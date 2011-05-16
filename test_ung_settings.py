@@ -1,38 +1,6 @@
 from base import BaseUNGTest
 import unittest
 
-#from tr to sel.
-#search:    \<tr\>.*\n.*\<td\>(.*)\<\/td\>.*\n.*\<td\>(.*)\<\/td\>.*\n.*\<td\>(.*)\<\/td\>.*\n.*\<\/tr\>
-#replace:   sel.\1(\2, \3)
-
-#from sel.verifyTextNotPresent to sel.failIf
-#search:    sel.verifyTextNotPresent\((.*)\)
-#replace:   self.failIf(sel.is_text_present(\1))
-
-#from sel.verifyTextPresent to sel.failUnless
-#search:    sel.verifyTextPresent\((.*), \"\"\)
-#replace:   self.failUnless(sel.is_text_present(\1))
-
-#search:   waitForCondition
-#replace: wait_for_condition
-
-#attention here to the '?' after .*, making the regular expression un-greedy
-#search:   sel.is_element_present\((.*?)\)
-#replace:  str(str(sel.is_element_present(\1)).lower()).lower()
-
-#search:   sel.verifyAttribute\((.*), (.*)\)
-#replace:  try: self.assertEqual(\2, sel.get_attribute(\1))
-#       except AssertionError, e: self.verificationErrors.append(str(e))
-
-#search: self.assertEqual("checked",
-#replace: self.assertEqual(u'true',
-
-#search: sel.openAndWait\((.*), \"\"\)
-#replace: sel.open(\1)\n        sel.wait_for_page_to_load(5000)
-
-#no search para wait_for_condition(
-#replace o " de dentro do elemento por \"
-
 class TestUNGSettings(BaseUNGTest):
     def test_ung_settings(self):
         sel = self.selenium
@@ -68,7 +36,7 @@ class TestUNGSettings(BaseUNGTest):
         sel.wait_for_page_to_load(5000)
         #don't try to create a new user since
         #test's instance already have one with login_name 'ung_user2'
-        #XXX this is not correct, because it has t#o be created once a time
+        #XXX this is not correct, because it has to be created once a time
         # next ones, just login
 ##        sel.click("//td[@id='new-account-form']")
 #   #     sel.type("//input[@name='firstname']", "Another")

@@ -37,7 +37,7 @@ class TestUNGSubjectList(BaseUNGTest):
         self.set_default_tree_view()
         sel.click("//button[@value='ung_domain/by_subject.0']")
         sel.wait_for_page_to_load('30000')
-        #XXX precisa dessa condition? ela esta falhando sempre sem pdb, faca o que eu fizer
+        #XXX doesn't need this condition. just assert text
 #        sel.wait_for_condition("selenium.isTextPresent(\"Ung test subject %d\")" % test_subject_time, "30000")
         self.assertEqual("Ung test subject %d" % test_subject_time, sel.get_text("//button[@value='ung_domain/by_subject/subject_UNG Test Subject %d.1']" % test_subject_time))
         self.failUnless(sel.is_element_present("//button[@value='ung_domain/by_subject/subject_UNG Test Subject %d.1']" % test_subject_time))
@@ -78,9 +78,6 @@ class TestUNGSubjectList(BaseUNGTest):
         #TODO: find if this is correct behaviour (by_subject already selected)
         #sel.click("//button[@value='ung_domain/by_subject.0']")
         #sel.wait_for_page_to_load(3000)
-        #XXX precisa dessa condition? ela esta falhando sempre sem pdb, faca o que eu fizer
-        # tinha a condition aqui para o elemento que pega-se texto logo abaixo, basta recriar a linha
-        #import ipdb; ipdb.set_trace()
         self.assertEqual("Ung test web table subject %d" % test_subject_time, sel.get_text("//button[@value='ung_domain/by_subject/subject_UNG Test Web Table Subject %d.1']" % test_subject_time))
         sel.click("//button[@value='ung_domain/by_subject/subject_UNG Test Web Table Subject %d.1']" % test_subject_time)
         sel.wait_for_page_to_load("30000")
