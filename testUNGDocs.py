@@ -688,6 +688,23 @@ class TestUNGDocs(UNGTestMixin):
         #assert only one element is present, because only one 'table' element was created
         self.failIf(self.selenium.is_element_present("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[2]/td[1]/input"))
 
+    def test_change_state_of_document_using_ung_interface_button(self):
+        """test the possibility to change state of a document
+        from within ung default interface, using 'Change State' button"""
+        test_time = int(unittest.time.time())
+        self.selenium.open("ERP5Site_createNewWebDocument?template=web_page_template")
+        self.selenium.wait_for_page_to_load("30000")
+        self.selenium.click("//a[@name=\"document_title\"]")
+        self.selenium.type("//input[@id=\"name\"]", "Functional UNG Test %d" % test_time)
+        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
+        self.selenium.wait_for_page_to_load("30000")
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.selenium.click("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[1]/td[1]/input")
+        self.selenium.click("//button[@class=\"change_state\"]")
+        self.selenium.wait_for_page_to_load("30000")
+        #XXX it's not implemented yet
+        raise NotImplementedError
+
 if __name__ == "__main__":
-    unittest.main()
+#    unittest.main()
 
