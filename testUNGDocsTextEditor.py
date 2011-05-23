@@ -38,6 +38,38 @@ class TestUNGDocsTextEditor(UNGTestMixin):
         self.assertEqual("<p>hello there</p>", self.selenium.get_eval("window.document.getElementById('field_my_text_content').value"))
         self.selenium.select_window("null")
 
+    def test_upload_text_with_image(self):
+        """test that uploading a Text Document (Open Office) with an image, as a
+        Web Page, will have its text and image correctly showed on fck editor"""
+        test_time = int(unittest.time.time())
+        test_file_path = self.get_test_file_path("ung-UNGDocs.Sample.TextWithImage.Text-001-en.odt")
+        web_page_name = "Functional UNG Test %d - Uploaded Web Page With Image" % test_time
+        #upload document
+        self.selenium.click("//input[@id=\"upload\"]")
+        self.selenium.select("//select[@name=\"portal_type\"]", "Web Page")
+        self.selenium.click("//input[@id=\"submit_document\"]")
+        self.selenium.type("//input[@id=\"upload-file\"]", test_file_path)
+        self.selenium.click("//input[@id=\"submit_document\"]")
+        self.selenium.wait_for_page_to_load("30000")
+        self.selenium.wait_for_condition("selenium.isTextPresent(\"Opening\")", "30000")
+        self.selenium.wait_for_page_to_load("30000")
+        #XXX this requires enabling a System Preference with Cloudooo
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//a[@name='document_title']\")", "30000")
+        #save document
+        self.selenium.click("//button[@name='Base_edit:method']")
+        self.selenium.wait_for_page_to_load("30000")
+        #assert web_page title
+        self.failUnless(self.selenium.is_text_present("UNGDocs Text"))
+        web_page_content = self.selenium.get_eval("window.document.getElementById('field_my_text_content').value")
+        #assert text content is present
+        self.failUnless('<b>Functional UNG Test</b>' in web_page_content)
+        self.failUnless('<p style="margin-bottom: 0in; font-weight: normal;">'
+            'Sample text document created in order to test some UNG features.'
+            '</p>' in web_page_content)
+        #assert image content is present
+        self.failUnless('<img align="LEFT" width="122" height="30" border="0"'
+            ' name="ung_docs-logo" src="image_module/' in web_page_content)
+
 
 if __name__ == "__main__":
     unittest.main()
