@@ -1,7 +1,7 @@
-from base import BaseUNGTest
+from UNGTestMixin import UNGTestMixin
 import unittest
 
-class TestUNGDocsTextEditor(BaseUNGTest):
+class TestUNGDocsTextEditor(UNGTestMixin):
     """tests related to UNG Docs text editors"""
     def test_fill_content_on_web_page_with_fck_editor(self):
         """test the action of filling content on FCK Editor for a Web Page
@@ -37,6 +37,7 @@ class TestUNGDocsTextEditor(BaseUNGTest):
         self.selenium.wait_for_condition("selenium.browserbot.getCurrentWindow().document.getElementById('field_my_text_content')", "5000")
         self.assertEqual("<p>hello there</p>", self.selenium.get_eval("window.document.getElementById('field_my_text_content').value"))
         self.selenium.select_window("null")
+
 
 if __name__ == "__main__":
     unittest.main()
