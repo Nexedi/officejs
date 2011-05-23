@@ -929,6 +929,23 @@ class TestUNGDocs(UNGTestMixin):
         #XXX this is not implemented yet
         raise NotImplementedError("Starred filter is not implemented yet")
 
+    def test_change_state_button(self):
+        """test the possibility to change state of many documents
+        from the standard ung default interface, using 'Change State' button"""
+        test_time = int(unittest.time.time())
+        #create 2 web_page
+        for doc_index in range(2):
+            self.create_document('page', name="Functional UNG Test %d - "
+                                        "Web Page %d" % (test_time, doc_index))
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        #select the 2 documents created
+        self.selenium.click("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[1]/td[1]/input")
+        self.selenium.click("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[2]/td[1]/input")
+        #try to change state of both documents
+        self.selenium.click("//button[@class=\"change_state\"]")
+        self.selenium.wait_for_page_to_load("30000")
+        raise NotImplementedError
+
 if __name__ == "__main__":
     unittest.main()
 
