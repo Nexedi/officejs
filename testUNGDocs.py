@@ -971,6 +971,7 @@ class TestUNGDocs(UNGTestMixin):
         self.failIf(self.selenium.is_checked("//tr[@class='your_listbox-data-line-1 DataB']/td[1]/input"))
         self.failIf(self.selenium.is_checked("//tr[@class='your_listbox-data-line-2 DataA']/td[1]/input"))
 
+
 if __name__ == "__main__":
     unittest.main()
 
