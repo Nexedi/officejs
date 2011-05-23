@@ -104,6 +104,17 @@ class UNGTestMixin(unittest.TestCase):
         self.wait_for_activities()
         return self.selenium.get_eval('selenium.browserbot.getCurrentWindow().location').split('?')[0]
 
+    def create_calendar_event(self, event_type, name):
+        self.selenium.click("//span[@class=\"addcal\"]")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"portal_type\")", "10000")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.selenium.select("//select[@name=\"portal_type\"]", event_type)
+        self.selenium.type("//input[@name=\"title\"]", name)
+        self.selenium.type("//input[@name=\"start_date_hour\"]", unittest.time.localtime().tm_hour + 1)
+        self.selenium.type("//input[@name=\"stop_date_hour\"]", unittest.time.localtime().tm_hour + 1)
+        self.selenium.click("//div[@aria-labelledby='ui-dialog-title-new_event_dialog']//button")
+        self.wait_for_activities()
+
 
 if __name__ == "__main__":
     unittest.main()
