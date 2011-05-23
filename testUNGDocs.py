@@ -705,6 +705,230 @@ class TestUNGDocs(UNGTestMixin):
         #XXX it's not implemented yet
         raise NotImplementedError
 
+    def test_all_domain_tree_filters(self):
+        """test Domain Tree on UNG Docs.
+        Domain Tree is the box where listbox is filtered by state, document type.
+        All Cases should be tested, including collapse and expand items into the list."""
+        test_time = int(unittest.time.time())
+        #first, create a web illustration, a web page and a web table
+        web_illustration_name = "Functional UNG Test %d - Web Illustration" % test_time
+        web_illustration_keywords = "Ung test %d - web illustration" % test_time
+        web_illustration_url = self.create_document('illustration',
+                                            name=web_illustration_name,
+                                            keywords=web_illustration_keywords)
+
+        web_page_name = "Functional UNG Test %d - Web Page" % test_time
+        web_page_keywords = "Ung test %d - web page" % test_time
+        web_page_url = self.create_document('page',
+                                            name=web_page_name,
+                                            keywords=web_page_keywords)
+
+        web_table_name = "Functional UNG Test %d - Web Table" % test_time
+        web_table_keywords = "Ung test %d - web table" % test_time
+        web_table_url = self.create_document('table',
+                                            name=web_table_name,
+                                            keywords=web_table_keywords)
+
+        #test 'All Documents' filter
+        self.wait_for_activities()
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.set_default_tree_view()
+        self.failUnless(self.selenium.is_text_present(web_table_name))
+        self.failUnless(self.selenium.is_text_present(web_page_name))
+        self.failUnless(self.selenium.is_text_present(web_illustration_name))
+        #test 'All Documents' / 'Web Illustration' filter
+        self.assertEqual("Web Illustration", self.selenium.get_text("//table[@class='your_listbox-table-domain-tree']/tbody/tr[2]/td/button"))
+        self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[2]/td/button")
+        self.selenium.wait_for_page_to_load("30000")
+        self.assertEqual(web_illustration_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        #test 'All Documents' / 'Web Page' filter
+        self.assertEqual("Web Page", self.selenium.get_text("//table[@class='your_listbox-table-domain-tree']/tbody/tr[3]/td/button"))
+        self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[3]/td/button")
+        self.selenium.wait_for_page_to_load("30000")
+        self.assertEqual(web_page_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        #test 'All Documents' / 'Web Table' filter
+        self.assertEqual("Web Table", self.selenium.get_text("//table[@class='your_listbox-table-domain-tree']/tbody/tr[4]/td/button"))
+        self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[4]/td/button")
+        self.selenium.wait_for_page_to_load("30000")
+        self.assertEqual(web_table_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        #test collapsing 'All Documents' and testing all 3 documents are present
+        self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[1]/td/button")
+        self.selenium.wait_for_page_to_load("30000")
+        self.failUnless(self.selenium.is_text_present(web_table_name))
+        self.failUnless(self.selenium.is_text_present(web_page_name))
+        self.failUnless(self.selenium.is_text_present(web_illustration_name))
+
+        #test 'By Subject' filter
+        self.open_ung_default_page(clear_cache=1)
+        self.set_default_tree_view()
+        self.selenium.click("//button[@value='ung_domain/by_subject.0']")
+        self.selenium.wait_for_page_to_load('30000')
+        self.failUnless(self.selenium.is_text_present(web_illustration_keywords))
+        self.failUnless(self.selenium.is_text_present(web_page_keywords))
+        self.failUnless(self.selenium.is_text_present(web_table_keywords))
+        #test 'By Subject' has web_illustration keywords
+        self.assertEqual(web_illustration_keywords, self.selenium.get_text("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_illustration_keywords))
+        self.selenium.click("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_illustration_keywords)
+        self.selenium.wait_for_page_to_load("30000")
+        self.assertEqual(web_illustration_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        #test 'By Subject' has web_page keywords
+        self.assertEqual(web_page_keywords, self.selenium.get_text("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_page_keywords))
+        self.selenium.click("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_page_keywords)
+        self.selenium.wait_for_page_to_load("30000")
+        self.assertEqual(web_page_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        #test 'By Subject' has web_table keywords
+        self.assertEqual(web_table_keywords, self.selenium.get_text("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_table_keywords))
+        self.selenium.click("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_table_keywords)
+        self.selenium.wait_for_page_to_load("30000")
+        self.assertEqual(web_table_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        #test collapsing 'By Subject' and testing all 3 documents are present
+        self.selenium.click("//button[@value='ung_domain/by_subject.0']")
+        self.selenium.wait_for_page_to_load('30000')
+        self.failUnless(self.selenium.is_text_present(web_illustration_name))
+        self.failUnless(self.selenium.is_text_present(web_page_name))
+        self.failUnless(self.selenium.is_text_present(web_table_name))
+
+        #test 'Owner' filter
+        self.open_ung_default_page(clear_cache=1)
+        self.set_default_tree_view()
+        self.selenium.click("//button[@value='ung_domain/owner.0']")
+        self.selenium.wait_for_page_to_load("30000")
+        #for web_table
+        self.assertEqual(web_table_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        #for web_page
+        self.assertEqual(web_page_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-1 DataB']/td[3]/a"))
+        #for web_illustration
+        self.assertEqual(web_illustration_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-2 DataA']/td[3]/a"))
+
+        #test 'Recent' filter
+        self.open_ung_default_page(clear_cache=1)
+        self.set_default_tree_view()
+        self.selenium.click("//button[@value='ung_domain/owner.0']")
+        self.selenium.wait_for_page_to_load("30000")
+        #for web_table
+        self.assertEqual(web_table_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        #for web_page
+        self.assertEqual(web_page_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-1 DataB']/td[3]/a"))
+        #for web_illustration
+        self.assertEqual(web_illustration_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-2 DataA']/td[3]/a"))
+
+        #test 'Shared by me' filter
+        #share web_illustration
+        self.selenium.open(web_illustration_url)
+        self.selenium.click("//a[@id=\"share_document\"]")
+        self.selenium.wait_for_page_to_load("30000")
+        #check 'Shared by me' filter for web_illustration
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.set_default_tree_view()
+        self.selenium.click("//button[@value='ung_domain/shared.0']")
+        self.selenium.wait_for_page_to_load("30000")
+        self.failIf(self.selenium.is_text_present("No Result"))
+        self.assertEqual("Shared by me", self.selenium.get_text("//button[@class=\"tree-open\"]"))
+        self.failUnless(self.selenium.is_text_present(web_illustration_name))
+        self.failIf(self.selenium.is_text_present(web_page_name))
+        self.failIf(self.selenium.is_text_present(web_table_name))
+        #share web_page and web_table
+        self.selenium.open(web_page_url)
+        self.selenium.click("//a[@id=\"share_document\"]")
+        self.selenium.wait_for_page_to_load("30000")
+        self.selenium.open(web_table_url)
+        self.selenium.click("//a[@id=\"share_document\"]")
+        self.selenium.wait_for_page_to_load("30000")
+        #check 'Shared by me' filter for all 3 documents
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.set_default_tree_view()
+        self.selenium.click("//button[@value='ung_domain/shared.0']")
+        self.selenium.wait_for_page_to_load("30000")
+        self.failIf(self.selenium.is_text_present("No Result"))
+        self.assertEqual("Shared by me", self.selenium.get_text("//button[@class=\"tree-open\"]"))
+        self.failUnless(self.selenium.is_text_present(web_illustration_name))
+        self.failUnless(self.selenium.is_text_present(web_page_name))
+        self.failUnless(self.selenium.is_text_present(web_table_name))
+
+        #test 'Hidden' filter
+        #to hide a document, it first have to be shared
+        #this is why 'Shared by me' filter is tested before Hidden filter
+        #so first, hide web_illustration
+        self.selenium.set_timeout(1)
+        try:
+            self.selenium.open(web_illustration_url + '/hide')
+            self.selenium.wait_for_page_to_load("30000")
+        except:
+            pass
+        self.selenium.set_timeout(30000)
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.set_default_tree_view()
+        #check 'Hidden' filter for web_illustration
+        self.selenium.click("//button[@value='ung_domain/hidden.0']")
+        self.selenium.wait_for_page_to_load("30000")
+        self.assertEqual("Hidden", self.selenium.get_text("//button[@class=\"tree-open\"]"))
+        self.failUnless(self.selenium.is_text_present(web_illustration_name))
+        self.failIf(self.selenium.is_text_present(web_page_name))
+        self.failIf(self.selenium.is_text_present(web_table_name))
+        #hide web_page and web_table
+        self.selenium.set_timeout(1)
+        try:
+            self.selenium.open(web_page_url + '/hide')
+            self.selenium.wait_for_page_to_load("30000")
+        except:
+            pass
+        try:
+            self.selenium.open(web_table_url + '/hide')
+            self.selenium.wait_for_page_to_load("30000")
+        except:
+            pass
+        self.selenium.set_timeout(30000)
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.set_default_tree_view()
+        #check 'Hidden' filter for all 3 documents
+        self.selenium.click("//button[@value='ung_domain/hidden.0']")
+        self.selenium.wait_for_page_to_load("30000")
+        self.assertEqual("Hidden", self.selenium.get_text("//button[@class=\"tree-open\"]"))
+        self.failUnless(self.selenium.is_text_present(web_illustration_name))
+        self.failUnless(self.selenium.is_text_present(web_page_name))
+        self.failUnless(self.selenium.is_text_present(web_table_name))
+
+        #test 'Trash' filter
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        #open trash
+        self.selenium.click("//button[@value='ung_domain/trash.0']")
+        self.selenium.wait_for_page_to_load("30000")
+        #check 'Trash' filter, so that none of the 3 documents are present
+        self.failIf(self.selenium.is_text_present(web_illustration_name))
+        self.failIf(self.selenium.is_text_present(web_page_name))
+        self.failIf(self.selenium.is_text_present(web_table_name))
+        #go back default tree and delete than
+        self.set_default_tree_view()
+        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[1]/input")
+        self.selenium.click("//tr[@class='your_listbox-data-line-1 DataB']/td[1]/input")
+        self.selenium.click("//tr[@class='your_listbox-data-line-2 DataA']/td[1]/input")
+        self.selenium.click("//button[@class=\"delete\"]")
+        self.selenium.wait_for_page_to_load("30000")
+        self.wait_for_activities()
+        #test 'Trash' filter to see if all 3 documents are present
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.set_default_tree_view()
+        self.selenium.click("//button[@value='ung_domain/trash.0']")
+        self.selenium.wait_for_page_to_load("30000")
+        self.failUnless(self.selenium.is_text_present(web_illustration_name))
+        self.failUnless(self.selenium.is_text_present(web_page_name))
+        self.failUnless(self.selenium.is_text_present(web_table_name))
+        #delete all 3 documents again
+        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[1]/input")
+        self.selenium.click("//tr[@class='your_listbox-data-line-1 DataB']/td[1]/input")
+        self.selenium.click("//tr[@class='your_listbox-data-line-2 DataA']/td[1]/input")
+        self.selenium.click("//button[@class=\"delete\"]")
+        self.selenium.wait_for_page_to_load("30000")
+        self.wait_for_activities()
+        #check 'Trash' filter, so that none of the 3 documents are present again
+        self.failIf(self.selenium.is_text_present(web_illustration_name))
+        self.failIf(self.selenium.is_text_present(web_page_name))
+        self.failIf(self.selenium.is_text_present(web_table_name))
+
+        #check 'Starred' filter
+        #XXX this is not implemented yet
+        raise NotImplementedError("Starred filter is not implemented yet")
+
 if __name__ == "__main__":
-#    unittest.main()
+    unittest.main()
 
