@@ -946,6 +946,31 @@ class TestUNGDocs(UNGTestMixin):
         self.selenium.wait_for_page_to_load("30000")
         raise NotImplementedError
 
+    def test_select_all_and_deselect_all(self):
+        """test the button to select all documents and deselect all documents"""
+        test_time = int(unittest.time.time())
+        #create 3 documents
+        for doc_index in range(3):
+            web_page_name = "Functional UNG Test %d - Web Page %d" % (test_time, doc_index)
+            web_page_url = self.create_document('page', web_page_name)
+        #assert no checkbox is checked
+        self.open_ung_default_page()
+        self.failIf(self.selenium.is_checked("//tr[@class='your_listbox-data-line-0 DataA']/td[1]/input"))
+        self.failIf(self.selenium.is_checked("//tr[@class='your_listbox-data-line-1 DataB']/td[1]/input"))
+        self.failIf(self.selenium.is_checked("//tr[@class='your_listbox-data-line-2 DataA']/td[1]/input"))
+        #click button to check all
+        self.selenium.click("//input[@name='your_listbox_checkAll:method']")
+        #check all checkboxes are selected
+        self.failUnless(self.selenium.is_checked("//tr[@class='your_listbox-data-line-0 DataA']/td[1]/input"))
+        self.failUnless(self.selenium.is_checked("//tr[@class='your_listbox-data-line-1 DataB']/td[1]/input"))
+        self.failUnless(self.selenium.is_checked("//tr[@class='your_listbox-data-line-2 DataA']/td[1]/input"))
+        #click button to deselect all
+        self.selenium.click("//input[@name='your_listbox_uncheckAll:method']")
+        #check all cheboxes are deselected
+        self.failIf(self.selenium.is_checked("//tr[@class='your_listbox-data-line-0 DataA']/td[1]/input"))
+        self.failIf(self.selenium.is_checked("//tr[@class='your_listbox-data-line-1 DataB']/td[1]/input"))
+        self.failIf(self.selenium.is_checked("//tr[@class='your_listbox-data-line-2 DataA']/td[1]/input"))
+
 if __name__ == "__main__":
     unittest.main()
 
