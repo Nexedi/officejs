@@ -76,7 +76,7 @@ class UNGTestMixin(unittest.TestCase):
         self.selenium.open("")
         self.selenium.wait_for_page_to_load("30000")
 
-    def get_test_file_path(self, filename):
+    def get_file_path(self, filename):
         """returns the absolute path to a test file given a 'filename'"""
         return os.path.join(os.path.abspath(os.curdir), 'test_data', filename)
 

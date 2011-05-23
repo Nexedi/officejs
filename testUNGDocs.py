@@ -139,7 +139,7 @@ class TestUNGDocs(UNGTestMixin):
     def test_web_table_upload_twice(self):
         """test the twice upload of a spreadsheet file into a Web Table
         document."""
-        test_file_path = self.get_test_file_path("tiolive-ERP5.Freedom.TioLive.Spreadsheet-001-en.ods")
+        test_file_path = sef.get_file_path("tiolive-ERP5.Freedom.TioLive.Spreadsheet-001-en.ods")
         for index in range(2):
             self.selenium.click("//a[@class=\"ung_docs\"]")
             self.selenium.wait_for_page_to_load("30000")
@@ -162,7 +162,7 @@ class TestUNGDocs(UNGTestMixin):
 
     def test_web_table_upload_converting_to_web_page(self):
         """test upload of a spreadsheet converting to a Web Page document"""
-        test_file_path = self.get_test_file_path("tiolive-ERP5.Freedom.TioLive.Spreadsheet-001-en.ods")
+        test_file_path = sef.get_file_path("tiolive-ERP5.Freedom.TioLive.Spreadsheet-001-en.ods")
         self.selenium.click("//a[@class=\"ung_docs\"]")
         self.selenium.wait_for_page_to_load("30000")
         self.selenium.click("//input[@id=\"upload\"]")
