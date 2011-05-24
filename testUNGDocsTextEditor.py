@@ -99,6 +99,43 @@ class TestUNGDocsTextEditor(UNGTestMixin):
         self.assertEqual(u'true', self.selenium.get_attribute("//input[@value='xinha']@checked"))
         self.assertEqual(u'true', self.selenium.get_attribute("//input[@value='text/html']@checked"))
 
+    def test_fill_content_on_web_page_with_xinha_editor(self):
+        """test the possibility to edit a Web Page document using
+        Xinha Text Editor"""
+        #select Xinha as Text Editor
+        self.selenium.click("//a[@id='settings']")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name='field_my_preferred_text_editor']\")", "3000")
+        self.selenium.check("//input[@value='xinha']")
+        self.selenium.check("//input[@value='text/html']")
+        self.selenium.click("//html/body/div[3]/div[11]/div/button[1]")
+        self.selenium.wait_for_page_to_load(5000)
+        #add new web_page
+        test_time = int(unittest.time.time())
+        self.create_document('page', name='Functional UNG Test %d - Web Page using Xinha' % test_time)
+        #activate Xinha Editor
+        self.selenium.click("//textarea[@id='my_text_content']")
+        #type text
+        self.selenium.select_frame("//iframe[@id='XinhaIFrame_my_text_content']")
+        web_page_content = """<p><strong>Chapter 1</strong></p> \n  <p>&nbsp;Sample Text</p>"""
+        self.selenium.type("//body", web_page_content)
+        self.selenium.select_window("null")
+        #save Web Page
+        self.selenium.click("//button[@name='Base_edit:method']")
+        self.selenium.wait_for_page_to_load("30000")
+        #wait for activities
+        self.wait_for_activities()
+        #assert text was typed
+        self.assertEqual(web_page_content, self.selenium.get_eval("window.document.getElementById('my_text_content').value"))
+        #go back to home page
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        #go back to the created Web Page (the last one modified on the list)
+        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
+        self.selenium.wait_for_page_to_load("30000")
+        #assert text is the same
+        self.selenium.wait_for_condition("selenium.browserbot.getCurrentWindow().document.getElementById('my_text_content')", "5000")
+        self.assertEqual(web_page_content, self.selenium.get_eval("window.document.getElementById('my_text_content').value"))
+        self.selenium.select_window("null")
+
 
 if __name__ == "__main__":
     unittest.main()
