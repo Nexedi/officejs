@@ -28,8 +28,7 @@ class TestUNGDocsTextEditor(UNGTestMixin):
         #assert text was typed
         self.assertEqual("<p>hello there</p>", self.selenium.get_eval("window.document.getElementById('field_my_text_content').value"))
         #go back to home page
-        self.selenium.click("//div[@id='wrapper_header']/div[1]/fieldset/div/div/div/a[1]/img")
-        self.selenium.wait_for_page_to_load("30000")
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
         #go back to the created Web Page (the last one modified on the list)
         self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
