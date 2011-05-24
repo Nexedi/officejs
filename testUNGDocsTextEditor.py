@@ -41,6 +41,14 @@ class TestUNGDocsTextEditor(UNGTestMixin):
         """test that uploading a Text Document (Open Office) with an image, as a
         Web Page, will have its text and image correctly showed on fck editor"""
         test_time = int(unittest.time.time())
+        #set default text editor as FCKeditor
+        self.selenium.click("//a[@id='settings']")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name=\'field_my_preferred_text_editor\']\")", "3000")
+        self.selenium.check("//input[@value=\'fck_editor\']")
+        self.selenium.check("//input[@value=\'text/html\']")
+        self.selenium.click("//html/body/div[3]/div[11]/div/button[1]")
+        self.selenium.wait_for_page_to_load(5000)
+        #get file_path
         test_file_path = self.get_file_path("ung-UNGDocs.Sample.TextWithImage.Text-001-en.odt")
         web_page_name = "Functional UNG Test %d - Uploaded Web Page With Image" % test_time
         #upload document
