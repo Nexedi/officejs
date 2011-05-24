@@ -77,6 +77,28 @@ class TestUNGDocsTextEditor(UNGTestMixin):
         self.failUnless('<img align="LEFT" width="122" height="30" border="0"'
             ' name="ung_docs-logo" src="image_module/' in web_page_content)
 
+    def test_select_xinha_as_preferred_text_editor(self):
+        """test that its possible to select Xinha instead of FCKeditor
+        for Edit Text Documents on UNG Docs."""
+        #assert Xinha Editor is shown as an option
+        self.selenium.click("//a[@id='settings']")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name='field_my_preferred_text_editor']\")", "3000")
+        self.failUnless(self.selenium.is_text_present("Text Format"))
+        self.failUnless(self.selenium.is_text_present("Xinha Editor"))
+        #select Xinha Editor as Preferred Text Editor
+        self.selenium.check("//input[@value='xinha']")
+        self.selenium.check("//input[@value='text/html']")
+        #save settings
+        self.selenium.click("//html/body/div[3]/div[11]/div/button[1]")
+        self.selenium.wait_for_page_to_load(5000)
+        #assert settings were saved
+        self.selenium.open("WebSite_logout")
+        self.login_as_default_user()
+        self.selenium.click("//a[@id='settings']")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name='field_my_preferred_text_editor']\")", "3000")
+        self.assertEqual(u'true', self.selenium.get_attribute("//input[@value='xinha']@checked"))
+        self.assertEqual(u'true', self.selenium.get_attribute("//input[@value='text/html']@checked"))
+
 
 if __name__ == "__main__":
     unittest.main()
