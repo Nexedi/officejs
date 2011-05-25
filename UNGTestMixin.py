@@ -66,7 +66,8 @@ class UNGTestMixin(unittest.TestCase):
             unittest.time.sleep(2) #XXX give time to selenium to recompose page when refresh
 
     def open_ung_default_page(self, page="", clear_cache=0, wait_for_activities=0):
-        """open ung default page set under 'setUp'
+        """open ung default page
+            page = UNG page to be opened, default to UNG Docs
             clear_cache = if enabled, will call 'clear_cache'
             wait_for_activities = if enabled, will call 'wait_for_activities'"""
         if clear_cache:
