@@ -411,7 +411,6 @@ class TestUNGCalendar(UNGTestMixin):
         test_time = int(unittest.time.time())
         #create an event
         self.open_ung_default_page("calendar")
-        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
         #create event of type 'Visit'
         event_name = 'Functional UNG Test %d - My Event' % test_time
         self.create_calendar_event('Note', name=event_name)
