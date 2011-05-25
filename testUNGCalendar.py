@@ -494,6 +494,24 @@ class TestUNGCalendar(UNGTestMixin):
         self.assertEqual(new_event_stop_year, int(self.selenium.get_value("stop_date_year")))
         self.selenium.click("//a[@class='ui-dialog-titlebar-close ui-corner-all']")
 
+    def test_create_multiple_events_by_click(self):
+        """test possibility to create multiple events by just clicking
+        on UNG Calendar interface"""
+        self.open_ung_default_page("calendar")
+        #create 4 events, each one on its specific 'day-column'
+        test_time = int(unittest.time.time())
+        event_name = "Functional UNG Test %d - Event %d"
+        for event_index in range(1, 5):
+            self.selenium.click_at("//div[@id='tgCol%d' and @class='tg-col-eventwrapper']" % event_index, (1,1))
+            self.selenium.type("//input[@id='bbit-cal-what']", event_name % (test_time, event_index))
+            self.selenium.click("//input[@id='bbit-cal-quickAddBTN']")
+            self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.wait_for_activities()
+        self.open_ung_default_page('calendar', clear_cache=1, wait_for_activities=1)
+        #assert events are present
+        for event_index in range(1, 5):
+            self.assertTrue(self.selenium.is_text_present(event_name % (test_time, event_index)))
+
 
 if __name__ == "__main__":
     unittest.main()
