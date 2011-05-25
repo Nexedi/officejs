@@ -65,7 +65,7 @@ class UNGTestMixin(unittest.TestCase):
                 break
             unittest.time.sleep(2) #XXX give time to selenium to recompose page when refresh
 
-    def open_ung_default_page(self, clear_cache=0, wait_for_activities=0):
+    def open_ung_default_page(self, page="", clear_cache=0, wait_for_activities=0):
         """open ung default page set under 'setUp'
             clear_cache = if enabled, will call 'clear_cache'
             wait_for_activities = if enabled, will call 'wait_for_activities'"""
@@ -73,7 +73,7 @@ class UNGTestMixin(unittest.TestCase):
             self.clear_cache()
         if wait_for_activities:
             self.wait_for_activities()
-        self.selenium.open("")
+        self.selenium.open(page)
         self.selenium.wait_for_page_to_load("30000")
 
     def get_file_path(self, filename):
