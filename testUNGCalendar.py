@@ -512,6 +512,90 @@ class TestUNGCalendar(UNGTestMixin):
         for event_index in range(1, 5):
             self.assertTrue(self.selenium.is_text_present(event_name % (test_time, event_index)))
 
+    def test_check_calendar_buttons(self):
+        """Test if the buttons Month, Day, Week shows the appropriate calendar
+        including the date range at calendar bar (near by previous/next
+        period arrows)."""
+        #XXX this test needs an empty instance
+        # due to the button 'other#' under month view, when there are many
+        # events do be displayed in just one day
+        self.open_ung_default_page("calendar")
+        test_time = int(unittest.time.time())
+        #create 4 events:
+        # 2 on same day, and another on same week
+        # last one on next week
+        event_name = "Functional UNG %d - Event %d"
+        dates = [(9, 13), (9, 13), (9, 16), (9, 20)]
+        for event_index, (month, day) in enumerate(dates):
+            self.create_calendar_event('Note',
+                                        event_name % (test_time, event_index),
+                                        start_month = month, start_day = day,
+                                        start_year=2011,
+                                        do_refresh=False)
+
+        #select month view
+        self.selenium.click("//span[@class='showmonthview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertTrue('fcurrent' in self.selenium.get_attribute("//div[@id='showmonthbtn']@class"))
+        #select month 9/2011 (month starts at 0)
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2011, 8, 13)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #wait due to interface delay
+        unittest.time.sleep(2)
+        #update page
+        self.selenium.click("//span[@class='showmonthview']")
+        self.selenium.click("//div/span[@title='Refresh view']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #XXX due to interface delay again, try two times
+        # on second, sleeping 3 seconds before refreshing page again
+        try:
+            for event_index in range(len(dates)):
+                self.assertTrue(self.selenium.is_text_present(event_name % (test_time, event_index)))
+        except:
+            unittest.time.sleep(3)
+            self.selenium.click("//div/span[@title='Refresh view']")
+            self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+            for event_index in range(len(dates)):
+                self.assertTrue(self.selenium.is_text_present(event_name % (test_time, event_index)))
+        #assert date displayed
+        self.assertEqual('Aug 28 2011 - Oct 1', self.selenium.get_text("//div[@id='display-datetime']"))
+
+        #select week view
+        self.selenium.click("//span[@class='showweekview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertTrue('fcurrent' in self.selenium.get_attribute("//div[@id='showweekbtn']@class"))
+        #select day 09/13/2011 (month starts at 0)
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2011, 8, 13)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.selenium.click("//div/span[@title='Refresh view']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #assert just the 3 events from days 13 and 16 are present
+        for event_index in range(3):
+            self.assertTrue(self.selenium.is_text_present(event_name % (test_time, event_index)))
+        #assert fourth event (event number 3, starting from 0) is not present
+        self.assertFalse(self.selenium.is_text_present(event_name % (test_time, 3)))
+        #assert date displayed
+        self.assertEqual('Sep 11 2011 - Sep 17', self.selenium.get_text("//div[@id='display-datetime']"))
+
+        #select day view
+        self.selenium.click("//span[@class='showdayview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertTrue('fcurrent' in self.selenium.get_attribute("//div[@id='showdaybtn']@class"))
+        #select day 09/13/2011 (month starts at 0)
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2011, 8, 13)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.selenium.click("//div/span[@title='Refresh view']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #assert just the 2 events from day 13 are present
+        for event_index in range(2):
+            self.assertTrue(self.selenium.is_text_present(event_name % (test_time, event_index)))
+        #assert third and fourth event (event number 2 and 3, starting from 0)
+        # are not present
+        for event_index in range(2, 4):
+            self.assertFalse(self.selenium.is_text_present(event_name % (test_time, event_index)))
+        #assert date displayed
+        self.assertEqual('Sep 13 2011', self.selenium.get_text("//div[@id='display-datetime']"))
+
 
 if __name__ == "__main__":
     unittest.main()
