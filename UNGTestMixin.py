@@ -114,6 +114,17 @@ class UNGTestMixin(unittest.TestCase):
         self.selenium.type("//input[@name=\"stop_date_hour\"]", unittest.time.localtime().tm_hour + 1)
         self.selenium.click("//div[@aria-labelledby='ui-dialog-title-new_event_dialog']//button")
         self.wait_for_activities()
+        #XXX due to interface delay
+        #try 5 times to see new event under interface
+        for _try in range(5):
+            try:
+                self.selenium.click("//div/span[@title='Refresh view']")
+                self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+                self.failUnless(self.selenium.is_text_present(name))
+                if self.selenium.is_text_present(name):
+                    break
+            except:
+                pass
 
 
 if __name__ == "__main__":
