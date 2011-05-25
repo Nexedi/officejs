@@ -107,27 +107,49 @@ class UNGTestMixin(unittest.TestCase):
         self.wait_for_activities()
         return self.selenium.get_eval('selenium.browserbot.getCurrentWindow().location').split('?')[0]
 
-    def create_calendar_event(self, event_type, name):
+    def create_calendar_event(self, event_type, name, start_month=None,
+                                end_month=None, start_day=None, end_day=None,
+                                start_year=None, end_year=None,
+                                do_refresh=True):
+        """Create an event at UNG Calendar.
+        Requires that the UNG Calendar is open."""
         self.selenium.click("//span[@class=\"addcal\"]")
         self.selenium.wait_for_condition("selenium.isElementPresent(\"portal_type\")", "10000")
         self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
         self.selenium.select("//select[@name=\"portal_type\"]", event_type)
         self.selenium.type("//input[@name=\"title\"]", name)
+
+        if start_month:
+            self.selenium.type("start_date_month", start_month)
+            if end_month:
+                self.selenium.type("stop_date_month", stop_month)
+            else:
+                self.selenium.type("stop_date_month", start_month)
+        if start_day:
+            self.selenium.type("start_date_day", start_day)
+            if end_day:
+                self.selenium.type("stop_date_day", stop_day)
+            else:
+                self.selenium.type("stop_date_day", start_day)
+        if start_year:
+            self.selenium.type("start_date_year", start_year)
+            if end_year:
+                self.selenium.type("stop_date_year", stop_year)
+            else:
+                self.selenium.type("stop_date_year", start_year)
+
+
         self.selenium.type("//input[@name=\"start_date_hour\"]", unittest.time.localtime().tm_hour + 1)
         self.selenium.type("//input[@name=\"stop_date_hour\"]", unittest.time.localtime().tm_hour + 1)
         self.selenium.click("//div[@aria-labelledby='ui-dialog-title-new_event_dialog']//button")
         self.wait_for_activities()
-        #XXX due to interface delay
-        #try 5 times to see new event under interface
-        for _try in range(5):
-            try:
+
+        if do_refresh:
+            #XXX due to interface delay
+            #refresh interface 5 times
+            for _try in range(5):
                 self.selenium.click("//div/span[@title='Refresh view']")
                 self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
-                self.failUnless(self.selenium.is_text_present(name))
-                if self.selenium.is_text_present(name):
-                    break
-            except:
-                pass
 
 
 if __name__ == "__main__":
