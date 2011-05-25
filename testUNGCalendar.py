@@ -596,6 +596,26 @@ class TestUNGCalendar(UNGTestMixin):
         #assert date displayed
         self.assertEqual('Sep 13 2011', self.selenium.get_text("//div[@id='display-datetime']"))
 
+    def test_refresh_button_should_not_multiplicate_event(self):
+        """test that 'Refresh' button doesn't multiplicate an event that was
+        just created"""
+        self.open_ung_default_page("calendar")
+        #create event
+        test_time = int(unittest.time.time())
+        event_name = "Functional UNG Test %d - An Event" % test_time
+        self.selenium.click_at("//div[@id='tgCol1' and @class='tg-col-eventwrapper']", (1,1))
+        self.selenium.type("//input[@id='bbit-cal-what']", event_name)
+        self.selenium.click("//input[@id='bbit-cal-quickAddBTN']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.open_ung_default_page('calendar', clear_cache=1, wait_for_activities=1)
+        #assert event is present
+        self.assertTrue(self.selenium.is_text_present(event_name))
+        #click refresh button 10 times
+        for _refresh in range(5):
+            self.selenium.click("//div/span[@title='Refresh view']")
+            self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #assert only 1 event is present
+        self.assertEqual(1, self.selenium.get_xpath_count("//div[contains(@title,'Title:%s')]" % event_name))
 
 if __name__ == "__main__":
     unittest.main()
