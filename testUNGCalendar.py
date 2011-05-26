@@ -617,6 +617,93 @@ class TestUNGCalendar(UNGTestMixin):
         #assert only 1 event is present
         self.assertEqual(1, self.selenium.get_xpath_count("//div[contains(@title,'Title:%s')]" % event_name))
 
+    def test_edit_event(self):
+        """test edit and event, including change the portal types"""
+        test_time = int(unittest.time.time())
+        self.open_ung_default_page('calendar')
+        #create event with specific properties
+        event_name = "Functional UNG Test %d - A Note" % test_time
+        event_type = 'Note'
+        localtime = unittest.time.localtime()
+        event_kw = {"start_month" : 01,
+                            "end_month" : 01,
+                            "start_day" : 01,
+                            "end_day" : 01,
+                            "start_year" : 2011,
+                            "end_year" : 2011,
+                            "start_hour" : 01,
+                            "end_hour" : 01,
+                            "start_minute" : 01,
+                            "end_minute" : 01}
+        self.create_calendar_event(event_type, event_name, do_refresh=False, **event_kw)
+        self.open_ung_default_page("calendar", clear_cache=1, wait_for_activities=1)
+        #XXX due to either a bug on javascript that doesn't allow to search
+        # or delay on creation of document
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2011, 00, 01)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #assert event properties
+        self.assertTrue(self.selenium.is_text_present(event_name))
+        self.selenium.click("//div[contains(@title,'Title:%s')]" % event_name)
+        self.selenium.click("//span[@id='bbit-cs-editLink']")
+        self.assertEqual(event_type, self.selenium.get_selected_value("//select[@name=\"portal_type\"]"))
+        self.assertEqual(event_name, self.selenium.get_value("//input[@name=\"title\"]"))
+        self.assertEqual(event_kw["start_month"], int(self.selenium.get_value("start_date_month")))
+        self.assertEqual(event_kw["end_month"], int(self.selenium.get_value("stop_date_month")))
+        self.assertEqual(event_kw["start_day"], int(self.selenium.get_value("start_date_day")))
+        self.assertEqual(event_kw["end_day"], int(self.selenium.get_value("stop_date_day")))
+        self.assertEqual(event_kw["start_year"], int(self.selenium.get_value("start_date_year")))
+        self.assertEqual(event_kw["end_year"], int(self.selenium.get_value("stop_date_year")))
+        self.assertEqual(event_kw["start_hour"], int(self.selenium.get_value("start_date_hour")))
+        self.assertEqual(event_kw["end_hour"], int(self.selenium.get_value("stop_date_hour")))
+        self.assertEqual(event_kw["start_minute"], int(self.selenium.get_value("start_date_minute")))
+        self.assertEqual(event_kw["end_minute"], int(self.selenium.get_value("stop_date_minute")))
+        #change event properties
+        for key, value in event_kw.items():
+            event_kw[key] = event_kw[key] + 2
+        event_type = 'Letter'
+        event_name = "Functional UNG Test %d - A Letter" % test_time
+        self.selenium.select("//select[@name=\"portal_type\"]", event_type)
+        self.selenium.type("//input[@name=\"title\"]", event_name)
+        self.selenium.type("start_date_month", event_kw["start_month"])
+        self.selenium.type("stop_date_month", event_kw["end_month"])
+        self.selenium.type("start_date_day", event_kw["start_day"])
+        self.selenium.type("stop_date_day", event_kw["end_day"])
+        self.selenium.type("start_date_year", event_kw["start_year"])
+        self.selenium.type("stop_date_year", event_kw["end_year"])
+        self.selenium.type("start_date_hour", event_kw["start_hour"])
+        self.selenium.type("stop_date_hour", event_kw["end_hour"])
+        self.selenium.type("start_date_minute", event_kw["start_minute"])
+        self.selenium.type("stop_date_minute", event_kw["end_minute"])
+        self.selenium.click("//div[@aria-labelledby='ui-dialog-title-new_event_dialog']//button")
+        self.wait_for_activities()
+        self.open_ung_default_page("calendar", clear_cache=1, wait_for_activities=1)
+        #XXX due to page delay
+        unittest.time.sleep(1)
+        #XXX this time search is possible
+        self.selenium.type("//input[@name='searchable-text']", '\"' + event_name + '\"')
+        self.selenium.click("//input[@id='submit-search']")
+        self.selenium.wait_for_condition("selenium.isElementPresent('//td[@id=\"event-date\"]')", "10000")
+        self.selenium.click("//td[@id=\"event-date\"]")
+        self.selenium.wait_for_condition("selenium.isTextPresent(\"%s\")" % event_name, "10000")
+        #assert new event properties
+        self.assertTrue(self.selenium.is_text_present(event_name))
+        self.selenium.click("//div[contains(@title,'Title:%s')]" % event_name)
+        self.selenium.click("//span[@id='bbit-cs-editLink']")
+        self.assertEqual(event_type, self.selenium.get_selected_value("//select[@name=\"portal_type\"]"))
+        self.assertEqual(event_name, self.selenium.get_value("//input[@name=\"title\"]"))
+        self.assertEqual(event_kw["start_month"], int(self.selenium.get_value("start_date_month")))
+        self.assertEqual(event_kw["end_month"], int(self.selenium.get_value("stop_date_month")))
+        self.assertEqual(event_kw["start_day"], int(self.selenium.get_value("start_date_day")))
+        self.assertEqual(event_kw["end_day"], int(self.selenium.get_value("stop_date_day")))
+        self.assertEqual(event_kw["start_year"], int(self.selenium.get_value("start_date_year")))
+        self.assertEqual(event_kw["end_year"], int(self.selenium.get_value("stop_date_year")))
+        self.assertEqual(event_kw["start_hour"], int(self.selenium.get_value("start_date_hour")))
+        self.assertEqual(event_kw["end_hour"], int(self.selenium.get_value("stop_date_hour")))
+        self.assertEqual(event_kw["start_minute"], int(self.selenium.get_value("start_date_minute")))
+        self.assertEqual(event_kw["end_minute"], int(self.selenium.get_value("stop_date_minute")))
+        self.selenium.click("//a[@class='ui-dialog-titlebar-close ui-corner-all']")
+
+
 if __name__ == "__main__":
     unittest.main()
 
