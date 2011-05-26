@@ -124,19 +124,19 @@ class UNGTestMixin(unittest.TestCase):
         if start_month:
             self.selenium.type("start_date_month", start_month)
             if end_month:
-                self.selenium.type("stop_date_month", stop_month)
+                self.selenium.type("stop_date_month", end_month)
             else:
                 self.selenium.type("stop_date_month", start_month)
         if start_day:
             self.selenium.type("start_date_day", start_day)
             if end_day:
-                self.selenium.type("stop_date_day", stop_day)
+                self.selenium.type("stop_date_day", end_day)
             else:
                 self.selenium.type("stop_date_day", start_day)
         if start_year:
             self.selenium.type("start_date_year", start_year)
             if end_year:
-                self.selenium.type("stop_date_year", stop_year)
+                self.selenium.type("stop_date_year", end_year)
             else:
                 self.selenium.type("stop_date_year", start_year)
 
