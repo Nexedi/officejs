@@ -816,6 +816,71 @@ class TestUNGCalendar(UNGTestMixin):
         date_marked = self.selenium.get_attribute("//td[contains(@class,'st-dtitle-today')]@abbr")
         self.assertEqual(current_date, date_marked)
 
+    def test_button_today_goes_to_current_day(self):
+        """Check the button today shows current day.
+        Also checks the behaviour when using month, week and day views.
+        """
+        test_time = int(unittest.time.time())
+        #prepare date
+        current_month = str(unittest.time.localtime().tm_mon)
+        current_day = str(unittest.time.localtime().tm_mday)
+        current_year = unittest.time.localtime().tm_year
+        current_date = '/'.join([current_month, current_day, str(current_year)])
+        self.open_ung_default_page("calendar")
+        #create an event for current date
+        event_name = "Functional UNG Test %d - Checking Today button" % test_time
+        self.create_calendar_event('Note', event_name,
+                                                    start_month=current_month,
+                                                    start_day=current_day,
+                                                    start_year=current_year)
+
+        #check button for month view
+        #XXX this part needs an empty instance, due to 'group events' behaviour
+        # of interface when there are many events on a single day
+        self.selenium.click("//span[@class='showmonthview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #first, go to an year long time ago
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(%d, 00, 01)).BcalGetOp();" % (current_year - 10))
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.selenium.click("//div/span[@title='Refresh view']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #check current date is not displayed
+        self.assertFalse(self.selenium.is_text_present(event_name))
+        #click Today button
+        self.selenium.click("//span[@class='showtoday']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertTrue(self.selenium.is_text_present(event_name))
+
+        #check button for week view
+        self.selenium.click("//span[@class='showweekview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #first, go to an year long time ago
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(%d, 00, 01)).BcalGetOp();" % (current_year - 10))
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.selenium.click("//div/span[@title='Refresh view']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #check current date is not displayed
+        self.assertFalse(self.selenium.is_text_present(event_name))
+        #click Today button
+        self.selenium.click("//span[@class='showtoday']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertTrue(self.selenium.is_text_present(event_name))
+
+        #check button for day view
+        self.selenium.click("//span[@class='showdayview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #first, go to an year long time ago
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(%d, 00, 01)).BcalGetOp();" % (current_year - 10))
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.selenium.click("//div/span[@title='Refresh view']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #check current date is not displayed
+        self.assertFalse(self.selenium.is_text_present(event_name))
+        #click Today button
+        self.selenium.click("//span[@class='showtoday']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertTrue(self.selenium.is_text_present(event_name))
+
 
 if __name__ == "__main__":
     unittest.main()
