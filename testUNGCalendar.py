@@ -882,6 +882,51 @@ class TestUNGCalendar(UNGTestMixin):
         self.assertTrue(self.selenium.is_text_present(event_name))
 
 
+    def test_current_hour_mark(self):
+        """Test that on Day and Week view, UNG Calendar defines a red line to
+        mark current time. """
+        #this calc is based on jquery.calendar.js, where there's a calc
+        # find correct position of red mark and set it on mark style attribute
+        def gP(h, m):
+            return h * 42 + int(float(m) / 60 * 42)
+
+        self.open_ung_default_page("calendar")
+
+        #test mark for week view
+        self.selenium.click("//span[@class='showweekview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #prepare time
+        current_hour = unittest.time.localtime().tm_hour
+        current_minute = unittest.time.localtime().tm_min
+        #assert mark is present
+        self.assertTrue(self.selenium.is_element_present("//div[@id='tgnowmarker']"))
+        self.selenium.click("//div/span[@title='Refresh view']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #find mark top distance
+        mark_style = self.selenium.get_attribute("//div[@id='tgnowmarker']@style")
+        mark_top_distance = int(mark_style.split(' ')[3][:-3]) #it ends with 'px;'
+        #assert mark top distance
+        correct_mark_top_distance = gP(current_hour, current_minute)
+        self.assertEqual(mark_top_distance, correct_mark_top_distance)
+
+        #test mark for day view
+        self.selenium.click("//span[@class='showweekview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #prepare time
+        current_hour = unittest.time.localtime().tm_hour
+        current_minute = unittest.time.localtime().tm_min
+        #assert mark is present
+        self.assertTrue(self.selenium.is_element_present("//div[@id='tgnowmarker']"))
+        self.selenium.click("//div/span[@title='Refresh view']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #find mark top distance
+        mark_style = self.selenium.get_attribute("//div[@id='tgnowmarker']@style")
+        mark_top_distance = int(mark_style.split(' ')[3][:-3]) #it ends with 'px;'
+        #assert mark top distance
+        correct_mark_top_distance = gP(current_hour, current_minute)
+        self.assertEqual(mark_top_distance, correct_mark_top_distance)
+
+
 if __name__ == "__main__":
     unittest.main()
 
