@@ -159,10 +159,14 @@ class UNGTestMixin(unittest.TestCase):
 
         if do_refresh:
             #XXX due to interface delay
-            #refresh interface 5 times
-            for _try in range(5):
+            #refresh interface 10 times
+            for _try in range(10):
                 self.selenium.click("//div/span[@title='Refresh view']")
                 self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+                if self.selenium.is_text_present(name):
+                    break
+                else:
+                    unittest.time.sleep(2)
 
 
 if __name__ == "__main__":
