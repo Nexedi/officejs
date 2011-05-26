@@ -791,6 +791,32 @@ class TestUNGCalendar(UNGTestMixin):
         self.assertEqual(event_kw["end_minute"], int(self.selenium.get_value("stop_date_minute")))
         self.selenium.click("//a[@class='ui-dialog-titlebar-close ui-corner-all']")
 
+    def test_current_day_different_color(self):
+        """test for UNG Calendar current day color.
+        On Month and Week view, UNG Calendar defines diferent colors to current
+        day. Include a test for left top bar of Month view, where the current day
+        is also maked (as blue)."""
+        #prepare date
+        current_month = str(unittest.time.localtime().tm_mon)
+        current_day = str(unittest.time.localtime().tm_mday)
+        current_year = str(unittest.time.localtime().tm_year)
+        current_date = '/'.join([current_month, current_day, current_year])
+        self.open_ung_default_page("calendar")
+        #test color for current day on week view
+        self.selenium.click("//span[@class='showweekview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        date_marked = self.selenium.get_attribute("//td[div/@class='tg-today']@abbr")
+        self.assertEqual(current_date, date_marked)
+        #test color for current day on month view
+        self.selenium.click("//span[@class='showmonthview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        date_marked = self.selenium.get_attribute("//td[contains(@class,'st-bg-today')]@abbr")
+        self.assertEqual(current_date, date_marked)
+        #test color for left top bar of current day on month view
+        date_marked = self.selenium.get_attribute("//td[contains(@class,'st-dtitle-today')]@abbr")
+        self.assertEqual(current_date, date_marked)
+
+
 if __name__ == "__main__":
     unittest.main()
 
