@@ -110,6 +110,8 @@ class UNGTestMixin(unittest.TestCase):
     def create_calendar_event(self, event_type, name, start_month=None,
                                 end_month=None, start_day=None, end_day=None,
                                 start_year=None, end_year=None,
+                                start_hour=None, end_hour=None,
+                                start_minute=None, end_minute=None,
                                 do_refresh=True):
         """Create an event at UNG Calendar.
         Requires that the UNG Calendar is open."""
@@ -138,9 +140,20 @@ class UNGTestMixin(unittest.TestCase):
             else:
                 self.selenium.type("stop_date_year", start_year)
 
+        if not start_hour:
+            start_hour = unittest.time.localtime().tm_hour + 1
+        if not end_hour:
+            end_hour = unittest.time.localtime().tm_hour + 1
+        self.selenium.type("start_date_hour", start_hour)
+        self.selenium.type("stop_date_hour", end_hour)
 
-        self.selenium.type("//input[@name=\"start_date_hour\"]", unittest.time.localtime().tm_hour + 1)
-        self.selenium.type("//input[@name=\"stop_date_hour\"]", unittest.time.localtime().tm_hour + 1)
+        if start_minute:
+            self.selenium.type("start_date_minute", start_minute)
+            if end_minute:
+                self.selenium.type("stop_date_minute", end_minute)
+            else:
+                self.selenium.type("stop_date_minute", start_minute)
+
         self.selenium.click("//div[@aria-labelledby='ui-dialog-title-new_event_dialog']//button")
         self.wait_for_activities()
 
