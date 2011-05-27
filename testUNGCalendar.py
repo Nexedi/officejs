@@ -624,7 +624,6 @@ class TestUNGCalendar(UNGTestMixin):
         #create event with specific properties
         event_name = "Functional UNG Test %d - A Note" % test_time
         event_type = 'Note'
-        localtime = unittest.time.localtime()
         event_kw = {"start_month" : 01,
                             "end_month" : 01,
                             "start_day" : 01,
