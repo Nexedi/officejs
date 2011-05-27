@@ -925,6 +925,101 @@ class TestUNGCalendar(UNGTestMixin):
         correct_mark_top_distance = gP(current_hour, current_minute)
         self.assertEqual(mark_top_distance, correct_mark_top_distance)
 
+    def test_event_with_long_date(self):
+        """test events that happen in multiple days"""
+        test_time = int(unittest.time.time())
+        self.open_ung_default_page("calendar")
+        #create 2 events
+        # 2011 ---------------- 2012 ---------------- 2013
+        # ..........event1..........
+        #                       ..........event2..........
+        event1_name = "Functional UNG Test %d - Long Event 1" % test_time
+        event1_kw = {"start_month" : 01,
+                            "end_month" : 12,
+                            "start_day" : 01,
+                            "end_day" : 31,
+                            "start_year" : 2011,
+                            "end_year" : 2012,
+                            "start_hour" : 01,
+                            "end_hour" : 23,
+                            "start_minute" : 01,
+                            "end_minute" : 59}
+        self.create_calendar_event('Visit', event1_name, do_refresh=False,
+                                                                **event1_kw)
+        event2_name = "Functional UNG Test %d - Long Event 2" % test_time
+        event2_kw = {"start_month" : 01,
+                            "end_month" : 12,
+                            "start_day" : 01,
+                            "end_day" : 31,
+                            "start_year" : 2012,
+                            "end_year" : 2013,
+                            "start_hour" : 01,
+                            "end_hour" : 23,
+                            "start_minute" : 01,
+                            "end_minute" : 59}
+        self.create_calendar_event('Letter', event2_name, do_refresh=False,
+                                                                **event2_kw)
+
+        #XXX this is maybe required is due to page delay
+        self.open_ung_default_page("calendar", clear_cache=1, wait_for_activities=1)
+        #for precise approach, this test will be done in day view
+        self.selenium.click("//span[@class='showdayview']")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+
+        #go one day before first day of event1, and assert any of them are present
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2010, 11, 31)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertFalse(self.selenium.is_text_present(event1_name))
+        self.assertFalse(self.selenium.is_text_present(event2_name))
+
+        #go to first day of event1, and assert only event1 is present
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2011, 00, 01)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertTrue(self.selenium.is_text_present(event1_name))
+        self.assertFalse(self.selenium.is_text_present(event2_name))
+
+        #go to 06/30/2011, and assert only event1 is present
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2011, 05, 30)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertTrue(self.selenium.is_text_present(event1_name))
+        self.assertFalse(self.selenium.is_text_present(event2_name))
+
+        #go to first day of event2, and assert both are present
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2012, 00, 01)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertTrue(self.selenium.is_text_present(event1_name))
+        self.assertTrue(self.selenium.is_text_present(event2_name))
+
+        #go to last day of event1, and assert both are present
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2012, 11, 31)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertTrue(self.selenium.is_text_present(event1_name))
+        self.assertTrue(self.selenium.is_text_present(event2_name))
+
+        #go one day after last day of event1, and assert only event2 is present
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2013, 00, 01)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertFalse(self.selenium.is_text_present(event1_name))
+        self.assertTrue(self.selenium.is_text_present(event2_name))
+
+        #go to 06/30/2013, and assert only event2 is present
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2013, 05, 30)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertFalse(self.selenium.is_text_present(event1_name))
+        self.assertTrue(self.selenium.is_text_present(event2_name))
+
+        #go to last day of event2, and assert only event2 is present
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2013, 11, 31)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertFalse(self.selenium.is_text_present(event1_name))
+        self.assertTrue(self.selenium.is_text_present(event2_name))
+
+        #go one day after last day of event2, and assert any of them are present
+        self.selenium.run_script("$('#gridcontainer').gotoDate(new Date(2014, 00, 01)).BcalGetOp();")
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.assertFalse(self.selenium.is_text_present(event1_name))
+        self.assertFalse(self.selenium.is_text_present(event2_name))
+
 
 if __name__ == "__main__":
     unittest.main()
