@@ -975,7 +975,7 @@ class TestUNGDocs(UNGTestMixin):
         """UNG Docs should paginate when many documents are present.
         Test that the action of paginate will work, given that many documents
         are present."""
-        #XXX this test needs an empty instance
+#        #XXX this test needs an empty instance
         test_time = int(unittest.time.time())
         page_title = "Functional UNG Test %d - Web Page " % test_time
         #add many documents to ensure that it has to paginate
@@ -988,37 +988,46 @@ class TestUNGDocs(UNGTestMixin):
             self.selenium.wait_for_page_to_load("30000")
 
         self.wait_for_activities()
-        self.selenium.open("")
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
         self.selenium.wait_for_page_to_load("30000")
         #assert first and last (relative) documents on first page
         self.assertEqual('1', self.selenium.get_value("//input[@name='your_listbox_page_start']"))
         self.assertTrue(self.selenium.is_text_present(page_title + '100'))
         self.assertTrue(self.selenium.is_text_present(page_title + '84'))
-        #assert first and last (relative) documents on third page
-        # (next button)
+        #NEXT BUTTON
+        # assert first and last (relative) documents on third page
         for next_page in range(2):
             self.selenium.click("//button[@name='nextPage']")
             self.selenium.wait_for_page_to_load("30000")
         self.assertEqual('3', self.selenium.get_value("//input[@name='your_listbox_page_start']"))
         self.assertTrue(self.selenium.is_text_present(page_title + '66'))
         self.assertTrue(self.selenium.is_text_present(page_title + '50'))
-        #assert first and last (relative) documents on second page
-        # (previous button)
+        #PREVIOUS BUTTON
+        # assert first and last (relative) documents on second page
         self.selenium.click("//button[@name='previousPage']")
         self.selenium.wait_for_page_to_load("30000")
         self.assertEqual('2', self.selenium.get_value("//input[@name='your_listbox_page_start']"))
         self.assertTrue(self.selenium.is_text_present(page_title + '83'))
         self.assertTrue(self.selenium.is_text_present(page_title + '67'))
-        #assert first and last (relative) documents on last page
-        # (last button)
+        #TEXT INPUT
+        # assert that entering a number at input and pressing enter will
+        # go to that page
+        self.selenium.type("//input[@name='your_listbox_page_start']", '4')
+        self.selenium.key_press("//input[@name='your_listbox_page_start']", '\\13')
+        self.selenium.wait_for_page_to_load("30000")
+        self.assertEqual('4', self.selenium.get_value("//input[@name='your_listbox_page_start']"))
+        self.assertTrue(self.selenium.is_text_present(page_title + '49'))
+        self.assertTrue(self.selenium.is_text_present(page_title + '33'))
+        #LAST BUTTON
+        # assert first and last (relative) documents on last page
         last_page_number = self.selenium.get_text("//div[@class='listbox-navigation']").split('/')[1].strip()
         self.selenium.click("//button[@name='lastPage']")
         self.selenium.wait_for_page_to_load("30000")
         self.assertEqual(last_page_number, self.selenium.get_value("//input[@name='your_listbox_page_start']"))
         self.assertTrue(self.selenium.is_text_present(page_title + '15'))
         self.assertTrue(self.selenium.is_text_present(page_title + '1'))
-        #assert first and last (relative) documents on first page
-        # (first button)
+        #FIRST BUTTON
+        # assert first and last (relative) documents on first page
         self.selenium.click("//button[@name='firstPage']")
         self.selenium.wait_for_page_to_load("30000")
         self.assertEqual('1', self.selenium.get_value("//input[@name='your_listbox_page_start']"))
