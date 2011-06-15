@@ -33,7 +33,7 @@ var JSONTextDocument = function() {
     this.type = "text";
 }
 
-JSONTextDocument.prototype = new JSONDocuement();
+JSONTextDocument.prototype = new JSONDocument();
 
 JSONTextDocument.prototype.saveEdition = function(content) {
     this.setContent(content);
