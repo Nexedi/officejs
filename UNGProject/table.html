@@ -1,0 +1,515 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+
+    <base href="http://10.0.112.141:12001/erp5/web_site_module/ung/web_page_module/3/" />
+    <meta name="generator" content="ERP5 - Copyright (C) 2001 - 2008. All rights reserved." />
+    <meta name="description"
+    content="Web Table - Web Table" />
+    <meta name="keywords" content="" />
+    <meta name="robots" content="index, follow" />
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Script-Type" content="text/javascript" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+
+    <title>Web Table - Web Table | ERP5</title>
+
+    <link rel="icon" type="image/x-icon"
+        href="images/ung/favicon.ico" />
+    <link rel="shortcut icon" type="image/x-icon"
+        href="images/ung/favicon.ico" />
+
+    <link rel="stylesheet" type="text/css" href="css/table.css" />
+
+    <script type="text/javascript" src="js/table.js"></script>
+
+    <script type="text/javascript"
+    src="js/jquery/plugin/sheet/jquery.sheet.js"></script>
+
+
+    <script type="text/javascript"
+    src="js/jquery/plugin/mbmenu/mbMenu.min.js"></script>
+
+
+    <script type="text/javascript"
+    src="js/jquery/ui/js/jquery-ui.js"></script>
+
+
+    <script type="text/javascript"
+    src="js/jquery/plugin/jqcharts/jgcharts.min.js"></script>
+
+
+    <script type="text/javascript"
+    src="js/jquery/plugin/colorpicker/jquery.colorPicker.min.js"></script>
+
+
+    <script type="text/javascript"
+    src="js/jquery/plugin/elastic/jquery.elastic.min.js"></script>
+
+
+
+    <script type="text/javascript"
+    src="js/jquery/plugin/sheet/jquery.sheet.erp5.js"></script>
+
+<!-- this is a placeholder for different extensions to head which could be required by web themes -->
+<form>
+    <fieldset>
+
+        <label for="name">Insert a new name:</label>
+        <input type="text" class="title" id="name" name="name" value=""><br>
+        <div id="more_property">
+            <label for="short_title">Short Title:</label>
+
+            <input type="text" class="short_title" id="short_title" name="short_title" value=""><br>
+            <label for="version">Version:</label>
+            <input type="text" class="version" id="version" name="version" value=""><br>
+            <label for="language">Language:</label>
+            <input type="text" class="language" id="language" name="language" value=""><br>
+            <label for="sort_index">Sort Index:</label>
+            <input type="text" class="sort_index" id="sort_index" name="sort_index" value=""><br>
+
+            <label for="keyword_list">Keywords:</label>
+            <textarea id="keyword_list" rows="2" cols="20" value="">
+            </textarea>
+        </div>
+        <p class="more_properties" id="more_properties">Edit More Properties</p>
+        <p class="hide_properties" id="hide_properties">Hide Properties</p>
+    </fieldset>
+</form>
+
+
+<div class="field" title="Contenu de la page web.">
+
+<label>
+Contenu de la page
+
+
+</label>
+<div class="input"><link rel="stylesheet" href="js/jquery/plugin/sheet/jquery.sheet.css" type="text/css" />
+<link rel="stylesheet" href="jquery.sheet.erp5.css" type="text/css" />
+<link rel="stylesheet" href="js/jquery/plugin/colorpicker/jquery.colorPicker.css" type="text/css" />
+<link rel="stylesheet" href="js/jquery/plugin/colorpicker/menu.css" type="text/css" />
+
+<script type="text/javascript">
+$("button.save").click(function(event){
+source = $.sheet.instance[0].getSource(true);
+$("input#my_text_content").attr("value", source)
+});
+$(function() {
+$('#jQuerySheet0').sheet({
+title: 'Spreadsheet Playground',
+inlineMenu: inlineMenu($.sheet.instance),
+urlGet: './getTextContent',
+});
+});
+
+function inlineMenu(instance) {
+var I = (instance ? instance.length : 0);
+var html = $('#inlineMenu').html().replace(/sheetInstance/g, "$.sheet.instance[" + I + "]");
+var menu = $(html);
+
+menu.find('.colorPickerCell')
+.colorPicker()
+.change(function() {
+$.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
+$.sheet.instance[I].obj.cellHighlighted().css('background-color', $(this).val());
+$.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
+});
+
+menu.find('.colorPickerFont')
+.colorPicker()
+.change(function() {
+$.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
+$.sheet.instance[I].obj.cellHighlighted().css('color', $(this).val());
+$.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
+});
+
+menu.find('.colorPickers')
+.children().eq(1).css('background-image', "url('jquery_sheet_image/palette.png')");
+menu.find('.colorPickers')
+.children().eq(3).css('background-image', "url('jquery_sheet_image/palette_bg.png')");
+
+return menu;
+}
+
+function goToObj(s) {
+$('html, body').animate({
+scrollTop: $(s).offset().top
+}, 'slow');
+return false;
+}
+</script>
+<div id="jQuerySheet0" style="height: 400px;"></div>
+<span id="inlineMenu" style="display: none;">
+<span>
+<a href="#" onclick="sheetInstance.controlFactory.addRow(); return false;" title="Insert Row After Selected">
+
+<img alt="Insert Row After Selected" src="jquery_sheet_image/sheet_row_add.png" />
+</a>
+<a href="#" onclick="sheetInstance.controlFactory.addRow(null, true); return false;" title="Insert Row Before Selected">
+<img alt="Insert Row Before Selected" src="jquery_sheet_image/sheet_row_add.png" />
+</a>
+<a href="#" onclick="sheetInstance.controlFactory.addRow(null, null, ':last'); return false;" title="Add Row At End">
+<img alt="Add Row" src="jquery_sheet_image/sheet_row_add.png" />
+</a>
+<a href="#" onclick="sheetInstance.controlFactory.addRowMulti(); return false;" title="Add Multi-Rows">
+<img alt="Add Multi-Rows" src="jquery_sheet_image/sheet_row_add_multi.png" />
+</a>
+<a href="#" onclick="sheetInstance.deleteRow(); return false;" title="Delete Row">
+<img alt="Delete Row" src="jquery_sheet_image/sheet_row_delete.png" />
+
+</a>
+<a href="#" onclick="sheetInstance.controlFactory.addColumn(); return false;" title="Insert Column After Selected">
+<img alt="Insert Column After Selected" src="jquery_sheet_image/sheet_col_add.png" />
+</a>
+<a href="#" onclick="sheetInstance.controlFactory.addColumn(null, true); return false;" title="Insert Column Before Selected">
+<img alt="Insert Column Before Selected" src="jquery_sheet_image/sheet_col_add.png" />
+</a>
+<a href="#" onclick="sheetInstance.controlFactory.addColumn(null, null, ':last'); return false;" title="Add Column At End">
+<img alt="Add Column At End" src="jquery_sheet_image/sheet_col_add.png" />
+</a>
+<a href="#" onclick="sheetInstance.controlFactory.addColumnMulti(); return false;" title="Insert Multi-Columns">
+<img alt="Add Multi-Columns" src="jquery_sheet_image/sheet_col_add_multi.png" />
+</a>
+
+<a href="#" onclick="sheetInstance.deleteColumn(); return false;" title="Delete Column">
+<img alt="Delete Column" src="jquery_sheet_image/sheet_col_delete.png" />
+</a>
+<a href="#" onclick="sheetInstance.getTdRange(null, sheetInstance.obj.formula().val()); return false;" title="Get Cell Range">
+<img alt="Get Cell Range" src="jquery_sheet_image/sheet_get_range.png" />
+</a>
+<a href="#" onclick="sheetInstance.deleteSheet(); return false;" title="Delete Current Sheet">
+<img alt="Delete Current Sheet" src="jquery_sheet_image/table_delete.png" />
+</a>
+<a href="#" onclick="sheetInstance.calc(sheetInstance.i); return false;" title="Refresh Calculations">
+<img alt="Refresh Calculations" src="jquery_sheet_image/arrow_refresh.png" />
+</a>
+<a href="#" onclick="sheetInstance.cellFind(); return false;" title="Find">
+
+<img alt="Find" src="jquery_sheet_image/find.png" />
+</a>
+<a href="#" onclick="sheetInstance.cellStyleToggle('styleBold'); return false;" title="Bold">
+<img alt="Bold" src="jquery_sheet_image/text_bold.png" />
+</a>
+<a href="#" onclick="sheetInstance.cellStyleToggle('styleItalics'); return false;" title="Italic">
+<img alt="Italic" src="jquery_sheet_image/text_italic.png" />
+</a>
+<a href="#" onclick="sheetInstance.cellStyleToggle('styleUnderline', 'styleLineThrough'); return false;" title="Underline">
+<img alt="Underline" src="jquery_sheet_image/text_underline.png" />
+</a>
+<a href="#" onclick="sheetInstance.cellStyleToggle('styleLineThrough', 'styleUnderline'); return false;" title="Strikethrough">
+<img alt="Strikethrough" src="jquery_sheet_image/text_strikethrough.png" />
+
+</a>
+<a href="#" onclick="sheetInstance.cellStyleToggle('styleLeft', 'styleCenter styleRight'); return false;" title="Align Left">
+<img alt="Align Left" src="jquery_sheet_image/text_align_left.png" />
+</a>
+<a href="#" onclick="sheetInstance.cellStyleToggle('styleCenter', 'styleLeft styleRight'); return false;" title="Align Center">
+<img alt="Align Center" src="jquery_sheet_image/text_align_center.png" />
+</a>
+<a href="#" onclick="sheetInstance.cellStyleToggle('styleRight', 'styleLeft styleCenter'); return false;" title="Align Right">
+<img alt="Align Right" src="jquery_sheet_image/text_align_right.png" />
+</a>
+<a href="#" onclick="sheetInstance.fillUpOrDown(); return false;" title="Fill Down">
+<img alt="Fill Down" src="jquery_sheet_image/arrow_down.png" />
+</a>
+
+<a href="#" onclick="sheetInstance.fillUpOrDown(true); return false;" title="Fill Up">
+<img alt="Fill Up" src="jquery_sheet_image/arrow_up.png" />
+</a>
+<span class="colorPickers">
+<input title="Foreground color" class="colorPickerFont" style="background-image: url('jquery_sheet_image/palette.png') ! important; width: 16px; height: 16px;" />
+<input title="Background Color" class="colorPickerCell" style="background-image: url('jquery_sheet_image/palette_bg.png') ! important; width: 16px; height: 16px;" />
+</span>
+<a href="#" onclick="sheetInstance.obj.formula().val('=HYPERLINK(\'' + prompt('Enter Web Address', 'http://www.visop-dev.com/') + '\')').keydown(); return false;" title="HyperLink">
+<img alt="Web Link" src="jquery_sheet_image/page_link.png" />
+</a>
+<a href="#" onclick="sheetInstance.toggleFullScreen(); $('#lockedMenu').toggle(); return false;" title="Toggle Full Screen">
+<img alt="Web Link" src="jquery_sheet_image/arrow_out.png" />
+
+</a>
+</span>
+</span></div>
+
+
+
+</div>
+
+
+
+
+
+
+<div class="field hidden"
+title="Le contenu du document.">
+
+<label>
+my_text_content
+
+
+</label>
+<div class="input"><input type="hidden" name="field_my_text_content" value="&lt;TABLE class=&quot;jSheet ui-widget-content&quot; id=&quot;jSheet_0_0&quot; border=&quot;1px&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot; style=&quot;width: 1200px; &quot;&gt;
+&lt;COLGROUP&gt;
+&lt;COL style=&quot;width: 120px; &quot; width=&quot;120px&quot;/&gt;
+&lt;COL style=&quot;width: 120px; &quot; width=&quot;120px&quot;/&gt;
+&lt;COL style=&quot;width: 120px; &quot; width=&quot;120px&quot;/&gt;
+&lt;COL style=&quot;width: 120px; &quot; width=&quot;120px&quot;/&gt;
+&lt;COL style=&quot;width: 120px; &quot; width=&quot;120px&quot;/&gt;
+&lt;COL style=&quot;width: 120px; &quot; width=&quot;120px&quot;/&gt;
+&lt;COL style=&quot;width: 120px; &quot; width=&quot;120px&quot;/&gt;
+&lt;COL style=&quot;width: 120px; &quot; width=&quot;120px&quot;/&gt;
+&lt;COL style=&quot;width: 120px; &quot; width=&quot;120px&quot;/&gt;
+&lt;COL style=&quot;width: 120px; &quot; width=&quot;120px&quot;/&gt;
+&lt;/COLGROUP&gt;
+&lt;TBODY&gt;
+&lt;TR style=&quot;height: 18px; &quot; height=&quot;18px&quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r0&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r0&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r0&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r0&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r0&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r0&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r0&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r0&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r0&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r0&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot; height=&quot;18px&quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r1&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r1&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r1&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r1&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r1&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r1&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r1&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r1&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r1&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r1&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot; height=&quot;18px&quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r2&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r2&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r2&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r2&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r2&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r2&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r2&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r2&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r2&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r2&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot; height=&quot;18px&quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r3&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r3&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r3&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r3&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r3&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r3&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r3&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r3&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r3&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r3&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot; height=&quot;18px&quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r4&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r4&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r4&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r4&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r4&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r4&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r4&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r4&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r4&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r4&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot; height=&quot;18px&quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r5&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r5&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r5&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r5&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r5&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r5&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r5&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r5&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r5&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r5&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot; height=&quot;18px&quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r6&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r6&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r6&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r6&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r6&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r6&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r6&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r6&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r6&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r6&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot; height=&quot;18px&quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r7&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r7&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r7&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r7&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r7&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r7&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r7&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r7&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r7&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r7&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot; height=&quot;18px&quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r8&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r8&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r8&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r8&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r8&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r8&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r8&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r8&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r8&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r8&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r9&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r9&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r9&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r9&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r9&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r9&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r9&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r9&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r9&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r9&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r10&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r10&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r10&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r10&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r10&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r10&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r10&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r10&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r10&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r10&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r11&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r11&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r11&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r11&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r11&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r11&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r11&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r11&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r11&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r11&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r12&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r12&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r12&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r12&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r12&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r12&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r12&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r12&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r12&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r12&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r13&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r13&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r13&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r13&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r13&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r13&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r13&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r13&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r13&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r13&quot;/&gt;
+&lt;/TR&gt;
+&lt;TR style=&quot;height: 18px; &quot;&gt;
+&lt;TD id=&quot;0_table0_cell_c0_r14&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c1_r14&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c2_r14&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c3_r14&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c4_r14&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c5_r14&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c6_r14&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c7_r14&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c8_r14&quot;/&gt;
+&lt;TD id=&quot;0_table0_cell_c9_r14&quot;/&gt;
+&lt;/TR&gt;
+&lt;/TBODY&gt;
+&lt;/TABLE&gt;"  /></div>
+
+
+
+</div>
+
+
+
+</fieldset>
+
+
+
+<p class="clear"></p>
+
+
+
+<div class="bottom_actions">
+<input type="hidden" name="form_action"
+value="Base_edit" />
+<input type="hidden"
+name="edit_document_url"
+value="http://10.0.112.141:12001/erp5/web_site_module/ung/web_page_module/3/WebTable_viewEditor" />
+<input type="hidden"
+name="view_document_url"
+value="http://10.0.112.141:12001/erp5/web_site_module/ung/web_page_module/3/view" />
+<button id="input-save-view"
+class="formbt save" type="submit"
+title="Save &amp; View"
+name="Base_editAndViewAsWeb:method">
+<span>
+<span class="image"></span>
+<span class="description">Sauvegarder et voir</span>
+
+</span>
+</button>
+<button id="input-save-edit"
+class="formbt save" type="submit"
+title="Save &amp; Edit"
+name="Base_editAndEditAsWeb:method">
+<span>
+<span class="image"></span>
+<span class="description">Sauvegarder et éditer</span>
+</span>
+</button>
+
+</div>
+</div>
+</div>
+
+
+
+<p class="clear"></p>
+</div>
+</div>
+
+</form>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

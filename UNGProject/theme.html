@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <base href="http://www.ungproject.com/" />
+
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="Content-Script-Type" content="text/javascript" />
+        <meta http-equiv="Content-Style-Type" content="text/css" />
+        <meta name="keywords" content="" />
+        <meta name="robots" content="index, follow" />
+        <title id="page_title"> Theme </title>
+
+        <link rel="icon" type="image/x-icon"
+            href="images/ung/favicon.ico" />
+        <link rel="shortcut icon" type="image/x-icon"
+            href="images/ung/favicon.ico" />
+
+        <!-- this is a placeholder for different extensions to head which could be required by web themes -->
+
+        <!-- jquery -->
+        <script type="text/javascript" src="js/jquery/jquery.js"></script>
+        <script type="text/javascript" src="js/jquery/jquery-ui.js"></script>
+        <!--<script type="text/javascript" src="js/jquery/jq.js"></script>-->
+
+        <link rel="stylesheet" type="text/css" href="css/theme.css" />
+
+        <script type="text/javascript"></script>
+        <script type="text/javascript" src="js/base64.js"></script>
+        <script type="text/javascript" src="js/theme.js"></script>
+
+        <script type="text/javascript">
+            // initialize
+            init = function() {
+                setCurrentPage("editor");
+                new User();
+            }
+            window.onload=init;
+        </script>
+
+    </head>
+    <body>
+    <form id="main_form" class="main_form"
+        onsubmit="changed=false; return true"
+        action="javascript:save_current_doc()"
+        method="post">
+
+        <div class="container">
+            <div class="navigation">
+
+                <!-- Each aggregate of groups is a div wrapper -->
+                <div class="wrapper" id="wrapper_navigation">
+
+                    <div class=" navigation-left">
+                        <fieldset class="widget">
+
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+
+                                <label>navigation_box</label>
+                                <div class="input"><div  >
+
+                                    <a class="email" href="ung/mail.html" lang="en">Email</a>
+                                    <a class="document" href="ung/ung.html" lang="en">Documents</a>
+                                    <a class="calendar" href="ung/calendar.html" lang="en">Calendar</a>
+
+                                </div></div>
+
+                            </div>
+
+                        </fieldset>
+                    </div>
+
+                    <div class=" navigation-right">
+                        <fieldset class="widget">
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+
+                                <label>your_language</label>
+                                <div class="input"><div  >
+
+                                    <div id="select_language">
+                                        <ul><li>
+                                            <span id="current_language">en</span>
+                                            <img src="images/ung/arrow_20C.png" alt=">"/>
+                                            <ul id="available_languages">
+                                                <li></li>
+                                            </ul>
+                                        </li></ul>
+                                    </div>
+
+                                </div></div>
+                            </div>
+
+                            <div class="field" title="">
+
+                                <label>Login Box</label>
+                                <div class="input"><div  >
+
+                                    <a id="right_message" lang="en">Not Implemented yet</a>
+                                    <div id="preference_dialog" title="UNG Preferences"></div>
+
+
+                                    <a id="userName">Unknown</a>
+
+                                       | <a id="settings" href="#" lang="en">Parametres</a>
+                                       | <a id="help" href="#" lang="en">Help</a>
+                                       | <a href="WebSite_logout" id="log" lang="en">Sign out</a>
+
+                                    </div></div>
+
+                                </div>
+
+                            </fieldset>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="header">
+
+                    <!-- Each aggregate of groups is a div wrapper -->
+                    <div class="wrapper" id="wrapper_header">
+
+                        <div class=" header-left">
+                            <fieldset class="widget">
+                                <legend class="group_title"></legend>
+
+                                <div class="field" title="">
+
+                                    <label>search_bar</label>
+                                    <div class="input"><div  >
+
+                                        <a class="ung_docs" href="ung/ung.html">
+                                            <img src="images/ung/ung-logo.gif" alt="logo"/>
+                                        </a>
+
+                                        <a id="loading_message" lang="en">Loading...</a>
+                                        <a id="document_title" name="document_title" onclick="javascript:rename()">Untitled</a>
+                                        <a id="document_state" name="document_state">...</a>
+
+                                        <div id="edit_document" title="Rename Document">
+                                            <form>
+                                                <fieldset>
+                                                    <label for="name">Insert a new name:</label>
+                                                    <input type="text" class="title" id="name" name="name" value=""/><br/>
+                                                    <div id="more_property">
+                                                        <label for="short_title">Short Title:</label>
+
+                                                        <input type="text" class="short_title" id="short_title" name="short_title" value=""/><br/>
+                                                        <label for="version">Version:</label>
+                                                        <input type="text" class="version" id="version" name="version" value=""/><br/>
+                                                        <label for="language">Language:</label>
+                                                        <input type="text" class="language" id="language" name="language" value=""/><br/>
+                                                        <label for="sort_index">Sort Index:</label>
+                                                        <input type="text" class="sort_index" id="sort_index" name="sort_index" value=""/><br/>
+
+                                                        <label for="keyword_list">Keywords:</label>
+                                                        <textarea id="keyword_list" rows="2" cols="20" value="">
+                                                        </textarea>
+                                                    </div>
+
+                                                    <p class="more_properties" id="more_properties">Edit More Properties</p>
+                                                    <p class="hide_properties" id="hide_properties">Hide Properties</p>
+                                                </fieldset>
+                                            </form>
+                                        </div>
+
+                                    </div></div>
+
+                                </div>
+                            </fieldset>
+
+                        </div>
+
+                        <div class=" header-right">
+                            <fieldset class="widget">
+
+                                <legend class="group_title"></legend>
+
+                                <div class="field" title="">
+
+                                    <label>document_action_box</label>
+                                    <div class="input"><div  >
+
+                                        <a id="last_update">Updated ... by</a>
+                                        <a id="author">Unknown</a>
+
+                                        <button type="submit">Enregistrer</button>
+
+                                        <div class="action_menu">
+
+                                            <ul><li>
+                                                <a id="change_state">
+                                                    <span>Changer d'état</span>
+                                                    <img src="images/ung/arrow.png" alt=">"/>
+                                                </a>
+
+                                                <ul>
+
+                                                    <li>
+                                                        <a onclick="javascript:cancel_sharing()">
+                                                            <h6>Annuler la publication du document</h6>
+                                                        </a>
+                                                    </li>
+
+
+                                                    <li>
+                                                        <a onclick="javascript:translate()">
+                                                            <h6>Demander la traduction</h6>
+                                                        </a>
+                                                    </li>
+
+
+                                                    <li>
+                                                        <a onclick="javascript:submit()">
+                                                            <h6>Soumettre</h6>
+                                                        </a>
+                                                    </li>
+
+                                                </ul>
+                                            </li></ul>
+
+                                        </div>
+
+                                    </div></div>
+
+                                </div>
+                            </fieldset>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="main">
+
+                    <div class="document">
+
+
+                        <div class="content editable">
+
+
+                            <fieldset class="bottom editable">
+
+                                <div id="page_content" class="field page"
+                                     title="Contenu de la page web.">
+                                </div>
+
+                            </fieldset>
+
+
+                        </div>
+                    </div>
+
+                    <p class="clear"></p>
+                </div>
+            </div>
+        </form>
+    </body>
+</html>
