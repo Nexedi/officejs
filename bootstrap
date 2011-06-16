@@ -1,0 +1,3 @@
+#!/usr/bin/env python
+import urllib2
+exec(urllib2.urlopen("http://svn.zope.org/*checkout*/zc.buildout/trunk/bootstrap/bootstrap.py").read())
