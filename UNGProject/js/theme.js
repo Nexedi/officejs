@@ -211,7 +211,7 @@ Document.states = {
 }
 getCurrentDocument = function() {
     var doc = JSON.parse(localStorage.getItem("currentDocument"));
-    doc.__proto__ = JSONDocument.prototype;
+    doc.prototype = JSONDocument.prototype;
     return doc;
 }
 setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.stringify(doc));}
