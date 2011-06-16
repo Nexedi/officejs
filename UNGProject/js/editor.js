@@ -1,4 +1,27 @@
 
+/**
+ * Editors
+ */
+var Xinha = function() {
+    this.name = "Xinha";
+    this.load = function() {
+        _editor_url  = "xinha/";
+        getCurrentPage().include("xinha/XinhaCore.js","script");
+        getCurrentPage().include("xinha/config.js","script");
+        xinha_init();
+    }
+    this.saveEdition = function() {
+        var textArea = getCurrentPage().getHTML().getElementById("input_area");
+        getCurrentDocument().saveEdition(textArea.content);
+    }
+    this.loadContent = function() {
+        var textArea = getCurrentPage().getHTML().getElementById("input_area");
+        textArea.content = getCurrentDocument().getContent();
+    }
+    this.load();
+}
+
+
 
 /**
  * Text documents
@@ -16,7 +39,6 @@ JSONTextDocument.prototype.saveEdition = function(content) {
     this.setLastModification(currentTime());
     setCurrentDocument(this);
 }
-
 JSONTextDocument.prototype.setAsCurrentDocument = function() {
     getCurrentPage().displayDocumentTitle(this);
     getCurrentPage().displayDocumentState(this);
@@ -26,34 +48,16 @@ JSONTextDocument.prototype.setAsCurrentDocument = function() {
 }
 
 getCurrentDocument = function() {
-    var doc = JSON.parse(localStorage.getItem("currentDocument"));
-    doc.__proto__ = JSONTextDocument.prototype;
+    var doc = new JSONTextDocument();
+    doc.load(JSON.parse(localStorage.getItem("currentDocument")));
     return doc;
 }
+(new JSONTextDocument()).setAsCurrentDocument();//load the document (it's just for testing)
 
 
-
-/**
- * Editors
- */
-var Xinha = function() {
-    this.name = "Xinha";
-    this.load = function() {
-        _editor_url  = "http://www.ungproject.com/xinha/";
-        getCurrentPage().include("xinha/XinhaCore.js","script");
-        getCurrentPage().include("xinha/config.js","script");
-        xinha_init();
-    }
-    this.saveEdition = function() {
-        var textArea = getCurrentPage().getHTML().getElementById("input_area");
-        getCurrentDocument().setContent(textArea.content);
-        //saveCurrentDocument(); : JIO function
-    }
-    this.loadContent = function() {
-        var textArea = getCurrentPage().getHTML().getElementById("input_area");
-        textArea.content = getCurrentDocument().getContent();
-    }
-    this.load();
+saveCurrentDocument = function() {
+    getCurrentPage().getEditor().saveEdition();
+    //saveJIO(); : JIO function
 }
 
 

@@ -1,4 +1,3 @@
-
 /*
  * global variables
  */
@@ -32,6 +31,7 @@ Page.prototype = {
     getTitle: function() {return $(this.getXML()).find("title").text();},
     getContent: function() {return $(this.getXML()).find("content").html();},
     getDependencies: function() {return $(this.getXML()).find("dependencies");},
+    getEditor: function() {return this.editor;},
 
     //loaders
         /* load the xml document which contains the web page information */
@@ -40,9 +40,9 @@ Page.prototype = {
             type: "GET",
             url: source,
             dataType: "html",
-            async: true,
+            async: false,
             success: function(data) {
-                currentPage.setXML(data);
+                getCurrentPage().setXML(data);
             }
         });
     },
@@ -94,9 +94,7 @@ Page.prototype = {
         }
         this.getHTML().getElementById("available_languages").innerHTML = avLang;
     },
-    displayUserName: function(user) {
-        //alert($(this.getHTML()).find("html").html());
-        this.getHTML().getElementById("user_name").innerHTML = user.getName();},
+    displayUserName: function(user) {this.getHTML().getElementById("userName").innerHTML = user.getName();},
 
         //document information
     displayAuthorName: function(doc) {this.getHTML().getElementById("author").innerHTML = doc.getAuthor();},
@@ -117,10 +115,10 @@ Page.prototype = {
         pageContent.innerHTML = this.getContent();
     }
 }
+
 getCurrentPage = function() {return currentPage;}
 setCurrentPage = function(page) {
     currentPage = new Page(page);
-    //window.location.reload();
 }
 
 /*
@@ -131,6 +129,8 @@ var User = function() {
     this.language = "en";
     this.storage = "http://www.unhosted-dav.com";
     this.identityProvider = "http://www.webfinger.com";
+
+    this.setAsCurrentUser();
 }
 User.prototype = {
     getName: function() {return this.name;},
@@ -148,18 +148,17 @@ User.prototype = {
     setAsCurrentUser: function() {
         getCurrentPage().displayUserName(this);
         getCurrentPage().displayLanguages(this);
+        setCurrentUser(this);
     }
 }
+
 getCurrentUser = function() {
-    var user = JSON.parse(localStorage.getItem("currentUser"));
-    user.__proto__ = User.prototype;
+    var user = new User();
+    user.load(JSON.parse(localStorage.getItem("currentUser")))
     return user;
 }
-setCurrentUser = function(user) {
-    localStorage.setItem("currentUser", JSON.stringify(user));
-    user.setAsCurrentUser();
-}
-//setCurrentUser(new User());
+setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.stringify(user));}
+
 
 
 /**
@@ -175,6 +174,8 @@ var JSONDocument = function() {
     this.creation=currentTime();
     this.lastModification=currentTime();
     this.state=Document.states.draft;
+
+    this.setAsCurrentDocument();//temp
 }
 JSONDocument.prototype = {
     //type
@@ -203,7 +204,9 @@ JSONDocument.prototype = {
 
     setAsCurrentDocument: function() {
         setCurrentDocument(this);
-    }
+    },
+
+    save: function() {}
 }
 Document.states = {
     draft:{"fr":"Brouillon","en":"Draft"},
@@ -211,8 +214,8 @@ Document.states = {
     deleted:{"fr":"Supprimé","en":"Deleted"}
 }
 getCurrentDocument = function() {
-    var doc = JSON.parse(localStorage.getItem("currentDocument"));
-    doc.__proto__ = JSONDocument.prototype;
+    var doc = new JSONDocument();
+    doc.load(JSON.parse(localStorage.getItem("currentDocument")));
     return doc;
 }
 setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.stringify(doc));}
@@ -221,7 +224,10 @@ setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.
 /*
  * tools
  */
+currentTime = function() {return (new Date()).toUTCString();}
 
 cancel_sharing = function() {alert("cancel");}
 translate = function() {alert("translate");}
 submit = function() {alert("submit");}
+
+//test = new User();
