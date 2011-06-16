@@ -52,7 +52,7 @@ getCurrentDocument = function() {
     doc.load(JSON.parse(localStorage.getItem("currentDocument")));
     return doc;
 }
-(new JSONTextDocument()).setAsCurrentDocument();//load the document (it's just for testing)
+
 
 
 saveCurrentDocument = function() {

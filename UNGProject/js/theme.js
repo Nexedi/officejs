@@ -146,6 +146,7 @@ User.prototype = {
     setIdentityProvider: function(IDProv) {this.identityProvider = IDProv;},
 
     setAsCurrentUser: function() {
+
         getCurrentPage().displayUserName(this);
         getCurrentPage().displayLanguages(this);
         setCurrentUser(this);
