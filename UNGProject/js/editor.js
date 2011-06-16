@@ -1,4 +1,38 @@
 
+
+/**
+ * Text documents
+ */
+
+var JSONTextDocument = function() {
+    JSONDocument.call(this);//inherits from JSONDocument
+    this.type = "text";
+}
+
+JSONTextDocument.prototype = new JSONDocument();
+
+JSONTextDocument.prototype.saveEdition = function(content) {
+    this.setContent(content);
+    this.setLastModification(currentTime());
+    setCurrentDocument(this);
+}
+
+JSONTextDocument.prototype.setAsCurrentDocument = function() {
+    getCurrentPage().displayDocumentTitle(this);
+    getCurrentPage().displayDocumentState(this);
+    getCurrentPage().displayAuthorName(this);
+    getCurrentPage().displayLastModification(this);
+    setCurrentDocument(this);
+}
+
+getCurrentDocument = function() {
+    var doc = JSON.parse(localStorage.getItem("currentDocument"));
+    doc.__proto__ = JSONTextDocument.prototype;
+    return doc;
+}
+
+
+
 /**
  * Editors
  */
@@ -21,41 +55,6 @@ var Xinha = function() {
     }
     this.load();
 }
-
-
-
-/**
- * Text documents
- */
-
-var JSONTextDocument = function() {
-    JSONDocument.call(this);//inherits from JSONDocument
-    this.type = "text";
-}
-
-JSONTextDocument.prototype = new JSONDocument();
-
-JSONTextDocument.prototype.saveEdition = function(content) {
-    this.setContent(content);
-    this.setLastModification(currentTime());
-    setCurrentDocument(this);
-}
-JSONTextDocument.prototype.setAsCurrentDocument = function() {
-    getCurrentPage().displayDocumentTitle(this);
-    getCurrentPage().displayDocumentState(this);
-    getCurrentPage().displayAuthorName(this);
-    getCurrentPage().displayLastModification(this);
-    setCurrentDocument(this);
-}
-
-getCurrentDocument = function() {
-    var doc = JSON.parse(localStorage.getItem("currentDocument"));
-    doc.__proto__ = JSONTextDocument.prototype;
-    return doc;
-}
-new JSONTextDocument();//load the document (it's just for testing)
-
-
 
 
 /*

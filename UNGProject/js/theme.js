@@ -1,3 +1,4 @@
+
 /*
  * global variables
  */
@@ -39,7 +40,7 @@ Page.prototype = {
             type: "GET",
             url: source,
             dataType: "html",
-            async: false,
+            async: true,
             success: function(data) {
                 currentPage.setXML(data);
             }
@@ -93,7 +94,9 @@ Page.prototype = {
         }
         this.getHTML().getElementById("available_languages").innerHTML = avLang;
     },
-    displayUserName: function(user) {this.getHTML().getElementById("userName").innerHTML = user.getName();},
+    displayUserName: function(user) {
+        //alert($(this.getHTML()).find("html").html());
+        this.getHTML().getElementById("user_name").innerHTML = user.getName();},
 
         //document information
     displayAuthorName: function(doc) {this.getHTML().getElementById("author").innerHTML = doc.getAuthor();},
@@ -128,8 +131,6 @@ var User = function() {
     this.language = "en";
     this.storage = "http://www.unhosted-dav.com";
     this.identityProvider = "http://www.webfinger.com";
-
-    this.setAsCurrentUser();
 }
 User.prototype = {
     getName: function() {return this.name;},
@@ -147,7 +148,6 @@ User.prototype = {
     setAsCurrentUser: function() {
         getCurrentPage().displayUserName(this);
         getCurrentPage().displayLanguages(this);
-        setCurrentUser(this);
     }
 }
 getCurrentUser = function() {
@@ -155,8 +155,11 @@ getCurrentUser = function() {
     user.__proto__ = User.prototype;
     return user;
 }
-setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.stringify(user));}
-
+setCurrentUser = function(user) {
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    user.setAsCurrentUser();
+}
+//setCurrentUser(new User());
 
 
 /**
@@ -172,8 +175,6 @@ var JSONDocument = function() {
     this.creation=currentTime();
     this.lastModification=currentTime();
     this.state=Document.states.draft;
-
-    this.setAsCurrentDocument();//temp
 }
 JSONDocument.prototype = {
     //type
@@ -220,10 +221,7 @@ setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.
 /*
  * tools
  */
-currentTime = function() {return (new Date()).toUTCString();}
 
 cancel_sharing = function() {alert("cancel");}
 translate = function() {alert("translate");}
 submit = function() {alert("submit");}
-
-//test = new User();
