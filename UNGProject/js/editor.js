@@ -53,8 +53,6 @@ getCurrentDocument = function() {
     return doc;
 }
 
-
-
 saveCurrentDocument = function() {
     getCurrentPage().getEditor().saveEdition();
     //saveJIO(); : JIO function

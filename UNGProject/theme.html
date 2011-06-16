@@ -29,7 +29,6 @@
         <script type="text/javascript" src="js/tools.js"></script>
         <script type="text/javascript" src="js/theme.js"></script>
 
-
         <script type="text/javascript">
             // initialize
             init = function() {
@@ -192,13 +191,13 @@
                                         <a id="last_update">Updated ... by</a>
                                         <a id="author">Unknown</a>
 
-                                        <button type="submit">Enregistrer</button>
+                                        <button type="submit">Save</button>
 
                                         <div class="action_menu">
 
                                             <ul><li>
                                                 <a id="change_state">
-                                                    <span>Changer d'état</span>
+                                                    <span>Change state</span>
                                                     <img src="images/ung/arrow.png" alt=">"/>
                                                 </a>
 
@@ -206,21 +205,27 @@
 
                                                     <li>
                                                         <a onclick="javascript:cancel_sharing()">
-                                                            <h6>Annuler la publication du document</h6>
+                                                            <h6>Cancel document publication</h6>
                                                         </a>
                                                     </li>
 
 
                                                     <li>
                                                         <a onclick="javascript:translate()">
-                                                            <h6>Demander la traduction</h6>
+                                                            <h6>Request translation</h6>
                                                         </a>
                                                     </li>
 
 
                                                     <li>
                                                         <a onclick="javascript:submit()">
-                                                            <h6>Soumettre</h6>
+                                                            <h6>Submit document for review</h6>
+                                                        </a>
+                                                    </li>
+
+                                                    <li>
+                                                        <a onclick="javascript:share()">
+                                                            <h6>Share this document</h6>
                                                         </a>
                                                     </li>
 

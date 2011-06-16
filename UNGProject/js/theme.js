@@ -4,7 +4,7 @@
 var languages = ["fr","en"];
 var availableLanguages = window.document.getElementById("available_languages");
 
-var currentPage = null;
+currentPage = null;
 
 
 /*
@@ -230,5 +230,6 @@ currentTime = function() {return (new Date()).toUTCString();}
 cancel_sharing = function() {alert("cancel");}
 translate = function() {alert("translate");}
 submit = function() {alert("submit");}
+share = function() {alert("share");}
 
 //test = new User();
