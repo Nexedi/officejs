@@ -24,7 +24,6 @@
 
         <link rel="stylesheet" type="text/css" href="css/theme.css" />
 
-        <script type="text/javascript"></script>
         <script type="text/javascript" src="js/base64.js"></script>
         <script type="text/javascript" src="js/tools.js"></script>
         <script type="text/javascript" src="js/theme.js"></script>
@@ -35,10 +34,12 @@
                 setCurrentPage("editor");
 
                 var user = getCurrentUser();
-                (user==null) ? (new User()).setAsCurrentDocument() : user.setAsCurrentUser();
+                if(!user) { user = new User();}
+                user.setAsCurrentUser();
 
                 var doc = getCurrentDocument();
-                (doc==null) ? (new JSONTextDocument()).setAsCurrentDocument() : doc.setAsCurrentDocument();
+                if(!doc) {doc = new JSONTextDocument();}
+                doc.setAsCurrentDocument();
             }
             $(document).ready(init);
         </script>
@@ -148,7 +149,7 @@
                                         <a id="document_state" name="document_state">...</a>
 
                                         <div id="edit_document" title="Rename Document">
-                                            <form>
+                                            <form action="#">
                                                 <fieldset>
                                                     <label for="name">Insert a new name:</label>
                                                     <input type="text" class="title" id="name" name="name" value=""/><br/>

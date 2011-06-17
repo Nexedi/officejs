@@ -11,11 +11,11 @@ var Xinha = function() {
         xinha_init();
     }
     this.saveEdition = function() {
-        var textArea = getCurrentPage().getHTML().getElementById("input_area");
+        var textArea = $("#input_area");
         getCurrentDocument().saveEdition(textArea.content);
     }
     this.loadContent = function() {
-        var textArea = getCurrentPage().getHTML().getElementById("input_area");
+        var textArea = $("input_area");
         textArea.content = getCurrentDocument().getContent();
     }
     this.load();
@@ -37,7 +37,7 @@ JSONTextDocument.prototype = new JSONDocument();
 JSONTextDocument.prototype.saveEdition = function(content) {
     this.setContent(content);
     this.setLastModification(currentTime());
-    setCurrentDocument(this);
+    this.setAsCurrentDocument();
 }
 JSONTextDocument.prototype.setAsCurrentDocument = function() {
     getCurrentPage().displayDocumentTitle(this);

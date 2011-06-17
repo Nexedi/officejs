@@ -1,0 +1,96 @@
+/***
+ * Spreadsheet documents
+ */
+var JSONSheetDocument = function() {
+    JSONDocument.call(this);//inherits from JSONDocument
+    this.type = "sheet";
+    this.width = 10;
+    this.height = 15;
+}
+JSONSheetDocument.prototype = new JSONDocument();//inheritance
+
+//accessors
+JSONSheetDocument.prototype.getWidth = function() {return this.width;}
+JSONSheetDocument.prototype.setWidth = function(newWidth) {this.width = newWidth;}
+JSONSheetDocument.prototype.getHeight = function() {return this.height;}
+JSONSheetDocument.prototype.setHeight = function(newHeight) {this.height = newHeight;}
+
+//save process
+JSONSheetDocument.prototype.saveEdition = function(content) {
+    this.setContent(content);
+    this.setLastModification(currentTime());
+    this.setAsCurrentDocument();
+}
+//display document information
+JSONSheetDocument.prototype.setAsCurrentDocument = function() {
+    getCurrentPage().displayDocumentTitle(this);
+    getCurrentPage().displayDocumentState(this);
+    getCurrentPage().displayAuthorName(this);
+    getCurrentPage().displayLastModification(this);
+    setCurrentDocument(this);
+}
+getCurrentDocument = function() {
+    var doc = new JSONTextDocument();
+    doc.load(JSON.parse(localStorage.getItem("currentDocument")));
+    return doc;
+}
+
+saveCurrentDocument = function() {
+    getCurrentPage().getEditor().saveEdition();
+    //saveJIO(); : JIO function
+}
+
+
+
+
+
+
+
+
+
+
+function inlineMenu(instance) {
+    var I = (instance ? instance.length : 0);
+    var html = $('#inlineMenu').html().replace(/sheetInstance/g, "$.sheet.instance[" + I + "]");
+    var menu = $(html);
+
+    menu.find('.colorPickerCell')
+        .colorPicker()
+        .change(function() {
+            $.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
+            $.sheet.instance[I].obj.cellHighlighted().css('background-color', $(this).val());
+            $.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
+        });
+
+    menu.find('.colorPickerFont')
+        .colorPicker()
+        .change(function() {
+            $.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
+            $.sheet.instance[I].obj.cellHighlighted().css('color', $(this).val());
+            $.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
+        });
+
+    menu.find('.colorPickers')
+        .children().eq(1).css('background-image', "url('jquery_sheet_editor/jquery_sheet_image/palette.png')");
+    menu.find('.colorPickers')
+        .children().eq(3).css('background-image', "url('jquery_sheet_editor/jquery_sheet_image/palette_bg.png')");
+
+    return menu;
+}
+
+function goToObj(s) {
+    $('html, body').animate({
+        scrollTop: $(s).offset().top
+    }, 'slow');
+    return false;
+}
+
+$("#jQuerySheet0").sheet({
+    buildSheet: '10x15',
+    title: 'Spreadsheet Playground',
+    inlineMenu: inlineMenu($.sheet.instance)
+});
+
+/*
+
+    */

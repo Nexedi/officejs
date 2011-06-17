@@ -1,7 +1,9 @@
 /***
- * return true if this object implements the interface
+ * Class UngObject
  */
-Object.prototype.Implements = function(myInterface)
+UngObject = function() {}
+/* return true if this object implements the interface */
+UngObject.prototype.Implements = function(myInterface)
 {
     for(var property in myInterface)
     {
@@ -14,15 +16,19 @@ Object.prototype.Implements = function(myInterface)
     return true;
 };
 
-/**
- * Load a JSON data into an object
- */
-Object.prototype.load = function(data) {
+/* Load a JSON data into an object */
+UngObject.prototype.load = function(data) {
     for(var property in data) {
         this[property] = data[property];
     }
 };
 
+/* Load methods from a class to another class */
+UngObject.prototype.inherits = function(superClass) {
+    for (var element in superClass.prototype ) {
+            this.prototype[element] = superClass.prototype[element]
+    }
+}
 
 /**
  * returns the current date
