@@ -2,7 +2,7 @@
  * global variables
  */
 languages = ["fr","en"];
-var availableLanguages = window.document.getElementById("available_languages");
+var availableLanguages = $("#available_languages");
 
 currentPage = null;
 
@@ -131,8 +131,6 @@ var User = function() {
     this.language = "en";
     this.storage = "http://www.unhosted-dav.com";
     this.identityProvider = "http://www.webfinger.com";
-
-    this.setAsCurrentUser();
 }
 User.prototype = {
     getName: function() {return this.name;},
@@ -176,8 +174,6 @@ var JSONDocument = function() {
     this.creation=currentTime();
     this.lastModification=currentTime();
     this.state=Document.states.draft;
-
-    this.setAsCurrentDocument();//temp
 }
 JSONDocument.prototype = {
     //type
@@ -264,6 +260,7 @@ changeLanguage = function(language) {
     user.setLanguage(language);
     setCurrentUser(user);
     getCurrentPage().displayLanguages(user);
+    window.location.reload();
 }
 cancel_sharing = function() {alert("cancel");}
 translate = function() {alert("translate");}

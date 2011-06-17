@@ -33,10 +33,12 @@
             // initialize
             init = function() {
                 setCurrentPage("editor");
-                alert(getCurrentUser());
-                if(getCurrentUser()==null) {new User();}
-                doc = new JSONTextDocument();//load the document (it's just for testing)
-                doc.setAsCurrentDocument();
+
+                var user = getCurrentUser();
+                (user==null) ? (new User()).setAsCurrentDocument() : user.setAsCurrentUser();
+
+                var doc = getCurrentDocument();
+                (doc==null) ? (new JSONTextDocument()).setAsCurrentDocument() : doc.setAsCurrentDocument();
             }
             $(document).ready(init);
         </script>
