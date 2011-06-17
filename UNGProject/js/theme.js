@@ -1,7 +1,7 @@
 /*
  * global variables
  */
-var languages = ["fr","en"];
+languages = ["fr","en"];
 var availableLanguages = window.document.getElementById("available_languages");
 
 currentPage = null;
@@ -86,10 +86,12 @@ Page.prototype = {
         /* display the list of availaible languages */
     displayLanguages: function(user) {
         var avLang = "";
-        for (var l in languages) {
+
+        for (var i = 0; i<languages.length; i++) {
+            var l = languages[i];
             if(l==user.getLanguage()) {this.getHTML().getElementById("current_language").innerHTML = l;}
             else {
-                avLang = avLang + "<li><span onclick='getCurrentUser.setLanguage(this.innerHTML)' id="+l+">"+l+"</span></li>\n"
+                avLang = avLang + "<li><span onclick='changeLanguage(this.innerHTML)' id='" +l+ "'>"+l+"</span></li>\n"
             }
         }
         this.getHTML().getElementById("available_languages").innerHTML = avLang;
@@ -136,17 +138,13 @@ User.prototype = {
     getName: function() {return this.name;},
     setName: function(newName) {this.name = newName;},
     getLanguage: function() {return this.language;},
-    setLanguage:function(language) {
-        this.language = language;
-        getCurrentPage().displayLanguages();
-    },
+    setLanguage:function(language) {this.language = language;},
     getStorageLocation: function() {return this.storage;},
     setStorageLocation: function(storage) {this.storage = storage;},
     getIdentityProvider: function() {return this.identityProvider;},
     setIdentityProvider: function(IDProv) {this.identityProvider = IDProv;},
 
     setAsCurrentUser: function() {
-
         getCurrentPage().displayUserName(this);
         getCurrentPage().displayLanguages(this);
         setCurrentUser(this);
@@ -169,6 +167,9 @@ setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.string
 /* JSON document */
 var JSONDocument = function() {
     this.type = "text";
+    this.language = getCurrentUser().getLanguage();
+    this.version = null;
+
     this.author=getCurrentUser().getName();
     this.title="Untitled";
     this.content="";
@@ -181,6 +182,14 @@ var JSONDocument = function() {
 JSONDocument.prototype = {
     //type
     getType: function() {return this.type;},
+    
+    //version
+    getVersion: function() {return this.version;},
+    setVersion: function(version) {this.version = version;},
+
+    //language
+    getLanguage: function() {return this.language;},
+    setLanguage: function(language) {this.language = language;},
 
     //content
     getContent:function() {return this.content;},
@@ -223,13 +232,40 @@ setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.
 
 
 /*
- * tools
+ * actions
  */
-currentTime = function() {return (new Date()).toUTCString();}
+editDocumentSettings = function() {
+  $("#edit_document").dialog({
+    autoOpen: false,
+    height: 131,
+    width: 389,
+    modal: true,
+    buttons: {
+      "Save": function(){
+        /*getCurrentDocument().setTitle($(getCurrentDocument()).find("#name").attr("value"));
+        //var new_short_title = $("input#short_title.short_title").attr("value");
+        getCurrentDocument().setLanguage($(getCurrentDocument()).find("#language").attr("value"));
+        getCurrentDocument().setVersion($(getCurrentDocument()).find("#version").attr("value"));
+        //var new_int_index = $("input#sort_index.sort_index").attr("value");
+        //var new_subject_list = $("textarea#keyword_list").attr("value").replace(/\n+/g, ",");
+        getCurrentDocument().setAsCurrentDocument();//diplay modifications
+        //save_button.click();*/
+        $(this).dialog("close");
+      },
+      Cancel: function() {
+        $(this).dialog("close");
+      }
+    }
+  });
+}
 
+changeLanguage = function(language) {
+    var user = getCurrentUser();
+    user.setLanguage(language);
+    setCurrentUser(user);
+    getCurrentPage().displayLanguages(user);
+}
 cancel_sharing = function() {alert("cancel");}
 translate = function() {alert("translate");}
 submit = function() {alert("submit");}
 share = function() {alert("share");}
-
-//test = new User();

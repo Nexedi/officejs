@@ -33,7 +33,8 @@
             // initialize
             init = function() {
                 setCurrentPage("editor");
-                new User();
+                alert(getCurrentUser());
+                if(getCurrentUser()==null) {new User();}
                 doc = new JSONTextDocument();//load the document (it's just for testing)
                 doc.setAsCurrentDocument();
             }
@@ -141,7 +142,7 @@
                                         </a>
 
                                         <a id="loading_message" lang="en">Loading...</a>
-                                        <a id="document_title" name="document_title" onclick="javascript:rename()">Untitled</a>
+                                        <a id="document_title" name="document_title" onclick="javascript:editDocumentSettings()">Untitled</a>
                                         <a id="document_state" name="document_state">...</a>
 
                                         <div id="edit_document" title="Rename Document">
