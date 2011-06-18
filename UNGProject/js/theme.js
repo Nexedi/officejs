@@ -126,13 +126,15 @@ setCurrentPage = function(page) {
 /*
  * user class
  */
-var User = function() {
+var User = function(details) {
     this.name = "unknown";
     this.language = "en";
     this.storage = "http://www.unhosted-dav.com";
     this.identityProvider = "http://www.webfinger.com";
+
 }
 User.prototype = {
+    load: UngObject.prototype.load,
     getName: function() {return this.name;},
     setName: function(newName) {this.name = newName;},
     getLanguage: function() {return this.language;},
@@ -151,7 +153,7 @@ User.prototype = {
 
 getCurrentUser = function() {
     var user = new User();
-    user.load(JSON.parse(localStorage.getItem("currentUser")))
+    user.load(JSON.parse(localStorage.getItem("currentUser")));
     return user;
 }
 setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.stringify(user));}
@@ -176,6 +178,7 @@ var JSONDocument = function() {
     this.state=Document.states.draft;
 }
 JSONDocument.prototype = {
+    load: UngObject.prototype.load,
     //type
     getType: function() {return this.type;},
     
