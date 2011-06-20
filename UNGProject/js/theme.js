@@ -125,7 +125,7 @@ setCurrentPage = function(page) {
 /*
  * user class
  */
-var User = function() {
+var User = function(details) {
     this.name = "unknown";
     this.language = "en";
     this.storage = "http://www.unhosted-dav.com";
@@ -151,7 +151,7 @@ User.prototype.load({
 
 getCurrentUser = function() {
     var user = new User();
-    user.load(JSON.parse(localStorage.getItem("currentUser")))
+    user.load(JSON.parse(localStorage.getItem("currentUser")));
     return user;
 }
 setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.stringify(user));}
@@ -235,12 +235,12 @@ setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.
 editDocumentSettings = function() {
 
   $("#edit_document").dialog({
-    autoOpen: true,
+    autoOpen: false,
     height: 131,
     width: 389,
     modal: true,
     buttons: {
-      'Save': function(){
+      "Save": function(){
         /*getCurrentDocument().setTitle($(getCurrentDocument()).find("#name").attr("value"));
         //var new_short_title = $("input#short_title.short_title").attr("value");
         getCurrentDocument().setLanguage($(getCurrentDocument()).find("#language").attr("value"));
@@ -249,10 +249,10 @@ editDocumentSettings = function() {
         //var new_subject_list = $("textarea#keyword_list").attr("value").replace(/\n+/g, ",");
         getCurrentDocument().setAsCurrentDocument();//diplay modifications
         //save_button.click();*/
-        $(this).dialog('close');
+        $(this).dialog("close");
       },
-      'Cancel': function() {
-        $(this).dialog('close');
+      Cancel: function() {
+        $(this).dialog("close");
       }
     }
   });
