@@ -51,8 +51,8 @@ Page.prototype = {
         this.displayPageTitle();
         this.displayPageContent();
         var dependencies = this.getDependencies();
-        $(dependencies).find("scriptfile").each(function() {currentPage.include($(this).text(),"script");});//includes js
         $(dependencies).find("linkfile").each(function() {currentPage.include($(this).text(),"link");});//includes css
+        $(dependencies).find("scriptfile").each(function() {currentPage.include($(this).text(),"script");});//includes js
         switch(this.name) {
             case "editor":
                     this.editor = new Xinha();
@@ -77,8 +77,7 @@ Page.prototype = {
                     break;
         }
 
-        var head = this.getHTML().getElementsByTagName("head");
-        $(head[0]).append(object);
+        var head = $(this.getHTML()).find("head").append(object);
     },
 
     //printers
@@ -132,7 +131,8 @@ var User = function() {
     this.storage = "http://www.unhosted-dav.com";
     this.identityProvider = "http://www.webfinger.com";
 }
-User.prototype = {
+User.prototype = new UngObject();
+User.prototype.load({
     getName: function() {return this.name;},
     setName: function(newName) {this.name = newName;},
     getLanguage: function() {return this.language;},
@@ -147,7 +147,7 @@ User.prototype = {
         getCurrentPage().displayLanguages(this);
         setCurrentUser(this);
     }
-}
+});
 
 getCurrentUser = function() {
     var user = new User();
@@ -175,7 +175,9 @@ var JSONDocument = function() {
     this.lastModification=currentTime();
     this.state=Document.states.draft;
 }
-JSONDocument.prototype = {
+JSONDocument.prototype = new UngObject();
+
+JSONDocument.prototype.load({
     //type
     getType: function() {return this.type;},
     
@@ -213,7 +215,7 @@ JSONDocument.prototype = {
     },
 
     save: function() {}
-}
+});
 Document.states = {
     draft:{"fr":"Brouillon","en":"Draft"},
     saved:{"fr":"Enregistré","en":"Saved"},
@@ -231,13 +233,14 @@ setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.
  * actions
  */
 editDocumentSettings = function() {
+
   $("#edit_document").dialog({
-    autoOpen: false,
+    autoOpen: true,
     height: 131,
     width: 389,
     modal: true,
     buttons: {
-      "Save": function(){
+      'Save': function(){
         /*getCurrentDocument().setTitle($(getCurrentDocument()).find("#name").attr("value"));
         //var new_short_title = $("input#short_title.short_title").attr("value");
         getCurrentDocument().setLanguage($(getCurrentDocument()).find("#language").attr("value"));
@@ -246,10 +249,10 @@ editDocumentSettings = function() {
         //var new_subject_list = $("textarea#keyword_list").attr("value").replace(/\n+/g, ",");
         getCurrentDocument().setAsCurrentDocument();//diplay modifications
         //save_button.click();*/
-        $(this).dialog("close");
+        $(this).dialog('close');
       },
-      Cancel: function() {
-        $(this).dialog("close");
+      'Cancel': function() {
+        $(this).dialog('close');
       }
     }
   });

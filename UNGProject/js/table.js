@@ -10,25 +10,29 @@ var JSONSheetDocument = function() {
 JSONSheetDocument.prototype = new JSONDocument();//inheritance
 
 //accessors
-JSONSheetDocument.prototype.getWidth = function() {return this.width;}
-JSONSheetDocument.prototype.setWidth = function(newWidth) {this.width = newWidth;}
-JSONSheetDocument.prototype.getHeight = function() {return this.height;}
-JSONSheetDocument.prototype.setHeight = function(newHeight) {this.height = newHeight;}
+JSONSheetDocument.prototype.load({
+    getWidth: function() {return this.width;},
+    setWidth: function(newWidth) {this.width = newWidth;},
+    getHeight: function() {return this.height;},
+    setHeight: function(newHeight) {this.height = newHeight;},
 
-//save process
-JSONSheetDocument.prototype.saveEdition = function(content) {
-    this.setContent(content);
-    this.setLastModification(currentTime());
-    this.setAsCurrentDocument();
-}
-//display document information
-JSONSheetDocument.prototype.setAsCurrentDocument = function() {
-    getCurrentPage().displayDocumentTitle(this);
-    getCurrentPage().displayDocumentState(this);
-    getCurrentPage().displayAuthorName(this);
-    getCurrentPage().displayLastModification(this);
-    setCurrentDocument(this);
-}
+    //save process
+    saveEdition: function(content) {
+        this.setContent(content);
+        this.setLastModification(currentTime());
+        this.setAsCurrentDocument();
+    },
+
+    //display document information
+    setAsCurrentDocument: function() {
+        getCurrentPage().displayDocumentTitle(this);
+        getCurrentPage().displayDocumentState(this);
+        getCurrentPage().displayAuthorName(this);
+        getCurrentPage().displayLastModification(this);
+        setCurrentDocument(this);
+    }
+});
+
 getCurrentDocument = function() {
     var doc = new JSONTextDocument();
     doc.load(JSON.parse(localStorage.getItem("currentDocument")));
