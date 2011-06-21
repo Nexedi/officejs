@@ -55,17 +55,22 @@ Page.prototype = {
         $(dependencies).find("linkfile").each(function() {currentPage.include($(this).text(),"link");});//includes css
         $(dependencies).find("scriptfile").each(function() {currentPage.include($(this).text(),"script");});//includes js
         
+        var doc = null;
         switch(this.name) {
             case "editor":
                     this.editor = new Xinha();
+                    if(!doc) {doc=new JSONTextDocument();}
                     break;
             case "table":
                     this.editor = new SheetEditor();
+                    if(!doc) {doc=new JSONSheetDocument();}
                     break;
             case "illustration":
                     this.editor = new SVGEditor();
+                    if(!doc) {doc=new JSONIllustrationDocument();}
                     break;
         }
+        doc.setCurrentDocument();
 
     },
     /* include a javascript or a css file */
@@ -270,7 +275,7 @@ editDocumentSettings = function() {
 
 saveCurrentDocument = function() {
     getCurrentPage().getEditor().saveEdition();
-    saveXHR();
+    saveXHR(address);
     //saveJIO(); : JIO function
 }
 

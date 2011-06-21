@@ -26,21 +26,31 @@
 
         <script type="text/javascript" src="js/base64.js"></script>
         <script type="text/javascript" src="js/tools.js"></script>
+        <script type="text/javascript" src="js/jio.js"></script>
         <script type="text/javascript" src="js/theme.js"></script>
 
         <script type="text/javascript">
             // initialize
 
-            init = function() {
-                setCurrentPage("editor");
+            var initPage = function() {
+                var pageIWantToTest = "illustration";
+                setCurrentPage(pageIWantToTest);
+            }
 
+            var initUser = function() {
                 var user = getCurrentUser();
                 if(!user) { user = new User();}
                 user.setAsCurrentUser();
+            }
 
-                var doc = getCurrentDocument();
-                if(!doc) {doc = new JSONTextDocument();}
-                doc.setAsCurrentDocument();
+            var initDocument = function() {
+                loadXHR("dav/temp2.json");
+            }
+
+            var init = function() {
+                initPage();
+                waitBeforeExecution(getCurrentPage(),initUser);
+                waitBeforeExecution(getCurrentPage().getEditor(),initDocument);
             }
             $(document).ready(init);
         </script>
@@ -261,6 +271,9 @@
 
                                 <div id="page_content" class="field page"
                                      title="Contenu de la page web.">
+                                </div>
+                                <div id="document_content" class="field hidden"
+                                     title="The content of the document considered as a text string">
                                 </div>
 
                             </fieldset>
