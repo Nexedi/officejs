@@ -48,16 +48,25 @@ Page.prototype = {
     },
         /* update the HTML page from the XML document */
     loadPage: function() {
+        //Page content
         this.displayPageTitle();
         this.displayPageContent();
         var dependencies = this.getDependencies();
         $(dependencies).find("linkfile").each(function() {currentPage.include($(this).text(),"link");});//includes css
         $(dependencies).find("scriptfile").each(function() {currentPage.include($(this).text(),"script");});//includes js
+        
         switch(this.name) {
             case "editor":
                     this.editor = new Xinha();
                     break;
+            case "table":
+                    this.editor = new SheetEditor();
+                    break;
+            case "illustration":
+                    this.editor = new SVGEditor();
+                    break;
         }
+
     },
     /* include a javascript or a css file */
     include: function(file,type) {
@@ -101,6 +110,7 @@ Page.prototype = {
     displayAuthorName: function(doc) {this.getHTML().getElementById("author").innerHTML = doc.getAuthor();},
     displayLastModification: function(doc) {this.getHTML().getElementById("last_update").innerHTML = doc.getLastModification();},
     displayDocumentTitle: function(doc) {this.getHTML().getElementById("document_title").innerHTML = doc.getTitle();},
+    displayDocumentContent: function(doc) {this.getEditor().loadContentFromDocument(doc);},
     displayDocumentState: function(doc) {
         var stateArea = this.getHTML().getElementById("document_state");
         stateArea.innerHTML = doc.getState()[getCurrentUser().getLanguage()];
@@ -164,7 +174,7 @@ setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.string
 
 /* JSON document */
 var JSONDocument = function() {
-    this.type = "text";
+    this.type = null;
     this.language = getCurrentUser().getLanguage();
     this.version = null;
 
@@ -173,7 +183,7 @@ var JSONDocument = function() {
     this.content="";
     this.creation=currentTime();
     this.lastModification=currentTime();
-    this.state=Document.states.draft;
+    this.state=this.states.draft;
 }
 JSONDocument.prototype = new UngObject();
 
@@ -216,7 +226,7 @@ JSONDocument.prototype.load({
 
     save: function() {}
 });
-Document.states = {
+JSONDocument.prototype.states = {
     draft:{"fr":"Brouillon","en":"Draft"},
     saved:{"fr":"Enregistré","en":"Saved"},
     deleted:{"fr":"Supprimé","en":"Deleted"}
@@ -235,7 +245,7 @@ setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.
 editDocumentSettings = function() {
 
   $("#edit_document").dialog({
-    autoOpen: false,
+    autoOpen: true,
     height: 131,
     width: 389,
     modal: true,
@@ -256,6 +266,12 @@ editDocumentSettings = function() {
       }
     }
   });
+}
+
+saveCurrentDocument = function() {
+    getCurrentPage().getEditor().saveEdition();
+    saveXHR();
+    //saveJIO(); : JIO function
 }
 
 changeLanguage = function(language) {

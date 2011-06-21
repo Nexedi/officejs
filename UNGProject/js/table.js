@@ -1,3 +1,22 @@
+
+/**
+ * Editors
+ */
+SheetEditor = function() {
+    this.name = "JQuery Sheet Editor";
+    this.load = function() {
+        $("#jQuerySheet0").sheet({
+            buildSheet: '10x15',
+            title: 'Spreadsheet Playground',
+            inlineMenu: inlineMenu($.sheet.instance)
+        });
+    }
+    this.saveEdition = function() {}
+    this.loadContentFromDocument = function(doc) {}
+    this.load();
+}
+
+
 /***
  * Spreadsheet documents
  */
@@ -26,6 +45,7 @@ JSONSheetDocument.prototype.load({
     //display document information
     setAsCurrentDocument: function() {
         getCurrentPage().displayDocumentTitle(this);
+        //getCurrentPage().displayDocumentContent(this);
         getCurrentPage().displayDocumentState(this);
         getCurrentPage().displayAuthorName(this);
         getCurrentPage().displayLastModification(this);
@@ -34,16 +54,10 @@ JSONSheetDocument.prototype.load({
 });
 
 getCurrentDocument = function() {
-    var doc = new JSONTextDocument();
+    var doc = new JSONSheetDocument();
     doc.load(JSON.parse(localStorage.getItem("currentDocument")));
     return doc;
 }
-
-saveCurrentDocument = function() {
-    getCurrentPage().getEditor().saveEdition();
-    //saveJIO(); : JIO function
-}
-
 
 
 
@@ -89,12 +103,4 @@ function goToObj(s) {
     return false;
 }
 
-$("#jQuerySheet0").sheet({
-    buildSheet: '10x15',
-    title: 'Spreadsheet Playground',
-    inlineMenu: inlineMenu($.sheet.instance)
-});
 
-/*
-
-    */

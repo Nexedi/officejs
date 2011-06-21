@@ -2,42 +2,41 @@
 /**
  * Editors
  */
-var Xinha = function() {
-    this.name = "Xinha";
-    this.load = function() {
-        _editor_url  = "xinha/";
-        getCurrentPage().include("xinha/XinhaCore.js","script");
-        getCurrentPage().include("xinha/config.js","script");
-        xinha_init();
-    }
+SVGEditor = function() {
+    this.name = "svg-editor";
+    
+    this.load = function() {$("#svgframe").attr("src", "svg-editor/svg-editor.html")}
     this.saveEdition = function() {
-        getCurrentDocument().saveEdition($("#input_area").attr("value"));
+        var s = "svgframe";
+        getCurrentDocument().saveEdition(window.frames[s].svgCanvas.getSvgString());
     }
     this.loadContentFromDocument = function(doc) {
-        $("#input_area").attr("value",doc.getContent());
+        var s = "svgframe";
+        window.frames[s].svgCanvas.setSvgString(doc.getContent());
     }
+
+    var s = "svgframe";
+    this.svgCanvas = window.frames[s].svgCanvas;
+
     this.load();
 }
 
-
-
 /**
- * Text documents
+ * SVG documents
  */
-
-var JSONTextDocument = function() {
+var JSONIllustrationDocument = function() {
     JSONDocument.call(this);//inherits properties from JSONDocument
-    this.type = "text";
+    this.type = "illustration";
 }
 
-JSONTextDocument.prototype = new JSONDocument();//inherits methods from JSONDocument
+JSONIllustrationDocument.prototype = new JSONDocument();//inherits methods from JSONDocument
 
-JSONTextDocument.prototype.saveEdition = function(content) {
+JSONIllustrationDocument.prototype.saveEdition = function(content) {
     this.setContent(content);
     this.setLastModification(currentTime());
     this.setAsCurrentDocument();
 }
-JSONTextDocument.prototype.setAsCurrentDocument = function() {
+JSONIllustrationDocument.prototype.setAsCurrentDocument = function() {
     getCurrentPage().displayDocumentTitle(this);
     getCurrentPage().displayDocumentState(this);
     getCurrentPage().displayDocumentContent(this);
@@ -47,12 +46,10 @@ JSONTextDocument.prototype.setAsCurrentDocument = function() {
 }
 
 getCurrentDocument = function() {
-    var doc = new JSONTextDocument();
+    var doc = new JSONIllustrationDocument();
     doc.load(JSON.parse(localStorage.getItem("currentDocument")));
     return doc;
 }
-
-
 
 // save
 saveXHR = function() {
@@ -73,7 +70,7 @@ saveXHR = function() {
 
     //xhr.open("PUT", keyToUrl(key, wallet), true, wallet.userAddress, wallet.davToken);
     //HACK:
-    xhr.open("PUT", "dav/temp.json", true);
+    xhr.open("PUT", "dav/temp2.json", true);
     xhr.setRequestHeader("Authorization", "Basic "+"nom:test");
     //END HACK.
 
@@ -106,11 +103,11 @@ loadXHR = function() {
         }
     }
 
-    xhr.open("GET", "dav/temp.json", false);
+    xhr.open("GET", "dav/temp2.json", false);
     xhr.onreadystatechange = function() {
             if(xhr.readyState == 4) {
 
-                    var cDoc = new JSONTextDocument();
+                    var cDoc = new JSONIllustrationDocument();
                     if(xhr.status == 200) {
                            cDoc.load(JSON.parse(xhr.responseText));
                     } else {

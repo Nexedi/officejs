@@ -10,57 +10,7 @@
             <link rel="stylesheet" href="js/jquery/plugin/sheet/jquery.sheet.css" type="text/css" />
             <link rel="stylesheet" href="jquery_sheet_editor/jquery.sheet.erp5.css" type="text/css" />
             <link rel="stylesheet" href="js/jquery/plugin/colorpicker/jquery.colorPicker.css" type="text/css" />
-            <link rel="stylesheet" href="js/jquery/plugin/colorpicker/menu.css" type="text/css" />
-
-            <script type="text/javascript">
-                $("button.save").click(function(event){
-                source = $.sheet.instance[0].getSource(true);
-                $("input#my_text_content").attr("value", source)
-                });
-                $(function() {
-                $('#jQuerySheet0').sheet({
-                title: 'Spreadsheet Playground',
-                inlineMenu: inlineMenu($.sheet.instance),
-                urlGet: './getTextContent',
-                });
-                });
-
-                function inlineMenu(instance) {
-                var I = (instance ? instance.length : 0);
-                var html = $('#inlineMenu').html().replace(/sheetInstance/g, "$.sheet.instance[" + I + "]");
-                var menu = $(html);
-
-                menu.find('.colorPickerCell')
-                .colorPicker()
-                .change(function() {
-                $.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
-                $.sheet.instance[I].obj.cellHighlighted().css('background-color', $(this).val());
-                $.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
-                });
-
-                menu.find('.colorPickerFont')
-                .colorPicker()
-                .change(function() {
-                $.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
-                $.sheet.instance[I].obj.cellHighlighted().css('color', $(this).val());
-                $.sheet.instance[I].cellUndoable.add($.sheet.instance[I].obj.cellHighlighted());
-                });
-
-                menu.find('.colorPickers')
-                .children().eq(1).css('background-image', "url('jquery_sheet_image/palette.png')");
-                menu.find('.colorPickers')
-                .children().eq(3).css('background-image', "url('jquery_sheet_image/palette_bg.png')");
-
-                return menu;
-                }
-
-                function goToObj(s) {
-                $('html, body').animate({
-                scrollTop: $(s).offset().top
-                }, 'slow');
-                return false;
-                }
-            </script>
+            <!--<link rel="stylesheet" href="js/jquery/plugin/colorpicker/menu.css" type="text/css" />-->
 
             <div id="jQuerySheet0" style="height: 400px;"></div>
 
@@ -145,7 +95,7 @@
                 </span>
 
                 <a href="#" onclick="sheetInstance.obj.formula().val('=HYPERLINK(\'' + prompt('Enter Web Address', 'http://www.visop-dev.com/') + '\')').keydown(); return false;" title="HyperLink">
-                    <img alt="Web Link" src="jquery_sheet_image/page_link.png" />
+                    <img alt="Web Link" src="jquery_sheet_editor/jquery_sheet_image/page_link.png" />
                 </a>
                 <a href="#" onclick="sheetInstance.toggleFullScreen(); $('#lockedMenu').toggle(); return false;" title="Toggle Full Screen">
                     <img alt="Web Link" src="jquery_sheet_editor/jquery_sheet_image/arrow_out.png" />
@@ -157,12 +107,15 @@
     <dependencies>
         <scriptfile>js/jquery/plugin/sheet/jquery.sheet.js</scriptfile>
         <scriptfile>js/jquery/plugin/mbmenu/mbMenu.min.js</scriptfile>
-        <scriptfile>js/jquery/plugin/jqcharts/jgcharts.min.js</scriptfile>
+        <scriptfile>js/jquery/plugin/jqchart/jgcharts.min.js</scriptfile>
         <scriptfile>js/jquery/plugin/colorpicker/jquery.colorPicker.min.js</scriptfile>
         <scriptfile>js/jquery/plugin/elastic/jquery.elastic.min.js</scriptfile>
-        <scriptfile>js/jquery/plugin/sheet/jquery.sheet.erp5.js</scriptfile>
-        <scriptfile>js/jquery/plugin/jqcharts/jgcharts.min.js</scriptfile>
+        <scriptfile>js/jquery/plugin/sheet/jquery.sheet.js</scriptfile>
+        <scriptfile>js/table.js</scriptfile>
         <stylefile>js/jquery/plugin/sheet/jquery.sheet.css</stylefile>
+        <stylefile>css/table.css</stylefile>
         <stylefile>js/jquery/plugin/colorpicker/jquery.colorPicker.css</stylefile>
+        <stylefile>css/jquery-ui.css</stylefile>
     </dependencies>
 </root>
+<link rel="stylesheet" href="css/jquery.sheet.erp5.css" type="text/css" />

@@ -25,12 +25,20 @@ UngObject.prototype.load = function(data) {
 
 /* Load methods from a class to another class */
 UngObject.prototype.inherits = function(superClass) {
-    for (var element in superClass.prototype ) {
-            this.prototype[element] = superClass.prototype[element]
-    }
+    this.prototype.load(superClass.prototype);
 }
 
 /**
  * returns the current date
  */
 currentTime = function() {return (new Date()).toUTCString();}
+
+/*
+ * wait an event before execute an action
+ */
+waitBeforeExecution = function(event, func) {
+    var waitBefore = function() {
+        if(event) {func.call();} else {setTimeout(waitBefore,1000)}
+    }
+    setTimeout(waitBefore,1000);
+}
