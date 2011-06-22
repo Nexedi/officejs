@@ -1,5 +1,10 @@
 /***
+ * This file provides some useful element used in the whole web site
+ */
+
+/**
  * Class UngObject
+ * provides useful general methods
  */
 UngObject = function() {}
 /* return true if this object implements the interface */
@@ -71,17 +76,16 @@ saveXHR = function(address) {
 
 // load
 loadXHR = function(address) {
-    alert('loadXHR');
     $.ajax({
 	url: address,
 	type: "GET",
+        dataType: "json",
 	cache:false,
-/*	username: "smik",
-	password: "asdf",*/
+	username: "nom",
+	password: "test",
 	success: function(data){
-	    alert(data);
 	    var cDoc = getCurrentDocument();
-	    cDoc.load(JSON.parse(data));
+	    cDoc.load(data);
 	    cDoc.setAsCurrentDocument();
 	}
     });
@@ -93,7 +97,6 @@ loadXHR = function(address) {
 waitBeforeSucceed = function(required, func) {
     var nb = 2;//avoid to test too much times
     var execute = function() {
-        //if(test()) {tryUntilSucceed(func);}
         try {
             if(!required.call()) {throw 0;}
             func.call();}
@@ -103,3 +106,15 @@ waitBeforeSucceed = function(required, func) {
     execute();
 }
 
+/*
+ * try a function until the execution meets with no error
+ */
+tryUntilSucceed = function(func) {
+    var nb = 2;//avoid to test too much times
+    var execute = function() {
+        try {func.call();}
+        catch(e) {if(nb<100) {setTimeout(execute,nb*400);} console.log(e);}
+        nb*=nb;
+    }
+    execute();
+}

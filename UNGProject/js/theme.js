@@ -1,3 +1,7 @@
+/**
+ * This file provides main classes to display the web page
+ */
+
 /*
  * global variables
  */
@@ -8,7 +12,9 @@ currentPage = null;
 
 
 /*
- * load page functions
+ * Page Class
+ * used to decompose the page and give access to useful elements
+ * @param page name of the page to be created
  */
 var Page = function(page) {
     this.name = page;
@@ -58,6 +64,7 @@ Page.prototype = {
         
         var doc = null;
         var editor = null;
+        /* load the editor to work with and a new document to work on */
         switch(this.name) {
             case "editor":
                     editor = new Xinha();
@@ -97,7 +104,10 @@ Page.prototype = {
         var head = $(this.getHTML()).find("head").append(object);
     },
 
-    //printers
+
+/* these methods display dynamically information about the page, user or current document
+ * at the right place on the web page
+ */
         //user information
         /* display the list of availaible languages */
     displayLanguages: function(user) {
@@ -134,14 +144,12 @@ Page.prototype = {
         pageContent.innerHTML = this.getContent();
     }
 }
-
 getCurrentPage = function() {return currentPage;}
-setCurrentPage = function(page) {
-    currentPage = new Page(page);
-}
+setCurrentPage = function(page) {currentPage = new Page(page);}
 
 /*
- * user class
+ * User Class
+ * stores useful information about a user and provides methods to manipulate them
  */
 var User = function(details) {
     this.name = "unknown";
@@ -149,8 +157,8 @@ var User = function(details) {
     this.storage = "http://www.unhosted-dav.com";
     this.identityProvider = "http://www.webfinger.com";
 }
-User.prototype = new UngObject();
-User.prototype.load({
+User.prototype = new UngObject();//inherits from UngObject
+User.prototype.load({//add methods thanks to the UngObject.load method
     getName: function() {return this.name;},
     setName: function(newName) {this.name = newName;},
     getLanguage: function() {return this.language;},
@@ -178,6 +186,8 @@ setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.string
 
 /**
  * Documents
+ * This class is used to store information about document and provide methodes
+ * to manipulate these elements.
  */
 
 /* JSON document */
@@ -193,9 +203,9 @@ var JSONDocument = function() {
     this.lastModification=currentTime();
     this.state=this.states.draft;
 }
-JSONDocument.prototype = new UngObject();
+JSONDocument.prototype = new UngObject();//inherits from UngObject
 
-JSONDocument.prototype.load({
+JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
     //type
     getType: function() {return this.type;},
     

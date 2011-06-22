@@ -1,28 +1,34 @@
+/**
+ * This file provides classes needed by the illustration editor
+ */
 
 /**
  * Editors
+ * editors must implement the following methods :
+ * load : load the editor in the current page
+ * saveEdition : save the edition made by this editor to the current document
+ * loadContentFromDocument : display the content of the specified document in the editor
  */
 SVGEditor = function() {
     this.name = "svg-editor";
     
-    this.load = function() {$("#svgframe").attr("src", "svg-editor/svg-editor.html")}
+    this.load = function() {$("#svgframe").attr("src", "svg-edit/svg-editor.html");}
     this.saveEdition = function() {
         var s = "svgframe";
         getCurrentDocument().saveEdition(window.frames[s].svgCanvas.getSvgString());
     }
     this.loadContentFromDocument = function(doc) {
-        var s = "svgframe";
-        window.frames[s].svgCanvas.setSvgString(doc.getContent());
+        tryUntilSucceed(function() {window.frames["svgframe"].svgEditor.loadFromString(doc.getContent());});
     }
-
-    var s = "svgframe";
-    this.svgCanvas = window.frames[s].svgCanvas;
-
     this.load();
 }
 
 /**
  * SVG documents
+ * editable documents must implements the following methods
+ * getType : returns the type of a document
+ * saveEdition : set the argument as the new content of the document. Change last modification time and display the changes
+ * setAsCurrentDocument : set the document as currentDocument in the local storage and display its properties in the current page
  */
 var JSONIllustrationDocument = function() {
     JSONDocument.call(this);//inherits properties from JSONDocument
