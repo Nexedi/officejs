@@ -32,6 +32,7 @@ Page.prototype = {
     getContent: function() {return $(this.getXML()).find("content").html();},
     getDependencies: function() {return $(this.getXML()).find("dependencies");},
     getEditor: function() {return this.editor;},
+    setEditor: function(editor) {this.editor = editor;},
 
     //loaders
         /* load the xml document which contains the web page information */
@@ -40,7 +41,7 @@ Page.prototype = {
             type: "GET",
             url: source,
             dataType: "html",
-            async: false,
+            async: true,
             success: function(data) {
                 getCurrentPage().setXML(data);
             }
@@ -56,21 +57,23 @@ Page.prototype = {
         $(dependencies).find("scriptfile").each(function() {currentPage.include($(this).text(),"script");});//includes js
         
         var doc = null;
+        var editor = null;
         switch(this.name) {
             case "editor":
-                    this.editor = new Xinha();
+                    editor = new Xinha();
                     if(!doc) {doc=new JSONTextDocument();}
                     break;
             case "table":
-                    this.editor = new SheetEditor();
+                    editor = new SheetEditor();
                     if(!doc) {doc=new JSONSheetDocument();}
                     break;
             case "illustration":
-                    this.editor = new SVGEditor();
+                    editor = new SVGEditor();
                     if(!doc) {doc=new JSONIllustrationDocument();}
                     break;
         }
-        doc.setCurrentDocument();
+        setCurrentDocument(doc);
+        this.setEditor(editor);
 
     },
     /* include a javascript or a css file */
@@ -275,7 +278,7 @@ editDocumentSettings = function() {
 
 saveCurrentDocument = function() {
     getCurrentPage().getEditor().saveEdition();
-    saveXHR(address);
+    saveXHR(addressOfTestDocument);
     //saveJIO(); : JIO function
 }
 

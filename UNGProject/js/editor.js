@@ -11,10 +11,11 @@ var Xinha = function() {
         xinha_init();
     }
     this.saveEdition = function() {
-        getCurrentDocument().saveEdition($("#input_area").attr("value"));
+        getCurrentDocument().saveEdition(xinha_editors.input_area.getEditorContent());
     }
     this.loadContentFromDocument = function(doc) {
-        $("#input_area").attr("value",doc.getContent());
+        var setText = function() {xinha_editors.input_area.setEditorContent(doc.getContent());}
+        waitBeforeSucceed(function() {return xinha_editors.input_area;},setText);
     }
     this.load();
 }

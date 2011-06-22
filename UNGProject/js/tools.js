@@ -106,21 +106,16 @@ loadXHR = function(address) {
 /*
  * wait an event before execute an action
  */
-tryUntilSucceed = function(func) {
+waitBeforeSucceed = function(required, func) {
     var nb = 2;//avoid to test too much times
-    var retry = function() {
-        try {return func.call();}
-        catch(e) {if(nb<100) {setTimeout(retry,nb*100); alert(e);}}
+    var execute = function() {
+        //if(test()) {tryUntilSucceed(func);}
+        try {
+            if(!required.call()) {throw 0;}
+            func.call();}
+        catch(e) {if(nb<100) {setTimeout(execute,nb*100);}}
         nb*=nb;
     }
-    retry();
-}
-
-requireBeforeSucceed = function(required, func) {
-    var test = function() {
-        try {return required.call();}
-        catch(e) {return null;}
-    }
-    if(test()) {tryUntilSucceed(func);} else {setTimeout(test,100);};
+    execute();
 }
 

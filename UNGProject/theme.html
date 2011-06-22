@@ -50,8 +50,8 @@
 
             var init = function() {
                 initPage();
-                requireBeforeSucceed(function() {return getCurrentPage().getXML();},initUser);
-                requireBeforeSucceed(function() {return getCurrentPage().getEditor();},initDocument);
+                waitBeforeSucceed(function() {return getCurrentPage().getXML();},initUser);
+                waitBeforeSucceed(function() {return getCurrentPage().getEditor();},initDocument);
             }
             $(document).ready(init);
         </script>
