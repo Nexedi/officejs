@@ -71,36 +71,20 @@ saveXHR = function(address) {
 
 // load
 loadXHR = function(address) {
-
-    //create request
-    var xhr=null;
-    try
-    {
-        xhr = new XMLHttpRequest();
-    } catch(e)
-    {
-        try {xhr = new ActiveXObject("Msxml2.XMLHTTP");}
-        catch (e2)
-        {
-            try {xhr = new ActiveXObject("Microsoft.XMLHTTP");}
-            catch (e) {}
-        }
-    }
-
-    xhr.open("GET", address, true);
-    xhr.onreadystatechange = function() {
-            if(xhr.readyState == 4) {
-
-                    var cDoc = getCurrentDocument();
-                    if(xhr.status == 200) {
-                           cDoc.load(JSON.parse(xhr.responseText));
-                    } else {
-                           alert("error: got status "+xhr.status+" when doing basic auth GET on url "+"nom:test"+"    " + xhr.statusText);
-                    }
-                   cDoc.setAsCurrentDocument();
-            }
-    }
-    xhr.send();
+    alert('loadXHR');
+    $.ajax({
+	url: address,
+	type: "GET",
+	cache:false,
+/*	username: "smik",
+	password: "asdf",*/
+	success: function(data){
+	    alert(data);
+	    var cDoc = getCurrentDocument();
+	    cDoc.load(JSON.parse(data));
+	    cDoc.setAsCurrentDocument();
+	}
+    });
 }
 
 /*
