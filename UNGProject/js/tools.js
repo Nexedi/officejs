@@ -40,8 +40,11 @@ saveXHR = function(address) {
     $.ajax({
                url: address,
                type: "PUT",
-	       username: "smik",
-	       password: "asdf",
+	       headers: {
+		   Authorization: "Basic "+btoa("smik:asdf")},
+               fields: {
+		   withCredentials: "true"
+	       },
                data: JSON.stringify(getCurrentDocument()),
                success: function(){alert("saved");},
                error: function(xhr) { alert("error while saving");}
@@ -53,8 +56,11 @@ loadXHR = function(address) {
 	url: address,
 	type: "GET",
 	cache:false,
-/*	username: "smik", No need to specify credential while GETTING
-	password: "asdf",*/
+	headers: {
+	    Authorization: "Basic "+btoa("smik:asdf")},
+        fields: {
+	   withCredentials: "true"
+       },
 	success: function(data){
 	    var cDoc = getCurrentDocument();
 	    cDoc.load(JSON.parse(data));
