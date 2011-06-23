@@ -37,12 +37,11 @@ currentTime = function() {return (new Date()).toUTCString();}
 
 // save
 saveXHR = function(address) {
-    alert("Saving"+address);
     $.ajax({
                url: address,
                type: "PUT",
-               headers: {Authorization: "Basic "+btoa("smik"+ ':' +"asdf")},
-               fields: {withCredentials: "true"},
+	       username: "smik",
+	       password: "asdf",
                data: JSON.stringify(getCurrentDocument()),
                success: function(){alert("saved");},
                error: function(xhr) { alert("error while saving");}
@@ -54,7 +53,7 @@ loadXHR = function(address) {
 	url: address,
 	type: "GET",
 	cache:false,
-/*	username: "smik",
+/*	username: "smik", No need to specify credential while GETTING
 	password: "asdf",*/
 	success: function(data){
 	    var cDoc = getCurrentDocument();
