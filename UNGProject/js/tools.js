@@ -42,38 +42,16 @@ currentTime = function() {return (new Date()).toUTCString();}
 
 // save
 saveXHR = function(address) {
-    //create request
-    var xhr=null;
-    try
-    {
-        xhr = new XMLHttpRequest();
-    } catch(e)
-    {
-        try {xhr = new ActiveXObject("Msxml2.XMLHTTP");}
-        catch (e2)
-        {
-            try {xhr = new ActiveXObject("Microsoft.XMLHTTP");}
-            catch (e) {alert("Please install a more recent browser")}
-        }
-    }
-
-    //xhr.open("PUT", keyToUrl(key, wallet), true, wallet.userAddress, wallet.davToken);
-    //HACK:
-    xhr.open("PUT", address, true);
-    xhr.setRequestHeader("Authorization", "Basic "+"nom:test");
-    //END HACK.
-
-    xhr.onreadystatechange = function() {
-            if(xhr.readyState == 4) {
-                    if(xhr.status != 200 && xhr.status != 201 && xhr.status != 204) {
-                            alert("error: got status "+xhr.status+" when doing basic auth PUT on url "+Base64.encode("nom:test")+"    " + xhr.statusText);
-                    }
-            }
-    }
-    xhr.withCredentials = "true";
-    xhr.send(JSON.stringify(getCurrentDocument()));
-}
-
+    $.ajax({
+               url: address,
+               type: "PUT",
+	       username: "smik",
+	       password: "asdf",
+               data: JSON.stringify(getCurrentDocument()),
+               success: function(){alert("saved");},
+               error: function(xhr) { alert("error while saving");}
+	   });
+};
 // load
 loadXHR = function(address) {
     $.ajax({
@@ -83,6 +61,8 @@ loadXHR = function(address) {
 	cache:false,
 	username: "nom",
 	password: "test",
+/*	username: "smik", No need to specify credential while GETTING
+	password: "asdf",*/
 	success: function(data){
 	    var cDoc = getCurrentDocument();
 	    cDoc.load(data);
