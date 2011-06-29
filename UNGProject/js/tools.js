@@ -34,6 +34,31 @@ UngObject.prototype.inherits = function(superClass) {
 }
 
 /**
+ * Class List
+ * this class provides usual API to manipulate list structure
+ */
+var List = function(arg) {
+    this.content = new Array();
+    if(arg) {this.content = arg;}
+    this.length = this.content.length;
+}
+List.prototype = {
+    size: function() {return this.length;},
+    add: function(element) {this.content[this.size()]=element; this.length++;},
+    get: function(i) {return this.content[i];},
+    concat: function(list) {while(!list.isEmpty()) {this.add(list.pop())}},
+    remove: function(i) {delete this.content[i];this.length--;},
+    isEmpty: function() {return this.size()==0;},
+    head: function() {return this.isEmpty() ? null : this.get(this.size()-1);},
+    pop: function() {
+        if(this.isEmpty()) {return null;}
+        var element = this.get(this.size()-1);
+        this.remove(this.size()-1);
+        return element;
+    }
+}
+
+/**
  * returns the current date
  */
 currentTime = function() {return (new Date()).toUTCString();}
@@ -55,6 +80,16 @@ saveXHR = function(address) {
                error: function(xhr) { alert("error while saving");}
 	   });
 };
+
+loadFile = function(address, type, instruction) {
+    $.ajax({
+	url: address,
+	type: "GET",
+        dataType: type,
+	success: instruction
+    });
+}
+
 // load
 loadXHR = function(address) {
     $.ajax({
@@ -77,6 +112,8 @@ loadXHR = function(address) {
 
 /*
  * wait an event before execute an action
+ * @param required : function we are waiting for a result
+ * @param func : function we will try to execute in a loop
  */
 waitBeforeSucceed = function(required, func) {
     var nb = 2;//avoid to test too much times
@@ -84,7 +121,7 @@ waitBeforeSucceed = function(required, func) {
         try {
             if(!required.call()) {throw 0;}
             func.call();}
-        catch(e) {if(nb<100) {setTimeout(execute,nb*100);}}
+        catch(e) {console.log(e);if(nb<100) {setTimeout(execute,nb*100);}}
         nb*=nb;
     }
     execute();
@@ -92,12 +129,13 @@ waitBeforeSucceed = function(required, func) {
 
 /*
  * try a function until the execution meets with no error
+ * @param func : function to execute in a loop until it encounters no exception
  */
 tryUntilSucceed = function(func) {
     var nb = 2;//avoid to test too much times
     var execute = function() {
         try {func.call();}
-        catch(e) {if(nb<100) {setTimeout(execute,nb*400);} console.log(e);}
+        catch(e) {if(nb<100) {setTimeout(execute,nb*200);} console.log(e);}
         nb*=nb;
     }
     execute();

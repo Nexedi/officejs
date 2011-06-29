@@ -14,7 +14,7 @@ currentPage = null;
 /*
  * Page Class
  * used to decompose the page and give access to useful elements
- * @param page name of the page to be created
+ * @param page : name of the page to be created
  */
 var Page = function(page) {
     this.name = page;
@@ -43,15 +43,7 @@ Page.prototype = {
     //loaders
         /* load the xml document which contains the web page information */
     loadXML: function(source) {
-        $.ajax( {
-            type: "GET",
-            url: source,
-            dataType: "html",
-            async: true,
-            success: function(data) {
-                getCurrentPage().setXML(data);
-            }
-        });
+        loadFile(source,"html",function(data) {getCurrentPage().setXML(data);});
     },
         /* update the HTML page from the XML document */
     loadPage: function() {
@@ -66,17 +58,21 @@ Page.prototype = {
         var editor = null;
         /* load the editor to work with and a new document to work on */
         switch(this.name) {
-            case "editor":
+            case "text-editor":
                     editor = new Xinha();
                     if(!doc) {doc=new JSONTextDocument();}
                     break;
-            case "table":
+            case "table-editor":
                     editor = new SheetEditor();
                     if(!doc) {doc=new JSONSheetDocument();}
                     break;
-            case "illustration":
+            case "image-editor":
                     editor = new SVGEditor();
                     if(!doc) {doc=new JSONIllustrationDocument();}
+                    break;
+            default://renvoie à la page d'accueil
+                    window.location = "ung.html";
+                    return;
                     break;
         }
         setCurrentDocument(doc);
@@ -192,7 +188,7 @@ setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.string
 
 /* JSON document */
 var JSONDocument = function() {
-    this.type = null;
+    this.type = "table";//test
     this.language = getCurrentUser().getLanguage();
     this.version = null;
 
@@ -255,7 +251,16 @@ getCurrentDocument = function() {
     return doc;
 }
 setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.stringify(doc));}
-
+getDocumentList = function() {
+    var list = localStorage.getItem("documentList");
+    return list ? list : new List();
+}
+setDocumentList = function() {localStorage.setItem("documentList",list);}
+supportedDocuments = {"text":{editorPage:"text-editor",icon:"images/icons/document.png"},
+        "illustration":{editorPage:"image-editor",icon:"images/icons/svg.png"},
+        "table":{editorPage:"table-editor",icon:"images/icons/table.png"},
+        "other":{editorPage:null,icon:"images/icons/other.gif"}
+}
 
 /*
  * actions

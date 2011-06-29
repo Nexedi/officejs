@@ -43,4 +43,31 @@
             </fieldset>
         </form>
     </upload>
+    <line>
+        <table>
+            <tbody>
+                <tr>
+                    <td class="listbox-table-select-cell">
+                        <input type="checkbox"/>
+                    </td>
+                    <td class="listbox-table-data-cell">
+                        <a class="listbox-document-icon">
+                            <img src="images/icons/document.png"/>
+                        </a>
+                    </td>
+                    <td class='listbox-table-data-cell'>
+                        <a class="listbox-document-title">Web Page</a>
+                    </td>
+
+                    <td class="listbox-table-data-cell">
+                        <a class="listbox-document-state">Deleted</a>
+                    </td>
+
+                    <td class="listbox-table-data-cell">
+                        <a class="listbox-document-date">2011/05/31&nbsp;&nbsp;&nbsp;11:44</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </line>
 </root>

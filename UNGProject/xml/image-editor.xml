@@ -1,0 +1,16 @@
+<root>
+    <title> Illustration Web - Web Illustration </title>
+    <content>
+        <label>
+            Page Content
+        </label>
+
+        <div class="input"><div  >
+            <iframe name="svgframe" id="svgframe" width="100%" height="600"/>
+        </div></div>
+    </content>
+    <dependencies>
+        <scriptfile>js/illustration.js</scriptfile>
+        <stylefile>css/jquery-ui.css</stylefile>
+    </dependencies>
+</root>

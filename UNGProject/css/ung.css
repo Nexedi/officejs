@@ -405,6 +405,9 @@ div.listbox-content a:hover {
     color: #3D6474;
     text-decoration: underline;
 }
+div.listbox-content td.listbox-table-data-cell {
+    cursor: pointer;
+}
 div.listbox-content td.listbox-table-data-cell a img {
     margin-right: -8px;
 }
