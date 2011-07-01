@@ -10,7 +10,7 @@
         </div></div>
     </content>
     <dependencies>
-        <scriptfile>js/illustration.js</scriptfile>
+        <scriptfile>js/image-editor.js</scriptfile>
         <stylefile>css/jquery-ui.css</stylefile>
     </dependencies>
 </root>

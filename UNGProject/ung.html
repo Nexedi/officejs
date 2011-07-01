@@ -29,6 +29,25 @@
     <link rel="shortcut icon" type="image/x-icon"
         href="images/ung/favicon.ico" />
 
+    <script type="text/javascript">
+        var initUser = function() {
+            var user = getCurrentUser();
+            if(!user) { user = new User();}
+            user.setAsCurrentUser();
+        }
+
+        var init = function() {
+            setCurrentPage(new Page());
+            initUser();
+            waitBeforeSucceed(
+                function(){return Line.loadHTML()},getDocumentList().display
+            );
+
+            resize();
+        }
+        $(window).resize(resize);
+        $(document).ready(init);
+    </script>
 </head>
 <body>
     <form id="main_form" class="main_form"
@@ -84,10 +103,10 @@
                                     <div id="select_language">
 
                                         <ul><li>
-                                            <span id="available_language">en</span>
+                                            <span id="current_language">en</span>
                                             <img src="images/ung/arrow_20C.png"/>
-                                            <ul>
-                                                <li><span onclick="changeLanguage(this.innerHTML)" id="fr">fr</span></li>
+                                            <ul id="available_languages">
+                                                <li></li>
                                             </ul>
                                         </li></ul>
 
@@ -104,7 +123,7 @@
 
                                     <a id="right_message">Not Implemented yet</a>
                                     <div id="preference_dialog" title="UNG Preferences"></div>
-                                    <a>zope</a>
+                                    <a id="userName">Unknown</a>
                                     | <a id="settings" href="#">Settings</a>
                                     | <a id="help" href="#">Help</a>
                                     | <a href="..WebSite_logout">Sign out</a>
@@ -134,7 +153,7 @@
 
                                 <div class="input"><div  >
 
-                                    <a class="ung_docs" href="javascript:window.location.reload()">
+                                    <a class="ung_docs" href="#" onclick="javascript:window.location.reload()">
                                         <img src="images/ung/ung-logo.gif"/>
                                     </a>
                                     <a id="loading_message">Loading...</a>
@@ -431,7 +450,7 @@
                                     <div class="favorite">
                                         <a class="domain_selected"></a>
 
-                                        <a href="...">Refresh</a>
+                                        <a href="#" onclick="javascript:window.location.reload()">Refresh</a>
                                     </div>
                                 </div></div>
 

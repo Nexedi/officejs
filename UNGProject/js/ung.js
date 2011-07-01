@@ -1,10 +1,46 @@
-var documentList = getDocumentList();
-documentList.add(new JSONDocument());
-documentList.add(new JSONDocument());
-documentList.add(new JSONDocument());
+/**
+ * This file provides the javascript used to display the list of user's documents
+ */
 
 /**
- * create a ligne representing a document in the main table
+ * class DocumentList
+ * This class provides methods to manipulate the list of documents of the current user
+ */
+var DocumentList = function() {List.call(this);}
+DocumentList.prototype = new List();
+DocumentList.prototype.load({
+    get: function(i) {
+        var doc = new JSONDocument();
+        doc.load(this.content[i]);
+        return doc;
+    },
+    add: function(doc) {
+        this.content[this.size()]=doc;
+        this.length++;
+        setDocumentList(this)
+    },
+    display: function() {
+        var n = getDocumentList().size();
+        for(var i=0;i<n;i++) {
+            var ligne = new Line(getDocumentList().get(i),0);
+            ligne.updateHTML();
+            ligne.display();
+        }
+    }
+})
+
+/* initialize the list */
+//current lines are just for testing
+setDocumentList(new List());
+loadTest("dav/temp.json");
+loadTest("dav/temp2.json");
+getDocumentList().add(new JSONDocument());
+
+
+
+
+/**
+ * create a line representing a document in the main table
  * @param doc : document to represent
  * @param i : ID of the line (number)
  */
@@ -25,11 +61,11 @@ Line.prototype = {
 
     /* load the document information in the html of a default line */
     updateHTML: function() {
+        var line = this;
         this.setHTML($(this.getHTML()).attr("class",this.getType())
             .find("td.listbox-table-select-cell input").attr("id",this.getID()).end()//ID
-            //.find("td.listbox-table-data-cell a").attr("onclick",this.startEdition).end()//clic
             .find("td.listbox-table-data-cell")
-                .click(this.startEdition)//clic
+                .click(function() {line.startEdition(line.getDocument())})//clic
                 .find("a.listbox-document-icon")
                     .find("img")
                         .attr("src",supportedDocuments[this.getType()].icon)//icon
@@ -43,10 +79,12 @@ Line.prototype = {
     /* add the line in the table */
     display: function() {$("table.listbox tbody").append($(this.getHTML()));},
     /* edit the document if clicked */
-    startEdition: function() {
-        setCurrentDocument(this.document);
-        window.location = "theme.html";
+    startEdition: function(doc) {
+        setCurrentDocument(doc);
+        if(supportedDocuments[doc.getType()].editorPage) {window.location = "theme.html";}
+        else alert("no editor available for this document");
     }
+
 }
 /* load the html code of a default line */
 Line.loadHTML = function() {
@@ -55,15 +93,3 @@ Line.loadHTML = function() {
 }
 /* return the html code of a default line */
 Line.getOriginalHTML = function() {return Line.originalHTML;}
-
-/* load the table */
-waitBeforeSucceed(
-    function(){return Line.loadHTML()},
-    function() {
-        for(var i=0;i<documentList.size();i++) {
-            var ligne = new Line(documentList.get(i),0);
-            ligne.updateHTML();
-            ligne.display();
-        }
-    }
-);

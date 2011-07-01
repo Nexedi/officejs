@@ -60,23 +60,25 @@ Page.prototype = {
         switch(this.name) {
             case "text-editor":
                     editor = new Xinha();
-                    if(!doc) {doc=new JSONTextDocument();}
+                    doc=new JSONTextDocument();
                     break;
             case "table-editor":
                     editor = new SheetEditor();
-                    if(!doc) {doc=new JSONSheetDocument();}
+                    doc=new JSONSheetDocument();
                     break;
             case "image-editor":
                     editor = new SVGEditor();
-                    if(!doc) {doc=new JSONIllustrationDocument();}
+                    doc=new JSONIllustrationDocument();
                     break;
             default://renvoie à la page d'accueil
                     window.location = "ung.html";
                     return;
                     break;
         }
-        setCurrentDocument(doc);
+
+        doc.load(getCurrentDocument());
         this.setEditor(editor);
+        doc.setAsCurrentDocument();
 
     },
     /* include a javascript or a css file */
@@ -188,7 +190,6 @@ setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.string
 
 /* JSON document */
 var JSONDocument = function() {
-    this.type = "table";//test
     this.language = getCurrentUser().getLanguage();
     this.version = null;
 
@@ -252,44 +253,43 @@ getCurrentDocument = function() {
 }
 setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.stringify(doc));}
 getDocumentList = function() {
-    var list = localStorage.getItem("documentList");
-    return list ? list : new List();
+    var list = new DocumentList();
+    list.load(JSON.parse(localStorage.getItem("documentList")));
+    return list;
 }
-setDocumentList = function() {localStorage.setItem("documentList",list);}
+setDocumentList = function(list) {localStorage.setItem("documentList",JSON.stringify(list));}
 supportedDocuments = {"text":{editorPage:"text-editor",icon:"images/icons/document.png"},
         "illustration":{editorPage:"image-editor",icon:"images/icons/svg.png"},
         "table":{editorPage:"table-editor",icon:"images/icons/table.png"},
-        "other":{editorPage:null,icon:"images/icons/other.gif"}
+        "other":{editorPage:null,icon:"images/icons/other.gif"},
+        undefined:{editorPage:null,icon:"images/icons/other.gif"}
 }
 
 /*
  * actions
  */
 editDocumentSettings = function() {
-
-  $("#edit_document").dialog({
-    autoOpen: true,
-    height: 131,
-    width: 389,
-    modal: true,
-    buttons: {
-      "Save": function(){
-        /*getCurrentDocument().setTitle($(getCurrentDocument()).find("#name").attr("value"));
-        //var new_short_title = $("input#short_title.short_title").attr("value");
-        getCurrentDocument().setLanguage($(getCurrentDocument()).find("#language").attr("value"));
-        getCurrentDocument().setVersion($(getCurrentDocument()).find("#version").attr("value"));
-        //var new_int_index = $("input#sort_index.sort_index").attr("value");
-        //var new_subject_list = $("textarea#keyword_list").attr("value").replace(/\n+/g, ",");
-        getCurrentDocument().setAsCurrentDocument();//diplay modifications
-        //save_button.click();*/
-        $(this).dialog("close");
-      },
-      Cancel: function() {
-        $(this).dialog("close");
-      }
-    }
-  });
-}
+  loadFile("xml/xmlElements.xml", "html", function(data) {
+      $("rename", data).dialog({
+        autoOpen: true,
+        height: 131,
+        width: 389,
+        modal: true,
+        buttons: {
+          "Save": function(){
+            getCurrentDocument().setTitle($(getCurrentDocument()).find("#name").attr("value"));
+            getCurrentDocument().setLanguage($(getCurrentDocument()).find("#language").attr("value"));
+            getCurrentDocument().setVersion($(getCurrentDocument()).find("#version").attr("value"));
+            getCurrentDocument().setAsCurrentDocument();//diplay modifications
+            $(this).dialog("close");
+          },
+          Cancel: function() {
+            $(this).dialog("close");
+          }
+        }
+    });
+  }
+)}
 
 saveCurrentDocument = function() {
     getCurrentPage().getEditor().saveEdition();

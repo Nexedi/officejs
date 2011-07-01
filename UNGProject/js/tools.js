@@ -42,7 +42,8 @@ var List = function(arg) {
     if(arg) {this.content = arg;}
     this.length = this.content.length;
 }
-List.prototype = {
+List.prototype = new UngObject();
+List.prototype.load ({
     size: function() {return this.length;},
     add: function(element) {this.content[this.size()]=element; this.length++;},
     get: function(i) {return this.content[i];},
@@ -56,7 +57,7 @@ List.prototype = {
         this.remove(this.size()-1);
         return element;
     }
-}
+});
 
 /**
  * returns the current date
@@ -87,6 +88,27 @@ loadFile = function(address, type, instruction) {
 	type: "GET",
         dataType: type,
 	success: instruction
+    });
+}
+
+// load methode, used for testing
+//(Francois)
+loadTest = function(address) {
+    $.ajax({
+	url: address,
+	type: "GET",
+        dataType: "json",
+	/*headers: {
+	    Authorization: "Basic "+"nom:test"},
+        fields: {
+	   withCredentials: "true"
+       },*/
+	success: function(data){
+	    var list = getDocumentList();
+            var doc = new JSONDocument();
+	    doc.load(data);
+            list.add(doc);
+	}
     });
 }
 
@@ -139,4 +161,11 @@ tryUntilSucceed = function(func) {
         nb*=nb;
     }
     execute();
+}
+
+/**
+ * Resize the right part of ung
+ */
+var resize = function() {
+    $("div.main-right").width($(window).width()-$("div.main-left").width());
 }

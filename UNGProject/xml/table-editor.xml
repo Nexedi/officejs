@@ -111,7 +111,7 @@
         <scriptfile>js/jquery/plugin/colorpicker/jquery.colorPicker.min.js</scriptfile>
         <scriptfile>js/jquery/plugin/elastic/jquery.elastic.min.js</scriptfile>
         <scriptfile>js/jquery/plugin/sheet/jquery.sheet.js</scriptfile>
-        <scriptfile>js/table.js</scriptfile>
+        <scriptfile>js/table-editor.js</scriptfile>
         <stylefile>js/jquery/plugin/sheet/jquery.sheet.css</stylefile>
         <stylefile>css/table.css</stylefile>
         <stylefile>js/jquery/plugin/colorpicker/jquery.colorPicker.css</stylefile>

@@ -12,7 +12,7 @@
         </div>
     </content>
     <dependencies>
-        <scriptfile>js/editor.js</scriptfile>
+        <scriptfile>js/text-editor.js</scriptfile>
         <stylefile>css/jquery-ui.css</stylefile>
     </dependencies>
 </root>

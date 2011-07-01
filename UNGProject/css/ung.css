@@ -136,7 +136,7 @@ div.main-left {
     background-color: #DAE6F6;
     height: 100%;
     margin-left: -4px;
-    width: 18%;
+    width: 12em;
     margin-top: -0.6em;
     overflow:auto;
     float:left;
@@ -257,7 +257,6 @@ div.listbox-domain-tree-container select {
         
     /* right */
 div.main-right {
-    width: 82%;
     height: 100%;
     margin-top: -0.6em;
     float:right;
@@ -331,11 +330,12 @@ a.your_listbox_title {
         /* records displayer */
 div.listbox-header-box {
     height: 0;
+    float: right;
 }
 div.listbox-number-of-records {
     float: right;
     font-size: 12px;
-    margin-right: 12em;
+    margin-right: 5em;
     margin-top: -18px;
     min-width: 30%;
 }
