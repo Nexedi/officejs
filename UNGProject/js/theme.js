@@ -24,7 +24,7 @@ var Page = function(page) {
 
     //define as current page
     currentPage = this;
-    this.loadXML("xml/"+page+".xml");
+    if(page!=undefined) {this.loadXML("xml/"+page+".xml");}
 }
 Page.prototype = {
     setXML: function(data) {
@@ -61,6 +61,7 @@ Page.prototype = {
             case "text-editor":
                     editor = new Xinha();
                     doc=new JSONTextDocument();
+                    saveAdresse = "dav/temp.json";
                     break;
             case "table-editor":
                     editor = new SheetEditor();
@@ -69,6 +70,7 @@ Page.prototype = {
             case "image-editor":
                     editor = new SVGEditor();
                     doc=new JSONIllustrationDocument();
+                    saveAdresse = "dav/temp2.json";
                     break;
             default://renvoie à la page d'accueil
                     window.location = "ung.html";
@@ -76,7 +78,7 @@ Page.prototype = {
                     break;
         }
 
-        doc.load(getCurrentDocument());
+        if(getCurrentDocument()) {doc.load(getCurrentDocument());}
         this.setEditor(editor);
         doc.setAsCurrentDocument();
 
@@ -113,37 +115,28 @@ Page.prototype = {
 
         for (var i = 0; i<languages.length; i++) {
             var l = languages[i];
-            if(l==user.getLanguage()) {this.getHTML().getElementById("current_language").innerHTML = l;}
+            if(l==user.getLanguage()) {$("span#current_language").html(l);}
             else {
-                avLang = avLang + "<li><span onclick='changeLanguage(this.innerHTML)' id='" +l+ "'>"+l+"</span></li>\n"
+                avLang = avLang + "<li><span onclick='changeLanguage($(this).html())' id='" +l+ "'>"+l+"</span></li>\n"
             }
         }
-        this.getHTML().getElementById("available_languages").innerHTML = avLang;
+        $("ul#available_languages").html(avLang);
     },
-    displayUserName: function(user) {this.getHTML().getElementById("userName").innerHTML = user.getName();},
+    displayUserName: function(user) {$("a#userName").html(user.getName());},
 
         //document information
-    displayAuthorName: function(doc) {this.getHTML().getElementById("author").innerHTML = doc.getAuthor();},
-    displayLastModification: function(doc) {this.getHTML().getElementById("last_update").innerHTML = doc.getLastModification();},
-    displayDocumentTitle: function(doc) {this.getHTML().getElementById("document_title").innerHTML = doc.getTitle();},
+    displayAuthorName: function(doc) {$("a#author").html(doc.getAuthor());},
+    displayLastModification: function(doc) {$("a#last_update").html(doc.getLastModification());},
+    displayDocumentTitle: function(doc) {$("a#document_title").html(doc.getTitle());},
     displayDocumentContent: function(doc) {this.getEditor().loadContentFromDocument(doc);},
-    displayDocumentState: function(doc) {
-        var stateArea = this.getHTML().getElementById("document_state");
-        stateArea.innerHTML = doc.getState()[getCurrentUser().getLanguage()];
-    },
+    displayDocumentState: function(doc) {$("a#document_state").html(doc.getState()[getCurrentUser().getLanguage()]);},
 
         //web page information
-    displayPageTitle: function() {
-        var pageTitle = this.getHTML().getElementById("page_title");
-        pageTitle.innerHTML = this.getTitle();
-    },
-    displayPageContent: function() {
-        var pageContent = this.getHTML().getElementById("page_content");
-        pageContent.innerHTML = this.getContent();
-    }
+    displayPageTitle: function() {$("title#page_title").html(this.getTitle());},
+    displayPageContent: function() {$("div#page_content").html(this.getContent());}
 }
 getCurrentPage = function() {return currentPage;}
-setCurrentPage = function(page) {currentPage = new Page(page);}
+setCurrentPage = function(page) {currentPage = page;}
 
 /*
  * User Class
@@ -151,9 +144,10 @@ setCurrentPage = function(page) {currentPage = new Page(page);}
  */
 var User = function(details) {
     this.name = "unknown";
-    this.language = "en";
+    this.language = "fr";
     this.storage = "http://www.unhosted-dav.com";
     this.identityProvider = "http://www.webfinger.com";
+    this.displayPreferences = 15;//number of displayed document in the list
 }
 User.prototype = new UngObject();//inherits from UngObject
 User.prototype.load({//add methods thanks to the UngObject.load method
@@ -165,6 +159,8 @@ User.prototype.load({//add methods thanks to the UngObject.load method
     setStorageLocation: function(storage) {this.storage = storage;},
     getIdentityProvider: function() {return this.identityProvider;},
     setIdentityProvider: function(IDProv) {this.identityProvider = IDProv;},
+    getDisplayPreferences: function() {return this.displayPreferences;},
+    setDisplayPreferences: function(n) {this.displayPreferences = n;},
 
     setAsCurrentUser: function() {
         getCurrentPage().displayUserName(this);
@@ -277,10 +273,11 @@ editDocumentSettings = function() {
         modal: true,
         buttons: {
           "Save": function(){
-            getCurrentDocument().setTitle($(getCurrentDocument()).find("#name").attr("value"));
-            getCurrentDocument().setLanguage($(getCurrentDocument()).find("#language").attr("value"));
-            getCurrentDocument().setVersion($(getCurrentDocument()).find("#version").attr("value"));
-            getCurrentDocument().setAsCurrentDocument();//diplay modifications
+            var doc = getCurrentDocument();
+            doc.setTitle($(this).find("#name").attr("value"));
+            doc.setLanguage($(getCurrentDocument()).find("#language").attr("value"));
+            doc.setVersion($(getCurrentDocument()).find("#version").attr("value"));
+            doc.setAsCurrentDocument();//diplay modifications
             $(this).dialog("close");
           },
           Cancel: function() {
@@ -293,7 +290,7 @@ editDocumentSettings = function() {
 
 saveCurrentDocument = function() {
     getCurrentPage().getEditor().saveEdition();
-    saveXHR(addressOfTestDocument);
+    saveXHR(saveAdresse);
     //saveJIO(); : JIO function
 }
 

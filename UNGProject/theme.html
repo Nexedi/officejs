@@ -31,11 +31,8 @@
 
         <script type="text/javascript">
             // initialize
-	    addressOfTestDocument = "http://sidunhosted.com/ungdav/test.json";
             var initPage = function() {
-                var pageIWantToTest = "editor";
-              //  addressOfTestDocument = "dav/temp2.json";
-                setCurrentPage(pageIWantToTest);
+                setCurrentPage(new Page(supportedDocuments[getCurrentDocument().getType()].editorPage));
             }
 
             var initUser = function() {
@@ -44,14 +41,9 @@
                 user.setAsCurrentUser();
             }
 
-            var initDocument = function() {
-                loadXHR(addressOfTestDocument);
-            }
-
             var init = function() {
                 initPage();
                 waitBeforeSucceed(function() {return getCurrentPage().getXML();},initUser);
-                waitBeforeSucceed(function() {return getCurrentPage().getEditor();},initDocument);
             }
             $(document).ready(init);
         </script>
@@ -80,7 +72,7 @@
                                 <div class="input"><div  >
 
                                     <a class="email" href="ung/mail.html" lang="en">Email</a>
-                                    <a class="document" href="ung/ung.html" lang="en">Documents</a>
+                                    <a class="document" href="#" onclick="javascript:window.location.reload()" lang="en">Documents</a>
                                     <a class="calendar" href="ung/calendar.html" lang="en">Calendar</a>
 
                                 </div></div>
@@ -152,40 +144,13 @@
                                     <label>search_bar</label>
                                     <div class="input"><div  >
 
-                                        <a class="ung_docs" href="ung/ung.html">
+                                        <a class="ung_docs" href="ung.html">
                                             <img src="images/ung/ung-logo.gif" alt="logo"/>
                                         </a>
 
                                         <a id="loading_message" lang="en">Loading...</a>
                                         <a id="document_title" name="document_title" onclick="javascript:editDocumentSettings()">Untitled</a>
                                         <a id="document_state" name="document_state">...</a>
-
-                                        <div id="edit_document" title="Rename Document">
-                                            <form action="#">
-                                                <fieldset>
-                                                    <label for="name">Insert a new name:</label>
-                                                    <input type="text" class="title" id="name" name="name" value=""/><br/>
-                                                    <div id="more_property">
-                                                        <label for="short_title">Short Title:</label>
-
-                                                        <input type="text" class="short_title" id="short_title" name="short_title" value=""/><br/>
-                                                        <label for="version">Version:</label>
-                                                        <input type="text" class="version" id="version" name="version" value=""/><br/>
-                                                        <label for="language">Language:</label>
-                                                        <input type="text" class="language" id="language" name="language" value=""/><br/>
-                                                        <label for="sort_index">Sort Index:</label>
-                                                        <input type="text" class="sort_index" id="sort_index" name="sort_index" value=""/><br/>
-
-                                                        <label for="keyword_list">Keywords:</label>
-                                                        <textarea id="keyword_list" rows="2" cols="20" value="">
-                                                        </textarea>
-                                                    </div>
-
-                                                    <p class="more_properties" id="more_properties">Edit More Properties</p>
-                                                    <p class="hide_properties" id="hide_properties">Hide Properties</p>
-                                                </fieldset>
-                                            </form>
-                                        </div>
 
                                     </div></div>
 
@@ -257,8 +222,8 @@
                         </div>
 
                     </div>
-
                 </div>
+
 
                 <div class="main">
 
@@ -279,11 +244,8 @@
 
                             </fieldset>
 
-
                         </div>
                     </div>
-
-                    <p class="clear"></p>
                 </div>
             </div>
         </form>
