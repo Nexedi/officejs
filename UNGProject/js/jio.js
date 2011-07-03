@@ -151,7 +151,7 @@ var JIO = (function () {
 						  //some other strange error,just call the user's error handler
 						  handler(err);
 					      }
-					  }
+					  }   
 					      else{
 						  //we got back a document, check for hash
 						  if(dataobject.hash===hash){
@@ -198,12 +198,128 @@ var JIO = (function () {
 		   //All methods are defined, now return J as the newly cooked object
 		   return J;
 	       };//DAVStorage
-	  
+	       
+	       /*ObjStorage: JIO on javscript objects*/
+	       var ObjStorage = function (store_info){
+		   /*
+		    * store_info.memobject must be either an empty object or must be a
+		    * collection object indicated by it's .content to be an array.
+		    */
+		   var memobject=store_info.memobject || {};
+		   if(memobject.data===undefined){
+		       // The object doesn't have a .data, we have to create a blank one
+		       // Most probably the object was blank or wasn't passed
+		       memobject.data=[];//blank array to hold all the object
+		   }
+		   if(memobject.doc_id===undefined){
+		       /*
+			* We can have doc_id of the parent node as an empty string
+			* But remember if we are binding this object to a children of another
+			* We will have to ask user about the name as which has to be mounted
+			*/
+		       memobject.doc_id="";
+		   }
+		  /*
+		   * after this line, the memobeject will have
+		   * .data as either an empty array [] or the original data as string
+		   * .doc_id as either the original doc_id or blank string
+		   */
+		   var J = JIOStorage(store_info);	   
+		   J.hashObject = function(object,hashfunction){
+		       if(hashfunction)
+			   {
+			       return hashfunction(JSON.stringify(object));
+			   }
+		       else{
+			   return J.hashdata(JSON.stringify(object));
+			   }
+		       };
+		   J.loadDocument = function (doc_id, handler) {
+		     /*
+		      * Handler is optional.
+		      * Returns dataobject = {hash,data}
+		      * If the requested doc_id is a collection,
+		      * return the hash is the sum of all the content inside that 
+		      * collection and let the data be an array with the docid of 
+		      * all the child documents. 
+		      * 
+		      * Since all operation are done on Memory, asyncronous request doesn't
+		      * have a meaning, handler is provided just to give a uniform interface.
+		      * Users are advised to call loadDocument without a handler
+		      * TODO: write how to handle error in case not
+		      * using handlers
+		      * TODO: Make it compatible with handler
+		      * 
+		      * Internal representation: Each object is
+		      * {doc_id,meta_data,content}. content can be
+		      * array which represents the collection or
+		      * simple data representing document.
+		      */ 
+		       var dataobject = {}; //to be returned
+		       if(memobject.data instanceof Array){
+			   /*
+			    * Check for any of the children have given doc_id
+			    */
+			   
+			   for (var i=0; i < memobject.data.length;i++){
+			       var ith_child=memobject.data[i];
+			       if(ith_child.doc_id===doc_id){
+				   if(ith_child instanceof Array){
+				       //found match is a collection
+				       dataobject.data=[];
+				       for(var j=0; j < ith_child.data.length; j++){
+					   dataobject.data.push(ith_child.data[j]);
+				       }
+				   }
+				   else{
+				       //it was a document
+				       dataobject.data=ith_child.data;
+				       }
+				   dataobject.hash=J.hashObject(ith_child);
+			       break;
+			       }
+			       
+			   }
+			   if(dataobject.data===undefined){
+			       // there are is no child of doc_id in current collection
+			       return null; //not found
+			   }
+
+		       }
+		       else{
+			   // the memobject is a datablob, check if doc_id matches and return
+			   if(memobject.doc_id===doc_id){
+			       dataobject.data=memobject.data;
+			       dataobject.hash=J.hashObject(memobject);
+			   }
+			   else{
+			       // the doc_id neither matched with any child or the object itself
+			       // return null
+			       return null;//return null
+			   }
+		       }
+		       return dataobject;
+		   };
+		   J.saveDocument = function (doc_id, data, handler, hash, conflict_func,overwrite){
+		       
+		       /*
+			* if data is null (not undefined but null) the save function will make a collection (directory) instead.
+			*/
+   
+			  
+		   };
+		   return J;
+		   
+		
+	       };
+	       
+	       
 
 	       //defined all classes, now return the interface of JIO which has all these classes
 	       return {
 		   'JIOStorage':JIOStorage,
-		   'DAVStorage':DAVStorage
+		   'DAVStorage':DAVStorage,
+		   'ObjStorage':ObjStorage
 	       };
 	   })();
 
