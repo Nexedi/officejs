@@ -11,6 +11,5 @@
     </content>
     <dependencies>
         <scriptfile>js/image-editor.js</scriptfile>
-        <stylefile>css/jquery-ui.css</stylefile>
     </dependencies>
 </root>

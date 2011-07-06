@@ -2,13 +2,10 @@
 <root>
     <rename>
         <form action="#">
-            <fieldset>
+            <fieldset id="edit_document">
                 <label for="name">Insert a new name:</label>
                 <input type="text" class="title" id="name" name="name" value=""/><br/>
                 <div id="more_property">
-                    <label for="short_title">Short Title:</label>
-
-                    <input type="text" class="short_title" id="short_title" name="short_title" value=""/><br/>
                     <label for="version">Version:</label>
                     <input type="text" class="version" id="version" name="version" value=""/><br/>
                     <label for="language">Language:</label>

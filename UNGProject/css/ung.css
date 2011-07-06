@@ -9,6 +9,12 @@ body {
   font-weight:normal;
   overflow-x: hidden;
 }
+
+/* widget fields */
+fieldset.widget {
+    border: 0 none;
+}
+
 /* hide legends */
 div.field label, span.headline, a.listbox_title, div.actions, div.actions,
 legend.group_title, fieldset.left {
@@ -102,13 +108,25 @@ a#left_message, a#right_message {
 
 
 /* header */
-iframe#svgframe, fieldset.widget {
-    border: 0 none;
+div.header {
+    height: 3.5em;
+    width: 100%;
 }
+div#wrapper_header {
+    width: 100%;
+    height: 100%;
+    display: inline-block;
+}
+
     /* left */
 div.header-left {
-    margin-left: 1px;
     margin-top: -4px;
+    min-width: 32em;
+    width: 40%;
+    position: absolute;
+}
+div.header-left h2 {
+    font-size: 14pt;
 }
         /* logo UNG */
 a#loading_message {
@@ -120,9 +138,94 @@ div.logo-area {
 }
 a.ung_docs img {
   border:0 none;
-  left:-7px;
   position:relative;
   top:9px;
+}
+        /* document title & state */
+div#wrapper_header div.field a[name="document_title"] {
+    color: #060605;
+    padding-left: 1em;
+    padding-right: 1em;
+    text-decoration: none;
+}
+div#wrapper_header div.field a[name="document_title"], div#wrapper_header div.field a[name="document_state"] {
+    font-size: 15px;
+    margin-left: 22px;
+}
+div#wrapper_header div.field a[name="document_title"]:hover {
+    background: none repeat scroll 0 0 #FFFFD6;
+    border: 1px solid #AAAAAA;
+}
+
+    /* right */
+div.header-right{
+    margin-right: 10em;
+    position: relative;
+    float: right;
+}
+div.header-right fieldset.widget {
+    padding: 0;
+}
+        /* last modification & author */
+div.header-right div.input {
+    margin-top: 1em;
+}
+div.header-right div.input div{
+    float: right;
+    position: relative;
+}
+div.header-right div.input a {
+    color: #A7A2A2;
+    font-size: 13px;
+}
+.action_menu {
+    float:right;
+    position: absolute;
+    margin-left: 3em;
+    z-index: 200;
+}
+.action_menu ul {
+    padding: 0;
+}
+.action_menu ul li {
+    list-style: none inside none;
+}
+.action_menu a#change_state {
+    background-image: url("../images/ung/button_background.png");
+    border: 1px solid #D1D1D1;
+    color: #333333;
+    padding: 2px;
+}
+.action_menu ul#change_state_list>li:hover {
+    color: #000000;
+    text-decoration: none;
+    cursor:pointer;
+    margin-right: -3em;
+}
+.action_menu li:hover ul {
+    display: block;
+}
+
+.action_menu ul li ul {
+    background: none repeat scroll 0 0 #FFFFFF;
+    border: 1px solid #D1D1D1;
+    display: none;
+}
+.action_menu ul li ul hover {
+    display: block;
+}
+.action_menu ul li ul li:hover {
+    background: none repeat scroll 0 0 #F3F3F3;
+}
+.action_menu ul li ul li {
+    text-align: center;
+}
+.action_menu ul li ul li h6 {
+    color: #333333;
+    font-size: 12px;
+    font-weight: lighter;
+    padding: 0.5em;
+    margin: 0;
 }
 
 /* main */
@@ -130,6 +233,7 @@ div.main {
     height: auto;
     margin-top: 0.5em;
 }
+/***************** UNG main page ********************/
     /* left */
 div.main-left {
     border-right: 4px solid #BBCCFF;
@@ -254,7 +358,7 @@ div.listbox-domain-tree-container select {
 }
         /* gadgets */
 
-        
+
     /* right */
 div.main-right {
     height: 100%;
@@ -415,3 +519,139 @@ div.listbox-content a img, div.main-content a img {
     border: 0 none;
 }
 
+/**********************************************************
+*******************   editor page   ***********************/
+    /* content */
+div.content {
+    /*background: none repeat scroll 0 0 #DAE6F6;*/
+    width:100%;
+    border-bottom: 4px solid #BBCCFF;
+    border-top: 4px solid #BBCCFF;
+}
+fieldset.bottom {
+    border: 0 none;
+    width:100%;
+    list-style: none outside none;
+    padding: 0;
+    position: relative;
+}
+    /* SVG-edit */
+iframe#svgframe {
+    width: 100%;
+    border: 0 none;
+    overflow: hidden;
+}
+
+/**********************************************************
+*******************   login page   ************************/
+    /* welcome message */
+div#advertisement b {
+    font-size: 12px;
+}
+div#advertisement img{
+    position: absolute;
+    margin-top: 3em;
+    height: 10em;
+}
+    /* login table */
+table#field_table, table#new-account-table, table#create-new-user {
+    border: 1px solid #C3D9FF;
+    width: 78%;
+}
+table#field_table tbody, table#new-account-table tbody, table#create-new-user tbody {
+    background: none repeat scroll 0 0 #E8EEFA;
+}
+table#field_table tbody label {
+    float: right;
+    font-size: 10pt;
+    white-space: nowrap;
+}
+    /* new user table */
+table#create-new-user {
+    display: none;
+    margin-top: -22px;
+}
+table#new-account-table table td, table#create-new-user td {
+    font-size: 10pt;
+}
+td#form-message {
+    color: #EC1D1D;
+    display: none;
+}
+form#create-user table tbody tr:last-child td a{
+    color: #2200CC;
+    cursor: pointer;
+    font-size: 8pt;
+    text-decoration: underline;
+}
+/* new account "button" */
+td#new-account-form {
+    color: #0000CC;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: underline;
+}
+/* footer */
+div.footer {
+    font-size: 10pt;
+    margin-top: 40px;
+    text-align: center;
+}
+div.footer a {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+/**********************************************************
+*******************   dialog box   ************************/
+div.ui-dialog {
+    background: none repeat scroll 0 0 #C1D9FF;
+}
+fieldset#edit_document {
+    border: 0 none;
+    height: 72px;
+    margin-left: -1em;
+    margin-top: -0.5em;
+    width: 379px;
+}
+div.ui-dialog-titlebar {
+    background: none repeat scroll 0 0 #E0EDFE;
+    border: 0 none;
+    border-radius: 1px 1px 1px 1px;
+    height: 15px;
+}
+div.ui-dialog-titlebar {
+    height: 15px;
+}
+span#ui-dialog-title-edit_document, span#ui-dialog-title-upload_document, span#ui-dialog-title-gadget-listbox {
+    color: #222222 !important;
+    font: bold 12pt Arial,Sans-serif;
+    margin-left: -8px;
+    margin-top: -3px;
+}
+div#edit_document.ui-dialog-content {
+    background-color: #FFFFFF;
+}
+div#edit_document {
+    height: 80px;
+    overflow: hidden;
+    width: 368px;
+}
+.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset {
+    float: none !important;
+    height: 21px;
+    margin-top: -10px;
+    width: 104px;
+}
+.ui-dialog .ui-dialog-buttonpane button {
+    margin: 0 0.4em 0.5em 0 !important;
+}
+.ui-button .ui-button-text {
+    line-height: 1em !important;
+}
+.ui-button-text-only .ui-button-text {
+    padding: 0.2em 0.3em !important;
+}
+span.ui-button-text {
+    font-size: 12px;
+}

@@ -32,15 +32,18 @@
     <script type="text/javascript">
         var initUser = function() {
             var user = getCurrentUser();
-            if(!user) { user = new User();}
             user.setAsCurrentUser();
         }
 
         var init = function() {
-            setCurrentPage(new Page());
-            initUser();
-            waitBeforeSucceed(
-                function(){return Line.loadHTML()},getDocumentList().display
+            setCurrentPage(new Page());//provide methods on the page
+            initUser();//initialize the user
+
+            if(getCurrentDocumentID()) {getDocumentList().update(getCurrentDocumentID());}//update the list of documents
+            waitBeforeSucceed(//display the list of documents
+                function(){return Line.loadHTML()},function() {
+                    getDocumentList().resetSelectionList();
+                    getDocumentList().display();}
             );
 
             resize();
@@ -52,12 +55,7 @@
 <body>
     <form id="main_form" class="main_form"
     onsubmit="changed=false; return true"
-    action="none"
     method="post">
-
-        <fieldset id="hidden_fieldset" class="hidden_fieldset">
-            <input type="hidden" name="cancel_url" value="http://10.0.112.141:12001/erp5/web_site_module/ung/view" />
-        </fieldset>
 
         <div class="container">
             <div class="navigation">
@@ -75,7 +73,7 @@
 
                                 <div class="input"><div  >
                                     <a class="email" href="/ung/mail">Email</a>
-                                    <a class="document" href="/web_site_module/ung">Documents</a>
+                                    <a class="document" href="#" onclick="window.location.reload()">Documents</a>
                                     <a class="calendar" href="/ung/calendar">Calendar</a>
                                 </div></div>
                             </div>
@@ -153,7 +151,7 @@
 
                                 <div class="input"><div  >
 
-                                    <a class="ung_docs" href="#" onclick="javascript:window.location.reload()">
+                                    <a class="ung_docs" href="#" onclick="window.location.reload()">
                                         <img src="images/ung/ung-logo.gif"/>
                                     </a>
                                     <a id="loading_message">Loading...</a>
@@ -199,19 +197,19 @@
                                                     </a>
                                                     <ul>
                                                         <li>
-                                                            <a href="web_illustration_template">
+                                                            <a href="#" onclick="createNewDocument('illustration')">
                                                                 <img src="images/icons/svg.png" alt=""/>
                                                                 <span>Web Illustration</span>
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a href="web_table_template">
+                                                            <a href="#" onclick="createNewDocument('table')">
                                                                 <img src="images/icons/table.png" alt=""/>
                                                                 <span>Web Table</span>
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a href="web_page_template">
+                                                            <a href="#" onclick="createNewDocument('text')">
                                                                 <img src="images/icons/document.png"/>
                                                                 <span>Web Page</span>
                                                             </a>
@@ -511,17 +509,17 @@
 
                                                                 <!-- listbox start - stop number -->
                                                                 <span id="page_start_number" class="listbox-current-page-start-number">1</span> -
-                                                                <span id="page_stop_number" class="listbox-current-page-stop-number">6</span>
+                                                                <span id="page_stop_number" class="listbox-current-page-stop-number">...</span>
                                                                 <span>of</span>
 
                                                                 <!-- listbox total rows number -->
                                                                 <span id="total_row_number" class="listbox-current-page-total-number your_listbox-current-page-total-number">
-                                                                    6 records
+                                                                    <a>?</a> records
                                                                 </span>
 
                                                                 <!-- listbox selected rows number -->
                                                                 <span id="selected_row_number" class="your_listbox-current-item-number">
-                                                                    - 0 items selected
+                                                                    - <a>0</a> items selected
                                                                 </span>
 
                                                             </div>
@@ -549,6 +547,7 @@
                                                                         name="your_listbox_checkAll:method"
                                                                         value="1" alt="Check All"
                                                                         title="Check All"
+                                                                        onclick="getDocumentList().checkAll()"
                                                                         src="images/icons/checkall.png" />
                                                                 &nbsp;
 
@@ -557,6 +556,7 @@
                                                                         name="your_listbox_uncheckAll:method"
                                                                         value="1" alt="Uncheck All"
                                                                         title="Uncheck All"
+                                                                        onclick="getDocuementList().resetSelectionList()"
                                                                         src="images/icons/decheckall.png" />
                                                             </th>
 
