@@ -1,0 +1,42 @@
+* Decision of JS pattern used for Prototypical Inheritance
+* Desicion: Why meta-data should be inside the data of the file
+** I had two choices about meta data:
+*** Let the meta-data stay inside the data itself i.e. your data on file will contain the meta data too.
+**** Advantage is that the ability to store meta-data is not needed or is dependednt on the type of storage
+**** We have more control over the meta data and how it is interfaced.
+**** Thus, currently meta-data in DAV is stored along with data, this way the hash returns the sum of both meta-data and data
+**** This might be desirable or undesirable but good thing is that decision is in our hand
+**** Other software must know how JIO stores the meta-data
+*** Let the meta-data be separate from the data so that the server can take care of meta-data in meaningful way
+**** This way, meta-data interface has to be written for every backend separately
+**** We just work on the data, the hash is returned for only the data part. encryption (or other transformations) are done for only the data part
+**** Many backend like ObjStore won't have meta-data handling in an intutive way
+**** server will handle the meta-data 
+**** This facilitates JIO interaction with other services (eg: in Google Doc, if you use its API to do the meta-data, even Google Doc can use that information)
+*** Decision
+    Meta-data with file data for now. Since JIO is open standard, we will publish our meta-data storing syntax. This way JIO can be used uniformally on All backends
+    The consequence of this is that we don't see meta-data as a different data, it is part of the document
+* Object based Storage
+** The basic idea is to let a object represent the entire tree of the
+virtual file system
+** The such objects can be nested inside each other. Hence to create
+an entire filesystem is possible.
+** Each object can be either a document (as are files in Unix) or a
+collection (as are directory in Unix)
+** We can then encapsulate the entire filesystem tree in as a single
+object.
+** The good part is that we can run JSON stringify on this object to
+convert it into pure string and thus serialize it.
+** The design should be such that these objects must be pluggable
+inside other objects.
+** Should be able to store Metadata
+** Design
+*** Each Object contain two basic information : doc_id,  content
+*** doc_id is basically the name of the resource (resource is a general term used for a collection or a document)
+*** In a given collection, all the containing collections and document should have unique doc_id (i.e. you can't have a collection and a document named `foo' inside on collection)
+*** Identification of if the resource is a collection or document is done by noting the type of the content, if it is an array, then the given resource is a collection, document otherwise
+*** Any resource is identified by it's doc_id and parent object (or parent's doc_id, which itself is identified by using its parents doc_id)
+*** 
+** If the loadDocument requests a directory, (aka collection), return the hash is the sum of all the content inside that collection and let the data be an array with the docid of all the child documents. 
+** Implementing 
+** Current implmentation doesn't enjoy much of code-reuse, I think I can use more inheritance core-reuse, will have to refactor the code. But the basic design of JIO will facilitate  that
