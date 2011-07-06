@@ -37,6 +37,7 @@ JSONSheetDocument.prototype.load({
 
     //save process
     saveEdition: function(content) {
+        this.setLastUser(getCurrentUser());
         this.setContent(content);
         this.setLastModification(currentTime());
         this.setAsCurrentDocument();
@@ -47,7 +48,7 @@ JSONSheetDocument.prototype.load({
         getCurrentPage().displayDocumentTitle(this);
         //getCurrentPage().displayDocumentContent(this);
         getCurrentPage().displayDocumentState(this);
-        getCurrentPage().displayAuthorName(this);
+        getCurrentPage().displayLastUserName(this);
         getCurrentPage().displayLastModification(this);
         setCurrentDocument(this);
     }

@@ -61,7 +61,6 @@ Page.prototype = {
             case "text-editor":
                     editor = new Xinha();
                     doc=new JSONTextDocument();
-                    saveAdresse = "dav/temp.json";
                     break;
             case "table-editor":
                     editor = new SheetEditor();
@@ -70,7 +69,6 @@ Page.prototype = {
             case "image-editor":
                     editor = new SVGEditor();
                     doc=new JSONIllustrationDocument();
-                    saveAdresse = "dav/temp2.json";
                     break;
             default://renvoie à la page d'accueil
                     window.location = "ung.html";
@@ -125,7 +123,7 @@ Page.prototype = {
     displayUserName: function(user) {$("a#userName").html(user.getName());},
 
         //document information
-    displayAuthorName: function(doc) {$("a#author").html(doc.getAuthor());},
+    displayLastUserName: function(doc) {$("a#author").html(doc.getAuthor());},
     displayLastModification: function(doc) {$("a#last_update").html(doc.getLastModification());},
     displayDocumentTitle: function(doc) {$("a#document_title").html(doc.getTitle());},
     displayDocumentContent: function(doc) {this.getEditor().loadContentFromDocument(doc);},
@@ -144,7 +142,7 @@ setCurrentPage = function(page) {currentPage = page;}
  */
 var User = function(details) {
     this.name = "unknown";
-    this.language = "fr";
+    this.language = "en";
     this.storage = "http://www.unhosted-dav.com";
     this.identityProvider = "http://www.webfinger.com";
     this.displayPreferences = 15;//number of displayed document in the list
@@ -190,6 +188,7 @@ var JSONDocument = function() {
     this.version = null;
 
     this.author=getCurrentUser().getName();
+    this.lastUser=getCurrentUser().getName();
     this.title="Untitled";
     this.content="";
     this.creation=currentTime();
@@ -201,6 +200,7 @@ JSONDocument.prototype = new UngObject();//inherits from UngObject
 JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
     //type
     getType: function() {return this.type;},
+    setType: function(newType) {this.type = newType;},
     
     //version
     getVersion: function() {return this.version;},
@@ -221,6 +221,8 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
     //author
     getAuthor:function() {return this.author;},
     setAuthor:function(userName) {this.author=userName;},
+    getLastUser:function() {return this.lastUser;},
+    setLastUser:function(user) {this.lastUser = user;},
 
     //dates
     getCreation:function() {return this.creation;},
@@ -235,7 +237,10 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
         setCurrentDocument(this);
     },
 
-    save: function() {}
+    save: function(instruction) {
+        var doc = this;
+        saveFile(getDocumentAddress(this), doc, instruction);
+    }
 });
 JSONDocument.prototype.states = {
     draft:{"fr":"Brouillon","en":"Draft"},
@@ -248,21 +253,20 @@ getCurrentDocument = function() {
     return doc;
 }
 setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.stringify(doc));}
-getDocumentList = function() {
-    var list = new DocumentList();
-    list.load(JSON.parse(localStorage.getItem("documentList")));
-    return list;
-}
-setDocumentList = function(list) {localStorage.setItem("documentList",JSON.stringify(list));}
+
 supportedDocuments = {"text":{editorPage:"text-editor",icon:"images/icons/document.png"},
         "illustration":{editorPage:"image-editor",icon:"images/icons/svg.png"},
         "table":{editorPage:"table-editor",icon:"images/icons/table.png"},
         "other":{editorPage:null,icon:"images/icons/other.gif"},
         undefined:{editorPage:null,icon:"images/icons/other.gif"}
 }
+getDocumentAddress = function(doc) {return "dav/"+doc.getCreation();}
 
-/*
- * actions
+/*************************************************
+ ******************   actions   ******************
+ *************************************************/
+/**
+ * open a dialog box to edit document information
  */
 editDocumentSettings = function() {
   loadFile("xml/xmlElements.xml", "html", function(data) {
@@ -277,6 +281,7 @@ editDocumentSettings = function() {
             doc.setTitle($(this).find("#name").attr("value"));
             doc.setLanguage($(getCurrentDocument()).find("#language").attr("value"));
             doc.setVersion($(getCurrentDocument()).find("#version").attr("value"));
+            saveCurrentDocument();
             doc.setAsCurrentDocument();//diplay modifications
             $(this).dialog("close");
           },
@@ -290,11 +295,31 @@ editDocumentSettings = function() {
 
 saveCurrentDocument = function() {
     getCurrentPage().getEditor().saveEdition();
-    saveXHR(saveAdresse);
-    //saveJIO(); : JIO function
+    getCurrentDocument().save();
 }
 
-changeLanguage = function(language) {
+ /**
+  * start an editor to edit the document
+  * @param doc : the document to edit
+  */
+var startDocumentEdition = function(doc) {
+    loadFile(getDocumentAddress(doc),"json",function(data) {
+        doc.load(data);
+        setCurrentDocument(doc);
+        if(supportedDocuments[doc.getType()].editorPage) {window.location = "theme.html";}
+        else alert("no editor available for this document");
+    });
+}
+var stopDocumentEdition = function() {
+    saveCurrentDocument();
+    window.location = "ung.html";
+}
+
+/**
+ * change the language of the user and reload the web page
+ * @param language : the new language
+ */
+var changeLanguage = function(language) {
     var user = getCurrentUser();
     user.setLanguage(language);
     setCurrentUser(user);

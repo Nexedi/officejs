@@ -2,41 +2,102 @@
  * This file provides the javascript used to display the list of user's documents
  */
 
+/* global variable */
+    /* the last modified document */
+getCurrentDocumentID = function() {return localStorage.getItem("currentDocumentID");}
+setCurrentDocumentID = function(ID) {return localStorage.setItem("currentDocumentID",ID);}
+
 /**
  * class DocumentList
  * This class provides methods to manipulate the list of documents of the current user
  */
-var DocumentList = function() {List.call(this);}
+var DocumentList = function() {
+    List.call(this);
+    this.displayedPage = 1;
+    this.selectionList = new List();
+}
 DocumentList.prototype = new List();
 DocumentList.prototype.load({
+    /* override : returns the ith document */
     get: function(i) {
         var doc = new JSONDocument();
         doc.load(this.content[i]);
         return doc;
     },
-    add: function(doc) {
-        this.content[this.size()]=doc;
-        this.length++;
-        setDocumentList(this)
+    /* override : put an element at the specified position */
+    put: function(i, doc) {
+        this.content[i]=doc;
+        if(!this.content[i]) {this.length++;}
+        setDocumentList(this);
     },
-    display: function() {
-        var n = getDocumentList().size();
+
+    getSelectionList: function() {
+        var list = new List();
+        list.load(this.selectionList);
+        return list;
+    },
+    resetSelectionList: function() {
+        this.selectionList = new List();
+        for(var i=0; i<this.length; i++) {
+            $("tr td.listbox-table-select-cell input#"+i).attr("checked",false);
+        }
+        setDocumentList(this);
+    },
+    checkAll: function() {
+        for(var i=0; i<this.length; i++) {
+            this.selectionList.put(i,this.get(i));
+            $("tr td.listbox-table-select-cell input#"+this.get(i).getID()).attr("checked",true);
+        }
+        setDocumentList(this);
+    },
+
+    getDisplayedPage: function() {return this.displayedPage;},
+    setDisplayedPage: function(index) {this.displayedPage = index;},
+
+    /* display the list of documents in the web page */
+    displayContent: function() {
+        var n = this.size();
         for(var i=0;i<n;i++) {
-            var ligne = new Line(getDocumentList().get(i),0);
+            var ligne = new Line(this.get(i),i);
             ligne.updateHTML();
             ligne.display();
         }
+    },
+    displayListInformation: function() {
+        if(this.size()>0) {
+            $("div.listbox-number-of-records").css("display","inline");
+            var step = getCurrentUser().getDisplayPreferences();
+            var first = (this.getDisplayedPage()-1)*step + 1;
+            var last = (this.size()<first+step) ? this.size() : first+step-1;
+            $("span#page_start_number").html(first);
+            $("span#page_stop_number").html(last);
+            $("span#total_row_number a").html(this.size());
+            $("span#selected_row_number a").html(this.getSelectionList().size());
+        }
+        else {$("div.listbox-number-of-records").css("display","none");}
+    },
+    display: function() {
+        this.displayContent();
+        this.displayListInformation();
+    },
+
+    /* update the ith document information */
+    update: function(i) {
+        var line = this;
+        var doc = line.get(i);
+        loadFile(getDocumentAddress(doc),"json",function(data) {
+            doc.load(data);//todo : replace by data.header
+            doc.setContent("");//
+            line.put(i,doc);
+        });
     }
-})
-
-/* initialize the list */
-//current lines are just for testing
-setDocumentList(new List());
-loadTest("dav/temp.json");
-loadTest("dav/temp2.json");
-getDocumentList().add(new JSONDocument());
-
-
+});
+getDocumentList = function() {
+    var list = new DocumentList();
+    list.load(JSON.parse(localStorage.getItem("documentList")));
+    return list;
+}
+setDocumentList = function(list) {localStorage.setItem("documentList",JSON.stringify(list));}
 
 
 /**
@@ -56,16 +117,38 @@ Line.prototype = {
     getHTML: function() {return this.html;},
     setHTML: function(newHTML) {this.html = newHTML;},
     isSelected: function() {
-        return $("tr td.listbox-table-select-cell input#"+this.ID).attr("checked");
+        return $("tr td.listbox-table-select-cell input#"+this.getID()).attr("checked");
+    },
+
+    addToSelection: function() {
+        var list = getDocumentList();
+        list.getSelectionList().put(this.getID(),this);
+        setDocumentList(list);
+    },
+    removeFromSelection: function() {
+        var list = getDocumentList();
+        list.getSelectionList().remove(this.getID());
+        setDocumentList(list);
+    },
+    changeState: function() {
+        this.isSelected() ? this.addToSelection() : this.removeFromSelection();
+        test = getDocumentList().getSelectionList();
+        $("span#selected_row_number a").html(getDocumentList().getSelectionList().size());
     },
 
     /* load the document information in the html of a default line */
     updateHTML: function() {
         var line = this;
         this.setHTML($(this.getHTML()).attr("class",this.getType())
-            .find("td.listbox-table-select-cell input").attr("id",this.getID()).end()//ID
+            .find("td.listbox-table-select-cell input")
+                .attr("id",this.getID())//ID
+                .click(function() {line.changeState();})//clic on a checkbox
+            .end()
             .find("td.listbox-table-data-cell")
-                .click(function() {line.startEdition(line.getDocument())})//clic
+                .click(function() {//clic on a line
+                    setCurrentDocumentID(line.getID());
+                    startDocumentEdition(line.getDocument())
+                })
                 .find("a.listbox-document-icon")
                     .find("img")
                         .attr("src",supportedDocuments[this.getType()].icon)//icon
@@ -77,14 +160,7 @@ Line.prototype = {
             .end());
     },
     /* add the line in the table */
-    display: function() {$("table.listbox tbody").append($(this.getHTML()));},
-    /* edit the document if clicked */
-    startEdition: function(doc) {
-        setCurrentDocument(doc);
-        if(supportedDocuments[doc.getType()].editorPage) {window.location = "theme.html";}
-        else alert("no editor available for this document");
-    }
-
+    display: function() {$("table.listbox tbody").append($(this.getHTML()));}
 }
 /* load the html code of a default line */
 Line.loadHTML = function() {
@@ -93,3 +169,22 @@ Line.loadHTML = function() {
 }
 /* return the html code of a default line */
 Line.getOriginalHTML = function() {return Line.originalHTML;}
+
+
+ /**
+  * create a new document and start an editor to edit it
+  * @param type : the type of the document to create
+  */
+var createNewDocument = function(type) {
+    var newDocument = new JSONDocument();
+    newDocument.setType(type);
+
+    newDocument.save(function() {
+        getDocumentList().add(newDocument);
+        startDocumentEdition(newDocument);
+    });
+}
+
+var deleteSelectedDocuments = function() {
+
+}

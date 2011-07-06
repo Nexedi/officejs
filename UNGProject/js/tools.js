@@ -45,7 +45,12 @@ var List = function(arg) {
 List.prototype = new UngObject();
 List.prototype.load ({
     size: function() {return this.length;},
-    add: function(element) {this.content[this.size()]=element; this.length++;},
+    put: function(key,value) {
+        if(!this.content[key]) {this.length=this.length+1;}
+        alert(""+this.length+this.content[key]);
+        this.content[key]=value;
+    },
+    add: function(element) {this.put(this.size(),element);},
     get: function(i) {return this.content[i];},
     concat: function(list) {while(!list.isEmpty()) {this.add(list.pop())}},
     remove: function(i) {delete this.content[i];this.length--;},
@@ -56,8 +61,21 @@ List.prototype.load ({
         var element = this.get(this.size()-1);
         this.remove(this.size()-1);
         return element;
-    }
+    },
+    recursiveCall: function(instruction) {
+        var list = new List();
+        list.load(this);
+        if(list.isEmpty()) {return false;}
+        var result = instruction(list.pop());
+        return result ? result : list.recursiveCall(instruction);
+    },
+    find: function(object) {
+        for(var i = 0; i<this.length; i++) {if(this.get(i)===object) {return i;}}
+        return -1;
+    },
+    contains: function(object) { return (find(object)!=-1); }
 });
+
 
 /**
  * returns the current date
@@ -82,35 +100,37 @@ saveXHR = function(address) {
 	   });
 };
 
+/**
+ * load a public file with a basic ajax request
+ * @param address : the address of the document
+ * @param type : the type of the document content
+ * @param instruction : a function to execute when getting the document
+ */
 loadFile = function(address, type, instruction) {
     $.ajax({
 	url: address,
 	type: "GET",
         dataType: type,
-	success: instruction
+	success: instruction,
+        error: function(type) {t=type;alert("er");}
     });
 }
 
-// load methode, used for testing
-//(Francois)
-loadTest = function(address) {
+// save
+saveFile = function(address, content, instruction) {
     $.ajax({
-	url: address,
-	type: "GET",
+        url: address,
+        type: "PUT",
         dataType: "json",
-	/*headers: {
-	    Authorization: "Basic "+"nom:test"},
-        fields: {
-	   withCredentials: "true"
-       },*/
-	success: function(data){
-	    var list = getDocumentList();
-            var doc = new JSONDocument();
-	    doc.load(data);
-            list.add(doc);
-	}
+        data: JSON.stringify(content),
+        headers: { Authorization: "Basic "+btoa("smik:asdf")},
+        fields: { withCredentials: "true" },
+        success: instruction,
+        error: function(type) {
+            if(type.status==201) {instruction();}//ajax thinks that 201 is an error...
+        }
     });
-}
+};
 
 // load
 loadXHR = function(address) {
@@ -164,8 +184,11 @@ tryUntilSucceed = function(func) {
 }
 
 /**
- * Resize the right part of ung
+ * Resize the right part of ung main page
+ * could be developed to implement more beautiful resizments
  */
 var resize = function() {
     $("div.main-right").width($(window).width()-$("div.main-left").width());
 }
+
+

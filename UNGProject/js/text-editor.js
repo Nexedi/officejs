@@ -45,6 +45,7 @@ var JSONTextDocument = function() {
 JSONTextDocument.prototype = new JSONDocument();//inherits methods from JSONDocument
 
 JSONTextDocument.prototype.saveEdition = function(content) {
+    this.setLastUser(getCurrentUser());
     this.setContent(content);
     this.setLastModification(currentTime());
     this.setAsCurrentDocument();
@@ -53,7 +54,7 @@ JSONTextDocument.prototype.setAsCurrentDocument = function() {
     getCurrentPage().displayDocumentTitle(this);
     getCurrentPage().displayDocumentState(this);
     getCurrentPage().displayDocumentContent(this);
-    getCurrentPage().displayAuthorName(this);
+    getCurrentPage().displayLastUserName(this);
     getCurrentPage().displayLastModification(this);
     setCurrentDocument(this);
 }

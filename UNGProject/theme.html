@@ -2,7 +2,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
 
-
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <meta http-equiv="Content-Script-Type" content="text/javascript" />
         <meta http-equiv="Content-Style-Type" content="text/css" />
@@ -20,9 +19,9 @@
         <!-- jquery -->
         <script type="text/javascript" src="js/jquery/jquery.js"></script>
         <script type="text/javascript" src="js/jquery/jquery-ui.js"></script>
-        <!--<script type="text/javascript" src="js/jquery/jq.js"></script>-->
 
-        <link rel="stylesheet" type="text/css" href="css/theme.css" />
+        <link type="text/css" rel="stylesheet" href="css/jquery-ui.css" />
+        <link rel="stylesheet" type="text/css" href="css/ung.css" />
 
         <script type="text/javascript" src="js/base64.js"></script>
         <script type="text/javascript" src="js/tools.js"></script>
@@ -50,10 +49,6 @@
 
     </head>
     <body>
-    <form id="main_form" class="main_form"
-        onsubmit="changed=false; return true"
-        action="javascript:saveCurrentDocument()"
-        method="post">
 
         <div class="container">
             <div class="navigation">
@@ -72,7 +67,7 @@
                                 <div class="input"><div  >
 
                                     <a class="email" href="ung/mail.html" lang="en">Email</a>
-                                    <a class="document" href="#" onclick="javascript:window.location.reload()" lang="en">Documents</a>
+                                    <a class="document" href="#" onclick="stopDocumentEdition()" lang="en">Documents</a>
                                     <a class="calendar" href="ung/calendar.html" lang="en">Calendar</a>
 
                                 </div></div>
@@ -115,139 +110,138 @@
 
                                     <a id="userName">Unknown</a>
 
-                                       | <a id="settings" href="#" lang="en">Parametres</a>
-                                       | <a id="help" href="#" lang="en">Help</a>
-                                       | <a href="WebSite_logout" id="log" lang="en">Sign out</a>
+                                    | <a id="settings" href="#" lang="en">Parametres</a>
+                                    | <a id="help" href="#" lang="en">Help</a>
+                                    | <a href="WebSite_logout" id="log" lang="en">Sign out</a>
 
-                                    </div></div>
+                                </div></div>
 
-                                </div>
+                            </div>
 
-                            </fieldset>
-                        </div>
-
+                        </fieldset>
                     </div>
 
                 </div>
 
-                <div class="header">
+            </div>
 
-                    <!-- Each aggregate of groups is a div wrapper -->
-                    <div class="wrapper" id="wrapper_header">
+            <div class="header">
 
-                        <div class=" header-left">
-                            <fieldset class="widget">
-                                <legend class="group_title"></legend>
+                <!-- Each aggregate of groups is a div wrapper -->
+                <div class="wrapper" id="wrapper_header">
 
-                                <div class="field" title="">
+                    <div class=" header-left">
+                        <fieldset class="widget">
+                            <legend class="group_title"></legend>
 
-                                    <label>search_bar</label>
-                                    <div class="input"><div  >
+                            <div class="field" title="">
 
-                                        <a class="ung_docs" href="ung.html">
-                                            <img src="images/ung/ung-logo.gif" alt="logo"/>
-                                        </a>
+                                <label>search_bar</label>
+                                <div class="input"><div  >
 
-                                        <a id="loading_message" lang="en">Loading...</a>
-                                        <a id="document_title" name="document_title" onclick="javascript:editDocumentSettings()">Untitled</a>
-                                        <a id="document_state" name="document_state">...</a>
+                                    <a class="ung_docs" href="#" onclick="stopDocumentEdition()">
+                                        <img src="images/ung/ung-logo.gif" alt="logo"/>
+                                    </a>
 
-                                    </div></div>
+                                    <a id="loading_message" lang="en">Loading...</a>
+                                    <a id="document_title" name="document_title" onclick="javascript:editDocumentSettings()">Untitled</a>
+                                    <a id="document_state" name="document_state">...</a>
 
-                                </div>
-                            </fieldset>
+                                </div></div>
 
-                        </div>
-
-                        <div class=" header-right">
-                            <fieldset class="widget">
-
-                                <legend class="group_title"></legend>
-
-                                <div class="field" title="">
-
-                                    <label>document_action_box</label>
-                                    <div class="input"><div  >
-
-                                        <a id="last_update">Updated ... by</a>
-                                        <a id="author">Unknown</a>
-
-                                        <button type="submit">Save</button>
-
-                                        <div class="action_menu">
-
-                                            <ul><li>
-                                                <a id="change_state">
-                                                    <span>Change state</span>
-                                                    <img src="images/ung/arrow.png" alt=">"/>
-                                                </a>
-
-                                                <ul>
-
-                                                    <li>
-                                                        <a onclick="javascript:cancel_sharing()">
-                                                            <h6>Cancel document publication</h6>
-                                                        </a>
-                                                    </li>
-
-
-                                                    <li>
-                                                        <a onclick="javascript:translate()">
-                                                            <h6>Request translation</h6>
-                                                        </a>
-                                                    </li>
-
-
-                                                    <li>
-                                                        <a onclick="javascript:submit()">
-                                                            <h6>Submit document for review</h6>
-                                                        </a>
-                                                    </li>
-
-                                                    <li>
-                                                        <a onclick="javascript:share()">
-                                                            <h6>Share this document</h6>
-                                                        </a>
-                                                    </li>
-
-                                                </ul>
-                                            </li></ul>
-
-                                        </div>
-
-                                    </div></div>
-
-                                </div>
-                            </fieldset>
-                        </div>
+                            </div>
+                        </fieldset>
 
                     </div>
+
+                    <div class=" header-right">
+                        <fieldset class="widget">
+
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+
+                                <label>document_action_box</label>
+                                <div class="input"><div  >
+
+                                    <a id="last_update">Updated ... by</a>
+                                    <a id="author">Unknown</a>
+
+                                    <button type="button" onclick="javascript:saveCurrentDocument()">Save</button>
+
+                                    <div class="action_menu">
+
+                                        <ul id="change_state_list"><li>
+                                            <a id="change_state">
+                                                <span>Change state</span>
+                                                <img src="images/ung/arrow.png" alt=">"/>
+                                            </a>
+
+                                            <ul>
+
+                                                <li>
+                                                    <a onclick="javascript:cancel_sharing()">
+                                                        <h6>Cancel document publication</h6>
+                                                    </a>
+                                                </li>
+
+
+                                                <li>
+                                                    <a onclick="javascript:translate()">
+                                                        <h6>Request translation</h6>
+                                                    </a>
+                                                </li>
+
+
+                                                <li>
+                                                    <a onclick="javascript:submit()">
+                                                        <h6>Submit document for review</h6>
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a onclick="javascript:share()">
+                                                        <h6>Share this document</h6>
+                                                    </a>
+                                                </li>
+
+                                            </ul>
+                                        </li></ul>
+
+                                    </div>
+
+                                </div></div>
+
+                            </div>
+                        </fieldset>
+                    </div>
+
                 </div>
+            </div>
 
 
-                <div class="main">
+            <div class="main">
 
-                    <div class="document">
-
-
-                        <div class="content editable">
+                <div class="document">
 
 
-                            <fieldset class="bottom editable">
+                    <div class="content editable">
 
-                                <div id="page_content" class="field page"
-                                     title="Contenu de la page web.">
-                                </div>
-                                <div id="document_content" class="field hidden"
-                                     title="The content of the document considered as a text string">
-                                </div>
 
-                            </fieldset>
+                        <fieldset class="bottom editable">
 
-                        </div>
+                            <div id="page_content" class="field page"
+                                 title="Contenu de la page web.">
+                            </div>
+                            <div id="document_content" class="field hidden"
+                                 title="The content of the document considered as a text string">
+                            </div>
+
+                        </fieldset>
+
                     </div>
                 </div>
             </div>
-        </form>
+        </div>
     </body>
 </html>
