@@ -36,18 +36,20 @@ UngObject.prototype.inherits = function(superClass) {
 /**
  * Class List
  * this class provides usual API to manipulate list structure
+ * @param arg : a json list object
  */
 var List = function(arg) {
-    this.content = new Array();
-    if(arg) {this.content = arg;}
-    this.length = this.content.length;
+    if(arg) {this.load(arg);}
+    else {
+        this.content = new Array();
+        this.length = this.content.length;
+    }
 }
 List.prototype = new UngObject();
 List.prototype.load ({
     size: function() {return this.length;},
     put: function(key,value) {
-        if(!this.content[key]) {this.length=this.length+1;}
-        alert(""+this.length+this.content[key]);
+        if(!this.content[key]) {this.length++;}
         this.content[key]=value;
     },
     add: function(element) {this.put(this.size(),element);},

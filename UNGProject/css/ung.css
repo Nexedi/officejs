@@ -121,8 +121,7 @@ div#wrapper_header {
     /* left */
 div.header-left {
     margin-top: -4px;
-    min-width: 32em;
-    width: 40%;
+    width: 32em;
     position: absolute;
 }
 div.header-left h2 {
@@ -155,6 +154,11 @@ div#wrapper_header div.field a[name="document_title"], div#wrapper_header div.fi
 div#wrapper_header div.field a[name="document_title"]:hover {
     background: none repeat scroll 0 0 #FFFFD6;
     border: 1px solid #AAAAAA;
+}
+        /* research bar */
+div.input form {
+    margin-top: 0.5em;
+    float:right;
 }
 
     /* right */

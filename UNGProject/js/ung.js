@@ -10,20 +10,26 @@ setCurrentDocumentID = function(ID) {return localStorage.setItem("currentDocumen
 /**
  * class DocumentList
  * This class provides methods to manipulate the list of documents of the current user
+ * As the list is stored in the localStorage, we are obliged to call "setDocumentList" after
+ * any content modification
+ * @param arg : a documentList json object to load
  */
-var DocumentList = function() {
-    List.call(this);
-    this.displayedPage = 1;
-    this.selectionList = new List();
+var DocumentList = function(arg) {
+    List.call(this,arg);
+    if(arg) {
+        this.load(arg);
+        for(var i=0; i<this.size(); i++) {
+            this.content[i]=new JSONDocument(this.get(i));//load methods of documents
+        }
+        this.selectionList = new List(arg.selectionList);//load methods of selectionList
+    }
+    else {
+        this.displayedPage = 1;
+        this.selectionList = new List();
+    }
 }
 DocumentList.prototype = new List();
 DocumentList.prototype.load({
-    /* override : returns the ith document */
-    get: function(i) {
-        var doc = new JSONDocument();
-        doc.load(this.content[i]);
-        return doc;
-    },
     /* override : put an element at the specified position */
     put: function(i, doc) {
         this.content[i]=doc;
@@ -31,11 +37,7 @@ DocumentList.prototype.load({
         setDocumentList(this);
     },
 
-    getSelectionList: function() {
-        var list = new List();
-        list.load(this.selectionList);
-        return list;
-    },
+    getSelectionList: function() { return this.selectionList; },
     resetSelectionList: function() {
         this.selectionList = new List();
         for(var i=0; i<this.length; i++) {
@@ -45,8 +47,8 @@ DocumentList.prototype.load({
     },
     checkAll: function() {
         for(var i=0; i<this.length; i++) {
-            this.selectionList.put(i,this.get(i));
-            $("tr td.listbox-table-select-cell input#"+this.get(i).getID()).attr("checked",true);
+            this.getSelectionList().put(i,this.get(i));
+            $("tr td.listbox-table-select-cell input#"+i).attr("checked",true);
         }
         setDocumentList(this);
     },
@@ -83,19 +85,17 @@ DocumentList.prototype.load({
 
     /* update the ith document information */
     update: function(i) {
-        var line = this;
-        var doc = line.get(i);
+        var list = this;
+        var doc = list.get(i);
         loadFile(getDocumentAddress(doc),"json",function(data) {
             doc.load(data);//todo : replace by data.header
             doc.setContent("");//
-            line.put(i,doc);
+            list.put(i,doc);
         });
     }
 });
 getDocumentList = function() {
-    var list = new DocumentList();
-    list.load(JSON.parse(localStorage.getItem("documentList")));
-    return list;
+    return new DocumentList(JSON.parse(localStorage.getItem("documentList")));
 }
 setDocumentList = function(list) {localStorage.setItem("documentList",JSON.stringify(list));}
 
@@ -120,19 +120,21 @@ Line.prototype = {
         return $("tr td.listbox-table-select-cell input#"+this.getID()).attr("checked");
     },
 
+    /* add the document of this line to the list of selected documents */
     addToSelection: function() {
-        var list = getDocumentList();
+        list = getDocumentList();
         list.getSelectionList().put(this.getID(),this);
         setDocumentList(list);
     },
+    /* remove the document of this line from the list of selected documents */
     removeFromSelection: function() {
         var list = getDocumentList();
         list.getSelectionList().remove(this.getID());
         setDocumentList(list);
     },
+    /* check or uncheck the line */
     changeState: function() {
         this.isSelected() ? this.addToSelection() : this.removeFromSelection();
-        test = getDocumentList().getSelectionList();
         $("span#selected_row_number a").html(getDocumentList().getSelectionList().size());
     },
 
