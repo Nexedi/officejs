@@ -21,7 +21,6 @@ var Page = function(page) {
     this.html = window.document;
     this.xml = null;
     this.editor = null;
-
     //define as current page
     currentPage = this;
     if(page!=undefined) {this.loadXML("xml/"+page+".xml");}
@@ -139,13 +138,17 @@ setCurrentPage = function(page) {currentPage = page;}
 /*
  * User Class
  * stores useful information about a user and provides methods to manipulate them
+ * @param arg : a json User object to load
  */
-var User = function(details) {
-    this.name = "unknown";
-    this.language = "en";
-    this.storage = "http://www.unhosted-dav.com";
-    this.identityProvider = "http://www.webfinger.com";
-    this.displayPreferences = 15;//number of displayed document in the list
+var User = function(arg) {
+    if(arg) {this.load(arg);}
+    else {
+        this.name = "unknown";
+        this.language = "en";
+        this.storage = "http://www.unhosted-dav.com";
+        this.identityProvider = "http://www.webfinger.com";
+        this.displayPreferences = 15;//number of displayed document in the list
+    }
 }
 User.prototype = new UngObject();//inherits from UngObject
 User.prototype.load({//add methods thanks to the UngObject.load method
@@ -168,9 +171,7 @@ User.prototype.load({//add methods thanks to the UngObject.load method
 });
 
 getCurrentUser = function() {
-    var user = new User();
-    user.load(JSON.parse(localStorage.getItem("currentUser")));
-    return user;
+    return new User(JSON.parse(localStorage.getItem("currentUser")));
 }
 setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.stringify(user));}
 
@@ -182,18 +183,24 @@ setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.string
  * to manipulate these elements.
  */
 
-/* JSON document */
-var JSONDocument = function() {
-    this.language = getCurrentUser().getLanguage();
-    this.version = null;
+/**
+ * JSON document
+ * @param arg : a json JSONDocument object to load
+ */
+var JSONDocument = function(arg) {
+    if(arg) {this.load(arg);}
+    else {
+        this.language = getCurrentUser().getLanguage();
+        this.version = null;
 
-    this.author=getCurrentUser().getName();
-    this.lastUser=getCurrentUser().getName();
-    this.title="Untitled";
-    this.content="";
-    this.creation=currentTime();
-    this.lastModification=currentTime();
-    this.state=this.states.draft;
+        this.author=getCurrentUser().getName();
+        this.lastUser=getCurrentUser().getName();
+        this.title="Untitled";
+        this.content="";
+        this.creation=currentTime();
+        this.lastModification=currentTime();
+        this.state=JSONDocument.prototype.states.draft;
+    }
 }
 JSONDocument.prototype = new UngObject();//inherits from UngObject
 
@@ -240,7 +247,8 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
     save: function(instruction) {
         var doc = this;
         saveFile(getDocumentAddress(this), doc, instruction);
-    }
+    },
+    remove: function(instruction) {deleteFile(getDocumentAddress(this), instruction);}
 });
 JSONDocument.prototype.states = {
     draft:{"fr":"Brouillon","en":"Draft"},
@@ -248,9 +256,7 @@ JSONDocument.prototype.states = {
     deleted:{"fr":"Supprimé","en":"Deleted"}
 }
 getCurrentDocument = function() {
-    var doc = new JSONDocument();
-    doc.load(JSON.parse(localStorage.getItem("currentDocument")));
-    return doc;
+    return new JSONDocument(JSON.parse(localStorage.getItem("currentDocument")));
 }
 setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.stringify(doc));}
 
@@ -269,28 +275,29 @@ getDocumentAddress = function(doc) {return "dav/"+doc.getCreation();}
  * open a dialog box to edit document information
  */
 editDocumentSettings = function() {
-  loadFile("xml/xmlElements.xml", "html", function(data) {
-      $("rename", data).dialog({
-        autoOpen: true,
-        height: 131,
-        width: 389,
-        modal: true,
-        buttons: {
-          "Save": function(){
-            var doc = getCurrentDocument();
-            doc.setTitle($(this).find("#name").attr("value"));
-            doc.setLanguage($(getCurrentDocument()).find("#language").attr("value"));
-            doc.setVersion($(getCurrentDocument()).find("#version").attr("value"));
-            saveCurrentDocument();
-            doc.setAsCurrentDocument();//diplay modifications
-            $(this).dialog("close");
-          },
-          Cancel: function() {
-            $(this).dialog("close");
-          }
-        }
-    });
-  }
+    saveCurrentDocument();
+    loadFile("xml/xmlElements.xml", "html", function(data) {
+        $("rename", data).dialog({
+            autoOpen: true,
+            height: 131,
+            width: 389,
+            modal: true,
+            buttons: {
+                "Save": function(){
+                    var doc = getCurrentDocument();
+                    doc.setTitle($(this).find("#name").attr("value"));
+                    doc.setLanguage($(getCurrentDocument()).find("#language").attr("value"));
+                    doc.setVersion($(getCurrentDocument()).find("#version").attr("value"));
+                    saveCurrentDocument();
+                    doc.setAsCurrentDocument();//diplay modifications
+                    $(this).dialog("close");
+                },
+                Cancel: function() {
+                    $(this).dialog("close");
+                }
+            }
+        });
+    }
 )}
 
 saveCurrentDocument = function() {

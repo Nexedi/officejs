@@ -15,13 +15,11 @@ setCurrentDocumentID = function(ID) {return localStorage.setItem("currentDocumen
  * @param arg : a documentList json object to load
  */
 var DocumentList = function(arg) {
-    List.call(this,arg);
+    //List.call(this);
     if(arg) {
         this.load(arg);
-        for(var i=0; i<this.size(); i++) {
-            this.content[i]=new JSONDocument(this.get(i));//load methods of documents
-        }
-        this.selectionList = new List(arg.selectionList);//load methods of selectionList
+        this.load(new List(arg,JSONDocument));
+        this.selectionList = new List(arg.selectionList,JSONDocument);//load methods of selectionList
     }
     else {
         this.displayedPage = 1;
@@ -30,27 +28,44 @@ var DocumentList = function(arg) {
 }
 DocumentList.prototype = new List();
 DocumentList.prototype.load({
-    /* override : put an element at the specified position */
-    put: function(i, doc) {
-        this.content[i]=doc;
-        if(!this.content[i]) {this.length++;}
+    addDocument: function(doc) {
+        this.add(doc);
         setDocumentList(this);
+        this.display();
+    },
+    removeDocument: function(doc) {
+        var i = this.find(doc);
+        this.get(i).remove()//delete the file
+        this.remove(i);//remove from the list
+        setDocumentList(this);
+        this.display();
     },
 
     getSelectionList: function() { return this.selectionList; },
     resetSelectionList: function() {
         this.selectionList = new List();
-        for(var i=0; i<this.length; i++) {
-            $("tr td.listbox-table-select-cell input#"+i).attr("checked",false);
+        for(var i=0; i<this.size(); i++) {
+            $("tr td.listbox-table-select-cell input#"+i).attr("checked",false);//uncheck
         }
         setDocumentList(this);
+        $("span#selected_row_number a").html(0);//display the selected row number
     },
     checkAll: function() {
-        for(var i=0; i<this.length; i++) {
-            this.getSelectionList().put(i,this.get(i));
+        this.selectionList = new List();
+        for(var i=0; i<this.size(); i++) {
+            this.getSelectionList().add(this.get(i));
             $("tr td.listbox-table-select-cell input#"+i).attr("checked",true);
         }
         setDocumentList(this);
+        $("span#selected_row_number a").html(this.size());//display the selected row number
+    },
+
+    deleteSelectedDocuments: function() {
+        var selection = this.getSelectionList();
+        while(!selection.isEmpty()) {
+            var doc = selection.pop();
+            this.removeDocument(doc);
+        }
     },
 
     getDisplayedPage: function() {return this.displayedPage;},
@@ -58,6 +73,7 @@ DocumentList.prototype.load({
 
     /* display the list of documents in the web page */
     displayContent: function() {
+        $("table.listbox tbody").html("");//empty the previous displayed list
         var n = this.size();
         for(var i=0;i<n;i++) {
             var ligne = new Line(this.get(i),i);
@@ -90,14 +106,17 @@ DocumentList.prototype.load({
         loadFile(getDocumentAddress(doc),"json",function(data) {
             doc.load(data);//todo : replace by data.header
             doc.setContent("");//
-            list.put(i,doc);
+            list.set(i,doc);
+            setDocumentList(list);
         });
     }
 });
 getDocumentList = function() {
     return new DocumentList(JSON.parse(localStorage.getItem("documentList")));
 }
-setDocumentList = function(list) {localStorage.setItem("documentList",JSON.stringify(list));}
+setDocumentList = function(list) {
+    localStorage.setItem("documentList",JSON.stringify(list));
+}
 
 
 /**
@@ -122,20 +141,20 @@ Line.prototype = {
 
     /* add the document of this line to the list of selected documents */
     addToSelection: function() {
-        list = getDocumentList();
-        list.getSelectionList().put(this.getID(),this);
+        var list = getDocumentList();
+        list.getSelectionList().add(this.getDocument());
         setDocumentList(list);
     },
     /* remove the document of this line from the list of selected documents */
     removeFromSelection: function() {
         var list = getDocumentList();
-        list.getSelectionList().remove(this.getID());
+        list.getSelectionList().removeElement(this.getDocument());
         setDocumentList(list);
     },
     /* check or uncheck the line */
     changeState: function() {
         this.isSelected() ? this.addToSelection() : this.removeFromSelection();
-        $("span#selected_row_number a").html(getDocumentList().getSelectionList().size());
+        $("span#selected_row_number a").html(getDocumentList().getSelectionList().size());//display the selected row number
     },
 
     /* load the document information in the html of a default line */
@@ -182,11 +201,7 @@ var createNewDocument = function(type) {
     newDocument.setType(type);
 
     newDocument.save(function() {
-        getDocumentList().add(newDocument);
+        getDocumentList().addDocument(newDocument);
         startDocumentEdition(newDocument);
     });
-}
-
-var deleteSelectedDocuments = function() {
-
 }

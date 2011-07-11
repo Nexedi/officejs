@@ -33,51 +33,132 @@ UngObject.prototype.inherits = function(superClass) {
     this.prototype.load(superClass.prototype);
 }
 
+/* return true only if two objects are equals */
+UngObject.prototype.equals = function(object) {
+    for (var property in object) {
+        if (this.hasOwnProperty(property)) {
+            var isEquals = this[property]&&typeof(this[property])=="object" ? UngObject.prototype.equals.call(this[property],object[property]) : this[property]===object[property];
+            if (!isEquals) {return false}
+        }
+    }
+    return true;
+}
+
+
 /**
  * Class List
  * this class provides usual API to manipulate list structure
  * @param arg : a json list object
+ * @param contentType : the type of the elements of the list
  */
-var List = function(arg) {
-    if(arg) {this.load(arg);}
+var List = function(arg, contentType) {
+    if(arg && arg.headElement) {
+        if(contentType) {
+            this.headElement=new contentType(arg.headElement);
+        } else {
+            this.headElement = arg.headElement;
+        }
+        this.length = arg.length;
+        this.previous = new List(arg.previous, contentType);
+    }
     else {
-        this.content = new Array();
-        this.length = this.content.length;
+        this.nullElement();
     }
 }
 List.prototype = new UngObject();
-List.prototype.load ({
+List.prototype.load({
+    nullElement: function() {
+        this.headElement = null;
+        this.previous = undefined;
+        this.length = 0;
+    },
     size: function() {return this.length;},
-    put: function(key,value) {
-        if(!this.content[key]) {this.length++;}
-        this.content[key]=value;
+    head: function() {return this.headElement;},
+    tail: function() {return this.previous;},
+    isEmpty: function() {return this.head()===null;},
+    equals: function(list) {
+        return this.head().equals(list.head()) && this.tail().equals(list.tail());
     },
-    add: function(element) {this.put(this.size(),element);},
-    get: function(i) {return this.content[i];},
-    concat: function(list) {while(!list.isEmpty()) {this.add(list.pop())}},
-    remove: function(i) {delete this.content[i];this.length--;},
-    isEmpty: function() {return this.size()==0;},
-    head: function() {return this.isEmpty() ? null : this.get(this.size()-1);},
+    add: function(value) {
+        var t = new List();
+        t.load(this);
+        this.headElement = value;
+        this.previous = t;
+        this.length = t.size()+1;
+    },
+    get: function(i) {
+        if(i>=this.size()) {return null;}
+        if(i==0) {return this.head();}
+        return this.tail().get(i-1);
+    },
+    set: function(i,element) {
+        if(i>=this.size()) {error("set out of bounds, "+i+" : "+this.size(),this);return}
+        if(i==0) {
+            this.headElement=element;
+        } else {
+            this.tail().set(i-1,element);
+        }
+    },
+    remove: function(i) {
+        if(i>=this.size()) {error("remove out of bounds, "+i+" : "+this.size(),this);return}//particular case
+        if(i==0) {this.pop();return}//particular case
+        if(i==1) {//init
+            this.previous = this.tail().tail();
+        } else {//recursion
+            this.tail().remove(i-1);
+        }
+        this.length--;
+    },
     pop: function() {
-        if(this.isEmpty()) {return null;}
-        var element = this.get(this.size()-1);
-        this.remove(this.size()-1);
-        return element;
-    },
-    recursiveCall: function(instruction) {
-        var list = new List();
-        list.load(this);
-        if(list.isEmpty()) {return false;}
-        var result = instruction(list.pop());
-        return result ? result : list.recursiveCall(instruction);
+        if(this.isEmpty()) {error("pop on empty list",this);return null;}
+        var h = this.head();
+        this.load(this.tail())
+        return h;
     },
     find: function(object) {
-        for(var i = 0; i<this.length; i++) {if(this.get(i)===object) {return i;}}
-        return -1;
+        if(this.isEmpty()) {return -1}//init-false
+        var elt = this.head();
+        if(object.equals) {//init-true
+            if(object.equals(this.head())) {return 0;}//with an adapted comparator
+        } else {
+            if(object===this.head()) {return 0;}//with usual comparator
+        }
+        var recursiveResult = this.tail().find(object);//recursion
+        return recursiveResult>=0 ? this.tail().find(object)+1 : recursiveResult;
     },
-    contains: function(object) { return (find(object)!=-1); }
+    contains: function(object) {if(this.isEmpty()) {return false} else {return object===this.head() ? true : this.tail().contains(object)}},
+    insert: function(element,i) {
+        if(i>this.size()) {error("insert out of bounds, "+i+" : "+this.size(),this);return}//particular case
+        if(i==0) {//init
+            this.add(element);
+        } else {//recursion
+            this.tail().insert(element,i-1);
+            this.length++;
+        }
+    },
+    replace: function(oldElement,newElement) {
+        if(this.isEmpty()) {error("<<element not found>> when trying to replace",this);return}//init-false
+        if(oldElement===this.head()) {
+            this.set(0,newElement);//init-true
+        } else {
+            this.tail().replace(oldElement,newElement);//recursion
+        }
+    },
+    removeElement: function(element) {//remove each occurence of the element in this list
+        if(this.isEmpty()) {return}
+        this.tail().removeElement(element);
+        if(element.equals) {//init-true
+            if(element.equals(this.head())) {this.pop();}//with an adapted comparator
+        } else {
+            if(element===this.head()) {this.pop();}//with usual comparator
+        }
+    }
 });
 
+error: function(message,object) {
+	errorObject = object;
+	console.log(message);
+}
 
 /**
  * returns the current date
@@ -89,17 +170,17 @@ currentTime = function() {return (new Date()).toUTCString();}
 // save
 saveXHR = function(address) {
     $.ajax({
-               url: address,
-               type: "PUT",
-	       headers: {
-		   Authorization: "Basic "+btoa("smik:asdf")},
-               fields: {
-		   withCredentials: "true"
-	       },
-               data: JSON.stringify(getCurrentDocument()),
-               success: function(){alert("saved");},
-               error: function(xhr) { alert("error while saving");}
-	   });
+        url: address,
+        type: "PUT",
+        headers: {
+            Authorization: "Basic "+btoa("smik:asdf")},
+        fields: {
+            withCredentials: "true"
+        },
+        data: JSON.stringify(getCurrentDocument()),
+        success: function(){alert("saved");},
+        error: function(xhr) { alert("error while saving");}
+    });
 };
 
 /**
@@ -110,11 +191,11 @@ saveXHR = function(address) {
  */
 loadFile = function(address, type, instruction) {
     $.ajax({
-	url: address,
-	type: "GET",
+        url: address,
+        type: "GET",
         dataType: type,
-	success: instruction,
-        error: function(type) {t=type;alert("er");}
+        success: instruction,
+        error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
     });
 }
 
@@ -129,28 +210,41 @@ saveFile = function(address, content, instruction) {
         fields: { withCredentials: "true" },
         success: instruction,
         error: function(type) {
-            if(type.status==201) {instruction();}//ajax thinks that 201 is an error...
+            if(type.status==201 || type.status==204) {instruction();}//ajax thinks that 201 is an error...
         }
     });
-};
+}
+
+deleteFile = function(address, instruction) {
+    $.ajax({
+        url: address,
+        type: "DELETE",
+        headers: { Authorization: "Basic "+btoa("smik:asdf")},
+        fields: { withCredentials: "true" },
+        success: instruction,
+        error: function(type) {
+            alert(type.status);//ajax thinks that 201 is an error...
+        }
+    });
+}
 
 // load
 loadXHR = function(address) {
     $.ajax({
-	url: address,
-	type: "GET",
+        url: address,
+        type: "GET",
         dataType: "json",
-	cache:false,
-	headers: {
-	    Authorization: "Basic "+btoa("smik:asdf")},
+        cache:false,
+        headers: {
+            Authorization: "Basic "+btoa("smik:asdf")},
         fields: {
-	   withCredentials: "true"
+           withCredentials: "true"
        },
-	success: function(data){
-	    var cDoc = getCurrentDocument();
-	    cDoc.load(data);
-	    cDoc.setAsCurrentDocument();
-	}
+        success: function(data){
+            var cDoc = getCurrentDocument();
+            cDoc.load(data);
+            cDoc.setAsCurrentDocument();
+        }
     });
 }
 
