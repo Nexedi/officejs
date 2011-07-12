@@ -36,10 +36,16 @@
         }
 
         var init = function() {
+            //delete localStorage.documentList;//delete the list for tests
             setCurrentPage(new Page());//provide methods on the page
             initUser();//initialize the user
 
-            if(getCurrentDocumentID()) {getDocumentList().update(getCurrentDocumentID());}//update the list of documents
+            if(getCurrentDocumentID()&&getDocumentList().get(getCurrentDocumentID())) {
+                /* update the list with the modifications of the last edited document
+                 * (this method has to been rewritten if using multi users) */
+                getDocumentList().update(getCurrentDocumentID());
+                delete localStorage.currentDocumentID;
+            }
             waitBeforeSucceed(//display the list of documents
                 function(){return Line.loadHTML()},function() {
                     getDocumentList().resetSelectionList();
@@ -53,585 +59,580 @@
     </script>
 </head>
 <body>
-    <form id="main_form" class="main_form"
-    onsubmit="changed=false; return true"
-    method="post">
+    <div class="container">
+        <div class="navigation">
 
-        <div class="container">
-            <div class="navigation">
+            <!-- Each aggregate of groups is a div wrapper -->
+            <div class="wrapper" id="wrapper_navigation">
 
-                <!-- Each aggregate of groups is a div wrapper -->
-                <div class="wrapper" id="wrapper_navigation">
+                <div class=" navigation-left">
+                    <fieldset class="widget">
+                        <legend class="group_title"></legend>
 
-                    <div class=" navigation-left">
-                        <fieldset class="widget">
-                            <legend class="group_title"></legend>
+                        <div class="field" title="">
 
-                            <div class="field" title="">
+                            <label> navigation_box </label>
 
-                                <label> navigation_box </label>
+                            <div class="input"><div  >
+                                <a class="email" href="/ung/mail">Email</a>
+                                <a class="document" href="#" onclick="window.location.reload()">Documents</a>
+                                <a class="calendar" href="/ung/calendar">Calendar</a>
+                            </div></div>
+                        </div>
 
-                                <div class="input"><div  >
-                                    <a class="email" href="/ung/mail">Email</a>
-                                    <a class="document" href="#" onclick="window.location.reload()">Documents</a>
-                                    <a class="calendar" href="/ung/calendar">Calendar</a>
-                                </div></div>
-                            </div>
+                        <div class="field date_field" title="The Date">
 
-                            <div class="field date_field" title="The Date">
+                            <label> Modification Date </label>
+                            <div class="input"></div>
 
-                                <label> Modification Date </label>
-                                <div class="input"></div>
+                        </div>
 
-                            </div>
+                    </fieldset>
+                </div>
 
-                        </fieldset>
-                    </div>
+                <div class=" navigation-right">
+                    <fieldset class="widget">
 
-                    <div class=" navigation-right">
-                        <fieldset class="widget">
+                        <legend class="group_title"></legend>
 
-                            <legend class="group_title"></legend>
+                        <div class="field" title="">
 
-                            <div class="field" title="">
+                            <label> your_language </label>
 
-                                <label> your_language </label>
+                            <div class="input"><div  >
+                                <div id="select_language">
 
-                                <div class="input"><div  >
-                                    <div id="select_language">
+                                    <ul><li>
+                                        <span id="current_language">en</span>
+                                        <img src="images/ung/arrow_20C.png"/>
+                                        <ul id="available_languages">
+                                            <li></li>
+                                        </ul>
+                                    </li></ul>
 
-                                        <ul><li>
-                                            <span id="current_language">en</span>
-                                            <img src="images/ung/arrow_20C.png"/>
-                                            <ul id="available_languages">
-                                                <li></li>
-                                            </ul>
-                                        </li></ul>
+                                </div>
+                            </div></div>
 
-                                    </div>
-                                </div></div>
+                        </div>
 
-                            </div>
+                        <div class="field" title="">
 
-                            <div class="field" title="">
+                            <label> user_login_box </label>
 
-                                <label> user_login_box </label>
+                            <div class="input"><div  >
 
-                                <div class="input"><div  >
+                                <a id="right_message">Not Implemented yet</a>
+                                <div id="preference_dialog" title="UNG Preferences"></div>
+                                <a id="userName">Unknown</a>
+                                | <a id="settings" href="#">Settings</a>
+                                | <a id="help" href="#">Help</a>
+                                | <a href="..WebSite_logout">Sign out</a>
 
-                                    <a id="right_message">Not Implemented yet</a>
-                                    <div id="preference_dialog" title="UNG Preferences"></div>
-                                    <a id="userName">Unknown</a>
-                                    | <a id="settings" href="#">Settings</a>
-                                    | <a id="help" href="#">Help</a>
-                                    | <a href="..WebSite_logout">Sign out</a>
+                            </div></div>
 
-                                </div></div>
+                        </div>
 
-                            </div>
-
-                        </fieldset>
-                    </div>
+                    </fieldset>
                 </div>
             </div>
+        </div>
 
-            <div class="header">
+        <div class="header">
 
-                <!-- Each aggregate of groups is a div wrapper -->
-                <div class="wrapper" id="wrapper_header">
+            <!-- Each aggregate of groups is a div wrapper -->
+            <div class="wrapper" id="wrapper_header">
 
-                    <div class=" header-left">
-                        <fieldset class="widget">
+                <div class=" header-left">
+                    <fieldset class="widget">
 
-                            <legend class="group_title"></legend>
+                        <legend class="group_title"></legend>
 
-                            <div class="field" title="">
+                        <div class="field" title="">
 
-                                <label> search_bar </label>
+                            <label> search_bar </label>
 
-                                <div class="input"><div  >
+                            <div class="input"><div  >
 
-                                    <a class="ung_docs" href="#" onclick="window.location.reload()">
-                                        <img src="images/ung/ung-logo.gif"/>
-                                    </a>
-                                    <a id="loading_message">Loading...</a>
+                                <a class="ung_docs" href="#" onclick="window.location.reload()">
+                                    <img src="images/ung/ung-logo.gif"/>
+                                </a>
+                                <a id="loading_message">Loading...</a>
 
-                                    <form>
-                                        <input type="text" name="field_your_search_text" class="field" onkeyup="submitFormOnEnter(event, this.form, 'WebSection_viewSearchResultList')" />
-                                        <input type="submit" value="Search Docs" name="WebSection_viewSearchResultList:method" />
-                                    </form>
+                                <form>
+                                    <input type="text" name="field_your_search_text" class="field" onkeyup="submitFormOnEnter(event, this.form, 'WebSection_viewSearchResultList')" />
+                                    <input type="submit" value="Search Docs" name="WebSection_viewSearchResultList:method" />
+                                </form>
 
-                                </div></div>
+                            </div></div>
 
-                            </div>
-                        </fieldset>
-                    </div>
-
+                        </div>
+                    </fieldset>
                 </div>
+
             </div>
+        </div>
 
-            <div class="main">
+        <div class="main">
 
-                <!-- Each aggregate of groups is a div wrapper --
-                <table class="wrapper" id="wrapper_main"><tr>-->
-                <div class="wrapper" id="wrapper_main">
-                    <!--<td class=" main-left">-->
-                    <div class=" main-left">
-                        <fieldset class="widget">
+            <!-- Each aggregate of groups is a div wrapper --
+            <table class="wrapper" id="wrapper_main"><tr>-->
+            <div class="wrapper" id="wrapper_main">
+                <!--<td class=" main-left">-->
+                <div class=" main-left">
+                    <fieldset class="widget">
 
-                            <legend class="group_title"></legend>
+                        <legend class="group_title"></legend>
 
-                            <div class="field" title="">
+                        <div class="field" title="">
 
-                                <label> user_menu_box </label>
+                            <label> user_menu_box </label>
 
-                                <div class="input"><div  >
-                                    <div class="gadget-column">
-                                        <div class="gadget-action">
+                            <div class="input"><div  >
+                                <div class="gadget-column">
+                                    <div class="gadget-action">
 
-                                            <div class="menu_create_object">
-                                                <ul><li>
-                                                    <a id="current">
-                                                        <span>Create New</span>
-                                                        <img src="images/ung/arrow.png"/>
-                                                    </a>
-                                                    <ul>
-                                                        <li>
-                                                            <a href="#" onclick="createNewDocument('illustration')">
-                                                                <img src="images/icons/svg.png" alt=""/>
-                                                                <span>Web Illustration</span>
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a href="#" onclick="createNewDocument('table')">
-                                                                <img src="images/icons/table.png" alt=""/>
-                                                                <span>Web Table</span>
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a href="#" onclick="createNewDocument('text')">
-                                                                <img src="images/icons/document.png"/>
-                                                                <span>Web Page</span>
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </li></ul>
-                                            </div>
+                                        <div class="menu_create_object">
+                                            <ul><li>
+                                                <a id="current">
+                                                    <span>Create New</span>
+                                                    <img src="images/ung/arrow.png"/>
+                                                </a>
+                                                <ul>
+                                                    <li>
+                                                        <a href="#" onclick="createNewDocument('illustration')">
+                                                            <img src="images/icons/svg.png" alt=""/>
+                                                            <span>Web Illustration</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#" onclick="createNewDocument('table')">
+                                                            <img src="images/icons/table.png" alt=""/>
+                                                            <span>Web Table</span>
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#" onclick="createNewDocument('text')">
+                                                            <img src="images/icons/document.png"/>
+                                                            <span>Web Page</span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </li></ul>
+                                        </div>
 
-                                            <input type="submit" id="upload" name="Upload" value="Upload" />
+                                        <input type="submit" id="upload" name="Upload" value="Upload" />
 
-                                            <div class="file-selection">
-                                                <div class="file-quick-search">
-                                                    <div class="listbox-tree">
+                                        <div class="file-selection">
+                                            <div class="file-quick-search">
+                                                <div class="listbox-tree">
 
-                                                        <!-- Domain Report Tree mode -->
-                                                        <div class="listbox-domain-tree-container">
+                                                    <!-- Domain Report Tree mode -->
+                                                    <div class="listbox-domain-tree-container">
 
-                                                            <!-- Select domain node -->
-                                                            <select name="domain_root_url" onchange="submitAction(this.form, '/ung/setDomainRoot')">
-                                                                <option value="ung_domain" selected="selected">UNG Documents</option>
-                                                            </select>
+                                                        <!-- Select domain node -->
+                                                        <select name="domain_root_url" onchange="submitAction(this.form, '/ung/setDomainRoot')">
+                                                            <option value="ung_domain" selected="selected">UNG Documents</option>
+                                                        </select>
 
-                                                            <!-- Domain node contents -->
-                                                            <table cellpadding="0"
-                                                                    summary="This table contains the domain tree"
-                                                                    class="your_listbox-table-domain-tree">
+                                                        <!-- Domain node contents -->
+                                                        <table cellpadding="0"
+                                                                summary="This table contains the domain tree"
+                                                                class="your_listbox-table-domain-tree">
 
-                                                                <tr>
-                                                                    <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                        <button type="submit"
-                                                                                name="unfoldDomain:method"
-                                                                                class="tree-closed"
-                                                                                value="ung_domain/all_documents.0">All Documents</button>
-                                                                    </td>
-                                                                </tr>
-
-                                                                <tr>
-                                                                    <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                        <button type="submit"
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
                                                                             name="unfoldDomain:method"
                                                                             class="tree-closed"
-                                                                            value="ung_domain/by_subject.0">By Subject</button>
-                                                                    </td>
-                                                                </tr>
+                                                                            value="ung_domain/all_documents.0">All Documents</button>
+                                                                </td>
+                                                            </tr>
 
-                                                                <tr>
-                                                                    <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                        <button type="submit"
-                                                                                name="unfoldDomain:method"
-                                                                                class="tree-closed"
-                                                                                value="ung_domain/hidden.0">Hidden</button>
-                                                                    </td>
-                                                                </tr>
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                        name="unfoldDomain:method"
+                                                                        class="tree-closed"
+                                                                        value="ung_domain/by_subject.0">By Subject</button>
+                                                                </td>
+                                                            </tr>
 
-                                                                <tr>
-                                                                    <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                        <button type="submit"
-                                                                                name="unfoldDomain:method"
-                                                                                class="tree-closed"
-                                                                                value="ung_domain/owner.0">Owner</button>
-                                                                    </td>
-                                                                </tr>
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/hidden.0">Hidden</button>
+                                                                </td>
+                                                            </tr>
 
-                                                                <tr>
-                                                                    <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                        <button type="submit"
-                                                                                name="unfoldDomain:method"
-                                                                                class="tree-closed"
-                                                                                value="ung_domain/recent.0">Recent</button>
-                                                                    </td>
-                                                                </tr>
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/owner.0">Owner</button>
+                                                                </td>
+                                                            </tr>
 
-                                                                <tr>
-                                                                    <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                        <button type="submit"
-                                                                                name="unfoldDomain:method"
-                                                                                class="tree-closed"
-                                                                                value="ung_domain/shared.0">Shared by me</button>
-                                                                    </td>
-                                                                </tr>
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/recent.0">Recent</button>
+                                                                </td>
+                                                            </tr>
 
-                                                                <tr>
-                                                                    <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                        <button type="submit"
-                                                                                name="unfoldDomain:method"
-                                                                                class="tree-closed"
-                                                                                value="ung_domain/starred.0">Starred</button>
-                                                                    </td>
-                                                                </tr>
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/shared.0">Shared by me</button>
+                                                                </td>
+                                                            </tr>
 
-                                                                <tr>
-                                                                    <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                        <button type="submit"
-                                                                                name="unfoldDomain:method"
-                                                                                class="tree-closed"
-                                                                                value="ung_domain/trash.0">Trash</button>
-                                                                    </td>
-                                                                </tr>
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/starred.0">Starred</button>
+                                                                </td>
+                                                            </tr>
 
-                                                            </table>
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/trash.0">Trash</button>
+                                                                </td>
+                                                            </tr>
 
-                                                        </div>
+                                                        </table>
+
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
 
 
-                                        <div class="gadget-listbox" id="gadget-listbox" title="Add Gadgets">
-                                            <table id="gadget-table"></table>
-                                        </div>
+                                    <div class="gadget-listbox" id="gadget-listbox" title="Add Gadgets">
+                                        <table id="gadget-table"></table>
+                                    </div>
 
-                                        <div class="front_pad">
+                                    <div class="front_pad">
 
-                                            <!-- XXX - Use WebSection_viewKnowledgePadColumn to display one column only -->
-                                            <div class="draggable_wrapper">
+                                        <!-- XXX - Use WebSection_viewKnowledgePadColumn to display one column only -->
+                                        <div class="draggable_wrapper">
 
-                                                <div id="gadget_area_wrapper">
-                                                    <div id="pad-navigation-wrapper">
+                                            <div id="gadget_area_wrapper">
+                                                <div id="pad-navigation-wrapper">
 
-                                                        <div class="tab" id="tabs_switcher">
-                                                            <span id="tab_switcher_hidden" style="display:none">Show tabs</span>
-                                                            <span id="tab_switcher_visible">Hide tabs</span>
+                                                    <div class="tab" id="tabs_switcher">
+                                                        <span id="tab_switcher_hidden" style="display:none">Show tabs</span>
+                                                        <span id="tab_switcher_visible">Hide tabs</span>
+                                                    </div>
+
+                                                    <div id="tabs" style="display: block">
+                                                        <ul>
+
+                                                            <li id="knowledge_pad_module_1" class="tab tab_selected">
+
+                                                                <span id="knowledge_pad_module_1_title" onclick="loadPadFromServer('knowledge_pad_module/1', 'knowledge_pad_module_1', 'web_front')">Onglet 1</span>
+
+                                                                <div class="pad-actions" style="display:block">
+                                                                    <span title="Settings"
+                                                                            class="clickable_image rename_tab_dialog_image"
+                                                                            onclick="showRenamePadPopup('knowledge_pad_module/1',
+                                                                                                         'knowledge_pad_module_1_title')"></span>
+                                                                    <span title="Remove"
+                                                                            class="clickable_image remove_tab_dialog_image"
+                                                                            onclick=" removeKnowledgePadFromServer(
+                                                                                         'knowledge_pad_module/1', 'web_front')" />
+                                                                </div>
+
+                                                            </li>
+
+                                                            <li class="tab" onclick="showAddNewPadPopup();"
+                                                                title="Add new tab"
+                                                                id="add_new_tab_dialog_link">Add tab</li>
+
+                                                            </ul>
                                                         </div>
 
-                                                        <div id="tabs" style="display: block">
-                                                            <ul>
-
-                                                                <li id="knowledge_pad_module_1" class="tab tab_selected">
-
-                                                                    <span id="knowledge_pad_module_1_title" onclick="loadPadFromServer('knowledge_pad_module/1', 'knowledge_pad_module_1', 'web_front')">Onglet 1</span>
-
-                                                                    <div class="pad-actions" style="display:block">
-                                                                        <span title="Settings"
-                                                                                class="clickable_image rename_tab_dialog_image"
-                                                                                onclick="showRenamePadPopup('knowledge_pad_module/1',
-                                                                                                             'knowledge_pad_module_1_title')"></span>
-                                                                        <span title="Remove"
-                                                                                class="clickable_image remove_tab_dialog_image"
-                                                                                onclick=" removeKnowledgePadFromServer(
-                                                                                             'knowledge_pad_module/1', 'web_front')" />
-                                                                    </div>
-
-                                                                </li>
-
-                                                                <li class="tab" onclick="showAddNewPadPopup();"
-                                                                    title="Add new tab"
-                                                                    id="add_new_tab_dialog_link">Add tab</li>
-
-                                                                </ul>
-                                                            </div>
-
-                                                            <div id="add_new_gadget_link">
-                                                                <a title="Add gadgets" id="add-gadgets" href="..."><span>Add gadgets</span></a>
-                                                            </div>
-
-                                                    </div>
-
-                                                    <div id="loading-wrapper" style="display:none;">
-                                                        <img src="ajax-loader.gif" title="Loading" alt="Loading" />
-                                                        <p> Please wait while your changes are being applied. </p>
-                                                    </div>
-
-                                                    <!-- Render active Knowledge pad -->
-                                                    <div id="pad-body-wrapper">
-                                                        <div id="page_wrapper">
-
-                                                            <!-- No gadgets message -->
-                                                            <div>
-                                                                <h3> Your tab is empty. </h3>
-                                                                <h4> Please  use link (<b>Add gadgets</b>) to prepare it yourself. </h4>
-                                                            </div>
-
-                                                            <!-- Render pad columns -->
-                                                            <div class="portal-column" id="portal-column-0"></div>
+                                                        <div id="add_new_gadget_link">
+                                                            <a title="Add gadgets" id="add-gadgets" href="..."><span>Add gadgets</span></a>
                                                         </div>
-                                                    </div>
 
-                                                    <!-- Hidden dialogs -->
-                                                    <div id="add_new_tab_dialog" class="toggable_dialog">
-
-                                                        <h3> Add new tab </h3>
-                                                        <span>Tab name</span>:
-                                                        <input type="text" value="" name="pad_title"
-                                                                id="new_pad_title"
-                                                                onkeypress=" return addPadOnServerOnEnter(event, 'web_front', 'view')" />
-                                                        <br />
-                                                        <br />
-
-                                                        <button type="button" onclick="$('#add_new_tab_dialog').toggle();">Cancel</button>
-                                                        <button type="button"
-                                                                id="add_new_tab_dialog_add_button"
-                                                                onclick="addPadOnServer('web_front', 'view')">Add</button>
-
-                                                    </div>
-
-                                                    <div id="rename_tab_dialog" class="toggable_dialog">
-
-                                                        <h3> Rename tab </h3>
-                                                        <span>Tab name</span>:
-                                                        <input type="text" id="new_knowledge_pad_title"
-                                                                name="knowledge_pad_title"
-                                                                onkeypress="return renameKnowledgePadToServerOnEnter(event);"
-                                                                value="Onglet 1" />
-                                                        <br />
-                                                        <br />
-
-                                                        <button type="button" onclick="$('#rename_tab_dialog').toggle();">Cancel</button>
-                                                        <button type="button"
-                                                                id="rename_tab_dialog_rename_button"
-                                                                onclick="renameKnowledgePadToServer();"> Rename </button>
-
-                                                    </div>
-
-                                                    <!-- Show message that default pad is being prepared. -->
-                                                    <!-- Create (asynch) default pad. -->
                                                 </div>
-                                            </div>
-                                        </div>
 
-                                    </div>
-                                </div></div>
-                            </div>
-                        </fieldset>
-                    </div>
-                    <div class=" main-right">
+                                                <div id="loading-wrapper" style="display:none;">
+                                                    <img src="ajax-loader.gif" title="Loading" alt="Loading" />
+                                                    <p> Please wait while your changes are being applied. </p>
+                                                </div>
 
-                        <fieldset class="widget">
+                                                <!-- Render active Knowledge pad -->
+                                                <div id="pad-body-wrapper">
+                                                    <div id="page_wrapper">
 
-                            <legend class="group_title"></legend>
-
-                            <div class="field" title="">
-
-                                <label> favorite_box </label>
-                                <div class="input"><div  >
-                                    <div class="favorite">
-                                        <a class="domain_selected"></a>
-
-                                        <a href="#" onclick="javascript:window.location.reload()">Refresh</a>
-                                    </div>
-                                </div></div>
-
-                            </div>
-
-                            <div class="field" title="">
-                                <label> Toolbar </label>
-
-                                <div class="input"><div  >
-                                    <div class="toolbar">
-                                        <button name="WebSection_deleteObjectList:method"
-                                                type="submit"
-                                                class="delete">Delete</button>
-                                        <button name="#" type="submit" class="change_state">Change State</button>
-                                    </div>
-                                </div></div>
-
-                            </div>
-
-                            <div class="field" title="">
-
-                                <label> Document List </label>
-
-                                <div class="input">
-
-                                    <div class="listbox-container">
-
-                                        <div class="listbox-content listbox-content-fixed-width">
-                                            <div class="listbox-head">
-
-                                                <div class="listbox-head-spacer"></div>
-
-                                                <div class="listbox-head-content">
-
-                                                    <!-- Listbox head (in left) -->
-                                                    <div class="listbox-head-title">
-
-                                                        <!-- List tree mode choice -->
-                                                        <!-- Listbox title -->
-                                                        <div class="listbox-header-box">
-                                                            <div class="listbox-title">
-                                                                <a href="..." class="your_listbox_title">
-                                                                    <span>Document List</span></a>
-                                                            </div>
+                                                        <!-- No gadgets message -->
+                                                        <div>
+                                                            <h3> Your tab is empty. </h3>
+                                                            <h4> Please  use link (<b>Add gadgets</b>) to prepare it yourself. </h4>
                                                         </div>
 
-                                                        <!-- Number of rows in ERP5 mode -->
-                                                        <!-- List style display mode -->
-
-                                                    </div>
-
-                                                    <!-- Listbox nagivation (in right) -->
-                                                    <div class="listbox-head-navigation">
-
-                                                        <!--Show search result in web mode-->
-                                                        <div class="listbox-header-box">
-                                                            <div class="listbox-number-of-records">
-
-                                                                <!-- listbox start - stop number -->
-                                                                <span id="page_start_number" class="listbox-current-page-start-number">1</span> -
-                                                                <span id="page_stop_number" class="listbox-current-page-stop-number">...</span>
-                                                                <span>of</span>
-
-                                                                <!-- listbox total rows number -->
-                                                                <span id="total_row_number" class="listbox-current-page-total-number your_listbox-current-page-total-number">
-                                                                    <a>?</a> records
-                                                                </span>
-
-                                                                <!-- listbox selected rows number -->
-                                                                <span id="selected_row_number" class="your_listbox-current-item-number">
-                                                                    - <a>0</a> items selected
-                                                                </span>
-
-                                                            </div>
-                                                        </div>
-
-                                                        <!--Page navigation -->
+                                                        <!-- Render pad columns -->
+                                                        <div class="portal-column" id="portal-column-0"></div>
                                                     </div>
                                                 </div>
 
+                                                <!-- Hidden dialogs -->
+                                                <div id="add_new_tab_dialog" class="toggable_dialog">
+
+                                                    <h3> Add new tab </h3>
+                                                    <span>Tab name</span>:
+                                                    <input type="text" value="" name="pad_title"
+                                                            id="new_pad_title"
+                                                            onkeypress=" return addPadOnServerOnEnter(event, 'web_front', 'view')" />
+                                                    <br />
+                                                    <br />
+
+                                                    <button type="button" onclick="$('#add_new_tab_dialog').toggle();">Cancel</button>
+                                                    <button type="button"
+                                                            id="add_new_tab_dialog_add_button"
+                                                            onclick="addPadOnServer('web_front', 'view')">Add</button>
+
+                                                </div>
+
+                                                <div id="rename_tab_dialog" class="toggable_dialog">
+
+                                                    <h3> Rename tab </h3>
+                                                    <span>Tab name</span>:
+                                                    <input type="text" id="new_knowledge_pad_title"
+                                                            name="knowledge_pad_title"
+                                                            onkeypress="return renameKnowledgePadToServerOnEnter(event);"
+                                                            value="Onglet 1" />
+                                                    <br />
+                                                    <br />
+
+                                                    <button type="button" onclick="$('#rename_tab_dialog').toggle();">Cancel</button>
+                                                    <button type="button"
+                                                            id="rename_tab_dialog_rename_button"
+                                                            onclick="renameKnowledgePadToServer();"> Rename </button>
+
+                                                </div>
+
+                                                <!-- Show message that default pad is being prepared. -->
+                                                <!-- Create (asynch) default pad. -->
                                             </div>
-
-                                            <div class="listbox-body">
-
-                                                <table class="listbox your_listbox your_listbox-table">
-                                                    <thead>
-
-                                                        <!--Column title -->
-                                                        <tr class="listbox-label-line">
-
-                                                            <!--Report tree-->
-                                                            <!-- Anchor cell -->
-                                                            <!-- Select cell -->
-                                                            <th class="listbox-table-select-cell">
-                                                                <input class="listbox-check-all" type="image"
-                                                                        name="your_listbox_checkAll:method"
-                                                                        value="1" alt="Check All"
-                                                                        title="Check All"
-                                                                        onclick="getDocumentList().checkAll()"
-                                                                        src="images/icons/checkall.png" />
-                                                                &nbsp;
-
-                                                                <input class="listbox-uncheck-all"
-                                                                        type="image"
-                                                                        name="your_listbox_uncheckAll:method"
-                                                                        value="1" alt="Uncheck All"
-                                                                        title="Uncheck All"
-                                                                        onclick="getDocuementList().resetSelectionList()"
-                                                                        src="images/icons/decheckall.png" />
-                                                            </th>
-
-                                                            <!-- Label column row -->
-                                                            <th class="listbox-table-header-cell"></th>
-
-                                                            <th class="listbox-table-header-cell">
-                                                                <!-- Button in normal view -->
-                                                                <!-- Button in gadget mode -->
-                                                                <button type="button" class="sort-button"
-                                                                        onclick=""
-                                                                        title="Title">
-
-                                                                    <span>Title</span>
-                                                                </button>
-
-                                                                <!-- Icon showing sort order -->
-                                                                <img src="images/ung/transparent-image.gif"
-                                                                        alt="Sort" class="sort-button"
-                                                                        title="Sort" />
-                                                            </th>
-
-                                                            <th class="listbox-table-header-cell">
-                                                                <!-- Button in normal view -->
-                                                                <!-- Button in gadget mode -->
-                                                                <button type="button"
-                                                                        class="sort-button"
-                                                                        onclick=""
-                                                                        title="Sharing">
-                                                                    <span>Sharing</span>
-                                                                </button>
-
-                                                                <!-- Icon showing sort order -->
-                                                                <img src="images/ung/transparent-image.gif"
-                                                                        alt="Sort" class="sort-button"
-                                                                        title="Sort" />
-                                                            </th>
-
-                                                            <th class="listbox-table-header-cell">
-                                                                <!-- Button in normal view -->
-                                                                <!-- Button in gadget mode -->
-                                                                <button type="button"
-                                                                        class="sort-button"
-                                                                        onclick=""
-                                                                        title="Date">
-                                                                    <span>Date</span>
-                                                                </button>
-
-                                                                <!-- Icon showing sort order -->
-                                                                <img src="images/ung/transparent-image.gif"
-                                                                        alt="Sort" class="sort-button"
-                                                                        title="Sort" />
-                                                            </th>
-
-                                                        </tr>
-
-                                                        <!--Search column input -->
-                                                    </thead>
-
-                                                    <!-- Stats -->
-                                                    <tbody></tbody>
-                                                </table>
-                                            </div>
-
                                         </div>
                                     </div>
 
                                 </div>
-                            </div>
-
-                        </fieldset>
-
-                    </div>
+                            </div></div>
+                        </div>
+                    </fieldset>
                 </div>
-        </div></div>
-    </form>
+                <div class=" main-right">
+
+                    <fieldset class="widget">
+
+                        <legend class="group_title"></legend>
+
+                        <div class="field" title="">
+
+                            <label> favorite_box </label>
+                            <div class="input"><div  >
+                                <div class="favorite">
+                                    <a class="domain_selected"></a>
+
+                                    <a href="#" onclick="javascript:window.location.reload()">Refresh</a>
+                                </div>
+                            </div></div>
+
+                        </div>
+
+                        <div class="field" title="">
+                            <label> Toolbar </label>
+
+                            <div class="input"><div  >
+                                <div class="toolbar">
+                                    <button class="delete"
+                                            onclick="getDocumentList().deleteSelectedDocuments()">Delete
+                                    </button>
+                                    <button name="#" class="change_state">Change State</button>
+                                </div>
+                            </div></div>
+
+                        </div>
+
+                        <div class="field" title="">
+
+                            <label> Document List </label>
+
+                            <div class="input">
+
+                                <div class="listbox-container">
+
+                                    <div class="listbox-content listbox-content-fixed-width">
+                                        <div class="listbox-head">
+
+                                            <div class="listbox-head-spacer"></div>
+
+                                            <div class="listbox-head-content">
+
+                                                <!-- Listbox head (in left) -->
+                                                <div class="listbox-head-title">
+
+                                                    <!-- List tree mode choice -->
+                                                    <!-- Listbox title -->
+                                                    <div class="listbox-header-box">
+                                                        <div class="listbox-title">
+                                                            <a href="..." class="your_listbox_title">
+                                                                <span>Document List</span></a>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Number of rows in ERP5 mode -->
+                                                    <!-- List style display mode -->
+
+                                                </div>
+
+                                                <!-- Listbox nagivation (in right) -->
+                                                <div class="listbox-head-navigation">
+
+                                                    <!--Show search result in web mode-->
+                                                    <div class="listbox-header-box">
+                                                        <div class="listbox-number-of-records">
+
+                                                            <!-- listbox start - stop number -->
+                                                            <span id="page_start_number" class="listbox-current-page-start-number">1</span> -
+                                                            <span id="page_stop_number" class="listbox-current-page-stop-number">...</span>
+                                                            <span>of</span>
+
+                                                            <!-- listbox total rows number -->
+                                                            <span id="total_row_number" class="listbox-current-page-total-number your_listbox-current-page-total-number">
+                                                                <a>?</a> records
+                                                            </span>
+
+                                                            <!-- listbox selected rows number -->
+                                                            <span id="selected_row_number" class="your_listbox-current-item-number">
+                                                                - <a>0</a> items selected
+                                                            </span>
+
+                                                        </div>
+                                                    </div>
+
+                                                    <!--Page navigation -->
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="listbox-body">
+
+                                            <table class="listbox your_listbox your_listbox-table">
+                                                <thead>
+
+                                                    <!--Column title -->
+                                                    <tr class="listbox-label-line">
+
+                                                        <!--Report tree-->
+                                                        <!-- Anchor cell -->
+                                                        <!-- Select cell -->
+                                                        <th class="listbox-table-select-cell">
+                                                            <input class="listbox-check-all" type="image"
+                                                                    name="your_listbox_checkAll:method"
+                                                                    value="1" alt="Check All"
+                                                                    title="Check All"
+                                                                    onclick="getDocumentList().checkAll()"
+                                                                    src="images/icons/checkall.png" />
+                                                            &nbsp;
+
+                                                            <input class="listbox-uncheck-all"
+                                                                    type="image"
+                                                                    name="your_listbox_uncheckAll:method"
+                                                                    value="1" alt="Uncheck All"
+                                                                    title="Uncheck All"
+                                                                    onclick="getDocumentList().resetSelectionList()"
+                                                                    src="images/icons/decheckall.png" />
+                                                        </th>
+
+                                                        <!-- Label column row -->
+                                                        <th class="listbox-table-header-cell"></th>
+
+                                                        <th class="listbox-table-header-cell">
+                                                            <!-- Button in normal view -->
+                                                            <!-- Button in gadget mode -->
+                                                            <button type="button" class="sort-button"
+                                                                    onclick=""
+                                                                    title="Title">
+
+                                                                <span>Title</span>
+                                                            </button>
+
+                                                            <!-- Icon showing sort order -->
+                                                            <img src="images/ung/transparent-image.gif"
+                                                                    alt="Sort" class="sort-button"
+                                                                    title="Sort" />
+                                                        </th>
+
+                                                        <th class="listbox-table-header-cell">
+                                                            <!-- Button in normal view -->
+                                                            <!-- Button in gadget mode -->
+                                                            <button type="button"
+                                                                    class="sort-button"
+                                                                    onclick=""
+                                                                    title="Sharing">
+                                                                <span>Sharing</span>
+                                                            </button>
+
+                                                            <!-- Icon showing sort order -->
+                                                            <img src="images/ung/transparent-image.gif"
+                                                                    alt="Sort" class="sort-button"
+                                                                    title="Sort" />
+                                                        </th>
+
+                                                        <th class="listbox-table-header-cell">
+                                                            <!-- Button in normal view -->
+                                                            <!-- Button in gadget mode -->
+                                                            <button type="button"
+                                                                    class="sort-button"
+                                                                    onclick=""
+                                                                    title="Date">
+                                                                <span>Date</span>
+                                                            </button>
+
+                                                            <!-- Icon showing sort order -->
+                                                            <img src="images/ung/transparent-image.gif"
+                                                                    alt="Sort" class="sort-button"
+                                                                    title="Sort" />
+                                                        </th>
+
+                                                    </tr>
+
+                                                    <!--Search column input -->
+                                                </thead>
+
+                                                <!-- Stats -->
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </fieldset>
+
+                </div>
+            </div>
+    </div></div>
 </body>
 </html>

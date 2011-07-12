@@ -31,21 +31,29 @@ var Xinha = function() {
 
 /**
  * Text documents
- * editable documents must implements the following methods
- * getType : returns the type of a document
+ *
+ * editable documents must implements the following arguments and methods
+ * type : a unique type ID
  * saveEdition : set the argument as the new content of the document. Change last modification time and display the changes
  * setAsCurrentDocument : set the document as currentDocument in the local storage and display its properties in the current page
- */
 
-var JSONTextDocument = function() {
-    JSONDocument.call(this);//inherits properties from JSONDocument
-    this.type = "text";
+
+/**
+ * class JSONTextDocument
+ * @param arg : a json JSONTextDocument object to load
+ */
+var JSONTextDocument = function(arg) {
+    JSONDocument.call(this,arg);//inherits properties from JSONDocument
+    if(arg) {this.load(arg);}
+    else {
+        this.type = "text";
+    }
 }
 
 JSONTextDocument.prototype = new JSONDocument();//inherits methods from JSONDocument
 
 JSONTextDocument.prototype.saveEdition = function(content) {
-    this.setLastUser(getCurrentUser());
+    this.setLastUser(getCurrentUser().getName());
     this.setContent(content);
     this.setLastModification(currentTime());
     this.setAsCurrentDocument();
@@ -60,7 +68,5 @@ JSONTextDocument.prototype.setAsCurrentDocument = function() {
 }
 
 getCurrentDocument = function() {
-    var doc = new JSONTextDocument();
-    doc.load(JSON.parse(localStorage.getItem("currentDocument")));
-    return doc;
+    return new JSONTextDocument(JSON.parse(localStorage.getItem("currentDocument")));
 }
