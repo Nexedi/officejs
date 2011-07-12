@@ -260,7 +260,7 @@ supportedDocuments = {"text":{editorPage:"text-editor",icon:"images/icons/docume
         "other":{editorPage:null,icon:"images/icons/other.gif"},
         undefined:{editorPage:null,icon:"images/icons/other.gif"}
 }
-getDocumentAddress = function(doc) {return "dav/"+doc.getCreation();}
+getDocumentAddress = function(doc) {return "http://sidunhosted.com/ungdav/"+doc.getCreation();}
 
 /*************************************************
  ******************   actions   ******************
