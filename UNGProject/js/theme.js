@@ -124,7 +124,10 @@ Page.prototype = {
         //document information
     displayLastUserName: function(doc) {$("a#author").html(doc.getAuthor());},
     displayLastModification: function(doc) {$("a#last_update").html(doc.getLastModification());},
-    displayDocumentTitle: function(doc) {$("a#document_title").html(doc.getTitle());},
+    displayDocumentTitle: function(doc) {
+        var title = (doc.getTitle().length < 30) ? doc.getTitle() : doc.getTitle().substring(0,30) + "...";
+        $("a#document_title").html(title);
+    },
     displayDocumentContent: function(doc) {this.getEditor().loadContentFromDocument(doc);},
     displayDocumentState: function(doc) {$("a#document_state").html(doc.getState()[getCurrentUser().getLanguage()]);},
 
@@ -299,6 +302,57 @@ editDocumentSettings = function() {
         });
     }
 )}
+
+/**
+ * open a dialog box to upload a document
+ */
+uploadDocument = function() {
+    loadFile("xml/xmlElements.xml", "html", function(data) {
+        $("upload", data).dialog({
+            autoOpen: false,
+            height: 116,
+            width: 346,
+            modal: true
+        });
+    });
+}
+
+/**
+ * open a dialog box to propose gadgets
+ */
+gadgetListBox = function() {
+    loadFile("xml/xmlElements.xml", "html", function(data) {
+        $("gadget", data).dialog({
+            autoOpen: false,
+            height: 416,
+            width: 600,
+            modal: true,
+            buttons: {
+                "Add": function(){
+                    var gadgetIdList = Array();
+                    $("table#gadget-table tbody tr td input").each(function(){
+                        if (this.checked){
+                            gadgetIdList.push($(this).attr("id"));
+                        }
+                    });
+                    if (gadgetIdList.length == 0){
+                        $(this).dialog("close");
+                    }
+                    var tabTitle = $("div#tabs ul li.tab_selected span").html();
+                    $.ajax({
+                        type: "post",
+                        url:"WebSection_addGadgetList",
+                        data: [{name:"gadget_id_list", value: gadgetIdList}],
+                        success: function(data) {
+                            window.location.reload();
+                        }
+                    });
+                }
+            }
+        });
+    });
+}
+
 
 saveCurrentDocument = function() {
     getCurrentPage().getEditor().saveEdition();

@@ -40,6 +40,37 @@
             </fieldset>
         </form>
     </upload>
+    <settings>
+        <form id="erp5_preference">
+            <fieldset class="center editable">
+
+                <div class="field" title="The text editor used by default">
+                    <label> Text Editor </label>
+                    <div class="input">
+                        <input type="radio" value="fck_editor" name="field_my_preferred_text_editor" checked="checked"/>
+                            Xinha Editor&nbsp;&nbsp;
+                        <input type="radio" value="text_area" name="field_my_preferred_text_editor"/>
+                            Plain Text&nbsp;&nbsp;
+                        <input type="hidden" value="" name="default_field_my_preferred_text_editor"/>
+                    </div>
+                </div>
+
+                <div class="field" title="The text format used by default">
+                    <label> Text Format </label>
+                    <div class="input">
+                        <input type="radio" value="text/html" name="field_my_preferred_text_format"/>
+                            HTML&nbsp;&nbsp;
+                        <input type="radio" value="text/plain" name="field_my_preferred_text_format" checked="checked"/>
+                            Plain Text&nbsp;&nbsp;
+                        <input type="radio" value="text/x-rst" name="field_my_preferred_text_format"/>
+                            reStructuredText&nbsp;&nbsp;
+                        <input type="hidden" value="" name="default_field_my_preferred_text_format"/>
+                    </div>
+                </div>
+
+            </fieldset>
+        </form>
+    </settings>
     <line>
         <table>
             <tbody>
