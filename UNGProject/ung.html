@@ -30,26 +30,24 @@
         href="images/ung/favicon.ico" />
 
     <script type="text/javascript">
-        var initUser = function() {
-            var user = getCurrentUser();
-            user.setAsCurrentUser();
-        }
 
         var init = function() {
             //delete localStorage.documentList;//delete the list for tests
-            setCurrentPage(new Page());//provide methods on the page
-            initUser();//initialize the user
+            setCurrentPage(new Page("ung"));//provide methods on the page
+            getCurrentStorage().getUser().setAsCurrentUser();//initialize the user
 
             if(getCurrentDocumentID()&&getDocumentList().get(getCurrentDocumentID())) {
                 /* update the list with the modifications of the last edited document
                  * (this method has to been rewritten if using multi users) */
-                getDocumentList().update(getCurrentDocumentID());
+                getDocumentList().updateDocumentInformation(getCurrentDocumentID());
                 delete localStorage.currentDocumentID;
             }
             waitBeforeSucceed(//display the list of documents
                 function(){return Line.loadHTML()},function() {
                     getDocumentList().resetSelectionList();
-                    getDocumentList().display();}
+                    getDocumentList().updateDisplayInformation();
+                    getDocumentList().display();
+                    resize();}
             );
 
             resize();
@@ -124,9 +122,9 @@
                                 <a id="right_message">Not Implemented yet</a>
                                 <div id="preference_dialog" title="UNG Preferences"></div>
                                 <a id="userName">Unknown</a>
-                                | <a id="settings" href="#">Settings</a>
-                                | <a id="help" href="#">Help</a>
-                                | <a href="..WebSite_logout">Sign out</a>
+                                | <a id="settings" href="">Settings</a>
+                                | <a id="help" href="">Help</a>
+                                | <a id="sign_out" href="" onclick="signOut()">Sign out</a>
 
                             </div></div>
 
@@ -174,8 +172,7 @@
 
         <div class="main">
 
-            <!-- Each aggregate of groups is a div wrapper --
-            <table class="wrapper" id="wrapper_main"><tr>-->
+            <!-- Each aggregate of groups is a div wrapper -->
             <div class="wrapper" id="wrapper_main">
                 <!--<td class=" main-left">-->
                 <div class=" main-left">
@@ -465,7 +462,74 @@
                                             onclick="getDocumentList().deleteSelectedDocuments()">Delete
                                     </button>
                                     <button name="#" class="change_state">Change State</button>
+
+                                    <div class="listbox-navigation">
+                                        <button class="listbox_first_page your_listbox_first_page" onclick="getDocumentList().changePage(event)">
+                                            <span class="image"> </span>
+                                        </button>
+                                        <button class="listbox_previous_page your_listbox_previous_page" onclick="getDocumentList().changePage(event)">
+                                            <span class="image"> </span>
+                                        </button>
+                                        <input class="listbox_set_page your_listbox_set_page" value="1" size="1" onkeypress="if(event.keyCode==13){getDocumentList().changePage(event)}" />
+                                        /<span class="listbox_last_page">1</span>
+                                        <button class="listbox_next_page your_listbox_next_page" onclick="getDocumentList().changePage(event)">
+                                            <span class="image"> </span>
+                                        </button>
+                                        <button class="listbox_last_page your_listbox_last_page" onclick="getDocumentList().changePage(event)">
+                                            <span class="image"> </span>
+                                        </button>
+                                    </div>
+
+                                    <div class="listbox-head">
+                                        <div class="listbox-head-spacer"></div>
+                                        <div class="listbox-head-content">
+
+                                            <!-- Listbox head (in left) -->
+                                            <div class="listbox-head-title">
+
+                                                <!-- List tree mode choice -->
+                                                <!-- Listbox title -->
+                                                <div class="listbox-header-box">
+                                                    <div class="listbox-title">
+                                                        <a href="..." class="your_listbox_title">
+                                                            <span>Document List</span></a>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Listbox nagivation (in right) -->
+                                            <div class="listbox-head-navigation">
+
+                                                <!--Show search result in web mode-->
+                                                <div class="listbox-header-box">
+                                                    <div class="listbox-number-of-records">
+
+                                                        <!-- listbox start - stop number -->
+                                                        <span id="page_start_number" class="listbox-current-page-start-number">1</span> -
+                                                        <span id="page_stop_number" class="listbox-current-page-stop-number">...</span>
+                                                        <span>of</span>
+
+                                                        <!-- listbox total rows number -->
+                                                        <span id="total_row_number" class="listbox-current-page-total-number your_listbox-current-page-total-number">
+                                                            <a>?</a> records
+                                                        </span>
+
+                                                        <!-- listbox selected rows number -->
+                                                        <span id="selected_row_number" class="your_listbox-current-item-number">
+                                                            - <a>0</a> items selected
+                                                        </span>
+
+                                                    </div>
+                                                </div>
+
+                                                <!--Page navigation -->
+                                            </div>
+                                        </div>
+
+                                    </div>
+
                                 </div>
+
                             </div></div>
 
                         </div>
@@ -479,59 +543,6 @@
                                 <div class="listbox-container">
 
                                     <div class="listbox-content listbox-content-fixed-width">
-                                        <div class="listbox-head">
-
-                                            <div class="listbox-head-spacer"></div>
-
-                                            <div class="listbox-head-content">
-
-                                                <!-- Listbox head (in left) -->
-                                                <div class="listbox-head-title">
-
-                                                    <!-- List tree mode choice -->
-                                                    <!-- Listbox title -->
-                                                    <div class="listbox-header-box">
-                                                        <div class="listbox-title">
-                                                            <a href="..." class="your_listbox_title">
-                                                                <span>Document List</span></a>
-                                                        </div>
-                                                    </div>
-
-                                                    <!-- Number of rows in ERP5 mode -->
-                                                    <!-- List style display mode -->
-
-                                                </div>
-
-                                                <!-- Listbox nagivation (in right) -->
-                                                <div class="listbox-head-navigation">
-
-                                                    <!--Show search result in web mode-->
-                                                    <div class="listbox-header-box">
-                                                        <div class="listbox-number-of-records">
-
-                                                            <!-- listbox start - stop number -->
-                                                            <span id="page_start_number" class="listbox-current-page-start-number">1</span> -
-                                                            <span id="page_stop_number" class="listbox-current-page-stop-number">...</span>
-                                                            <span>of</span>
-
-                                                            <!-- listbox total rows number -->
-                                                            <span id="total_row_number" class="listbox-current-page-total-number your_listbox-current-page-total-number">
-                                                                <a>?</a> records
-                                                            </span>
-
-                                                            <!-- listbox selected rows number -->
-                                                            <span id="selected_row_number" class="your_listbox-current-item-number">
-                                                                - <a>0</a> items selected
-                                                            </span>
-
-                                                        </div>
-                                                    </div>
-
-                                                    <!--Page navigation -->
-                                                </div>
-                                            </div>
-
-                                        </div>
 
                                         <div class="listbox-body">
 
