@@ -166,8 +166,6 @@ loadFile = function(address, type, instruction) {
         url: address,
         type: "GET",
         dataType: type,
-	headers: { Authorization: "Basic "+btoa("smik:asdf")},
-        fields: { withCredentials: "true" },
 	success: instruction,
         error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
 

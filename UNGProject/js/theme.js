@@ -171,6 +171,8 @@ User.prototype.load({//add methods thanks to the UngObject.load method
     getDocumentList: function() {return this.documentList;},
     setDocumentList: function(list) {this.documentList = list;},
 
+    getIDProvider: function() {return this.IDProvider;},
+
     setAsCurrentUser: function() {
         getCurrentPage().displayUserName(this);
         getCurrentPage().displayLanguages(this);
@@ -222,10 +224,6 @@ Storage.prototype.load({
  */
 var LocalStorage = function(userName) {
     Storage.call(this,"local", userName);
-    if(this.user) {
-        //this.user.documents = {}
-        //this.updateUser();
-    }
 }
 LocalStorage.prototype = new Storage();
 LocalStorage.prototype.load({
@@ -277,8 +275,9 @@ LocalStorage.prototype.load({
  * Class JIOStorage
  * this class provides usual API to save/load/delete documents on a remote storage
  */
-var JIOStorage = function(userName) {
+var JIOStorage = function(userName, IDProvider) {
     Storage.call(this,"JIO", userName);
+    if(this.user) this.user.IDProvider = IDProvider;
 }
 JIOStorage.prototype = new Storage();
 JIOStorage.prototype.load({
@@ -290,6 +289,8 @@ JIOStorage.prototype.load({
             url: address,
             type: "GET",
             dataType: type,
+            headers: {Authorization: "Basic "+btoa("smik:asdf")},
+            fields: {withCredentials: "true"},
             success: instruction,
             error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
         });
@@ -450,7 +451,7 @@ supportedDocuments = {"text":{editorPage:"text-editor",icon:"images/icons/docume
     undefined:{editorPage:null,icon:"images/icons/other.gif"}
 }
 getDocumentAddress = function(doc) {
-    return getCurrentStorage().getType()=="local" ? doc.getCreation() : "http://sidunhosted.com/ungdav/"+doc.getCreation();
+    return getCurrentStorage().getType()=="local" ? doc.getCreation() : "http://"+getCurrentUser().getIDProvider()+"/ungdav/"+doc.getCreation();
 }
 
 /*************************************************
