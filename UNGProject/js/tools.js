@@ -92,7 +92,7 @@ List.prototype.load({
         return this.tail().get(i-1);
     },
     set: function(i,element) {
-        if(i>=this.size()) {error("set out of bounds, "+i+" : "+this.size(),this);return}
+        if(i>=this.size()) {errorMessage("set out of bounds, "+i+" : "+this.size(),this);return}
         if(i==0) {
             this.headElement=element;
         } else {
@@ -100,7 +100,7 @@ List.prototype.load({
         }
     },
     remove: function(i) {
-        if(i>=this.size()) {error("remove out of bounds, "+i+" : "+this.size(),this);return}//particular case
+        if(i>=this.size()) {errorMessage("remove out of bounds, "+i+" : "+this.size(),this);return}//particular case
         if(i==0) {this.pop();return}//particular case
         if(i==1) {//init
             this.previous = this.tail().tail();
@@ -110,7 +110,7 @@ List.prototype.load({
         this.length--;
     },
     pop: function() {
-        if(this.isEmpty()) {error("pop on empty list",this);return null;}
+        if(this.isEmpty()) {errorMessage("pop on empty list",this);return null;}
         var h = this.head();
         this.load(this.tail())
         return h;
@@ -128,7 +128,7 @@ List.prototype.load({
     },
     contains: function(object) {if(this.isEmpty()) {return false} else {return object===this.head() ? true : this.tail().contains(object)}},
     insert: function(element,i) {
-        if(i>this.size()) {error("insert out of bounds, "+i+" : "+this.size(),this);return}//particular case
+        if(i>this.size()) {errorMessage("insert out of bounds, "+i+" : "+this.size(),this);return}//particular case
         if(i==0) {//init
             this.add(element);
         } else {//recursion
@@ -137,7 +137,7 @@ List.prototype.load({
         }
     },
     replace: function(oldElement,newElement) {
-        if(this.isEmpty()) {error("<<element not found>> when trying to replace",this);return}//init-false
+        if(this.isEmpty()) {errorMessage("<<element not found>> when trying to replace",this);return}//init-false
         if(oldElement===this.head()) {
             this.set(0,newElement);//init-true
         } else {
@@ -155,34 +155,6 @@ List.prototype.load({
     }
 });
 
-error: function(message,object) {
-	errorObject = object;
-	console.log(message);
-}
-
-/**
- * returns the current date
- */
-currentTime = function() {return (new Date()).toUTCString();}
-
-
-
-// save
-saveXHR = function(address) {
-    $.ajax({
-        url: address,
-        type: "PUT",
-        headers: {
-            Authorization: "Basic "+btoa("smik:asdf")},
-        fields: {
-            withCredentials: "true"
-        },
-        data: JSON.stringify(getCurrentDocument()),
-        success: function(){alert("saved");},
-        error: function(xhr) { alert("error while saving");}
-    });
-};
-
 /**
  * load a public file with a basic ajax request
  * @param address : the address of the document
@@ -196,55 +168,6 @@ loadFile = function(address, type, instruction) {
         dataType: type,
         success: instruction,
         error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
-    });
-}
-
-// save
-saveFile = function(address, content, instruction) {
-    $.ajax({
-        url: address,
-        type: "PUT",
-        dataType: "json",
-        data: JSON.stringify(content),
-        headers: { Authorization: "Basic "+btoa("smik:asdf")},
-        fields: { withCredentials: "true" },
-        success: instruction,
-        error: function(type) {
-            if(type.status==201 || type.status==204) {instruction();}//ajax thinks that 201 is an error...
-        }
-    });
-}
-
-deleteFile = function(address, instruction) {
-    $.ajax({
-        url: address,
-        type: "DELETE",
-        headers: { Authorization: "Basic "+btoa("smik:asdf")},
-        fields: { withCredentials: "true" },
-        success: instruction,
-        error: function(type) {
-            alert(type.status);//ajax thinks that 201 is an error...
-        }
-    });
-}
-
-// load
-loadXHR = function(address) {
-    $.ajax({
-        url: address,
-        type: "GET",
-        dataType: "json",
-        cache:false,
-        headers: {
-            Authorization: "Basic "+btoa("smik:asdf")},
-        fields: {
-           withCredentials: "true"
-       },
-        success: function(data){
-            var cDoc = getCurrentDocument();
-            cDoc.load(data);
-            cDoc.setAsCurrentDocument();
-        }
     });
 }
 
@@ -273,7 +196,7 @@ tryUntilSucceed = function(func) {
     var nb = 2;//avoid to test too much times
     var execute = function() {
         try {func.call();}
-        catch(e) {if(nb<100) {setTimeout(execute,nb*200);} console.log(e);}
+        catch(e) {if(nb<100) {setTimeout(execute,nb*200);}console.log(e);}
         nb*=nb;
     }
     execute();
@@ -287,4 +210,43 @@ var resize = function() {
     $("div.main-right").width($(window).width()-$("div.main-left").width());
 }
 
+/**
+ * Used to debug
+ */
+errorMessage = function(message,object) {
+    errorObject = object;
+    console.log(message);
+}
 
+/**
+ * returns the current date
+ */
+currentTime = function() {return (new Date()).toUTCString();}
+
+/**
+ * Paste a toolkit at the mouse position
+ */
+Tooltip = function() {
+    this.visible=false; // La variable i nous dit si la bulle est visible ou non
+}
+Tooltip.prototype = {
+    isVisible: function() {return this.visible;},
+    move: function(e) {$("div.toolLocation").css("left",e.pageX+5+"px").css("top",e.pageY + 10+"px");},
+    show: function(text) {
+        if(!this.isVisible()) {
+            $("div.toolLocation")
+                .css("display","inline")
+                .css("visibility","visible")
+                .html(text);
+            this.visible = true;
+        }
+    },
+    hide: function() {
+        if(this.isVisible()) {
+            $("div.toolLocation")
+                .css("display","none")
+                .css("visibility","hidden");
+            this.visible = false;
+        }
+    }
+}

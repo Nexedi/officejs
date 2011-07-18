@@ -215,7 +215,7 @@ div.header-right div.input a {
     border: 1px solid #D1D1D1;
     display: none;
 }
-.action_menu ul li ul hover {
+.action_menu ul li ul:hover {
     display: block;
 }
 .action_menu ul li ul li:hover {
@@ -330,7 +330,7 @@ div.gadget-action input#upload {
     border: 1px solid #BBBBBB;
     border-radius: 4px 4px 4px 4px;
     color: #333333;
-    left: 1em;
+    left: 0.5em;
     position: relative;
     top: 0.1em;
 }
@@ -409,12 +409,46 @@ button.delete {
     margin-left: 6px;
     margin-top: 6px;
 }
+        /* navigation buttons */
 div.listbox-navigation {
     float: right;
     font-size: 13px;
     margin-right: 5px;
-    margin-top: 6px;
+    margin-top: 0;
     min-width: 10%;
+    display: none;
+}
+div.listbox-navigation input {
+    margin-top: 0.3em;
+    height: 18px;
+    width: 20px;
+}
+div.listbox-navigation button.listbox_first_page {
+    background-image: url("../images/ung/first_page.png");
+}
+div.listbox-navigation button.listbox_previous_page {
+    background-image: url("../images/ung/previous_page.png");
+}
+div.listbox-navigation button.listbox_next_page {
+    background-image: url("../images/ung/next_page.png");
+}
+div.listbox-navigation button.listbox_last_page {
+    background-image: url("../images/ung/last_page.png");
+}
+div.listbox-navigation button.listbox_previous_page, div.listbox-navigation button.listbox_next_page {
+    margin: 0;
+    width: 12px;
+}
+div.listbox-navigation button {
+    position: relative;
+    top: -0.2em;
+    background-repeat: no-repeat;
+    border: 0 none;
+    height: 20px;
+    display: none;
+}
+div.listbox-navigation button:hover {
+    cursor: pointer;
 }
 
         /* header */
@@ -558,6 +592,10 @@ div#advertisement img{
     height: 10em;
 }
     /* login table */
+span#id_provider_details {
+    font-size: 8px;
+    float: left;
+}
 table#field_table, table#new-account-table, table#create-new-user {
     border: 1px solid #C3D9FF;
     width: 78%;
@@ -607,6 +645,23 @@ div.footer a {
 }
 
 /**********************************************************
+********************   tooltip area   *********************/
+span.tooltipElement {
+    cursor: pointer;
+    color: #0099CC;
+}
+div.toolLocation{
+    visibility: hidden;
+    position: absolute;
+    border-radius: 10px 10px 10px 10px;
+    border: 1px solid Black;
+    padding: 10px;
+    font-family: Verdana, Arial;
+    font-size: 10px;
+    background-color: #FFFFCC;
+}
+
+/**********************************************************
 *******************   dialog box   ************************/
 div.ui-dialog {
     background: none repeat scroll 0 0 #C1D9FF;
@@ -622,9 +677,6 @@ div.ui-dialog-titlebar {
     background: none repeat scroll 0 0 #E0EDFE;
     border: 0 none;
     border-radius: 1px 1px 1px 1px;
-    height: 15px;
-}
-div.ui-dialog-titlebar {
     height: 15px;
 }
 span#ui-dialog-title-edit_document, span#ui-dialog-title-upload_document, span#ui-dialog-title-gadget-listbox {

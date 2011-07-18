@@ -9,6 +9,8 @@ languages = ["fr","en"];
 var availableLanguages = $("#available_languages");
 
 currentPage = null;
+currentDocument = null;
+currentStorage = null;
 
 
 /*
@@ -23,7 +25,7 @@ var Page = function(page) {
     this.editor = null;
     //define as current page
     currentPage = this;
-    if(page!=undefined) {this.loadXML("xml/"+page+".xml");}
+    if(page!="ung" && page !=undefined) {this.loadXML("xml/"+page+".xml");}
 }
 Page.prototype = {
     setXML: function(data) {
@@ -31,6 +33,7 @@ Page.prototype = {
         this.loadPage();
     },
     //getters
+    getName: function() {return this.name;},
     getXML: function() {return this.xml;},
     getHTML: function() {return this.html;},
     getTitle: function() {return $(this.getXML()).find("title").text();},
@@ -52,7 +55,7 @@ Page.prototype = {
         var dependencies = this.getDependencies();
         $(dependencies).find("linkfile").each(function() {currentPage.include($(this).text(),"link");});//includes css
         $(dependencies).find("scriptfile").each(function() {currentPage.include($(this).text(),"script");});//includes js
-        
+
         var doc = null;
         var editor = null;
         /* load the editor to work with and a new document to work on */
@@ -112,7 +115,7 @@ Page.prototype = {
 
         for (var i = 0; i<languages.length; i++) {
             var l = languages[i];
-            if(l==user.getLanguage()) {$("span#current_language").html(l);}
+            if(l==user.getSetting("language")) {$("span#current_language").html(l);}
             else {
                 avLang = avLang + "<li><span onclick='changeLanguage($(this).html())' id='" +l+ "'>"+l+"</span></li>\n"
             }
@@ -129,7 +132,7 @@ Page.prototype = {
         $("a#document_title").html(title);
     },
     displayDocumentContent: function(doc) {this.getEditor().loadContentFromDocument(doc);},
-    displayDocumentState: function(doc) {$("a#document_state").html(doc.getState()[getCurrentUser().getLanguage()]);},
+    displayDocumentState: function(doc) {$("a#document_state").html(doc.getState()[getCurrentUser().getSetting("language")]);},
 
         //web page information
     displayPageTitle: function() {$("title#page_title").html(this.getTitle());},
@@ -144,39 +147,205 @@ setCurrentPage = function(page) {currentPage = page;}
  * @param arg : a json User object to load
  */
 var User = function(arg) {
-    if(arg) {this.load(arg);}
+    if(arg) {
+        this.load(arg);
+        if(window.DocumentList) {this.documentList = new DocumentList(arg.documentList);}
+    }
     else {
-        this.name = "unknown";
-        this.language = "en";
-        this.storage = "http://www.unhosted-dav.com";
-        this.identityProvider = "http://www.webfinger.com";
-        this.displayPreferences = 15;//number of displayed document in the list
+        this.name = "UNG";//default name
+        this.settings = {
+            language: "en",
+            displayPreferences: 15//number of displayed document in the list
+        }
+        this.documentList = new DocumentList();
+        this.documents = {};
     }
 }
 User.prototype = new UngObject();//inherits from UngObject
 User.prototype.load({//add methods thanks to the UngObject.load method
     getName: function() {return this.name;},
     setName: function(newName) {this.name = newName;},
-    getLanguage: function() {return this.language;},
-    setLanguage:function(language) {this.language = language;},
-    getStorageLocation: function() {return this.storage;},
-    setStorageLocation: function(storage) {this.storage = storage;},
-    getIdentityProvider: function() {return this.identityProvider;},
-    setIdentityProvider: function(IDProv) {this.identityProvider = IDProv;},
-    getDisplayPreferences: function() {return this.displayPreferences;},
-    setDisplayPreferences: function(n) {this.displayPreferences = n;},
+    getSetting: function(key) {return this.settings[key];},
+    setSetting: function(key,value) { this.settings[key] = value; },
+    getSettings: function() {return this.settings;},
+    getDocumentList: function() {return this.documentList;},
+    setDocumentList: function(list) {this.documentList = list;},
 
     setAsCurrentUser: function() {
         getCurrentPage().displayUserName(this);
         getCurrentPage().displayLanguages(this);
-        setCurrentUser(this);
+        getCurrentStorage().setUser(this);
+        if(getCurrentPage().getName()=="ung") getDocumentList().setAsCurrentDocumentList();
     }
 });
 
 getCurrentUser = function() {
-    return new User(JSON.parse(localStorage.getItem("currentUser")));
+    return getCurrentStorage().getUser();
 }
-setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.stringify(user));}
+
+
+
+
+
+/**
+ * Class Storage
+ * this class provides usual API to save/load/delete documents
+ * @param type : "local" to save in localStorage, or "JIO" for remote storage
+ * @param userName : the name of the user concerned by this storage
+ */
+var Storage = function(type, userName) {
+    this.type = type;
+    if(userName) {
+        var loaded = this.loadUser(userName)//load an existing user
+        if(!loaded) {//create a new user if there was no such one
+            var user = new User();
+            user.setName(userName);
+            this.setUser(user);
+        }
+    }
+}
+Storage.prototype = new UngObject();
+Storage.prototype.load({
+    getType: function() {return this.type;},
+    getUser: function() {return this.user;},
+
+    loadUser: function(userName) {},
+    setUser: function(user) {this.user = user},
+    getDocument: function(address, instruction) {},
+    saveDocument: function(doc, address, instruction) {},
+    deleteDocument: function(address, instruction) {}
+});
+
+/**
+ * Class LocalStorage
+ * this class provides usual API to save/load/delete documents on the localStorage
+ */
+var LocalStorage = function(userName) {
+    Storage.call(this,"local", userName);
+    if(this.user) {
+        //this.user.documents = {}
+        //this.updateUser();
+    }
+}
+LocalStorage.prototype = new Storage();
+LocalStorage.prototype.load({
+    /* try to load the user information in the storage and save it in the
+     * storage instance.
+     * @param userName : the name of the user
+     * @return : true if the user existed and has been loaded, false otherwise
+     */
+    loadUser: function(userName) {
+        try{
+            if(!localStorage[userName]) {throw "noSuchUser";}
+            this.user = new User(JSON.parse(localStorage[userName]));
+            return true;
+        } catch(e) {
+            if(e!="noSuchUser") {alert(e);}
+            return false
+        }
+    },
+    getUser: function() {return this.user;},
+    setUser: function(user) {
+        this.user = user;
+        localStorage[this.user.name] = JSON.stringify(user);
+    },
+    updateUser: function() {localStorage[this.user.name] = JSON.stringify(this.user);},
+    getDocument: function(address, instruction) {
+        var doc = new JSONDocument(this.user.documents[address]);
+        if(instruction) instruction(doc);
+        return doc;
+    },
+    saveDocument: function(doc, address, instruction) {
+        this.user.documents[address] = doc;
+        this.updateUser();
+        if(instruction) instruction();
+    },
+    deleteDocument: function(address, instruction) {
+        delete this.user.documents[address];
+        this.updateUser();
+        if(instruction) instruction();
+    },
+
+    save: function() {
+        this.updateUser();
+        localStorage.setItem("currentStorage", JSON.stringify(this));
+    }
+});
+
+
+/**
+ * Class JIOStorage
+ * this class provides usual API to save/load/delete documents on a remote storage
+ */
+var JIOStorage = function(userName) {
+    Storage.call(this,"JIO", userName);
+}
+JIOStorage.prototype = new Storage();
+JIOStorage.prototype.load({
+    loadUser: function(userName) {
+        //JIO : IDProvider
+    },
+    getDocument: function(address, instruction) {
+        $.ajax({
+            url: address,
+            type: "GET",
+            dataType: type,
+            success: instruction,
+            error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
+        });
+    },
+    saveDocument: function(content, address, instruction) {
+        this.user.documents[address] = doc;
+        $.ajax({
+            url: address,
+            type: "PUT",
+            dataType: "json",
+            data: JSON.stringify(content),
+            headers: {Authorization: "Basic "+btoa("smik:asdf")},
+            fields: {withCredentials: "true"},
+            success: instruction,
+            error: function(type) {
+                if(type.status==201 || type.status==204) {instruction();}//ajax thinks that 201 is an error...
+            }
+        });
+    },
+    deleteDocument: function(address, instruction) {
+        delete this.user.documents[address];
+        $.ajax({
+            url: address,
+            type: "DELETE",
+            headers: {Authorization: "Basic "+btoa("smik:asdf")},
+            fields: {withCredentials: "true"},
+            success: instruction,
+            error: function(type) {
+                alert(type.status);//ajax thinks that 201 is an error...
+            }
+        });
+    }
+});
+
+getCurrentStorage = function() {
+    if(!currentStorage) {//if storage has not been loaded yet
+        var dataStorage = JSON.parse(localStorage.getItem("currentStorage"));
+        if(!dataStorage) {window.location = "login.html";return null;}//if it's the first connexion
+
+        switch(dataStorage.type) {//load the last storage used
+            case "local": currentStorage = new LocalStorage(); break;
+            case "JIO": currentStorage = new JIOStorage(); break;
+        }
+        currentStorage.loadUser(dataStorage.user.name);
+        currentStorage.type = dataStorage.type;
+    }
+    return currentStorage;
+}
+setCurrentStorage = function(storage) {
+    currentStorage = storage;
+    localStorage.setItem("currentStorage", JSON.stringify(storage));
+}
+
+
+
+
 
 
 
@@ -193,7 +362,7 @@ setCurrentUser = function(user) {localStorage.setItem("currentUser", JSON.string
 var JSONDocument = function(arg) {
     if(arg) {this.load(arg);}
     else {
-        this.language = getCurrentUser().getLanguage();
+        this.language = getCurrentUser().getSetting("language");
         this.version = null;
 
         this.author=getCurrentUser().getName();
@@ -211,7 +380,7 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
     //type
     getType: function() {return this.type;},
     setType: function(newType) {this.type = newType;},
-    
+
     //version
     getVersion: function() {return this.version;},
     setVersion: function(version) {this.version = version;},
@@ -249,9 +418,9 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
 
     save: function(instruction) {
         var doc = this;
-        saveFile(getDocumentAddress(this), doc, instruction);
+        getCurrentStorage().saveDocument(doc, getDocumentAddress(this), instruction);
     },
-    remove: function(instruction) {deleteFile(getDocumentAddress(this), instruction);}
+    remove: function(instruction) {getCurrentStorage().deleteDocument(getDocumentAddress(this), instruction);}
 });
 JSONDocument.prototype.states = {
     draft:{"fr":"Brouillon","en":"Draft"},
@@ -259,9 +428,20 @@ JSONDocument.prototype.states = {
     deleted:{"fr":"Supprimé","en":"Deleted"}
 }
 getCurrentDocument = function() {
-    return new JSONDocument(JSON.parse(localStorage.getItem("currentDocument")));
+    if(!currentDocument) {
+        currentDocument = new JSONDocument(JSON.parse(localStorage.getItem("currentDocument")));
+    }
+    return currentDocument;
 }
-setCurrentDocument = function(doc) {localStorage.setItem("currentDocument",JSON.stringify(doc));}
+setCurrentDocument = function(doc) {
+    currentDocument = doc;
+    localStorage.setItem("currentDocument",JSON.stringify(doc));
+}
+
+
+
+
+
 
 supportedDocuments = {"text":{editorPage:"text-editor",icon:"images/icons/document.png"},
         "illustration":{editorPage:"image-editor",icon:"images/icons/svg.png"},
@@ -269,7 +449,9 @@ supportedDocuments = {"text":{editorPage:"text-editor",icon:"images/icons/docume
         "other":{editorPage:null,icon:"images/icons/other.gif"},
         undefined:{editorPage:null,icon:"images/icons/other.gif"}
 }
-getDocumentAddress = function(doc) {return "dav/"+doc.getCreation();}
+getDocumentAddress = function(doc) {
+    return getCurrentStorage().getType()=="local" ? doc.getCreation() : "dav/"+doc.getCreation();
+}
 
 /*************************************************
  ******************   actions   ******************
@@ -299,6 +481,30 @@ editDocumentSettings = function() {
                     $(this).dialog("close");
                 }
             }
+        });
+        $("p#more_properties") .click(function(){
+            $("div#more_property").show();
+            $("p#hide_properties").show();
+            $("div#edit_document fieldset").animate({"height": "186px"}, "slow");
+            $("div.ui-dialog").animate({"top": "50px"}, "slow")
+                .animate({"height": "255px"}, "slow");
+            $("div#edit_document").animate({"height": "183px"}, "slow");
+            $("div#edit_document fieldset input").css("margin", "0")
+                .css("width", "60%");
+            $("div#edit_document fieldset label").css("float", "left")
+                .css("width", "35%");
+            $("div#more_property input").css("width", "47%");
+            $("p#more_properties").hide();
+        });
+        $("p#hide_properties") .click(function(){
+            $("div#more_property").hide();
+            $("p#more_properties").show();
+            $("p#hide_properties").hide();
+            $("div#edit_document fieldset input").css("width", "95%")
+                .css("margin-top", "14px");
+            $("div#edit_document fieldset").animate({"height": "69px"}, "slow");
+            $("div.ui-dialog").animate({"height": "148px"}, "slow");
+            $("div#edit_document").animate({"height": "78px"}, "slow");
         });
     }
 )}
@@ -353,6 +559,26 @@ gadgetListBox = function() {
     });
 }
 
+/**
+ * open a dialog box to propose settings
+ */
+editUserSettings = function() {
+    $("div#preference_dialog").dialog({
+        autoOpen: false,
+        height: 215,
+        width: 319,
+        modal:true,
+        buttons: {
+            "Save": function(){
+
+            },
+            Cancel: function() {
+                $(this).dialog("close");
+            }
+        }
+    });
+}
+
 
 saveCurrentDocument = function() {
     getCurrentPage().getEditor().saveEdition();
@@ -364,7 +590,7 @@ saveCurrentDocument = function() {
   * @param doc : the document to edit
   */
 var startDocumentEdition = function(doc) {
-    loadFile(getDocumentAddress(doc),"json",function(data) {
+    getCurrentStorage().getDocument(getDocumentAddress(doc), function(data) {
         doc.load(data);
         setCurrentDocument(doc);
         if(supportedDocuments[doc.getType()].editorPage) {window.location = "theme.html";}
@@ -381,12 +607,18 @@ var stopDocumentEdition = function() {
  * @param language : the new language
  */
 var changeLanguage = function(language) {
-    var user = getCurrentUser();
-    user.setLanguage(language);
-    setCurrentUser(user);
+    getCurrentUser().setSetting("language");
+    getCurrentStorage().save();
     getCurrentPage().displayLanguages(user);
     window.location.reload();
 }
+
+var signOut = function() {
+    delete localStorage.currentStorage;
+    delete localStorage.currentDocumentID;
+    window.location = "login.html";
+}
+
 cancel_sharing = function() {alert("cancel");}
 translate = function() {alert("translate");}
 submit = function() {alert("submit");}
