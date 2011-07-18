@@ -444,10 +444,10 @@ setCurrentDocument = function(doc) {
 
 
 supportedDocuments = {"text":{editorPage:"text-editor",icon:"images/icons/document.png"},
-        "illustration":{editorPage:"image-editor",icon:"images/icons/svg.png"},
-        "table":{editorPage:"table-editor",icon:"images/icons/table.png"},
-        "other":{editorPage:null,icon:"images/icons/other.gif"},
-        undefined:{editorPage:null,icon:"images/icons/other.gif"}
+    "illustration":{editorPage:"image-editor",icon:"images/icons/svg.png"},
+    "table":{editorPage:"table-editor",icon:"images/icons/table.png"},
+    "other":{editorPage:null,icon:"images/icons/other.gif"},
+    undefined:{editorPage:null,icon:"images/icons/other.gif"}
 }
 getDocumentAddress = function(doc) {
     return getCurrentStorage().getType()=="local" ? doc.getCreation() : "dav/"+doc.getCreation();

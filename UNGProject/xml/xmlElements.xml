@@ -5,7 +5,7 @@
             <fieldset id="edit_document">
                 <label for="name">Insert a new name:</label>
                 <input type="text" class="title" id="name" name="name" value=""/><br/>
-                <div id="more_property">
+                <div id="more_property" style="display:none">
                     <label for="version">Version:</label>
                     <input type="text" class="version" id="version" name="version" value=""/><br/>
                     <label for="language">Language:</label>
@@ -19,7 +19,7 @@
                 </div>
 
                 <p class="more_properties" id="more_properties">Edit More Properties</p>
-                <p class="hide_properties" id="hide_properties">Hide Properties</p>
+                <p class="hide_properties" id="hide_properties" style="display:none">Hide Properties</p>
             </fieldset>
         </form>
     </rename>
