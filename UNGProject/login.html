@@ -1,0 +1,291 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta name="generator" content="ERP5 - Copyright (C) 2001 - 2008. All rights reserved." />
+        <meta name="description"
+            content="ERP5 Free Open Source ERP and CRM" />
+        <meta name="keywords" content="" />
+        <meta name="robots" content="index, follow" />
+
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="Content-Script-Type" content="text/javascript" />
+        <meta http-equiv="Content-Style-Type" content="text/css" />
+
+        <title>ERP5 | ERP5</title>
+
+        <link type="text/css" rel="stylesheet" href="css/jquery-ui.css" />
+        <link type="text/css" rel="stylesheet" href="css/ung.css" />
+        <script type="text/javascript" src="js/jquery/jquery.js"></script>
+        <script type="text/javascript" src="js/tools.js"></script>
+        <script type="text/javascript" src="js/theme.js"></script>
+        <script type="text/javascript" src="js/ung.js"></script>
+        <script type="text/javascript" src="js/login.js"></script>
+
+        <link rel="icon" type="image/x-icon"
+            href="images/ung/favicon.ico" />
+        <link rel="shortcut icon" type="image/x-icon"
+            href="images/ung/favicon.ico" />
+
+        <script type="text/javascript">
+            var init = function() {
+                tooltip = new Tooltip();
+                $("span.tooltipElement")
+                    .mouseover(function() {tooltip.show("sdf")})
+                    .mouseout(function() {tooltip.hide();})
+                    .mousemove(function(event) {tooltip.move(event);});
+            }
+            $(document).ready(init);
+        </script>
+
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="navigation" style="display:none">
+
+                <!-- Each aggregate of groups is a div wrapper -->
+                <div class="wrapper" id="wrapper_navigation">
+
+                    <div class=" navigation-right">
+                        <fieldset class="widget">
+
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+                                <label> your_language </label>
+
+                                <div class="input"><div  >
+                                    <div id="select_language">
+                                        <!-- todo : interface to change the language -->
+                                    </div>
+                                </div></div>
+                            </div>
+
+                        </fieldset>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="main">
+
+                <!-- Each aggregate of groups is a div wrapper -->
+                <div class="wrapper" id="wrapper_main">
+
+
+                    <div class="content">
+
+                        <fieldset class="widget">
+
+                            <p></p>
+                            <h2>Welcome to UNG Web Office</h2>
+                            <div id="main-content">
+
+                                <table width="100%" cellspacing="0" cellpadding="0" border="0">
+                                    <tbody>
+                                        <tr>
+                                            <td valign="top">
+                                                <div id="advertisement">
+                                                    <b>Sign in to edit documents, spreadsheets and drawing and share this document with other users</b>
+                                                    <br/>
+                                                    <img src="images/ung/ung-logo.png" alt=""/>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <table id="field_table" style="display: table; width: 78%;">
+                                                    <tbody>
+
+                                                        <tr>
+                                                            <td align="center">
+                                                                <table>
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td align="center" colspan="2">
+                                                                                <font size="-1">Login in</font>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr><td></td></tr>
+                                                                        <tr>
+                                                                            <td align="center">
+                                                                                <label for="name">Name</label>
+                                                                            </td>
+                                                                            <td align="center">
+                                                                                <input id="name" type="text" value="" name="name" />
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td align="center">
+                                                                                <label for="id_provider">
+                                                                                    ID provider
+                                                                                    <span class="tooltipElement"
+                                                                                        onmouseover="tooltip.show('please, indicate the storage server<br/>where your data will be stored<br/>let free to store on your computer')">
+                                                                                        (?)</span>
+                                                                                </label>
+                                                                            </td>
+                                                                            <td>
+                                                                                <input id="id_provider" type="text" value="" name="id_provider" />
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td align="center" colspan="2">
+                                                                                <input class="submit" onclick="logUser()" type="button" value="Login" name="logged_in:method" />
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>
+                                                <br/>
+                                            </td>
+
+                                            <td>
+                                                <table id="create-new-user" style="width: 78%; display: none;">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>
+
+                                                                <form id="create-user" action="javascript:createNewUser()" method="post">
+
+                                                                    <table width="100%">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td align="center" colspan="2">
+                                                                                    <b>Create an account</b>
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td id="form-message" align="center" colspan="2"></td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td>First Name</td>
+                                                                                <td>
+                                                                                    <input type="text" name="firstname" />
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td>Last Name</td>
+                                                                                <td>
+                                                                                    <input type="text" name="lastname" />
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td>Email</td>
+                                                                                <td>
+                                                                                    <input type="text" name="email" />
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td>Login name</td>
+                                                                                <td>
+                                                                                    <input type="text" name="login_name" />
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td>Password</td>
+                                                                                <td>
+                                                                                    <input type="password" name="password" />
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td>Confirm Password</td>
+                                                                                <td>
+                                                                                    <input type="password" name="confirm" />
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td align="center" colspan="2">
+                                                                                    <input class="submit" type="submit" value="Create Account" name="logged_in:method" />
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td id="back-login" align="left" colspan="2">
+                                                                                    <a onclick="displayNewAccountForm(false)">&lt;&lt;Back</a>
+                                                                                </td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+
+                                                                </form>
+
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        <tr><td></td></tr>
+                                        <tr>
+                                            <td></td>
+                                            <td>
+                                                <table id="new-account-table" style="display: table; width: 78%;">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>
+                                                                <table width="100%">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td align="center" colspan="2">
+                                                                                <b>Don't have an
+                                                                                    <span class="tooltipElement"
+                                                                                        onmouseover="tooltip.show('register to store your data<br/>on our server<br/>(not implemented yet)')">
+                                                                                        UNG Account
+                                                                                    </span>
+                                                                                    ?
+                                                                                </b>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td id="new-account-form" align="center" colspan="2" onclick="displayNewAccountForm(true)">Create an account now</td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="footer">
+                                <a href="http://www.freecloudalliance.org/">Free Cloud Alliance</a>
+                                -
+                                <a href="#">Help</a>
+                            </div>
+                            <p></p>
+                        </fieldset>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page_bottom">
+            
+        </div>
+
+        <div class="toolLocation"></div>
+
+    </body>
+</html>
+
+
+
+
+
+
+
+
