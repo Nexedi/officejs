@@ -47,10 +47,8 @@
                     getDocumentList().resetSelectionList();
                     getDocumentList().updateDisplayInformation();
                     getDocumentList().display();
-                    resize();}
+                    resize();}//hack for a bug with firefox
             );
-
-            resize();
         }
         $(window).resize(resize);
         $(document).ready(init);

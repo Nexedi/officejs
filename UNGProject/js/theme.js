@@ -406,7 +406,7 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
 
     //dates
     getCreation:function() {return this.creation;},
-    getLastModification:function() {return this.lastModification;},
+    getLastModification:function() {return this.lastModification.toUTCString();},
     setLastModification:function(date) {this.lastModification=date;},
 
     //state

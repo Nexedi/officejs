@@ -208,7 +208,7 @@ tryUntilSucceed = function(func) {
  * could be developed to implement more beautiful resizments
  */
 var resize = function() {
-    $("div.main-right").width($(window).width()-$("div.main-left").width());
+    return $("div.main-right").width($(window).width()-$("div.main-left").width());
 }
 
 /**
@@ -222,7 +222,7 @@ errorMessage = function(message,object) {
 /**
  * returns the current date
  */
-currentTime = function() {return (new Date()).toUTCString();}
+currentTime = function() {return Date.now();}
 
 /**
  * Paste a toolkit at the mouse position
