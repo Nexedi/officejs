@@ -41,6 +41,7 @@
                  * (this method has to been rewritten if using multi users) */
                 getDocumentList().updateDocumentInformation(getCurrentDocumentID());
                 delete localStorage.currentDocumentID;
+                getCurrentStorage().save();
             }
             waitBeforeSucceed(//display the list of documents
                 function(){return Line.loadHTML()},function() {
