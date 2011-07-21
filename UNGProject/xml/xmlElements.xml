@@ -79,20 +79,13 @@
                         <input type="checkbox"/>
                     </td>
                     <td class="listbox-table-data-cell">
-                        <a class="listbox-document-icon">
-                            <img src="images/icons/document.png"/>
-                        </a>
+                        <a class="listbox-document-icon"><img /></a>
                     </td>
                     <td class='listbox-table-data-cell'>
-                        <a class="listbox-document-title">Web Page</a>
+                        <a class="listbox-document-title"></a>
                     </td>
-
                     <td class="listbox-table-data-cell">
-                        <a class="listbox-document-state">Deleted</a>
-                    </td>
-
-                    <td class="listbox-table-data-cell">
-                        <a class="listbox-document-date">2011/05/31&nbsp;&nbsp;&nbsp;11:44</a>
+                        <a class="listbox-document-date"></a>
                     </td>
                 </tr>
             </tbody>

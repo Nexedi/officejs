@@ -21,8 +21,6 @@ var DocumentList = function(arg) {
     }
     else {
         List.call(this);
-        this.displayInformation = {};
-        this.displayInformation.page = 1;
         this.selectionList = new List();
     }
 }
@@ -41,7 +39,7 @@ DocumentList.prototype.load({
         this.selectionList = new List();
 
         //display consequences
-        for(var i=this.getDisplayInformation().first-1; i<this.getDisplayInformation().last; i++) {
+        for(var i=0; i<this.size(); i++) {
             $("tr td.listbox-table-select-cell input#"+i).attr("checked",false);//uncheck
         }
         $("span#selected_row_number a").html(0);//display the selected row number
@@ -53,7 +51,7 @@ DocumentList.prototype.load({
         }
 
         //display consequences
-        for(i=this.getDisplayInformation().first-1; i<this.getDisplayInformation().last; i++) {
+        for(i=0; i<this.size(); i++) {
             $("tr td.listbox-table-select-cell input#"+i).attr("checked",true);//check
         }
         $("span#selected_row_number a").html(this.size());//display the selected row number
@@ -68,28 +66,10 @@ DocumentList.prototype.load({
         this.display();
     },
 
-    getDisplayInformation: function() {return this.displayInformation;},
-    getDisplayedPage: function() {return this.getDisplayInformation().page;},
-    setDisplayedPage: function(index) {
-        this.displayInformation.page = index;
-        this.display();
-    },
-    changePage: function(event) {
-        var newPage = this.getDisplayedPage();
-        switch(event.target.className.split(" ")[0]) {
-            case "listbox_set_page":newPage = event.target.value;break;
-            case "listbox_next_page":newPage++;break;
-            case "listbox_previous_page":newPage--;break;
-            case "listbox_last_page":newPage = this.getDisplayInformation().lastPage;break;
-            case "listbox_first_page":newPage = 1;break;
-        }
-        this.setDisplayedPage(newPage);
-    },
-
     /* display the list of documents in the web page */
     displayContent: function() {
         $("table.listbox tbody").html("");//empty the previous displayed list
-        for(var i=this.getDisplayInformation().first-1;i<this.getDisplayInformation().last;i++) {
+        for(var i=0;i<this.size();i++) {
             var doc = this.get(i);
             var ligne = new Line(doc,i);
             ligne.updateHTML();
@@ -97,38 +77,8 @@ DocumentList.prototype.load({
             if(this.getSelectionList().contains(doc)) {ligne.setSelected(true);}//check the box if selected
         }
     },
-    displayListInformation: function() {
-        if(this.size()>0) {
-            $("div.listbox-number-of-records").css("display","inline");
-
-            $("span#page_start_number").html(this.getDisplayInformation().first);
-            $("span#page_stop_number").html(this.getDisplayInformation().last);
-            $("span#total_row_number a").html(this.size());
-            $("span#selected_row_number a").html(this.getSelectionList().size());
-        }
-        else {$("div.listbox-number-of-records").css("display","none");}
-    },
-    displayNavigationElements: function() {
-        var lastPage = this.getDisplayInformation().lastPage;
-        var disp = function(element,bool) {
-            bool ? $(element).css("display","inline") : $(element).css("display","none");
-        }
-        disp("div.listbox-navigation",this.getDisplayInformation().lastPage>1);
-        if(lastPage>1) {
-            $("div.listbox-navigation input.listbox_set_page").attr("value",this.getDisplayedPage());
-            $("div.listbox-navigation span.listbox_last_page").html(lastPage);
-            
-            disp("div.listbox-navigation button.listbox_first_page",this.getDisplayedPage()>1);
-            disp("div.listbox-navigation button.listbox_previous_page",this.getDisplayedPage()>1);
-            disp("div.listbox-navigation button.listbox_next_page",this.getDisplayedPage()<lastPage);
-            disp("div.listbox-navigation button.listbox_last_page",this.getDisplayedPage()<lastPage);
-        }
-    },
     display: function() {
-        this.updateDisplayInformation();
         this.displayContent();
-        this.displayListInformation();
-        this.displayNavigationElements();
     },
 
     /* update the ith document information */
@@ -140,14 +90,6 @@ DocumentList.prototype.load({
             doc.setContent("");//
             list.set(i,doc);
         });
-    },
-    /* update the document to be displayed */
-    updateDisplayInformation: function() {
-        var infos = this.getDisplayInformation();
-        infos.step = getCurrentUser().getSetting("displayPreferences"),//documents per page
-        infos.first = (infos.page-1)*infos.step + 1,//number of the first displayed document
-        infos.last = (this.size()<(infos.first+infos.step)) ? this.size() : infos.first+infos.step-1//number of the last displayed document
-        infos.lastPage = Math.ceil(this.size()/infos.step);
     },
 
     setAsCurrentDocumentList: function() {
@@ -197,6 +139,7 @@ Line.prototype = {
     /* load the document information in the html of a default line */
     updateHTML: function() {
         var line = this;
+
         this.setHTML($(this.getHTML()).attr("class",this.getType())
             .find("td.listbox-table-select-cell input")
                 .attr("id",this.getID())//ID
@@ -212,8 +155,7 @@ Line.prototype = {
                         .attr("src",supportedDocuments[this.getType()].icon)//icon
                     .end()
                 .end()
-                .find("a.listbox-document-title").html(this.getDocument().getTitle()).end()
-                .find("a.listbox-document-state").html(this.getDocument().getState()[getCurrentUser().getSetting("language")]).end()
+                .find("a.listbox-document-title").html(limitedString(this.getDocument().getTitle(),10)).end()
                 .find("a.listbox-document-date").html(this.getDocument().getLastModification()).end()
             .end());
     },
@@ -237,6 +179,7 @@ Line.getOriginalHTML = function() {return Line.originalHTML;}
   * @param type : the type of the document to create
   */
 var createNewDocument = function(type) {
+    if(type=="title") {return}
     var newDocument = new JSONDocument();
     newDocument.setType(type);
 

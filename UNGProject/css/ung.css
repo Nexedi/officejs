@@ -31,27 +31,14 @@ fieldset#hidden_fieldset,
 div.navigation {
     border-bottom: 1px solid #C9D7F1;
     font-family: arial,sans-serif;
-    font-size: 13px;
-    height: 15px;
-    padding: 5px;
+    font-size: 11px;
+    height: 2em;
 }
 div.navigation fieldset.widget {
   border: 0px;
-  padding-top: 0.6%;
-  margin: -0.60%;
-  width: 96%;
-}
-
-    /* left */
-div.navigation-left a {
- margin-left:7px;
 }
 
     /* right */
-div.navigation-right {
-    float: right;
-    margin-top: -16px;
-}
 div.navigation-right a {
     margin-left: 2px;
 }
@@ -109,7 +96,7 @@ a#left_message, a#right_message {
 
 /* header */
 div.header {
-    height: 3.5em;
+    height: 6em;
     width: 100%;
 }
 div#wrapper_header {
@@ -121,8 +108,6 @@ div#wrapper_header {
     /* left */
 div.header-left {
     margin-top: -4px;
-    width: 32em;
-    position: absolute;
 }
 div.header-left h2 {
     font-size: 14pt;
@@ -132,7 +117,6 @@ a#loading_message {
     display: none;
 }
 div.logo-area {
-  float: left;
   padding-right: 10px;
 }
 a.ung_docs img {
@@ -157,8 +141,9 @@ div#wrapper_header div.field a[name="document_title"]:hover {
 }
         /* research bar */
 div.input form {
+    width: 90%;
     margin-top: 0.5em;
-    float:right;
+    text-align: center;
 }
 
     /* right */
@@ -240,89 +225,30 @@ div.main {
 /***************** UNG main page ********************/
     /* left */
 div.main-left {
-    border-right: 4px solid #BBCCFF;
+    border-bottom: 4px solid #BBCCFF;
     background-color: #DAE6F6;
-    height: 100%;
-    margin-left: -4px;
-    width: 12em;
-    margin-top: -0.6em;
-    overflow:auto;
-    float:left;
 }
-div.gadget-column {
-    margin-left: -4px;
-    margin-right: -8px;
-}
+
         /* "create new" menu */
 .menu_create_object {
     font-family: arial,sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     list-style: none outside none;
     white-space: nowrap;
     color: #8E8E8E;
-    margin-top: -5px;
-    margin-left: 5px;
-    float:left;
+    margin-left: 1px;
 }
-.menu_create_object li {
-    padding-top: 0.5em;
-    position: relative;
-    text-decoration: none;
-}
-.menu_create_object li a {
-    display: block;
-    text-decoration: none;
-}
-.menu_create_object li a#current {
+.menu_create_object select {
     background-image: url('../images/ung/button_background.png');
     border: 1px solid #BBBBBB;
     border-radius: 4px 4px 4px 4px;
-    color: #333333;
-    height: 19px;
-    padding-left: 2px;
-    padding-right: 14px;
-    text-align: justify;
-    width: 78px;
+    float: left;
 }
-.menu_create_object li a#current img {
-    margin-left: 3px;
-    position: relative;
-    top: 2px;
-}
-.menu_create_object img {
-    border: 0 none;
-}
-.menu_create_object li:hover ul {
-    display: block;
-}
-.menu_create_object li ul {
-    display: none;
-    height: auto;
-    position: absolute;
-    z-index: 200;
-    background-color: #FFFFFF;
-    border: 1px solid #D1D1D1;
-}
-.menu_create_object ul {
-    list-style: none outside none;
-    margin: 0;
-    padding: 0;
-}
-.menu_create_object li a:hover {
-    color: #000000;
-    text-decoration: none;
-}
-.menu_create_object li ul a {
-    color: #002E3F;
-    display: block;
-    font-size: 14px;
-    font-style: normal;
-    line-height: 28px;
-    margin-left: 4px;
-    margin-top: -5px;
-    padding: 0 21px 0 1px;
+.menu_create_object select option {
     text-align: left;
-    text-decoration: none;
+}
+.menu_create_object select option#new {
+    text-align: center;
 }
         /* upload button */
 div.gadget-action input#upload {
@@ -330,126 +256,36 @@ div.gadget-action input#upload {
     border: 1px solid #BBBBBB;
     border-radius: 4px 4px 4px 4px;
     color: #333333;
-    left: 0.5em;
+    margin-left: 2px;
+    float: right;
     position: relative;
-    top: 0.1em;
 }
-        /* action list */
-div.gadget-column div.file-selection {
-    background-color: #FFFFFF;
-    margin: 15px -4px -4px;
-}
-div.gadget-column div.file-selection div.file-quick-browser,
-div.gadget-column div.file-selection div.file-quick-search {
-    border-bottom: 1px solid #DDDDDD;
-    padding-bottom: 5px;
-    padding-top: 5px;
-    width: 100%;
-}
-div.listbox-tree {
-    font-size: 13px;
-    height: 233px;
-    overflow: hidden;
-    width: 100%;
-}
-div.listbox-domain-tree-container select {
-    display: none;
-}
-.tree-open, .tree-closed {
-    background: none repeat scroll 0 0 #FFFFFF;
-    border: medium none;
-    cursor: pointer;
-}
-        /* gadgets */
-
 
     /* right */
 div.main-right {
     height: 100%;
-    margin-top: -0.6em;
-    float:right;
-    margin-left: -3px;
 }
 div.main-right fieldset.widget {
-    margin-top: 5px;
     padding: 0;
-    margin-left: -1px;
 }
         /* buttons delete, refresh, change state */
-div.toolbar, div.favorite {
-    border-collapse: collapse;
-}
-div.favorite {
-    background-color: #BBCCFF;
-    height: 27px;
-    margin-top: -5px;
-    padding-top: 8px;
-}
 div.toolbar {
+    border-collapse: collapse;
     background-color: #E3E9FF;
     height: 27px;
-    padding-bottom: 5px;
+    text-align: center;
 }
-div.favorite a {
-    float: right;
-    font-size: 14px;
-    margin-right: 5px;
-}
-a.domain_selected {
-    float: left !important;
-    font-size: 15px !important;
-}
-div.toolbar button {
+button.delete {
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
     background-image: url("../images/ung/button_background.png");
     border: 1px solid #BBBBBB;
     border-radius: 4px 4px 4px 4px;
     color: #333333;
+    width: 95%;
+    text-align: center;
 }
-button.delete {
-    margin-left: 6px;
-    margin-top: 6px;
-}
-        /* navigation buttons */
-div.listbox-navigation {
-    float: right;
-    font-size: 13px;
-    margin-right: 5px;
-    margin-top: 0;
-    min-width: 10%;
-    display: none;
-}
-div.listbox-navigation input {
-    margin-top: 0.3em;
-    height: 18px;
-    width: 20px;
-}
-div.listbox-navigation button.listbox_first_page {
-    background-image: url("../images/ung/first_page.png");
-}
-div.listbox-navigation button.listbox_previous_page {
-    background-image: url("../images/ung/previous_page.png");
-}
-div.listbox-navigation button.listbox_next_page {
-    background-image: url("../images/ung/next_page.png");
-}
-div.listbox-navigation button.listbox_last_page {
-    background-image: url("../images/ung/last_page.png");
-}
-div.listbox-navigation button.listbox_previous_page, div.listbox-navigation button.listbox_next_page {
-    margin: 0;
-    width: 12px;
-}
-div.listbox-navigation button {
-    position: relative;
-    top: -0.2em;
-    background-repeat: no-repeat;
-    border: 0 none;
-    height: 20px;
-    display: none;
-}
-div.listbox-navigation button:hover {
-    cursor: pointer;
-}
+
 
         /* header */
 div.listbox-header-box {
@@ -467,19 +303,6 @@ div.listbox-content a:hover {
 }
 a.your_listbox_title {
     display: none;
-}
-
-        /* records displayer */
-div.listbox-header-box {
-    height: 0;
-    float: right;
-}
-div.listbox-number-of-records {
-    float: right;
-    font-size: 12px;
-    margin-right: 5em;
-    margin-top: -18px;
-    min-width: 30%;
 }
         /* document list */
             /* headlines */

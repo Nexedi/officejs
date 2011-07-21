@@ -128,8 +128,7 @@ Page.prototype = {
     displayLastUserName: function(doc) {$("a#author").html(doc.getAuthor());},
     displayLastModification: function(doc) {$("a#last_update").html(doc.getLastModification());},
     displayDocumentTitle: function(doc) {
-        var title = (doc.getTitle().length < 30) ? doc.getTitle() : doc.getTitle().substring(0,30) + "...";
-        $("a#document_title").html(title);
+        $("a#document_title").html(limitedString(doc.getTitle(),30));
     },
     displayDocumentContent: function(doc) {this.getEditor().loadContentFromDocument(doc);},
     displayDocumentState: function(doc) {$("a#document_state").html(doc.getState()[getCurrentUser().getSetting("language")]);},
@@ -154,8 +153,7 @@ var User = function(arg) {
     else {
         this.name = "UNG";//default name
         this.settings = {
-            language: "en",
-            displayPreferences: 15//number of displayed document in the list
+            language: "en"
         }
         this.documentList = new DocumentList();
         this.documents = {};
@@ -328,7 +326,11 @@ JIOStorage.prototype.load({
 getCurrentStorage = function() {
     if(!currentStorage) {//if storage has not been loaded yet
         var dataStorage = JSON.parse(localStorage.getItem("currentStorage"));
-        if(!dataStorage) {window.location = "login.html";return null;}//if it's the first connexion
+        if(!dataStorage) {
+            setCurrentStorage(new LocalStorage("ung"));
+            //window.location = "login.html";
+            return null;
+        }//if it's the first connexion
 
         switch(dataStorage.type) {//load the last storage used
             case "local": currentStorage = new LocalStorage(); break;
@@ -406,7 +408,12 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
 
     //dates
     getCreation:function() {return this.creation;},
-    getLastModification:function() {return (new Date(this.lastModification)).toUTCString();},
+    getLastModification:function() {
+        var date = (new Date(this.lastModification)).toGMTString();
+        var day = date.substring(0,16);
+        var today = (new Date(currentTime())).toGMTString().substring(0,16);
+        return (day===today) ? date.substring(17,date.length) : day;
+    },
     setLastModification:function(date) {this.lastModification=date;},
 
     //state

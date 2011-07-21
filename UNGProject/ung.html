@@ -1,28 +1,19 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-    <meta name="generator" content="ERP5 - Copyright (C) 2001 - 2008. All rights reserved." />
-    <meta name="description"
-    content="ERP5 Free Open Source ERP and CRM" />
-    <meta name="keywords" content="" />
-    <meta name="robots" content="index, follow" />
 
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta http-equiv="Content-Script-Type" content="text/javascript" />
-    <meta http-equiv="Content-Style-Type" content="text/css" />
-
-    <title>ERP5 | ERP5</title>
+    <title>UNG Docs</title>
 
     <link type="text/css" rel="stylesheet" href="css/ung.css" />
     <link type="text/css" rel="stylesheet" href="css/jquery-ui.css" />
     <link type="text/css" rel="stylesheet" href="css/gadget.css" />
     <script type="text/javascript" src="js/jquery/jquery.js"></script>
     <script type="text/javascript" src="js/jquery/jquery-ui.js"></script>
-    <!--<script type="text/javascript" src="/ung/erp5.js"></script>
-    <script type="text/javascript" src="/erp5_knowledge_box.js"></script>-->
     <script type="text/javascript" src="js/tools.js"></script>
     <script type="text/javascript" src="js/theme.js"></script>
     <script type="text/javascript" src="js/ung.js"></script>
+
+    <script type="text/javascript" charset="utf-8" src="phonegap.0.9.6.js"></script>
 
     <link rel="icon" type="image/x-icon"
         href="images/ung/favicon.ico" />
@@ -45,12 +36,10 @@
             waitBeforeSucceed(//display the list of documents
                 function(){return Line.loadHTML()},function() {
                     getDocumentList().resetSelectionList();
-                    getDocumentList().updateDisplayInformation();
                     getDocumentList().display();
-                    resize();}//hack for a bug with firefox
+                    }//hack for a bug with firefox
             );
         }
-        $(window).resize(resize);
         $(document).ready(init);
     </script>
 </head>
@@ -60,31 +49,6 @@
 
             <!-- Each aggregate of groups is a div wrapper -->
             <div class="wrapper" id="wrapper_navigation">
-
-                <div class=" navigation-left">
-                    <fieldset class="widget">
-                        <legend class="group_title"></legend>
-
-                        <div class="field" title="">
-
-                            <label> navigation_box </label>
-
-                            <div class="input"><div  >
-                                <a class="email" href="/ung/mail">Email</a>
-                                <a class="document" href="#" onclick="window.location.reload()">Documents</a>
-                                <a class="calendar" href="/ung/calendar">Calendar</a>
-                            </div></div>
-                        </div>
-
-                        <div class="field date_field" title="The Date">
-
-                            <label> Modification Date </label>
-                            <div class="input"></div>
-
-                        </div>
-
-                    </fieldset>
-                </div>
 
                 <div class=" navigation-right">
                     <fieldset class="widget">
@@ -187,246 +151,17 @@
                                     <div class="gadget-action">
 
                                         <div class="menu_create_object">
-                                            <ul><li>
-                                                <a id="current">
-                                                    <span>Create New</span>
-                                                    <img src="images/ung/arrow.png"/>
-                                                </a>
-                                                <ul>
-                                                    <li>
-                                                        <a href="#" onclick="createNewDocument('illustration')">
-                                                            <img src="images/icons/svg.png" alt=""/>
-                                                            <span>Web Illustration</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a href="#" onclick="createNewDocument('table')">
-                                                            <img src="images/icons/table.png" alt=""/>
-                                                            <span>Web Table</span>
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a href="#" onclick="createNewDocument('text')">
-                                                            <img src="images/icons/document.png"/>
-                                                            <span>Web Page</span>
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </li></ul>
+                                            <label> create document </label>
+                                            <select name="create_document" onChange="createNewDocument(this.value)">
+                                                <option id="new" value="title" selected>New...</option>
+                                                <option value="text">text</option>
+                                                <option value="table">spreadshit</option>
+                                                <option value="illustration">illustration</option>
+                                            </select>
                                         </div>
 
                                         <input type="submit" id="upload" name="Upload" value="Upload" />
-
-                                        <div class="file-selection">
-                                            <div class="file-quick-search">
-                                                <div class="listbox-tree">
-
-                                                    <!-- Domain Report Tree mode -->
-                                                    <div class="listbox-domain-tree-container">
-
-                                                        <!-- Select domain node -->
-                                                        <select name="domain_root_url" onchange="submitAction(this.form, '/ung/setDomainRoot')">
-                                                            <option value="ung_domain" selected="selected">UNG Documents</option>
-                                                        </select>
-
-                                                        <!-- Domain node contents -->
-                                                        <table cellpadding="0"
-                                                                summary="This table contains the domain tree"
-                                                                class="your_listbox-table-domain-tree">
-
-                                                            <tr>
-                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                    <button type="submit"
-                                                                            name="unfoldDomain:method"
-                                                                            class="tree-closed"
-                                                                            value="ung_domain/all_documents.0">All Documents</button>
-                                                                </td>
-                                                            </tr>
-
-                                                            <tr>
-                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                    <button type="submit"
-                                                                        name="unfoldDomain:method"
-                                                                        class="tree-closed"
-                                                                        value="ung_domain/by_subject.0">By Subject</button>
-                                                                </td>
-                                                            </tr>
-
-                                                            <tr>
-                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                    <button type="submit"
-                                                                            name="unfoldDomain:method"
-                                                                            class="tree-closed"
-                                                                            value="ung_domain/hidden.0">Hidden</button>
-                                                                </td>
-                                                            </tr>
-
-                                                            <tr>
-                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                    <button type="submit"
-                                                                            name="unfoldDomain:method"
-                                                                            class="tree-closed"
-                                                                            value="ung_domain/owner.0">Owner</button>
-                                                                </td>
-                                                            </tr>
-
-                                                            <tr>
-                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                    <button type="submit"
-                                                                            name="unfoldDomain:method"
-                                                                            class="tree-closed"
-                                                                            value="ung_domain/recent.0">Recent</button>
-                                                                </td>
-                                                            </tr>
-
-                                                            <tr>
-                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                    <button type="submit"
-                                                                            name="unfoldDomain:method"
-                                                                            class="tree-closed"
-                                                                            value="ung_domain/shared.0">Shared by me</button>
-                                                                </td>
-                                                            </tr>
-
-                                                            <tr>
-                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                    <button type="submit"
-                                                                            name="unfoldDomain:method"
-                                                                            class="tree-closed"
-                                                                            value="ung_domain/starred.0">Starred</button>
-                                                                </td>
-                                                            </tr>
-
-                                                            <tr>
-                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
-                                                                    <button type="submit"
-                                                                            name="unfoldDomain:method"
-                                                                            class="tree-closed"
-                                                                            value="ung_domain/trash.0">Trash</button>
-                                                                </td>
-                                                            </tr>
-
-                                                        </table>
-
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
-
-
-                                    <div class="gadget-listbox" id="gadget-listbox" title="Add Gadgets">
-                                        <table id="gadget-table"></table>
-                                    </div>
-
-                                    <div class="front_pad">
-
-                                        <!-- XXX - Use WebSection_viewKnowledgePadColumn to display one column only -->
-                                        <div class="draggable_wrapper">
-
-                                            <div id="gadget_area_wrapper">
-                                                <div id="pad-navigation-wrapper">
-
-                                                    <div class="tab" id="tabs_switcher">
-                                                        <span id="tab_switcher_hidden" style="display:none">Show tabs</span>
-                                                        <span id="tab_switcher_visible">Hide tabs</span>
-                                                    </div>
-
-                                                    <div id="tabs" style="display: block">
-                                                        <ul>
-
-                                                            <li id="knowledge_pad_module_1" class="tab tab_selected">
-
-                                                                <span id="knowledge_pad_module_1_title" onclick="loadPadFromServer('knowledge_pad_module/1', 'knowledge_pad_module_1', 'web_front')">Onglet 1</span>
-
-                                                                <div class="pad-actions" style="display:block">
-                                                                    <span title="Settings"
-                                                                            class="clickable_image rename_tab_dialog_image"
-                                                                            onclick="showRenamePadPopup('knowledge_pad_module/1',
-                                                                                                         'knowledge_pad_module_1_title')"></span>
-                                                                    <span title="Remove"
-                                                                            class="clickable_image remove_tab_dialog_image"
-                                                                            onclick=" removeKnowledgePadFromServer(
-                                                                                         'knowledge_pad_module/1', 'web_front')" />
-                                                                </div>
-
-                                                            </li>
-
-                                                            <li class="tab" onclick="showAddNewPadPopup();"
-                                                                title="Add new tab"
-                                                                id="add_new_tab_dialog_link">Add tab</li>
-
-                                                            </ul>
-                                                        </div>
-
-                                                        <div id="add_new_gadget_link">
-                                                            <a title="Add gadgets" id="add-gadgets" href="..."><span>Add gadgets</span></a>
-                                                        </div>
-
-                                                </div>
-
-                                                <div id="loading-wrapper" style="display:none;">
-                                                    <img src="ajax-loader.gif" title="Loading" alt="Loading" />
-                                                    <p> Please wait while your changes are being applied. </p>
-                                                </div>
-
-                                                <!-- Render active Knowledge pad -->
-                                                <div id="pad-body-wrapper">
-                                                    <div id="page_wrapper">
-
-                                                        <!-- No gadgets message -->
-                                                        <div>
-                                                            <h3> Your tab is empty. </h3>
-                                                            <h4> Please  use link (<b>Add gadgets</b>) to prepare it yourself. </h4>
-                                                        </div>
-
-                                                        <!-- Render pad columns -->
-                                                        <div class="portal-column" id="portal-column-0"></div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Hidden dialogs -->
-                                                <div id="add_new_tab_dialog" class="toggable_dialog">
-
-                                                    <h3> Add new tab </h3>
-                                                    <span>Tab name</span>:
-                                                    <input type="text" value="" name="pad_title"
-                                                            id="new_pad_title"
-                                                            onkeypress=" return addPadOnServerOnEnter(event, 'web_front', 'view')" />
-                                                    <br />
-                                                    <br />
-
-                                                    <button type="button" onclick="$('#add_new_tab_dialog').toggle();">Cancel</button>
-                                                    <button type="button"
-                                                            id="add_new_tab_dialog_add_button"
-                                                            onclick="addPadOnServer('web_front', 'view')">Add</button>
-
-                                                </div>
-
-                                                <div id="rename_tab_dialog" class="toggable_dialog">
-
-                                                    <h3> Rename tab </h3>
-                                                    <span>Tab name</span>:
-                                                    <input type="text" id="new_knowledge_pad_title"
-                                                            name="knowledge_pad_title"
-                                                            onkeypress="return renameKnowledgePadToServerOnEnter(event);"
-                                                            value="Onglet 1" />
-                                                    <br />
-                                                    <br />
-
-                                                    <button type="button" onclick="$('#rename_tab_dialog').toggle();">Cancel</button>
-                                                    <button type="button"
-                                                            id="rename_tab_dialog_rename_button"
-                                                            onclick="renameKnowledgePadToServer();"> Rename </button>
-
-                                                </div>
-
-                                                <!-- Show message that default pad is being prepared. -->
-                                                <!-- Create (asynch) default pad. -->
-                                            </div>
-                                        </div>
-                                    </div>
-
                                 </div>
                             </div></div>
                         </div>
@@ -439,19 +174,6 @@
                         <legend class="group_title"></legend>
 
                         <div class="field" title="">
-
-                            <label> favorite_box </label>
-                            <div class="input"><div  >
-                                <div class="favorite">
-                                    <a class="domain_selected"></a>
-
-                                    <a href="#" onclick="javascript:window.location.reload()">Refresh</a>
-                                </div>
-                            </div></div>
-
-                        </div>
-
-                        <div class="field" title="">
                             <label> Toolbar </label>
 
                             <div class="input"><div  >
@@ -459,73 +181,6 @@
                                     <button class="delete"
                                             onclick="getDocumentList().deleteSelectedDocuments()">Delete
                                     </button>
-                                    <button name="#" class="change_state">Change State</button>
-
-                                    <div class="listbox-navigation">
-                                        <button class="listbox_first_page your_listbox_first_page" onclick="getDocumentList().changePage(event)">
-                                            <span class="image"> </span>
-                                        </button>
-                                        <button class="listbox_previous_page your_listbox_previous_page" onclick="getDocumentList().changePage(event)">
-                                            <span class="image"> </span>
-                                        </button>
-                                        <input class="listbox_set_page your_listbox_set_page" value="1" size="1" onkeypress="if(event.keyCode==13){getDocumentList().changePage(event)}" />
-                                        /<span class="listbox_last_page">1</span>
-                                        <button class="listbox_next_page your_listbox_next_page" onclick="getDocumentList().changePage(event)">
-                                            <span class="image"> </span>
-                                        </button>
-                                        <button class="listbox_last_page your_listbox_last_page" onclick="getDocumentList().changePage(event)">
-                                            <span class="image"> </span>
-                                        </button>
-                                    </div>
-
-                                    <div class="listbox-head">
-                                        <div class="listbox-head-spacer"></div>
-                                        <div class="listbox-head-content">
-
-                                            <!-- Listbox head (in left) -->
-                                            <div class="listbox-head-title">
-
-                                                <!-- List tree mode choice -->
-                                                <!-- Listbox title -->
-                                                <div class="listbox-header-box">
-                                                    <div class="listbox-title">
-                                                        <a href="..." class="your_listbox_title">
-                                                            <span>Document List</span></a>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Listbox nagivation (in right) -->
-                                            <div class="listbox-head-navigation">
-
-                                                <!--Show search result in web mode-->
-                                                <div class="listbox-header-box">
-                                                    <div class="listbox-number-of-records">
-
-                                                        <!-- listbox start - stop number -->
-                                                        <span id="page_start_number" class="listbox-current-page-start-number">1</span> -
-                                                        <span id="page_stop_number" class="listbox-current-page-stop-number">...</span>
-                                                        <span>of</span>
-
-                                                        <!-- listbox total rows number -->
-                                                        <span id="total_row_number" class="listbox-current-page-total-number your_listbox-current-page-total-number">
-                                                            <a>?</a> records
-                                                        </span>
-
-                                                        <!-- listbox selected rows number -->
-                                                        <span id="selected_row_number" class="your_listbox-current-item-number">
-                                                            - <a>0</a> items selected
-                                                        </span>
-
-                                                    </div>
-                                                </div>
-
-                                                <!--Page navigation -->
-                                            </div>
-                                        </div>
-
-                                    </div>
-
                                 </div>
 
                             </div></div>
@@ -582,22 +237,6 @@
                                                                     title="Title">
 
                                                                 <span>Title</span>
-                                                            </button>
-
-                                                            <!-- Icon showing sort order -->
-                                                            <img src="images/ung/transparent-image.gif"
-                                                                    alt="Sort" class="sort-button"
-                                                                    title="Sort" />
-                                                        </th>
-
-                                                        <th class="listbox-table-header-cell">
-                                                            <!-- Button in normal view -->
-                                                            <!-- Button in gadget mode -->
-                                                            <button type="button"
-                                                                    class="sort-button"
-                                                                    onclick=""
-                                                                    title="Sharing">
-                                                                <span>Sharing</span>
                                                             </button>
 
                                                             <!-- Icon showing sort order -->

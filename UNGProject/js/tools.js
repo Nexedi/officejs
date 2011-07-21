@@ -225,6 +225,13 @@ errorMessage = function(message,object) {
 currentTime = function() {return Date.now();}
 
 /**
+ * cuts a string if too long
+ */
+limitedString = function(s, max) {
+    return (s.length < max) ? s : (s.substring(0,max) + "...");
+}
+
+/**
  * Paste a toolkit at the mouse position
  */
 Tooltip = function() {
