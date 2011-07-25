@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-
+    <meta name="viewport" content="width=device-width"/>
     <title>UNG Docs</title>
 
     <link type="text/css" rel="stylesheet" href="css/ung.css" />
@@ -12,8 +12,6 @@
     <script type="text/javascript" src="js/tools.js"></script>
     <script type="text/javascript" src="js/theme.js"></script>
     <script type="text/javascript" src="js/ung.js"></script>
-
-    <script type="text/javascript" charset="utf-8" src="phonegap.0.9.6.js"></script>
 
     <link rel="icon" type="image/x-icon"
         href="images/ung/favicon.ico" />
@@ -153,7 +151,7 @@
 
                                         <div class="menu_create_object">
                                             <label> create document </label>
-                                            <select name="create_document" onChange="createNewDocument(this.value)">
+                                            <select name="create_document" onchange="createNewDocument(this.value)">
                                                 <option id="new" value="title" selected>New...</option>
                                                 <option value="text">text</option>
                                                 <option value="table">spreadshit</option>
