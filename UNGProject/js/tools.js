@@ -258,3 +258,17 @@ Tooltip.prototype = {
         }
     }
 }
+
+includeJS = function(file) {
+    /*var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = file;
+    document.getElementsByTagName('head')[0].appendChild(script);
+    */$("<script>", {type:"text/javascript",src:file}).appendTo("head");
+}
+includeJS2 = function(file) {
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = file;
+    document.getElementsByTagName('head')[0].appendChild(script);
+}

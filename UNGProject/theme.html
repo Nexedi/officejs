@@ -17,8 +17,8 @@
         <!-- this is a placeholder for different extensions to head which could be required by web themes -->
 
         <!-- jquery -->
-        <script type="text/javascript" src="js/jquery/jquery.js"></script>
-        <script type="text/javascript" src="js/jquery/jquery-ui.js"></script>
+        <script id="jquery_loader" type="text/javascript" src="js/jquery/jquery.js"></script>
+        <script id="jquery_loader2" type="text/javascript" src="js/jquery/jquery-ui.js"></script>
 
         <link type="text/css" rel="stylesheet" href="css/jquery-ui.css" />
         <link rel="stylesheet" type="text/css" href="css/ung.css" />
@@ -27,6 +27,13 @@
         <script type="text/javascript" src="js/tools.js"></script>
 
         <script type="text/javascript" src="js/theme.js"></script>
+
+        <script type="text/javascript">//hack for aloha
+            if(supportedDocuments[getCurrentDocument().getType()].editorPage=="text-editor") {
+                GENTICS_Aloha_base="aloha/aloha/"
+                includeJS("aloha/aloha/aloha.js");
+            }
+        </script>
 
         <script type="text/javascript" charset="utf-8" src="phonegap.0.9.6.js"></script>
 
@@ -44,6 +51,11 @@
             var init = function() {
                 initPage();
                 waitBeforeSucceed(function() {return getCurrentPage().getXML();},initUser);
+
+        //$("script#jquery_loader").remove();
+        //$("script#jquery_loader2").remove();
+
+        //$("#author").aloha();
             }
             $(document).ready(init);
         </script>
@@ -56,27 +68,6 @@
 
                 <!-- Each aggregate of groups is a div wrapper -->
                 <div class="wrapper" id="wrapper_navigation">
-
-                    <div class=" navigation-left">
-                        <fieldset class="widget">
-
-                            <legend class="group_title"></legend>
-
-                            <div class="field" title="">
-
-                                <label>navigation_box</label>
-                                <div class="input"><div  >
-
-                                    <a class="email" href="ung/mail.html" lang="en">Email</a>
-                                    <a class="document" href="#" onclick="stopDocumentEdition()" lang="en">Documents</a>
-                                    <a class="calendar" href="ung/calendar.html" lang="en">Calendar</a>
-
-                                </div></div>
-
-                            </div>
-
-                        </fieldset>
-                    </div>
 
                     <div class=" navigation-right">
                         <fieldset class="widget">
@@ -169,47 +160,6 @@
                                     <a id="author">Unknown</a>
 
                                     <button type="button" onclick="javascript:saveCurrentDocument()">Save</button>
-
-                                    <div class="action_menu">
-
-                                        <ul id="change_state_list"><li>
-                                            <a id="change_state">
-                                                <span>Change state</span>
-                                                <img src="images/ung/arrow.png" alt=">"/>
-                                            </a>
-
-                                            <ul>
-
-                                                <li>
-                                                    <a onclick="javascript:cancel_sharing()">
-                                                        <h6>Cancel document publication</h6>
-                                                    </a>
-                                                </li>
-
-
-                                                <li>
-                                                    <a onclick="javascript:translate()">
-                                                        <h6>Request translation</h6>
-                                                    </a>
-                                                </li>
-
-
-                                                <li>
-                                                    <a onclick="javascript:submit()">
-                                                        <h6>Submit document for review</h6>
-                                                    </a>
-                                                </li>
-
-                                                <li>
-                                                    <a onclick="javascript:share()">
-                                                        <h6>Share this document</h6>
-                                                    </a>
-                                                </li>
-
-                                            </ul>
-                                        </li></ul>
-
-                                    </div>
 
                                 </div></div>
 

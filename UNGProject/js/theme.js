@@ -61,7 +61,7 @@ Page.prototype = {
         /* load the editor to work with and a new document to work on */
         switch(this.name) {
             case "text-editor":
-                    editor = new Xinha();
+                    editor = new AlohaInterface();
                     doc=new JSONTextDocument();
                     break;
             case "table-editor":
@@ -88,9 +88,10 @@ Page.prototype = {
         var object = null;
         switch(type) {
             case "script":
-                    object = this.getHTML().createElement("script");
+                    /*object = window.document.createElement("script");
                     object.type = "text/javascript";
-                    object.src = file;
+                    object.src = file;*/
+                    includeJS(file);includeJS2(file);return;
                     break;
 
             case "style":
@@ -164,7 +165,7 @@ User.prototype.load({//add methods thanks to the UngObject.load method
     getName: function() {return this.name;},
     setName: function(newName) {this.name = newName;},
     getSetting: function(key) {return this.settings[key];},
-    setSetting: function(key,value) { this.settings[key] = value; },
+    setSetting: function(key,value) {this.settings[key] = value;},
     getSettings: function() {return this.settings;},
     getDocumentList: function() {return this.documentList;},
     setDocumentList: function(list) {this.documentList = list;},
@@ -333,8 +334,8 @@ getCurrentStorage = function() {
         }//if it's the first connexion
 
         switch(dataStorage.type) {//load the last storage used
-            case "local": currentStorage = new LocalStorage(); break;
-            case "JIO": currentStorage = new JIOStorage(); break;
+            case "local":currentStorage = new LocalStorage();break;
+            case "JIO":currentStorage = new JIOStorage();break;
         }
         currentStorage.loadUser(dataStorage.user.name);
         currentStorage.type = dataStorage.type;
