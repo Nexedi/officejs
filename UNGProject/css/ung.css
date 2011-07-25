@@ -10,6 +10,14 @@ body {
   overflow-x: hidden;
 }
 
+/* buttons aspect */
+.ung_button {
+    background-image: url('../images/ung/button_background.png');
+    border: 1px solid #BBBBBB;
+    border-radius: 4px 4px 4px 4px;
+    color: #333333;
+}
+
 /* widget fields */
 fieldset.widget {
     border: 0 none;
@@ -274,10 +282,6 @@ div.gadget-column {
     text-decoration: none;
 }
 .menu_create_object li a#current {
-    background-image: url('../images/ung/button_background.png');
-    border: 1px solid #BBBBBB;
-    border-radius: 4px 4px 4px 4px;
-    color: #333333;
     height: 19px;
     padding-left: 2px;
     padding-right: 14px;
@@ -326,10 +330,6 @@ div.gadget-column {
 }
         /* upload button */
 div.gadget-action input#upload {
-    background-image: url('../images/ung/button_background.png');
-    border: 1px solid #BBBBBB;
-    border-radius: 4px 4px 4px 4px;
-    color: #333333;
     left: 0.5em;
     position: relative;
     top: 0.1em;
@@ -398,12 +398,6 @@ div.favorite a {
 a.domain_selected {
     float: left !important;
     font-size: 15px !important;
-}
-div.toolbar button {
-    background-image: url("../images/ung/button_background.png");
-    border: 1px solid #BBBBBB;
-    border-radius: 4px 4px 4px 4px;
-    color: #333333;
 }
 button.delete {
     margin-left: 6px;

@@ -25,7 +25,7 @@ var Page = function(page) {
     this.editor = null;
     //define as current page
     currentPage = this;
-    if(page!="ung" && page !=undefined) {this.loadXML("xml/"+page+".xml");}
+    if(page!="ung" &&page!="mail" && page !=undefined) {this.loadXML("xml/"+page+".xml");}
 }
 Page.prototype = {
     setXML: function(data) {

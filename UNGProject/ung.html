@@ -189,7 +189,7 @@
 
                                         <div class="menu_create_object">
                                             <ul><li>
-                                                <a id="current">
+                                                <a id="current" class="ung_button">
                                                     <span>Create New</span>
                                                     <img src="images/ung/arrow.png"/>
                                                 </a>
@@ -216,7 +216,7 @@
                                             </li></ul>
                                         </div>
 
-                                        <input type="submit" id="upload" name="Upload" value="Upload" />
+                                        <input type="submit" id="upload" class="ung_button" name="Upload" value="Upload" />
 
                                         <div class="file-selection">
                                             <div class="file-quick-search">
@@ -457,24 +457,24 @@
 
                             <div class="input"><div  >
                                 <div class="toolbar">
-                                    <button class="delete"
+                                    <button class="delete ung_button"
                                             onclick="getDocumentList().deleteSelectedDocuments()">Delete
                                     </button>
-                                    <button name="#" class="change_state">Change State</button>
+                                    <button name="#" class="change_state ung_button">Change State</button>
 
                                     <div class="listbox-navigation">
-                                        <button class="listbox_first_page your_listbox_first_page" onclick="getDocumentList().changePage(event)">
+                                        <button class="listbox_first_page your_listbox_first_page ung_button" onclick="getDocumentList().changePage(event)">
                                             <span class="image"> </span>
                                         </button>
-                                        <button class="listbox_previous_page your_listbox_previous_page" onclick="getDocumentList().changePage(event)">
+                                        <button class="listbox_previous_page your_listbox_previous_page ung_button" onclick="getDocumentList().changePage(event)">
                                             <span class="image"> </span>
                                         </button>
                                         <input class="listbox_set_page your_listbox_set_page" value="1" size="1" onkeypress="if(event.keyCode==13){getDocumentList().changePage(event)}" />
                                         /<span class="listbox_last_page">1</span>
-                                        <button class="listbox_next_page your_listbox_next_page" onclick="getDocumentList().changePage(event)">
+                                        <button class="listbox_next_page your_listbox_next_page ung_button" onclick="getDocumentList().changePage(event)">
                                             <span class="image"> </span>
                                         </button>
-                                        <button class="listbox_last_page your_listbox_last_page" onclick="getDocumentList().changePage(event)">
+                                        <button class="listbox_last_page your_listbox_last_page ung_button" onclick="getDocumentList().changePage(event)">
                                             <span class="image"> </span>
                                         </button>
                                     </div>
