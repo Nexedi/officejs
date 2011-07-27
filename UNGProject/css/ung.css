@@ -261,8 +261,8 @@ div.gadget-column {
     margin-left: -4px;
     margin-right: -8px;
 }
-        /* "create new" menu */
-.menu_create_object {
+        /* listbox menus */
+.option_menu {
     font-family: arial,sans-serif;
     font-size: 14px;
     list-style: none outside none;
@@ -272,34 +272,34 @@ div.gadget-column {
     margin-left: 5px;
     float:left;
 }
-.menu_create_object li {
+.option_menu li {
     padding-top: 0.5em;
     position: relative;
     text-decoration: none;
 }
-.menu_create_object li a {
+.option_menu li div {
     display: block;
     text-decoration: none;
 }
-.menu_create_object li a#current {
+.option_menu li div.fix {
     height: 19px;
     padding-left: 2px;
     padding-right: 14px;
     text-align: justify;
     width: 78px;
 }
-.menu_create_object li a#current img {
+.option_menu li div.fix img {
     margin-left: 3px;
     position: relative;
     top: 2px;
 }
-.menu_create_object img {
+.option_menu img {
     border: 0 none;
 }
-.menu_create_object li:hover ul {
+.option_menu li:hover ul {
     display: block;
 }
-.menu_create_object li ul {
+.option_menu li ul {
     display: none;
     height: auto;
     position: absolute;
@@ -307,16 +307,17 @@ div.gadget-column {
     background-color: #FFFFFF;
     border: 1px solid #D1D1D1;
 }
-.menu_create_object ul {
+.option_menu ul {
     list-style: none outside none;
     margin: 0;
     padding: 0;
 }
-.menu_create_object li a:hover {
+.option_menu li div:hover {
     color: #000000;
     text-decoration: none;
+    cursor: pointer;
 }
-.menu_create_object li ul a {
+.option_menu li ul div {
     color: #002E3F;
     display: block;
     font-size: 14px;
@@ -337,7 +338,7 @@ div.gadget-action input#upload {
         /* action list */
 div.gadget-column div.file-selection {
     background-color: #FFFFFF;
-    margin: 15px -4px -4px;
+    margin: 0.5em -4px -4px;
 }
 div.gadget-column div.file-selection div.file-quick-browser,
 div.gadget-column div.file-selection div.file-quick-search {
@@ -359,6 +360,7 @@ div.listbox-domain-tree-container select {
     background: none repeat scroll 0 0 #FFFFFF;
     border: medium none;
     cursor: pointer;
+    margin-left: 1em;
 }
         /* gadgets */
 

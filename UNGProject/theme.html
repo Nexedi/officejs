@@ -66,7 +66,7 @@
                                 <div class="input"><div  >
 
                                     <a class="email" href="ung/mail.html" lang="en">Email</a>
-                                    <a class="document" href="#" onclick="stopDocumentEdition()" lang="en">Documents</a>
+                                    <a class="document" href="ung.html" onclick="stopDocumentEdition()" lang="en">Documents</a>
                                     <a class="calendar" href="ung/calendar.html" lang="en">Calendar</a>
 
                                 </div></div>
@@ -111,7 +111,7 @@
 
                                     | <a id="settings" href="#" lang="en">Parametres</a>
                                     | <a id="help" href="#" lang="en">Help</a>
-                                    | <a href="WebSite_logout" id="log" lang="en">Sign out</a>
+                                    | <a id="sign_out" href="login.html" onclick="signOut()">Sign out</a>
 
                                 </div></div>
 
@@ -138,12 +138,12 @@
                                 <label>search_bar</label>
                                 <div class="input"><div  >
 
-                                    <a class="ung_docs" href="#" onclick="stopDocumentEdition()">
+                                    <a class="ung_docs" href="ung.html" onclick="stopDocumentEdition()">
                                         <img src="images/ung/ung-logo.gif" alt="logo"/>
                                     </a>
 
                                     <a id="loading_message" lang="en">Loading...</a>
-                                    <a id="document_title" name="document_title" onclick="javascript:editDocumentSettings()">Untitled</a>
+                                    <a id="document_title" name="document_title" onclick="editDocumentSettings()">Untitled</a>
                                     <a id="document_state" name="document_state">...</a>
 
                                 </div></div>
@@ -166,7 +166,7 @@
                                     <a id="last_update">Updated ... by</a>
                                     <a id="author">Unknown</a>
 
-                                    <button type="button" onclick="javascript:saveCurrentDocument()">Save</button>
+                                    <button type="button" onclick="saveCurrentDocument()">Save</button>
 
                                     <div class="action_menu">
 

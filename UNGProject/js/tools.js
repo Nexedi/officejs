@@ -44,6 +44,15 @@ UngObject.prototype.equals = function(object) {
     return true;
 }
 
+/* return a copy of the current object */
+UngObject.prototype.copy = function() {
+    var copied = new Object();
+    for (var property in this) {
+        copied[property] = this[property]!==null&&typeof(this[property])=="object" ? UngObject.prototype.copy.call(this[property]) : this[property];
+    }
+    return copied;
+}
+
 
 /**
  * Class List
@@ -152,6 +161,13 @@ List.prototype.load({
         } else {
             if(element===this.head()) {this.pop();}//with usual comparator
         }
+    },
+    concat: function(list) {
+        if(list.size()==0) {return this}
+        var l1 = this.copy();
+        var l2 = list.copy();
+        l1.add(l2.get(l2.size()-1));
+        return l2;
     }
 });
 

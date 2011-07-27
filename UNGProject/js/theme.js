@@ -191,7 +191,7 @@ getCurrentUser = function() {
 
 /**
  * Class Storage
- * this class provides usual API to save/load/delete documents
+ * this class provides usual API to save/load/delete elements
  * @param type : "local" to save in localStorage, or "JIO" for remote storage
  * @param userName : the name of the user concerned by this storage
  */
@@ -212,10 +212,7 @@ Storage.prototype.load({
     getUser: function() {return this.user;},
 
     loadUser: function(userName) {},
-    setUser: function(user) {this.user = user},
-    getDocument: function(address, instruction) {},
-    saveDocument: function(doc, address, instruction) {},
-    deleteDocument: function(address, instruction) {}
+    setUser: function(user) {this.user = user}
 });
 
 /**
@@ -601,6 +598,7 @@ var startDocumentEdition = function(doc) {
 var stopDocumentEdition = function() {
     saveCurrentDocument();
     window.location = "ung.html";
+    return false;
 }
 
 /**
@@ -618,6 +616,7 @@ var signOut = function() {
     delete localStorage.currentStorage;
     delete localStorage.currentDocumentID;
     window.location = "login.html";
+    return false
 }
 
 cancel_sharing = function() {alert("cancel");}

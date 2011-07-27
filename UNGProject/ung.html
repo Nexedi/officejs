@@ -72,7 +72,7 @@
 
                             <div class="input"><div  >
                                 <a class="email" href="/ung/mail">Email</a>
-                                <a class="document" href="#" onclick="window.location.reload()">Documents</a>
+                                <a class="document" href="ung.html">Documents</a>
                                 <a class="calendar" href="/ung/calendar">Calendar</a>
                             </div></div>
                         </div>
@@ -121,9 +121,9 @@
                                 <a id="right_message">Not Implemented yet</a>
                                 <div id="preference_dialog" title="UNG Preferences"></div>
                                 <a id="userName">Unknown</a>
-                                | <a id="settings" href="">Settings</a>
-                                | <a id="help" href="">Help</a>
-                                | <a id="sign_out" href="" onclick="signOut()">Sign out</a>
+                                | <a id="settings" href="#">Settings</a>
+                                | <a id="help" href="#">Help</a>
+                                | <a id="sign_out" href="login.html" onclick="signOut()">Sign out</a>
 
                             </div></div>
 
@@ -150,7 +150,7 @@
 
                             <div class="input"><div  >
 
-                                <a class="ung_docs" href="#" onclick="window.location.reload()">
+                                <a class="ung_docs" href="ung.html">
                                     <img src="images/ung/ung-logo.gif"/>
                                 </a>
                                 <a id="loading_message">Loading...</a>
@@ -187,30 +187,30 @@
                                 <div class="gadget-column">
                                     <div class="gadget-action">
 
-                                        <div class="menu_create_object">
+                                        <div class="create_object option_menu">
                                             <ul><li>
-                                                <a id="current" class="ung_button">
+                                                <div class="fix ung_button">
                                                     <span>Create New</span>
                                                     <img src="images/ung/arrow.png"/>
-                                                </a>
+                                                </div>
                                                 <ul>
                                                     <li>
-                                                        <a href="#" onclick="createNewDocument('illustration')">
+                                                        <div onclick="createNewDocument('illustration')">
                                                             <img src="images/icons/svg.png" alt=""/>
                                                             <span>Web Illustration</span>
-                                                        </a>
+                                                        </div>
                                                     </li>
                                                     <li>
-                                                        <a href="#" onclick="createNewDocument('table')">
+                                                        <div onclick="createNewDocument('table')">
                                                             <img src="images/icons/table.png" alt=""/>
                                                             <span>Web Table</span>
-                                                        </a>
+                                                        </div>
                                                     </li>
                                                     <li>
-                                                        <a href="#" onclick="createNewDocument('text')">
+                                                        <div onclick="createNewDocument('text')">
                                                             <img src="images/icons/document.png"/>
                                                             <span>Web Page</span>
-                                                        </a>
+                                                        </div>
                                                     </li>
                                                 </ul>
                                             </li></ul>
@@ -446,7 +446,7 @@
                                 <div class="favorite">
                                     <a class="domain_selected"></a>
 
-                                    <a href="#" onclick="javascript:window.location.reload()">Refresh</a>
+                                    <a href="ung.html">Refresh</a>
                                 </div>
                             </div></div>
 
