@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="Content-Script-Type" content="text/javascript" />
+        <meta http-equiv="Content-Style-Type" content="text/css" />
+        <meta name="keywords" content="" />
+        <meta name="robots" content="index, follow" />
+        <title id="page_title"> Theme </title>
+
+        <link rel="icon" type="image/x-icon"
+            href="images/ung/favicon.ico" />
+        <link rel="shortcut icon" type="image/x-icon"
+            href="images/ung/favicon.ico" />
+
+        <!-- this is a placeholder for different extensions to head which could be required by web themes -->
+
+        <!-- jquery -->
+        <script id="jquery_loader" type="text/javascript" src="js/jquery/jquery.js"></script>
+        <script id="jquery_loader2" type="text/javascript" src="js/jquery/jquery-ui.js"></script>
+
+        <link type="text/css" rel="stylesheet" href="css/jquery-ui.css" />
+        <link rel="stylesheet" type="text/css" href="css/ung-mobile.css" />
+
+        <script type="text/javascript" src="js/base64.js"></script>
+        <script type="text/javascript" src="js/tools-mobile.js"></script>
+
+        <script type="text/javascript" src="js/theme-mobile.js"></script>
+
+        <script type="text/javascript">//hack for aloha
+            if(supportedDocuments[getCurrentDocument().getType()].editorPage=="text-editor") {
+                GENTICS_Aloha_base="aloha/aloha/"
+                includeJS("aloha/aloha/aloha.js");
+            }
+        </script>
+
+        <script type="text/javascript">
+            // initialize
+            var initPage = function() {
+                setCurrentPage(new Page(supportedDocuments[getCurrentDocument().getType()].editorPage));
+            }
+
+            var initUser = function() {
+                var user = getCurrentUser();
+                user.setAsCurrentUser();
+            }
+
+            var init = function() {
+                initPage();
+                waitBeforeSucceed(function() {return getCurrentPage().getXML();},initUser);
+
+        //$("script#jquery_loader").remove();
+        //$("script#jquery_loader2").remove();
+
+        //$("#author").aloha();
+            }
+            $(document).ready(init);
+        </script>
+
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="navigation">
+
+                <!-- Each aggregate of groups is a div wrapper -->
+                <div class="wrapper" id="wrapper_navigation">
+
+                    <div class=" navigation-right">
+                        <fieldset class="widget">
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+
+                                <label>your_language</label>
+                                <div class="input"><div  >
+
+                                    <div id="select_language">
+                                        <ul><li>
+                                            <span id="current_language">en</span>
+                                            <img src="images/ung/arrow_20C.png" alt=">"/>
+                                            <ul id="available_languages">
+                                                <li></li>
+                                            </ul>
+                                        </li></ul>
+                                    </div>
+
+                                </div></div>
+                            </div>
+
+                            <div class="field" title="">
+
+                                <label>Login Box</label>
+                                <div class="input"><div  >
+
+                                    <a id="right_message" lang="en">Not Implemented yet</a>
+                                    <div id="preference_dialog" title="UNG Preferences"></div>
+
+
+                                    <a id="userName">Unknown</a>
+
+                                    | <a id="settings" href="#" lang="en">Parametres</a>
+                                    | <a id="help" href="#" lang="en">Help</a>
+                                    | <a href="login-mobile.html" onclick="signOut()" id="log" lang="en">Sign out</a>
+
+                                </div></div>
+
+                            </div>
+
+                        </fieldset>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="header">
+
+                <!-- Each aggregate of groups is a div wrapper -->
+                <div class="wrapper" id="wrapper_header">
+
+                    <div class=" header-left">
+                        <fieldset class="widget">
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+
+                                <label>search_bar</label>
+                                <div class="input"><div  >
+
+                                    <a class="ung_docs" onclick="stopDocumentEdition()">
+                                        <img src="images/ung/ung-logo.gif" alt="logo"/>
+                                    </a>
+
+                                    <a id="loading_message" lang="en">Loading...</a>
+                                    <a id="document_title" name="document_title" onclick="editDocumentSettings()">Untitled</a>
+                                    <a id="document_state" name="document_state">...</a>
+
+                                </div></div>
+
+                            </div>
+                        </fieldset>
+
+                    </div>
+
+                    <div class=" header-right">
+                        <fieldset class="widget">
+
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+
+                                <label>document_action_box</label>
+                                <div class="input"><div  >
+
+                                    <a id="last_update">Updated ... by</a>
+                                    <a id="author">Unknown</a>
+
+                                    <button type="button" onclick="saveCurrentDocument()">Save</button>
+
+                                </div></div>
+
+                            </div>
+                        </fieldset>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="main">
+
+                <div class="document">
+
+
+                    <div class="content editable">
+
+
+                        <fieldset class="bottom editable">
+
+                            <div id="page_content" class="field page"
+                                 title="Contenu de la page web.">
+                            </div>
+                            <div id="document_content" class="field hidden"
+                                 title="The content of the document considered as a text string">
+                            </div>
+
+                        </fieldset>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

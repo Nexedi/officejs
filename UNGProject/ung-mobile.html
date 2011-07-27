@@ -1,0 +1,285 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <title>UNG Docs</title>
+
+    <link type="text/css" rel="stylesheet" href="css/ung-mobile.css" />
+    <link type="text/css" rel="stylesheet" href="css/jquery-ui.css" />
+    <link type="text/css" rel="stylesheet" href="css/gadget.css" />
+    <script type="text/javascript" src="js/jquery/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery/jquery-ui.js"></script>
+    <script type="text/javascript" src="js/tools-mobile.js"></script>
+    <script type="text/javascript" src="js/theme-mobile.js"></script>
+    <script type="text/javascript" src="js/ung-mobile.js"></script>
+
+    <link rel="icon" type="image/x-icon"
+        href="images/ung/favicon.ico" />
+    <link rel="shortcut icon" type="image/x-icon"
+        href="images/ung/favicon.ico" />
+
+    <script type="text/javascript">
+
+        var init = function() {
+            //delete localStorage.documentList;//delete the list for tests
+            setCurrentPage(new Page("ung"));//provide methods on the page
+            getCurrentStorage().getUser().setAsCurrentUser();//initialize the user
+
+            if(getCurrentDocumentID()&&getDocumentList().get(getCurrentDocumentID())) {
+                /* update the list with the modifications of the last edited document
+                 * (this method has to been rewritten if using multi users) */
+                getDocumentList().updateDocumentInformation(getCurrentDocumentID());
+                delete localStorage.currentDocumentID;
+                getCurrentStorage().save();
+            }
+            waitBeforeSucceed(//display the list of documents
+                function(){return Line.loadHTML()},function() {
+                    getDocumentList().resetSelectionList();
+                    getDocumentList().display();
+                    }//hack for a bug with firefox
+            );
+        }
+        $(document).ready(init);
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="navigation">
+
+            <!-- Each aggregate of groups is a div wrapper -->
+            <div class="wrapper" id="wrapper_navigation">
+
+                <div class=" navigation-right">
+                    <fieldset class="widget">
+
+                        <legend class="group_title"></legend>
+
+                        <div class="field" title="">
+
+                            <label> your_language </label>
+
+                            <div class="input"><div  >
+                                <div id="select_language">
+
+                                    <ul><li>
+                                        <span id="current_language">en</span>
+                                        <img src="images/ung/arrow_20C.png"/>
+                                        <ul id="available_languages">
+                                            <li></li>
+                                        </ul>
+                                    </li></ul>
+
+                                </div>
+                            </div></div>
+
+                        </div>
+
+                        <div class="field" title="">
+
+                            <label> user_login_box </label>
+
+                            <div class="input"><div  >
+
+                                <a id="right_message">Not Implemented yet</a>
+                                <div id="preference_dialog" title="UNG Preferences"></div>
+                                <a id="userName">Unknown</a>
+                                | <a id="settings" href="">Settings</a>
+                                | <a id="help" href="">Help</a>
+                                | <a id="sign_out" href="login-mobile.html" onclick="signOut()">Sign out</a>
+
+                            </div></div>
+
+                        </div>
+
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+
+        <div class="header">
+
+            <!-- Each aggregate of groups is a div wrapper -->
+            <div class="wrapper" id="wrapper_header">
+
+                <div class=" header-left">
+                    <fieldset class="widget">
+
+                        <legend class="group_title"></legend>
+
+                        <div class="field" title="">
+
+                            <label> search_bar </label>
+
+                            <div class="input"><div  >
+
+                                <a class="ung_docs" href="ung.html">
+                                    <img src="images/ung/ung-logo.gif"/>
+                                </a>
+                                <a id="loading_message">Loading...</a>
+
+                                <form>
+                                    <input type="text" name="field_your_search_text" class="field" onkeyup="submitFormOnEnter(event, this.form, 'WebSection_viewSearchResultList')" />
+                                    <input type="submit" value="Search Docs" name="button_search" />
+                                </form>
+
+                            </div></div>
+
+                        </div>
+                    </fieldset>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="main">
+
+            <!-- Each aggregate of groups is a div wrapper -->
+            <div class="wrapper" id="wrapper_main">
+                <!--<td class=" main-left">-->
+                <div class=" main-left">
+                    <fieldset class="widget">
+
+                        <legend class="group_title"></legend>
+
+                        <div class="field" title="">
+
+                            <label> user_menu_box </label>
+
+                            <div class="input"><div  >
+                                <div class="gadget-column">
+                                    <div class="gadget-action">
+
+                                        <div class="menu_create_object">
+                                            <label> create document </label>
+                                            <select name="create_document" onchange="createNewDocument(this.value)">
+                                                <option id="new" value="title" selected>New...</option>
+                                                <option value="text">text</option>
+                                                <option value="table">spreadshit</option>
+                                                <option value="illustration">illustration</option>
+                                            </select>
+                                        </div>
+
+                                        <input type="submit" id="upload" name="Upload" value="Upload" />
+                                    </div>
+                                </div>
+                            </div></div>
+                        </div>
+                    </fieldset>
+                </div>
+                <div class=" main-right">
+
+                    <fieldset class="widget">
+
+                        <legend class="group_title"></legend>
+
+                        <div class="field" title="">
+                            <label> Toolbar </label>
+
+                            <div class="input"><div  >
+                                <div class="toolbar">
+                                    <button class="delete"
+                                            onclick="getDocumentList().deleteSelectedDocuments()">Delete
+                                    </button>
+                                </div>
+
+                            </div></div>
+
+                        </div>
+
+                        <div class="field" title="">
+
+                            <label> Document List </label>
+
+                            <div class="input">
+
+                                <div class="listbox-container">
+
+                                    <div class="listbox-content listbox-content-fixed-width">
+
+                                        <div class="listbox-body">
+
+                                            <table class="listbox your_listbox your_listbox-table">
+                                                <thead>
+
+                                                    <!--Column title -->
+                                                    <tr class="listbox-label-line">
+
+                                                        <!--Report tree-->
+                                                        <!-- Anchor cell -->
+                                                        <!-- Select cell -->
+                                                        <th class="listbox-table-select-cell">
+                                                            <input class="listbox-check-all" type="image"
+                                                                    name="your_listbox_checkAll:method"
+                                                                    value="1" alt="Check All"
+                                                                    title="Check All"
+                                                                    onclick="getDocumentList().checkAll()"
+                                                                    src="images/icons/checkall.png" />
+                                                            &nbsp;
+
+                                                            <input class="listbox-uncheck-all"
+                                                                    type="image"
+                                                                    name="your_listbox_uncheckAll:method"
+                                                                    value="1" alt="Uncheck All"
+                                                                    title="Uncheck All"
+                                                                    onclick="getDocumentList().resetSelectionList()"
+                                                                    src="images/icons/decheckall.png" />
+                                                        </th>
+
+                                                        <!-- Label column row -->
+                                                        <th class="listbox-table-header-cell"></th>
+
+                                                        <th class="listbox-table-header-cell">
+                                                            <!-- Button in normal view -->
+                                                            <!-- Button in gadget mode -->
+                                                            <button type="button" class="sort-button"
+                                                                    onclick=""
+                                                                    title="Title">
+
+                                                                <span>Title</span>
+                                                            </button>
+
+                                                            <!-- Icon showing sort order -->
+                                                            <img src="images/ung/transparent-image.gif"
+                                                                    alt="Sort" class="sort-button"
+                                                                    title="Sort" />
+                                                        </th>
+
+                                                        <th class="listbox-table-header-cell">
+                                                            <!-- Button in normal view -->
+                                                            <!-- Button in gadget mode -->
+                                                            <button type="button"
+                                                                    class="sort-button"
+                                                                    onclick=""
+                                                                    title="Date">
+                                                                <span>Date</span>
+                                                            </button>
+
+                                                            <!-- Icon showing sort order -->
+                                                            <img src="images/ung/transparent-image.gif"
+                                                                    alt="Sort" class="sort-button"
+                                                                    title="Sort" />
+                                                        </th>
+
+                                                    </tr>
+
+                                                    <!--Search column input -->
+                                                </thead>
+
+                                                <!-- Stats -->
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </fieldset>
+
+                </div>
+            </div>
+    </div></div>
+</body>
+</html>
