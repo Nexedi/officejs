@@ -27,7 +27,26 @@ var Xinha = function() {
     this.load();
 }
 
-
+var AlohaInterface = function() {
+    this.name = "Aloha";
+    this.load = function() {
+        includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Format/plugin.js");
+        includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Table/plugin.js");
+        includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.List/plugin.js");
+	includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Link/plugin.js");
+        $("div#page_content div.input").html("<div id='aloha_editable'>test</div>");
+        $("#aloha_editable").css("min-height","15em").css("border","5px solid #3399FF").css("overflow","auto");
+        $("#aloha_editable").aloha();
+    }
+    this.saveEdition = function() {
+        getCurrentDocument().saveEdition(GENTICS.Aloha.editables[0].getContents());
+    }
+    this.loadContentFromDocument = function(doc) {
+        var setText = function() {$("div.aloha_editable").html(doc.getContent());}
+        tryUntilSucceed(setText);
+    }
+    this.load();
+}
 
 /**
  * Text documents

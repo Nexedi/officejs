@@ -150,6 +150,8 @@ var User = function(arg) {
     if(arg) {
         this.load(arg);
         if(window.DocumentList) {this.documentList = new DocumentList(arg.documentList);}
+        if(window.LabelList) {this.labelList = new LabelList(arg.labelList);}
+        if(window.GroupList) {this.groupList = new GroupList(arg.groupList);}
     }
     else {
         this.name = "UNG";//default name
