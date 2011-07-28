@@ -5,7 +5,7 @@
         <title></title>
         <script type="text/javascript"> function reloc(url) {window.location = url;}</script>
     </head>
-    <body onload="reloc('ung.html');">
+    <body onload="reloc('mail.html');">
 
     </body>
 </html>
