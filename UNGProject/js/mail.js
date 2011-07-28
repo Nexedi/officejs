@@ -169,7 +169,7 @@ var Line = function(mail, i) {
 Line.prototype = {
     getEMail: function() {return this.email;},
     getID: function() {return this.ID;},
-    getType: function() {return this.document.getType() ? this.document.getType() : "other";},
+    getType: function() {return this.document.getType() || "other";},
     getHTML: function() {return this.html;},
     setHTML: function(newHTML) {this.html = newHTML;},
     setSelected: function(bool) {$("tr td.listbox-table-select-cell input#"+this.getID()).attr("checked",bool)},
