@@ -28,13 +28,6 @@
 
         <script type="text/javascript" src="js/theme-mobile.js"></script>
 
-        <script type="text/javascript">//hack for aloha
-            if(supportedDocuments[getCurrentDocument().getType()].editorPage=="text-editor") {
-                GENTICS_Aloha_base="aloha/aloha/"
-                includeJS("aloha/aloha/aloha.js");
-            }
-        </script>
-
         <script type="text/javascript">
             // initialize
             var initPage = function() {
@@ -49,11 +42,6 @@
             var init = function() {
                 initPage();
                 waitBeforeSucceed(function() {return getCurrentPage().getXML();},initUser);
-
-        //$("script#jquery_loader").remove();
-        //$("script#jquery_loader2").remove();
-
-        //$("#author").aloha();
             }
             $(document).ready(init);
         </script>
@@ -129,7 +117,7 @@
                                 <label>search_bar</label>
                                 <div class="input"><div  >
 
-                                    <a class="ung_docs" onclick="stopDocumentEdition()">
+                                    <a class="ung_docs" href="ung-mobile.html" onclick="stopDocumentEdition()">
                                         <img src="images/ung/ung-logo.gif" alt="logo"/>
                                     </a>
 
@@ -179,11 +167,9 @@
 
                         <fieldset class="bottom editable">
 
-                            <div id="page_content" class="field page"
-                                 title="Contenu de la page web.">
+                            <div id="page_content" class="field page">
                             </div>
-                            <div id="document_content" class="field hidden"
-                                 title="The content of the document considered as a text string">
+                            <div id="document_content" class="field hidden">
                             </div>
 
                         </fieldset>
