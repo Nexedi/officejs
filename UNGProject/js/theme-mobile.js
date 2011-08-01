@@ -61,7 +61,7 @@ Page.prototype = {
         /* load the editor to work with and a new document to work on */
         switch(this.name) {
             case "text-editor":
-                    editor = new AlohaInterface();
+                    editor = new NicEdit();
                     doc=new JSONTextDocument();
                     break;
             case "table-editor":

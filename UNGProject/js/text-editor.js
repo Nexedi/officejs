@@ -30,13 +30,17 @@ var Xinha = function() {
 var AlohaInterface = function() {
     this.name = "Aloha";
     this.load = function() {
-        includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Format/plugin.js");
-        includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Table/plugin.js");
-        includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.List/plugin.js");
-	includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Link/plugin.js");
-        $("div#page_content div.input").html("<div id='aloha_editable'>test</div>");
-        $("#aloha_editable").css("min-height","15em").css("border","5px solid #3399FF").css("overflow","auto");
-        $("#aloha_editable").aloha();
+        GENTICS_Aloha_base="aloha/aloha/";
+        loadFile("aloha/aloha/aloha.js", "script", function(data) {
+            eval(data);
+            includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Format/plugin.js");
+            includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Table/plugin.js");
+            includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.List/plugin.js");
+            includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Link/plugin.js");
+            $("div#page_content div.input").html("<div id='aloha_editable'>test</div>");
+            $("#aloha_editable").css("min-height","15em").css("border","5px solid #3399FF").css("overflow","auto");
+            $("#aloha_editable").aloha();
+        });
     }
     this.saveEdition = function() {
         getCurrentDocument().saveEdition(GENTICS.Aloha.editables[0].getContents());
@@ -47,6 +51,65 @@ var AlohaInterface = function() {
     }
     this.load();
 }
+
+var NicEdit = function() {
+    this.name = "NicEdit";
+    this.instance = null;
+    this.load = function() {
+        var nic = this;
+        loadFile("nicEdit/nicEdit.js","script",function(data) {
+            eval(data);
+            nic.instance = new nicEditor({iconsPath : 'nicEdit/nicEditorIcons.gif',fullPanel : true}).panelInstance('input_area');
+        });
+    }
+    this.saveEdition = function() {
+        getCurrentDocument().saveEdition($("div.input div.nicEdit-main").html());
+    }
+    this.loadContentFromDocument = function(doc) {
+        if(this.instance) {this.instance.removeInstance('input_area');this.instance=null}
+        $("#input_area").attr("value",doc.getContent());
+        this.instance = new nicEditor({iconsPath : 'nicEdit/nicEditorIcons.gif',fullPanel : true}).panelInstance('input_area');
+    }
+    this.load();
+}
+
+
+var TinyEdit = function() {
+    this.name = "TinyEdit";
+    this.load = function() {
+        loadFile("tinyEdit/tinyEdit.js","script",function(data) {
+            eval(data);
+            new TINY.editor.edit('editor',{
+                id:'input_area', // (required) ID of the textarea
+                width:584, // (optional) width of the editor
+                height:175, // (optional) heightof the editor
+                cssclass:'te', // (optional) CSS class of the editor
+                controlclass:'tecontrol', // (optional) CSS class of the buttons
+                rowclass:'teheader', // (optional) CSS class of the button rows
+                dividerclass:'tedivider', // (optional) CSS class of the button diviers
+                controls:['bold', 'italic', 'underline', 'strikethrough', '|', 'subscript', 'superscript', '|', 'orderedlist', 'unorderedlist', '|' ,'outdent' ,'indent', '|', 'leftalign', 'centeralign', 'rightalign', 'blockjustify', '|', 'unformat', '|', 'undo', 'redo', 'n', 'font', 'size', 'style', '|', 'image', 'hr', 'link', 'unlink', '|', 'cut', 'copy', 'paste', 'print'], // (required) options you want available, a '|' represents a divider and an 'n' represents a new row
+                footer:true, // (optional) show the footer
+                fonts:['Verdana','Arial','Georgia','Trebuchet MS'],  // (optional) array of fonts to display
+                xhtml:true, // (optional) generate XHTML vs HTML
+                //cssfile:'style.css', // (optional) attach an external CSS file to the editor
+                content:'starting content', // (optional) set the starting content else it will default to the textarea content
+                css:'body{background-color:#ccc}', // (optional) attach CSS to the editor
+                bodyid:'editor', // (optional) attach an ID to the editor body
+                footerclass:'tefooter', // (optional) CSS class of the footer
+                toggle:{text:'source',activetext:'wysiwyg',cssclass:'toggle'}, // (optional) toggle to markup view options
+                resize:{cssclass:'resize'} // (optional) display options for the editor resize
+            });
+        });
+    }
+    this.saveEdition = function() {
+        getCurrentDocument().saveEdition($("#input").attr("value"));
+    }
+    this.loadContentFromDocument = function(doc) {
+        $("#input").attr("value",doc.getContent());
+    }
+    this.load();
+}
+
 
 /**
  * Text documents
