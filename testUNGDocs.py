@@ -26,9 +26,6 @@ class TestUNGDocs(UNGTestMixin):
         self.selenium.open(url + "/WebIllustration_viewEditor?"
                                                           "editable_mode:int=1")
         self.selenium.wait_for_page_to_load("30000")
-
-        #XXX had to change
-        #self.selenium.wait_for_condition("selenium.isElementPresent(\"//ellipse[@id='svg_1']\")", "9000")
         self.selenium.select_frame("//iframe[@id='svgframe']")
         self.selenium.wait_for_condition("window.document.getElementById"
                                                             "('svg_1')", "1000")
