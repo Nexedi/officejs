@@ -33,6 +33,13 @@ class TestUNGLogin(UNGTestMixin):
         self.selenium.wait_for_page_to_load(5000)
         self.assertEqual("ung_user2", self.selenium.get_text("//div[@class=\' navigation-right\']/fieldset/div[2]/div/div/a[2]"))
 
+    def test_login_using_enter_key(self):
+        """try to login, submitting login form using 'enter' key (code 13)"""
+        self.selenium.open("WebSite_logout")
+        self.selenium.wait_for_page_to_load(5000)
+        self.selenium.type("__ac_name", "ung_user2")
+        self.selenium.type("__ac_password", "1234")
+        self.selenium.key_press("//input[@value='Login']", '\\13')
         self.selenium.wait_for_page_to_load(5000)
         self.assertEqual("ung_user2", self.selenium.get_text("//div[@class=\' navigation-right\']/fieldset/div[2]/div/div/a[2]"))
 
