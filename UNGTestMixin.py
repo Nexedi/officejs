@@ -183,11 +183,11 @@ class UNGTestMixin(unittest.TestCase):
                                 do_refresh=True):
         """Create an event at UNG Calendar.
         Requires that the UNG Calendar is open."""
-        self.selenium.click("//span[@class=\"addcal\"]")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"portal_type\")", "10000")
-        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
-        self.selenium.select("//select[@name=\"portal_type\"]", event_type)
-        self.selenium.type("//input[@name=\"title\"]", name)
+        self.selenium.click("//span[@class='addcal']")
+        self.selenium.wait_for_condition("selenium.isElementPresent('portal_type')", "10000")
+        self.wait_ung_calendar_to_load()
+        self.selenium.select("//select[@name='portal_type']", event_type)
+        self.selenium.type("//input[@name='title']", name)
 
         if start_month:
             self.selenium.type("start_date_month", start_month)
