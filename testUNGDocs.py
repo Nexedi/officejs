@@ -908,30 +908,44 @@ class TestUNGDocs(UNGTestMixin):
                                             keywords=web_table_keywords)
 
         #test 'All Documents' filter
-        self.wait_for_activities()
         self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
         self.set_default_tree_view()
         self.failUnless(self.selenium.is_text_present(web_table_name))
         self.failUnless(self.selenium.is_text_present(web_page_name))
         self.failUnless(self.selenium.is_text_present(web_illustration_name))
         #test 'All Documents' / 'Web Illustration' filter
-        self.assertEqual("Web Illustration", self.selenium.get_text("//table[@class='your_listbox-table-domain-tree']/tbody/tr[2]/td/button"))
-        self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[2]/td/button")
+        self.assertEqual("Web Illustration", self.selenium.get_text(
+                            "//button[@value='ung_domain/all_documents/"
+                                                 "web_illustration_domain.1']"))
+        self.selenium.click("//button[@value='ung_domain/all_documents/"
+                                                  "web_illustration_domain.1']")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual(web_illustration_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        self.wait_ung_listbox_to_load()
+        self.assertEqual(web_illustration_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-0 DataA']/td[3]/a"))
         #test 'All Documents' / 'Web Page' filter
-        self.assertEqual("Web Page", self.selenium.get_text("//table[@class='your_listbox-table-domain-tree']/tbody/tr[3]/td/button"))
-        self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[3]/td/button")
+        self.assertEqual("Web Page", self.selenium.get_text(
+            "//button[@value='ung_domain/all_documents/web_page_subdomain.1']"))
+        self.selenium.click("//button[@value='ung_domain/all_documents/"
+                                                       "web_page_subdomain.1']")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual(web_page_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        self.wait_ung_listbox_to_load()
+        self.assertEqual(web_page_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-0 DataA']/td[3]/a"))
         #test 'All Documents' / 'Web Table' filter
-        self.assertEqual("Web Table", self.selenium.get_text("//table[@class='your_listbox-table-domain-tree']/tbody/tr[4]/td/button"))
-        self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[4]/td/button")
+        self.assertEqual("Web Table", self.selenium.get_text(
+                        "//button[@value='ung_domain/all_documents/"
+                                                     "web_table_subdomain.1']"))
+        self.selenium.click("//button[@value='ung_domain/all_documents/"
+                                                      "web_table_subdomain.1']")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual(web_table_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        self.wait_ung_listbox_to_load()
+        self.assertEqual(web_table_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-0 DataA']/td[3]/a"))
         #test collapsing 'All Documents' and testing all 3 documents are present
-        self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[1]/td/button")
+        self.selenium.click("//button[@value='ung_domain/all_documents.0']")
         self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failUnless(self.selenium.is_text_present(web_table_name))
         self.failUnless(self.selenium.is_text_present(web_page_name))
         self.failUnless(self.selenium.is_text_present(web_illustration_name))
@@ -941,27 +955,45 @@ class TestUNGDocs(UNGTestMixin):
         self.set_default_tree_view()
         self.selenium.click("//button[@value='ung_domain/by_subject.0']")
         self.selenium.wait_for_page_to_load('30000')
-        self.failUnless(self.selenium.is_text_present(web_illustration_keywords))
+        self.wait_ung_listbox_to_load()
+        self.failUnless(self.selenium.is_text_present(
+                                                     web_illustration_keywords))
         self.failUnless(self.selenium.is_text_present(web_page_keywords))
         self.failUnless(self.selenium.is_text_present(web_table_keywords))
         #test 'By Subject' has web_illustration keywords
-        self.assertEqual(web_illustration_keywords, self.selenium.get_text("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_illustration_keywords))
-        self.selenium.click("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_illustration_keywords)
+        self.assertEqual(web_illustration_keywords, self.selenium.get_text(
+                    "//button[@value='ung_domain/by_subject/subject_%s.1']" % \
+                                                     web_illustration_keywords))
+        self.selenium.click("//button[@value='ung_domain/by_subject/"
+                                   "subject_%s.1']" % web_illustration_keywords)
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual(web_illustration_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        self.wait_ung_listbox_to_load()
+        self.assertEqual(web_illustration_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-0 DataA']/td[3]/a"))
         #test 'By Subject' has web_page keywords
-        self.assertEqual(web_page_keywords, self.selenium.get_text("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_page_keywords))
-        self.selenium.click("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_page_keywords)
+        self.assertEqual(web_page_keywords, self.selenium.get_text(
+                    "//button[@value='ung_domain/by_subject/subject_%s.1']" % \
+                                                             web_page_keywords))
+        self.selenium.click("//button[@value='ung_domain/by_subject/"
+                                           "subject_%s.1']" % web_page_keywords)
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual(web_page_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        self.wait_ung_listbox_to_load()
+        self.assertEqual(web_page_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-0 DataA']/td[3]/a"))
         #test 'By Subject' has web_table keywords
-        self.assertEqual(web_table_keywords, self.selenium.get_text("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_table_keywords))
-        self.selenium.click("//button[@value='ung_domain/by_subject/subject_%s.1']" % web_table_keywords)
+        self.assertEqual(web_table_keywords, self.selenium.get_text(
+                    "//button[@value='ung_domain/by_subject/subject_%s.1']" % \
+                                                            web_table_keywords))
+        self.selenium.click("//button[@value='ung_domain/by_subject/"
+                                          "subject_%s.1']" % web_table_keywords)
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual(web_table_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        self.wait_ung_listbox_to_load()
+        self.assertEqual(web_table_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-0 DataA']/td[3]/a"))
         #test collapsing 'By Subject' and testing all 3 documents are present
         self.selenium.click("//button[@value='ung_domain/by_subject.0']")
         self.selenium.wait_for_page_to_load('30000')
+        self.wait_ung_listbox_to_load()
         self.failUnless(self.selenium.is_text_present(web_illustration_name))
         self.failUnless(self.selenium.is_text_present(web_page_name))
         self.failUnless(self.selenium.is_text_present(web_table_name))
@@ -971,24 +1003,32 @@ class TestUNGDocs(UNGTestMixin):
         self.set_default_tree_view()
         self.selenium.click("//button[@value='ung_domain/owner.0']")
         self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         #for web_table
-        self.assertEqual(web_table_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        self.assertEqual(web_table_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-0 DataA']/td[3]/a"))
         #for web_page
-        self.assertEqual(web_page_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-1 DataB']/td[3]/a"))
+        self.assertEqual(web_page_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-1 DataB']/td[3]/a"))
         #for web_illustration
-        self.assertEqual(web_illustration_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-2 DataA']/td[3]/a"))
+        self.assertEqual(web_illustration_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-2 DataA']/td[3]/a"))
 
         #test 'Recent' filter
         self.open_ung_default_page(clear_cache=1)
         self.set_default_tree_view()
         self.selenium.click("//button[@value='ung_domain/owner.0']")
         self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         #for web_table
-        self.assertEqual(web_table_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a"))
+        self.assertEqual(web_table_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-0 DataA']/td[3]/a"))
         #for web_page
-        self.assertEqual(web_page_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-1 DataB']/td[3]/a"))
+        self.assertEqual(web_page_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-1 DataB']/td[3]/a"))
         #for web_illustration
-        self.assertEqual(web_illustration_name, self.selenium.get_text("//tr[@class='your_listbox-data-line-2 DataA']/td[3]/a"))
+        self.assertEqual(web_illustration_name, self.selenium.get_text(
+                            "//tr[@class='listbox-data-line-2 DataA']/td[3]/a"))
 
         #test 'Shared by me' filter
         #share web_illustration
