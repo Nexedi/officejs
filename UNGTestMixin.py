@@ -76,6 +76,23 @@ class UNGTestMixin(unittest.TestCase):
                                          waiting_time)
 
     def clear_user_gadgets(self, user=None, password=None):
+        """remove all gadgets from given user
+        if no user is given, then just remove all gadgets"""
+        if user:
+            self.selenium.open("WebSite_logout")
+            self.selenium.wait_for_page_to_load("30000")
+            self.selenium.type("__ac_name", user)
+            self.selenium.type("__ac_password", password)
+            self.selenium.click("//input[@value='Login']")
+            self.selenium.wait_for_page_to_load("30000")
+            self.wait_ung_listbox_to_load()
+
+        while self.selenium.is_element_present("//a[@class='clickable-block"
+                                                             " block-remove']"):
+            self.selenium.click("//a[@class=\"clickable-block block-remove\"]")
+            self.selenium.get_confirmation()
+            self.open_ung_default_page('ung')
+
     def clear_cache(self):
         """call method 'Base_clearCache' of bt5 erp5_ui_test, that orders
         portal_catalog to clear all allocated cache"""
