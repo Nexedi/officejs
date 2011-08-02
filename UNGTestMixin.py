@@ -52,6 +52,15 @@ class UNGTestMixin(unittest.TestCase):
             self.selenium.click("//table[@class='listbox-table-domain-tree']/tbody/tr[1]/td/button")
             self.selenium.wait_for_page_to_load("30000")
 
+    def wait_ung_listbox_to_load(self, waiting_time="30000"):
+        """wait until UNG listbox is fully loaded"""
+        self.selenium.wait_for_condition("selenium.isElementPresent(\""
+                               "//table[@class='listbox-table-domain-tree']\")",
+                                        waiting_time)
+        self.selenium.wait_for_condition("selenium.browserbot"
+                ".getCurrentWindow().$('#knowledge_pad_module_ung_knowledge_pad"
+                      "_ung_docs_listbox_content').css('opacity') == '1'",
+                                        waiting_time)
     def clear_cache(self):
         """call method 'Base_clearCache' of bt5 erp5_ui_test, that orders
         portal_catalog to clear all allocated cache"""
