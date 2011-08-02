@@ -12,35 +12,53 @@ class TestUNGGadgets(UNGTestMixin):
             - add gadget
             - delete gadget
         """
-        self.failUnless(self.selenium.is_text_present("Please use link (Add gadgets) to prepare it yourself."))
-        self.assertEqual("Add gadgets", self.selenium.get_text("//a[@id=\"add-gadgets\"]/span"))
+        self.failUnless(self.selenium.is_text_present("Please use link "
+                                       "(Add gadgets) to prepare it yourself."))
+        self.assertEqual("Add gadgets",
+                        self.selenium.get_text("//a[@id=\"add-gadgets\"]/span"))
         self.failIf(self.selenium.is_text_present("Join ERP5 Network !"))
-        self.failIf(self.selenium.is_element_present("//a[@class=\"clickable-block block-remove\"]"))
+        self.failIf(self.selenium.is_element_present("//a[@class="
+                                           "'clickable-block block-remove']"))
         self.selenium.click("//a[@id=\"add-gadgets\"]")
+        self.wait_add_gadgets_dialog_to_load()
         self.failUnless(self.selenium.is_text_present("Add Gadget"))
         self.selenium.click("//input[@id=\"erp5_documentation\"]")
         self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
         self.selenium.wait_for_page_to_load("30000")
         self.failUnless(self.selenium.is_text_present("Join ERP5 Network !"))
-        self.failUnless(self.selenium.is_element_present("//a[@class=\"clickable-block block-remove\"]"))
-        self.failIf(self.selenium.is_element_present("//div[@id=\"page_wrapper\"]/div[1]/h4"))
-        self.selenium.click("//a[@class=\"clickable-block block-remove\"]")
-        self.failUnless(re.search(r"^Are you sure you want to remove this gadget from your personalized page[\s\S]$", self.selenium.get_confirmation()))
+        self.failUnless(self.selenium.is_element_present("//a[@class="
+                                           "'clickable-block block-remove']"))
+        self.failIf(self.selenium.is_element_present("//div[@id="
+                                                 "\"page_wrapper\"]/div[1]/h4"))
+        self.selenium.click("//a[@class='clickable-block block-remove']")
+        self.failUnless(re.search(r"^Are you sure you want to remove this "
+            "gadget from your personalized page[\s\S]$",
+                        self.selenium.get_confirmation()))
         self.wait_for_activities()
         self.selenium.open("")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Add gadgets", self.selenium.get_text("//a[@id=\"add-gadgets\"]/span"))
+        self.assertEqual("Add gadgets", self.selenium.get_text(
+                                               "//a[@id=\"add-gadgets\"]/span"))
         self.selenium.click("//a[@id=\"add-gadgets\"]")
+        self.wait_add_gadgets_dialog_to_load()
         self.selenium.click("//input[@id=\"erp5_rss\"]")
         self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Feed Reader", self.selenium.get_text("//span[@class=\"gadget_title\"]"))
-        self.selenium.click("//a[@class=\"clickable-block block-remove\"]")
-        self.failUnless(re.search(r"^Are you sure you want to remove this gadget from your personalized page[\s\S]$", self.selenium.get_confirmation()))
+        self.assertEqual("Feed Reader", self.selenium.get_text("//span[@class"
+                                                          "=\"gadget_title\"]"))
+        self.selenium.click("//a[@class='clickable-block block-remove']")
+        self.failUnless(re.search(r"^Are you sure you want to remove this "
+            "gadget from your personalized page[\s\S]$",
+                        self.selenium.get_confirmation()))
         self.wait_for_activities()
         self.selenium.open("")
         self.selenium.wait_for_page_to_load("30000")
-        self.failIf(self.selenium.is_element_present("//a[@class=\"clickable-block block-remove\"]"))
+        # ung listbox, now a gadget, have this element until it's fully
+        # loaded, and then its removed from listbox
+        self.wait_ung_listbox_to_load()
+        self.failIf(self.selenium.is_element_present("//a[@class="
+                                           "'clickable-block block-remove']"))
+        self.clear_user_gadgets()
 
     def test_add_two_gadgets(self):
         """test that its possible to add more than just 1 gadget"""
