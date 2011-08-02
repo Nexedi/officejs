@@ -1,8 +1,10 @@
 from UNGTestMixin import UNGTestMixin
 import unittest
 
+
 class TestUNGDocsSharing(UNGTestMixin):
     """tests related to the action of share documents on UNG Docs"""
+
     def test_share_web_page_with_another_user(self):
         """test that web_page is correctly shared with another user"""
         self.selenium.open("ERP5Site_createNewWebDocument?template=web_page_template")

@@ -1,6 +1,7 @@
 from UNGTestMixin import UNGTestMixin
 import unittest
 
+
 class TestUNGDocsTextEditor(UNGTestMixin):
     """tests related to UNG Docs text editors"""
     def test_fill_content_on_web_page_with_fck_editor(self):

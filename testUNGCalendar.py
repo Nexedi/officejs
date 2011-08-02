@@ -1,6 +1,7 @@
 from UNGTestMixin import UNGTestMixin
 import unittest
 
+
 class TestUNGCalendar(UNGTestMixin):
     """ Tests related to UNG Calendar
     """
@@ -17,10 +18,14 @@ class TestUNGCalendar(UNGTestMixin):
         test_subject_time = int(unittest.time.time())
         self.selenium.open("calendar")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Refresh", self.selenium.get_text("//span[@class='showdayflash']"))
-        self.assertEqual("Su", self.selenium.get_text("//span[@title='Sunday']"))
+        self.assertEqual("Refresh", self.selenium.get_text(
+                                               "//span[@class='showdayflash']"))
+        self.assertEqual("Su", self.selenium.get_text(
+                                                     "//span[@title='Sunday']"))
         self.selenium.click("//span[@class='showmonthview']")
-        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull"
+                          "('loadingpannel').style.display == 'none'",
+                                         "10000");
         self.selenium.click("//span[@class='showdayview']")
         self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
         self.selenium.type("//input[@name='searchable-text']", "My Event %d" % test_subject_time)

@@ -9,6 +9,7 @@ xmlns='http://www.w3.org/2000/svg'> \
 <ellipse ry='46' rx='47' id='svg_1' cy='93' cx='138' stroke-width='5' \
 stroke='#000000' fill='#FF0000'/> </g></svg>")
 
+
 class TestUNGDocs(UNGTestMixin):
     """Tests related to UNG Docs"""
     def test_web_illustration(self):
@@ -36,18 +37,23 @@ class TestUNGDocs(UNGTestMixin):
             pass
         finally:
             self.selenium.set_timeout(30000)
-        self.selenium.open(url + "/WebIllustration_viewEditor?editable_mode:int=1")
+        self.selenium.open(url + "/WebIllustration_viewEditor?"
+                                                          "editable_mode:int=1")
         self.selenium.wait_for_page_to_load("30000")
 
         #XXX had to change
         #self.selenium.wait_for_condition("selenium.isElementPresent(\"//ellipse[@id='svg_1']\")", "9000")
         self.selenium.select_frame("//iframe[@id='svgframe']")
-        self.selenium.wait_for_condition("window.document.getElementById('svg_1')", "1000")
-        self.assertEqual("46", self.selenium.get_eval("window.document.getElementById('svg_1').ry.baseVal.value"))
+        self.selenium.wait_for_condition("window.document.getElementById"
+                                                            "('svg_1')", "1000")
+        self.assertEqual("46", self.selenium.get_eval("window.document."
+                                    "getElementById('svg_1').ry.baseVal.value"))
         self.selenium.select_window('null')
 
-        self.assertEqual("Web Illustration", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Draft", self.selenium.get_text("//a[@name=\"document_state\"]"))
+        self.assertEqual("Web Illustration", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
+        self.assertEqual("Draft", self.selenium.get_text(
+                                               "//a[@name=\"document_state\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
         unittest.time.sleep(2)
         self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))

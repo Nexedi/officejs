@@ -1,6 +1,7 @@
 from UNGTestMixin import UNGTestMixin
 import unittest
 
+
 class TestUNGSettings(UNGTestMixin):
     """tests related to UNG settings"""
     def test_saving_settings_even_on_different_users(self):

@@ -1,6 +1,7 @@
 from UNGTestMixin import UNGTestMixin
 import unittest
 
+
 class TestUNGDocsTableEditor(UNGTestMixin):
     def test_fill_some_cells_in_web_table(self):
         """test the action of add, fill cells, assert title of sheet and
