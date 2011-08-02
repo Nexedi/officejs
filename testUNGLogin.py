@@ -29,7 +29,10 @@ class TestUNGLogin(UNGTestMixin):
         #<tal:block metal:use-macro="here/Zuite_CommonTemplateForUNG/macros/create-user" />
         self.selenium.type("__ac_name", "ung_user2")
         self.selenium.type("__ac_password", "1234")
-        self.selenium.click("//input[@type='submit']")
+        self.selenium.click("//input[@value='Login']")
+        self.selenium.wait_for_page_to_load(5000)
+        self.assertEqual("ung_user2", self.selenium.get_text("//div[@class=\' navigation-right\']/fieldset/div[2]/div/div/a[2]"))
+
         self.selenium.wait_for_page_to_load(5000)
         self.assertEqual("ung_user2", self.selenium.get_text("//div[@class=\' navigation-right\']/fieldset/div[2]/div/div/a[2]"))
 
