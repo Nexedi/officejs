@@ -71,12 +71,17 @@ class TestUNGDocsTextEditor(UNGTestMixin):
         web_page_content = self.selenium.get_eval("window.document.getElementById('field_my_text_content').value")
         #assert text content is present
         self.failUnless('<b>Functional UNG Test</b>' in web_page_content)
-        self.failUnless('<p style="margin-bottom: 0in; font-weight: normal;">'
-            'Sample text document created in order to test some UNG features.'
-            '</p>' in web_page_content)
+        self.failUnless('<p style="margin-bottom: 0in; font-weight: normal">Sample text document created in order to test some UNG features.</p>' in web_page_content)
         #assert image content is present
-        self.failUnless('<img align="LEFT" width="122" height="30" border="0"'
-            ' name="ung_docs-logo" src="image_module/' in web_page_content)
+        try:
+            self.failUnless('<img align="LEFT" width="122" height="30" border="0"'
+                ' name="ung_docs-logo" src="image_module/' in web_page_content)
+        except AssertionError:
+            raise NotImplementedError("This should fail until implement "
+                    "correct behaviour of images. They should be put under "
+                    "image_module, instead of just a 'tmp' file. \n"
+                    "XXX: Please refactor this try/except code if this"
+                    " functionality is already implemented.")
 
     def test_select_xinha_as_preferred_text_editor(self):
         """test that its possible to select Xinha instead of FCKeditor
