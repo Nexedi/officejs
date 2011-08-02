@@ -12,24 +12,10 @@ stroke='#000000' fill='#FF0000'/> </g></svg>")
 
 class TestUNGDocs(UNGTestMixin):
     """Tests related to UNG Docs"""
-    def test_web_illustration(self):
-        """test the action of add, fill, rename and search for a Web
-        Illustration document"""
-        #XXX when gadgets are enabled, this test may fail
-        # due to delay loading gadgets on every load of a page
-        #XXX the action of rename a document, clicking on 'document-title'
-        # may fail. I think, due to delay on animation when clicking to
-        # rename the document, and then clicking it again
-        # because selenium can do it really fast
-        #XXX may slowing down the speed it may test pass every time it's runned
-        #self.selenium.set_speed(1000)
-        #XXX even slowing down steps, the action of rename a document
-        # still fails saving the new name, and the 'document-title' remains
-        # showing the last one ('Web Page')
 
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_illustration_template")
-        self.selenium.wait_for_page_to_load("30000")
-        url = self.selenium.get_eval('selenium.browserbot.getCurrentWindow().location').split('?')[0]
+    def test_web_illustration(self):
+        """test add, fill, rename and search for a Web Illustration document"""
+        url = self.create_document('illustration')
         try:
             self.selenium.set_timeout(1)
             self.selenium.open(url + "/setTextContent?value=%s" % SVG_CONTENT)
