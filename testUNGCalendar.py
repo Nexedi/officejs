@@ -615,7 +615,7 @@ class TestUNGCalendar(UNGTestMixin):
         #assert event is present
         self.assertTrue(self.selenium.is_text_present(event_name))
         #click refresh button 10 times
-        for _refresh in range(5):
+        for _refresh in range(10):
             self.selenium.click("//div/span[@title='Refresh view']")
             self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
         #assert only 1 event is present
