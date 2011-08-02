@@ -552,6 +552,7 @@ class TestUNGCalendar(UNGTestMixin):
         self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
         #XXX due to interface delay again, try two times
         # on second, sleeping 3 seconds before refreshing page again
+        #XXX: this part needs the 'Other##' workaround when many events are present
         try:
             for event_index in range(len(dates)):
                 self.assertTrue(self.selenium.is_text_present(event_name % (test_time, event_index)))
