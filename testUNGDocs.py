@@ -815,56 +815,46 @@ class TestUNGDocs(UNGTestMixin):
             - when changing old subjects to new ones, the old ones disappear on
                 the list"""
         test_subject_time = int(unittest.time.time())
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_page_template")
-        self.selenium.wait_for_page_to_load('30000')
-        self.selenium.click("//a[@name='document_title']")
-        self.selenium.click("//p[@id='more_properties']") #"Edit More Properties"
-        self.selenium.type("//textarea[@id='keyword_list']", "UNG Test Subject %d" % test_subject_time)
-        self.selenium.click("//div[@class='ui-dialog-buttonset']/button[1]")
-        self.selenium.wait_for_page_to_load("30000")
-        self.failUnless(self.selenium.is_element_present("//meta[@content='UNG Test Subject %d']" % test_subject_time))
-        self.open_ung_default_page(clear_cache=1)
-        self.failIf(self.selenium.is_text_present("Ung test subject %d" % test_subject_time))
-        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
-        self.set_default_tree_view()
+        self.create_document('page', keywords="UNG Test Subject %d" % \
+                                                              test_subject_time)
+        self.failUnless(self.selenium.is_element_present(
+                  "//meta[@content='UNG Test Subject %d']" % test_subject_time))
+        self.open_ung_default_page('ung', clear_cache=1, wait_for_activities=1)
+        self.failIf(self.selenium.is_text_present(
+                                     "Ung test subject %d" % test_subject_time))
         self.selenium.click("//button[@value='ung_domain/by_subject.0']")
+        self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
+        self.assertEqual("Ung test subject %d" % test_subject_time,
+               self.selenium.get_text("//button[@value='ung_domain/by_subject/"
+                         "subject_UNG Test Subject %d.1']" % test_subject_time))
+        self.failUnless(self.selenium.is_element_present(
+                        "//button[@value='ung_domain/by_subject/"
+                         "subject_UNG Test Subject %d.1']" % test_subject_time))
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load('30000')
-        self.assertEqual("Ung test subject %d" % test_subject_time, self.selenium.get_text("//button[@value='ung_domain/by_subject/subject_UNG Test Subject %d.1']" % test_subject_time))
-        self.failUnless(self.selenium.is_element_present("//button[@value='ung_domain/by_subject/subject_UNG Test Subject %d.1']" % test_subject_time))
-
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
-        self.selenium.wait_for_page_to_load('30000')
-        self.selenium.click("//a[@name='document_title']")
-        self.selenium.click("//p[@id='more_properties']") #"Edit More Properties"
-        self.selenium.run_script("document.getElementById('keyword_list').value = 'UNG Test VPN %(time)d\\nUNG Test Cloudooo %(time)d'" % {'time' : test_subject_time})
-        self.selenium.click("//div[@class='ui-dialog-buttonset']/button[1]")
-        self.selenium.wait_for_page_to_load('30000')
-        self.open_ung_default_page(clear_cache=1)
-        #assert that when changing subjects, the old subjects (existing anymore) are not presented anymore
-        self.failIf(self.selenium.is_element_present("//button[@value='ung_domain/by_subject/subject_UNG Subject %d.1']" % test_subject_time))
-        self.failUnless(self.selenium.is_element_present("//button[@value='ung_domain/by_subject/subject_UNG Test VPN %d.1']" % test_subject_time))
-        self.assertEqual("Ung test vpn %d" % test_subject_time, self.selenium.get_text("//button[@value='ung_domain/by_subject/subject_UNG Test VPN %d.1']" % test_subject_time))
-        self.failUnless(self.selenium.is_element_present("//button[@value='ung_domain/by_subject/subject_UNG Test Cloudooo %d.1']" % test_subject_time))
-        self.assertEqual("Ung test cloudooo %d" % test_subject_time, self.selenium.get_text("//button[@value='ung_domain/by_subject/subject_UNG Test Cloudooo %d.1']" % test_subject_time))
-
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_table_template")
+        self.rename_document(keywords="UNG Test VPN %(time)d\n"
+                   "UNG Test Cloudooo %(time)d" % {'time': test_subject_time})
+        self.open_ung_default_page('ung', clear_cache=1, wait_for_activities=1)
+        self.selenium.click("//button[@value='ung_domain/by_subject.0']")
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//a[@name=\"document_title\"]")
-        self.selenium.type("//input[@id=\"name\"]", "Document Sample")
-        self.selenium.click("//p[@id=\"more_properties\"]")
-        self.selenium.type("//textarea[@id=\"keyword_list\"]", "UNG Test Web Table Subject %d" % test_subject_time)
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
-        self.selenium.wait_for_page_to_load("30000")
-
-        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Ung test web table subject %d" % test_subject_time, self.selenium.get_text("//button[@value='ung_domain/by_subject/subject_UNG Test Web Table Subject %d.1']" % test_subject_time))
-        self.selenium.click("//button[@value='ung_domain/by_subject/subject_UNG Test Web Table Subject %d.1']" % test_subject_time)
-        self.selenium.wait_for_page_to_load("30000")
-        self.failUnless(self.selenium.is_element_present("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[1]/td[1]/input"))
-        self.failUnless(self.selenium.is_element_present("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[1]/td[2]/input"))
-        #assert only one element is present, because only one 'table' element was created
-        self.failIf(self.selenium.is_element_present("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[2]/td[1]/input"))
+        self.wait_ung_listbox_to_load()
+        #check that when renaming subjects, the old ones are not present anymore
+        self.failIf(self.selenium.is_element_present(
+                              "//button[@value='ung_domain/by_subject/"
+                              "subject_UNG Subject %d.1']" % test_subject_time))
+        self.failUnless(self.selenium.is_element_present(
+                             "//button[@value='ung_domain/by_subject/subject_UNG"
+                                        " Test VPN %d.1']" % test_subject_time))
+        self.assertEqual("Ung test vpn %d" % test_subject_time,
+              self.selenium.get_text("//button[@value='ung_domain/by_subject/"
+                             "subject_UNG Test VPN %d.1']" % test_subject_time))
+        self.failUnless(self.selenium.is_element_present(
+                        "//button[@value='ung_domain/by_subject/"
+                        "subject_UNG Test Cloudooo %d.1']" % test_subject_time))
+        self.assertEqual("Ung test cloudooo %d" % test_subject_time,
+            self.selenium.get_text("//button[@value='ung_domain/by_subject/"
+                        "subject_UNG Test Cloudooo %d.1']" % test_subject_time))
 
     def test_change_state_of_document_using_ung_interface_button(self):
         """test the possibility to change state of a document
