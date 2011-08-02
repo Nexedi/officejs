@@ -1040,8 +1040,10 @@ class TestUNGDocs(UNGTestMixin):
         self.set_default_tree_view()
         self.selenium.click("//button[@value='ung_domain/shared.0']")
         self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failIf(self.selenium.is_text_present("No Result"))
-        self.assertEqual("Shared by me", self.selenium.get_text("//button[@class=\"tree-open\"]"))
+        self.assertEqual("Shared by me", self.selenium.get_text(
+                                              "//button[@class=\"tree-open\"]"))
         self.failUnless(self.selenium.is_text_present(web_illustration_name))
         self.failIf(self.selenium.is_text_present(web_page_name))
         self.failIf(self.selenium.is_text_present(web_table_name))
@@ -1057,8 +1059,10 @@ class TestUNGDocs(UNGTestMixin):
         self.set_default_tree_view()
         self.selenium.click("//button[@value='ung_domain/shared.0']")
         self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failIf(self.selenium.is_text_present("No Result"))
-        self.assertEqual("Shared by me", self.selenium.get_text("//button[@class=\"tree-open\"]"))
+        self.assertEqual("Shared by me", self.selenium.get_text(
+                                              "//button[@class=\"tree-open\"]"))
         self.failUnless(self.selenium.is_text_present(web_illustration_name))
         self.failUnless(self.selenium.is_text_present(web_page_name))
         self.failUnless(self.selenium.is_text_present(web_table_name))
@@ -1067,10 +1071,12 @@ class TestUNGDocs(UNGTestMixin):
         #to hide a document, it first have to be shared
         #this is why 'Shared by me' filter is tested before Hidden filter
         #so first, hide web_illustration
+        # this try/except is because page 'web_illustration_url + '/hide'
+        # doesn't trigger wait_for_page_to_load
         self.selenium.set_timeout(1)
         try:
             self.selenium.open(web_illustration_url + '/hide')
-            self.selenium.wait_for_page_to_load("30000")
+            self.selenium.wait_for_page_to_load("10000")
         except:
             pass
         self.selenium.set_timeout(30000)
@@ -1079,7 +1085,9 @@ class TestUNGDocs(UNGTestMixin):
         #check 'Hidden' filter for web_illustration
         self.selenium.click("//button[@value='ung_domain/hidden.0']")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Hidden", self.selenium.get_text("//button[@class=\"tree-open\"]"))
+        self.wait_ung_listbox_to_load()
+        self.assertEqual("Hidden", self.selenium.get_text(
+                                              "//button[@class=\"tree-open\"]"))
         self.failUnless(self.selenium.is_text_present(web_illustration_name))
         self.failIf(self.selenium.is_text_present(web_page_name))
         self.failIf(self.selenium.is_text_present(web_table_name))
@@ -1087,12 +1095,12 @@ class TestUNGDocs(UNGTestMixin):
         self.selenium.set_timeout(1)
         try:
             self.selenium.open(web_page_url + '/hide')
-            self.selenium.wait_for_page_to_load("30000")
+            self.selenium.wait_for_page_to_load("10000")
         except:
             pass
         try:
             self.selenium.open(web_table_url + '/hide')
-            self.selenium.wait_for_page_to_load("30000")
+            self.selenium.wait_for_page_to_load("10000")
         except:
             pass
         self.selenium.set_timeout(30000)
@@ -1101,26 +1109,31 @@ class TestUNGDocs(UNGTestMixin):
         #check 'Hidden' filter for all 3 documents
         self.selenium.click("//button[@value='ung_domain/hidden.0']")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Hidden", self.selenium.get_text("//button[@class=\"tree-open\"]"))
+        self.wait_ung_listbox_to_load()
+        self.assertEqual("Hidden", self.selenium.get_text(
+                                              "//button[@class=\"tree-open\"]"))
         self.failUnless(self.selenium.is_text_present(web_illustration_name))
         self.failUnless(self.selenium.is_text_present(web_page_name))
         self.failUnless(self.selenium.is_text_present(web_table_name))
 
         #test 'Trash' filter
         self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.wait_ung_listbox_to_load()
         #open trash
         self.selenium.click("//button[@value='ung_domain/trash.0']")
         self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         #check 'Trash' filter, so that none of the 3 documents are present
         self.failIf(self.selenium.is_text_present(web_illustration_name))
         self.failIf(self.selenium.is_text_present(web_page_name))
         self.failIf(self.selenium.is_text_present(web_table_name))
         #go back default tree and delete than
         self.set_default_tree_view()
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[1]/input")
-        self.selenium.click("//tr[@class='your_listbox-data-line-1 DataB']/td[1]/input")
-        self.selenium.click("//tr[@class='your_listbox-data-line-2 DataA']/td[1]/input")
-        self.selenium.click("//button[@class=\"delete\"]")
+        self.wait_ung_listbox_to_load()
+        for doc_index in range(3):
+            self.selenium.click("//tr[@class='listbox-data-line-%d Data%s']"
+                "/td[1]/input" % (doc_index, ('A', 'B')[doc_index % 2]))
+        self.selenium.click("//button[@class='delete']")
         self.selenium.wait_for_page_to_load("30000")
         self.wait_for_activities()
         #test 'Trash' filter to see if all 3 documents are present
@@ -1128,14 +1141,15 @@ class TestUNGDocs(UNGTestMixin):
         self.set_default_tree_view()
         self.selenium.click("//button[@value='ung_domain/trash.0']")
         self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failUnless(self.selenium.is_text_present(web_illustration_name))
         self.failUnless(self.selenium.is_text_present(web_page_name))
         self.failUnless(self.selenium.is_text_present(web_table_name))
         #delete all 3 documents again
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[1]/input")
-        self.selenium.click("//tr[@class='your_listbox-data-line-1 DataB']/td[1]/input")
-        self.selenium.click("//tr[@class='your_listbox-data-line-2 DataA']/td[1]/input")
-        self.selenium.click("//button[@class=\"delete\"]")
+        for doc_index in range(3):
+            self.selenium.click("//tr[@class='listbox-data-line-%d Data%s']"
+                "/td[1]/input" % (doc_index, ('A', 'B')[doc_index % 2]))
+        self.selenium.click("//button[@class='delete']")
         self.selenium.wait_for_page_to_load("30000")
         self.wait_for_activities()
         #check 'Trash' filter, so that none of the 3 documents are present again
