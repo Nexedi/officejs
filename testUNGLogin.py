@@ -17,7 +17,7 @@ class TestUNGLogin(UNGTestMixin):
         self.failUnless(self.selenium.is_text_present("Web Illustration"))
         self.failUnless(self.selenium.is_text_present("Web Page"))
         self.failUnless(self.selenium.is_text_present("Web Table"))
-        #XXX: the user used on test's instance is 'nsi'
+        #XXX: the user used on test's instance is 'test_user'
         self.failUnless(self.selenium.is_text_present("test_user"))
         self.selenium.click("link=Sign out")
         self.selenium.wait_for_page_to_load(5000)
