@@ -1,20 +1,18 @@
 from UNGTestMixin import UNGTestMixin
 import unittest
 
+
 class TestUNGDocsSharing(UNGTestMixin):
     """tests related to the action of share documents on UNG Docs"""
+
     def test_share_web_page_with_another_user(self):
         """test that web_page is correctly shared with another user"""
         self.selenium.open("ERP5Site_createNewWebDocument?template=web_page_template")
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//a[@name=\"document_title\"]")
-        self.selenium.type("//input[@id=\"name\"]", "Document Shared")
-        self.selenium.click("//p[@id=\"more_properties\"]")
-        self.selenium.type("//input[@id=\"version\"]", "002")
-        self.selenium.type("//input[@id=\"language\"]", "pt-br")
-        self.selenium.type("//textarea[@id=\"keyword_list\"]", "My Subject")
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
-        self.selenium.wait_for_page_to_load("30000")
+        self.rename_document(name='Document Shared',
+                              version='002',
+                              language='pt-br',
+                              keywords="My Subject")
         self.selenium.click("//a[@name=\"document_title\"]")
         self.selenium.click("//p[@id=\"more_properties\"]")
         self.assertEqual("002", self.selenium.get_value("//input[@id=\"version\"]"))
@@ -28,12 +26,13 @@ class TestUNGDocsSharing(UNGTestMixin):
         self.wait_for_activities()
         self.selenium.open("")
         self.selenium.wait_for_page_to_load("30000")
-        #XXX this could be changed (for a generic approach) to //button[@value='ung_domain/shared.0']
-        self.selenium.click("//table[@class=\"your_listbox-table-domain-tree\"]/tbody/tr[9]/td/button")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//button[@value='ung_domain/shared.0']\")", "30000")
+        self.selenium.click("//button[@value='ung_domain/shared.0']")
         self.selenium.wait_for_page_to_load("30000")
         self.failIf(self.selenium.is_text_present("No Result"))
-        self.assertEqual("Shared by me", self.selenium.get_text("//button[@class=\"tree-open\"]"))
-        self.selenium.click("//div[@id='wrapper_navigation']/div[2]/fieldset/div[2]/div/div/a[5]")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//button[@class='tree-open']\")", "30000")
+        self.assertEqual("Shared by me", self.selenium.get_text("//button[@class='tree-open']"))
+        self.selenium.open("WebSite_logout")
         self.selenium.wait_for_page_to_load("30000")
         #XXX user already created
 #        self.selenium.click("//td[@id=\"new-account-form\"]")
@@ -47,7 +46,7 @@ class TestUNGDocsSharing(UNGTestMixin):
 #        self.selenium.wait_for_page_to_load("30000")
         self.selenium.type("__ac_name", "ung_user2")
         self.selenium.type("__ac_password", "1234")
-        self.selenium.click("//input[@type=\"submit\"]")
+        self.selenium.click("//input[@value='Login']")
         self.selenium.wait_for_page_to_load("30000")
         self.selenium.open(document_url)
         self.selenium.wait_for_page_to_load("30000")
@@ -59,19 +58,25 @@ class TestUNGDocsSharing(UNGTestMixin):
         self.assertEqual("My Subject", self.selenium.get_value("//textarea[@id=\"keyword_list\"]"))
         self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
         self.selenium.wait_for_page_to_load("30000")
+        self.rename_document(name='Document Shared Updated', version='003')
         self.selenium.open("WebSite_logout")
         self.selenium.wait_for_page_to_load("30000")
         self.login_as_default_user()
-        self.selenium.click("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr/td[3]/a")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//table[@class='listbox listbox listbox-table']\")", "30000")
+        self.selenium.click("//table[@class='listbox listbox listbox-table']/tbody/tr/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
         self.selenium.click("//a[@name=\"document_title\"]")
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.selenium.type("//input[@id=\"version\"]", "003")
+        self.assertEqual("Document Shared Updated", self.selenium.get_value("//input[@id=\"name\"]"))
+        self.assertEqual("003", self.selenium.get_value("//input[@id=\"version\"]"))
+        self.assertEqual("pt-br", self.selenium.get_value("//input[@id=\"language\"]"))
+        self.assertEqual("My Subject", self.selenium.get_value("//textarea[@id=\"keyword_list\"]"))
         self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
         self.selenium.wait_for_page_to_load("30000")
+        self.rename_document(version='004')
         self.selenium.click("//a[@name=\"document_title\"]")
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("003", self.selenium.get_value("//input[@id=\"version\"]"))
+        self.assertEqual("004", self.selenium.get_value("//input[@id=\"version\"]"))
         #XXX this test delete all documents here
         # but it won't be done
 

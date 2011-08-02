@@ -1,6 +1,7 @@
 from UNGTestMixin import UNGTestMixin
 import unittest
 
+
 class TestUNGCalendar(UNGTestMixin):
     """ Tests related to UNG Calendar
     """
@@ -17,10 +18,14 @@ class TestUNGCalendar(UNGTestMixin):
         test_subject_time = int(unittest.time.time())
         self.selenium.open("calendar")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Refresh", self.selenium.get_text("//span[@class='showdayflash']"))
-        self.assertEqual("Su", self.selenium.get_text("//span[@title='Sunday']"))
+        self.assertEqual("Refresh", self.selenium.get_text(
+                                               "//span[@class='showdayflash']"))
+        self.assertEqual("Su", self.selenium.get_text(
+                                                     "//span[@title='Sunday']"))
         self.selenium.click("//span[@class='showmonthview']")
-        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull"
+                          "('loadingpannel').style.display == 'none'",
+                                         "10000");
         self.selenium.click("//span[@class='showdayview']")
         self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
         self.selenium.type("//input[@name='searchable-text']", "My Event %d" % test_subject_time)
@@ -40,14 +45,13 @@ class TestUNGCalendar(UNGTestMixin):
         self.selenium.type("//input[@name=\"start_date_hour\"]", unittest.time.localtime().tm_hour + 1)
         self.selenium.type("//input[@name=\"stop_date_hour\"]", unittest.time.localtime().tm_hour + 1)
         self.selenium.click("//div[@aria-labelledby='ui-dialog-title-new_event_dialog']//button")
-        #XXX handle this behaviour differently: activities is called twice
-        # because sometimes its passing through method even with some present
-        # activities
+        #XXX handle this behaviour differently: wait_for_activities is called
+        # twice because sometimes its passing through method even with some
+        # remaining activities
         self.wait_for_activities()
         self.clear_cache()
         self.wait_for_activities()
-        self.selenium.open("calendar")
-        self.selenium.wait_for_page_to_load("30000")
+        self.open_ung_default_page("calendar")
         self.selenium.wait_for_condition("selenium.isTextPresent('My Event %d')" % test_subject_time, "10000")
         self.failUnless(self.selenium.is_text_present("My Event %d" % test_subject_time))
         self.selenium.type("//input[@name='searchable-text']", "My Event %d" % test_subject_time)
@@ -548,6 +552,7 @@ class TestUNGCalendar(UNGTestMixin):
         self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
         #XXX due to interface delay again, try two times
         # on second, sleeping 3 seconds before refreshing page again
+        #XXX: this part needs the 'Other##' workaround when many events are present
         try:
             for event_index in range(len(dates)):
                 self.assertTrue(self.selenium.is_text_present(event_name % (test_time, event_index)))
@@ -611,7 +616,7 @@ class TestUNGCalendar(UNGTestMixin):
         #assert event is present
         self.assertTrue(self.selenium.is_text_present(event_name))
         #click refresh button 10 times
-        for _refresh in range(5):
+        for _refresh in range(10):
             self.selenium.click("//div/span[@title='Refresh view']")
             self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
         #assert only 1 event is present
@@ -848,6 +853,11 @@ class TestUNGCalendar(UNGTestMixin):
         #click Today button
         self.selenium.click("//span[@class='showtoday']")
         self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #in cases when there are many events on same day, the 'month' view
+        # group them, only showing them after clicking on 'Others##'
+        if self.selenium.is_element_present("//td[@abbr='%s'][@ch='more']" % current_date):
+            self.selenium.click("//td[@abbr='%s'][@ch='more']" % current_date)
+        self.selenium.wait_for_condition("selenium.isTextPresent('%s')" % event_name, 30000)
         self.assertTrue(self.selenium.is_text_present(event_name))
 
         #check button for week view

@@ -1,11 +1,14 @@
-from selenium import selenium
 import unittest
-
+from selenium import selenium
 import urllib2
 import os
 
+
 ERP5_URL = "http://localhost:18080/erp5/"
+ERP5_ACTIVITIES_URL = ERP5_URL + \
+                        'portal_activities/getMessageList?include_processing=1'
 UNG_URL = ERP5_URL + "web_site_module/ung/"
+
 
 class UNGTestMixin(unittest.TestCase):
     """Base class for selenium UNG tests, containing useful methods."""
@@ -21,14 +24,15 @@ class UNGTestMixin(unittest.TestCase):
     def init(self):
         """clear cache, open default page, login, wait for activities
         and then set default tree view as 'All Documents'"""
-        self.clear_cache()
-        self.open_ung_default_page()
+        self.selenium.open('')
+        self.selenium.wait_for_page_to_load(30000)
         self.login_as_default_user()
-        self.wait_for_activities()
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
         self.set_default_tree_view()
         #XXX all tests parsed may have
-        # <tal:block metal:use-macro="here/Zuite_CommonTemplateForUNG/macros/delete-all-documents"/>
-        # but it was omitted since it's not permited to delete objects
+        # <tal:block metal:use-macro="here/Zuite_CommonTemplateForUNG/
+        #                                         macros/delete-all-documents"/>
+        # but it was omitted since it was not permited to delete objects
 
     def login_as_default_user(self):
         """login as default user 'test_user'"""
@@ -40,13 +44,54 @@ class UNGTestMixin(unittest.TestCase):
 
     def set_default_tree_view(self):
         """select default opened tree view as 'All Documents'"""
-        try:
-            if not "All Documents" == self.selenium.get_text("//button[@class=\"tree-open\"]"):
-                self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[1]/td/button")
-                self.selenium.wait_for_page_to_load("30000")
-        except:
-            self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[1]/td/button")
+        self.wait_ung_listbox_to_load()
+        if not self.selenium.is_element_present("//button[@class='tree-open']"):
+            self.selenium.click("//table[@class='listbox-table-domain-tree']/tbody/tr[1]/td/button")
             self.selenium.wait_for_page_to_load("30000")
+        elif not "All Documents" == self.selenium.get_text("//button[@class='tree-open']"):
+            self.selenium.click("//table[@class='listbox-table-domain-tree']/tbody/tr[1]/td/button")
+            self.selenium.wait_for_page_to_load("30000")
+
+    def wait_ung_listbox_to_load(self, waiting_time="30000"):
+        """wait until UNG listbox is fully loaded"""
+        self.selenium.wait_for_condition("selenium.isElementPresent(\""
+                               "//table[@class='listbox-table-domain-tree']\")",
+                                        waiting_time)
+        self.selenium.wait_for_condition("selenium.browserbot"
+                ".getCurrentWindow().$('#knowledge_pad_module_ung_knowledge_pad"
+                      "_ung_docs_listbox_content').css('opacity') == '1'",
+                                        waiting_time)
+
+    def wait_ung_calendar_to_load(self, waiting_time="30000"):
+        """wait until UNG calendar is fully loaded"""
+        self.selenium.wait_for_condition("selenium.browserbot"
+            ".findElementOrNull('loadingpannel').style.display == 'none'",
+                                         waiting_time)
+
+    def wait_add_gadgets_dialog_to_load(self, waiting_time="30000"):
+        """wait until UNG gadgets dialog is fully loaded"""
+        self.selenium.wait_for_condition("selenium.browserbot"
+                ".getCurrentWindow().$('div.gadget-listbox table#gadget-table')"
+                ".children().length > 0",
+                                         waiting_time)
+
+    def clear_user_gadgets(self, user=None, password=None):
+        """remove all gadgets from given user
+        if no user is given, then just remove all gadgets"""
+        if user:
+            self.selenium.open("WebSite_logout")
+            self.selenium.wait_for_page_to_load("30000")
+            self.selenium.type("__ac_name", user)
+            self.selenium.type("__ac_password", password)
+            self.selenium.click("//input[@value='Login']")
+            self.selenium.wait_for_page_to_load("30000")
+            self.wait_ung_listbox_to_load()
+
+        while self.selenium.is_element_present("//a[@class='clickable-block"
+                                                             " block-remove']"):
+            self.selenium.click("//a[@class=\"clickable-block block-remove\"]")
+            self.selenium.get_confirmation()
+            self.open_ung_default_page('ung')
 
     def clear_cache(self):
         """call method 'Base_clearCache' of bt5 erp5_ui_test, that orders
@@ -57,15 +102,15 @@ class UNGTestMixin(unittest.TestCase):
     def wait_for_activities(self):
         """wait untill all activities end up, trying 60 times to see it,
         sleeping 2 seconds after each try"""
-        activities = urllib2.urlopen(ERP5_URL + 'portal_activities/getMessageList')
+        activities = urllib2.urlopen(ERP5_ACTIVITIES_URL)
         for _try in range(60):
-            #XXX 'readlines' is proxyfied, so url is opened everytime it's called
             message_queue = activities.readlines()
             if not message_queue:
                 break
-            unittest.time.sleep(2) #XXX give time to selenium to recompose page when refresh
+            #give time to selenium to recompose page when refresh
+            unittest.time.sleep(2)
 
-    def open_ung_default_page(self, page="", clear_cache=0, wait_for_activities=0):
+    def open_ung_default_page(self, page='ung', clear_cache=0, wait_for_activities=0):
         """open ung default page
             page = UNG page to be opened, default to UNG Docs
             clear_cache = if enabled, will call 'clear_cache'
@@ -76,8 +121,10 @@ class UNGTestMixin(unittest.TestCase):
             self.wait_for_activities()
         self.selenium.open(page)
         self.selenium.wait_for_page_to_load("30000")
-        if page == "calendar":
-            self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        if page == 'ung':
+            self.wait_ung_listbox_to_load()
+        elif page == "calendar":
+            self.wait_ung_calendar_to_load()
 
     def get_file_path(self, filename):
         """returns the absolute path to a test file given a 'filename'"""
@@ -89,23 +136,44 @@ class UNGTestMixin(unittest.TestCase):
         self.selenium.stop()
         self.assertEqual([], self.verificationErrors)
 
-    def create_document(self, portal_type, name=None, keywords=None):
+    def create_document(self, portal_type, keywords=None,
+                                              wait_for_activities=True, **kw):
         """create web documents, given a portal_type, optionally changing
         properties:
             name = name of the document
             keywords = keyword_list of the document
         """
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_%s_template" % portal_type)
+        self.selenium.open("ERP5Site_createNewWebDocument?template="
+                                                "web_%s_template" % portal_type)
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//a[@name=\"document_title\"]")
-        if name:
-            self.selenium.type("//input[@id=\"name\"]", name)
+        if keywords or kw:
+            self.rename_document(keywords=keywords,
+                                 wait_for_activities=wait_for_activities, **kw)
+        elif wait_for_activities:
+            self.wait_for_activities()
+        return self.selenium.get_eval("selenium.browserbot."
+                                    "getCurrentWindow().location").split('?')[0]
+
+    def rename_document(self, url=None, keywords=None, stop_try=False,
+                                                wait_for_activities=True, **kw):
+        """Change document attributes. At the end, check if rename was
+        successfull and, if not, repeat steps.
+            url - visit url of document, case given
+            keywords - list of keywords to put under keyword_list
+            **kw - dict of locator:value to type as document attributes"""
+        if url:
+            self.selenium.open(url)
+            self.selenium.wait_for_page_to_load("30000")
+        self.selenium.click("//a[@name='document_title']")
+        self.selenium.click("//p[@id='more_properties']")
+        for locator, value in kw.items():
+            self.selenium.type(locator, value)
         if keywords:
-            self.selenium.type("//textarea[@id=\"keyword_list\"]", keywords)
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
+            self.selenium.type("//textarea[@id='keyword_list']", keywords)
+        self.selenium.click("//div[@class='ui-dialog-buttonset']/button[1]")
         self.selenium.wait_for_page_to_load("30000")
-        self.wait_for_activities()
-        return self.selenium.get_eval('selenium.browserbot.getCurrentWindow().location').split('?')[0]
+        if wait_for_activities:
+            self.wait_for_activities()
 
     def create_calendar_event(self, event_type, name, start_month=None,
                                 end_month=None, start_day=None, end_day=None,
@@ -115,11 +183,11 @@ class UNGTestMixin(unittest.TestCase):
                                 do_refresh=True):
         """Create an event at UNG Calendar.
         Requires that the UNG Calendar is open."""
-        self.selenium.click("//span[@class=\"addcal\"]")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"portal_type\")", "10000")
-        self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
-        self.selenium.select("//select[@name=\"portal_type\"]", event_type)
-        self.selenium.type("//input[@name=\"title\"]", name)
+        self.selenium.click("//span[@class='addcal']")
+        self.selenium.wait_for_condition("selenium.isElementPresent('portal_type')", "10000")
+        self.wait_ung_calendar_to_load()
+        self.selenium.select("//select[@name='portal_type']", event_type)
+        self.selenium.type("//input[@name='title']", name)
 
         if start_month:
             self.selenium.type("start_date_month", start_month)
@@ -162,7 +230,7 @@ class UNGTestMixin(unittest.TestCase):
             #refresh interface 10 times
             for _try in range(10):
                 self.selenium.click("//div/span[@title='Refresh view']")
-                self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+                self.wait_ung_calendar_to_load()
                 if self.selenium.is_text_present(name):
                     break
                 else:

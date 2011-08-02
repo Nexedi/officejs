@@ -1,6 +1,7 @@
 from UNGTestMixin import UNGTestMixin
 import unittest
 
+
 class TestUNGDocsTextEditor(UNGTestMixin):
     """tests related to UNG Docs text editors"""
     def test_fill_content_on_web_page_with_fck_editor(self):
@@ -28,9 +29,9 @@ class TestUNGDocsTextEditor(UNGTestMixin):
         #assert text was typed
         self.assertEqual("<p>hello there</p>", self.selenium.get_eval("window.document.getElementById('field_my_text_content').value"))
         #go back to home page
-        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.open_ung_default_page('ung', clear_cache=1, wait_for_activities=1)
         #go back to the created Web Page (the last one modified on the list)
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
         #assert text was saved
         self.selenium.wait_for_condition("selenium.browserbot.getCurrentWindow().document.getElementById('field_my_text_content')", "5000")
@@ -70,12 +71,17 @@ class TestUNGDocsTextEditor(UNGTestMixin):
         web_page_content = self.selenium.get_eval("window.document.getElementById('field_my_text_content').value")
         #assert text content is present
         self.failUnless('<b>Functional UNG Test</b>' in web_page_content)
-        self.failUnless('<p style="margin-bottom: 0in; font-weight: normal;">'
-            'Sample text document created in order to test some UNG features.'
-            '</p>' in web_page_content)
+        self.failUnless('<p style="margin-bottom: 0in; font-weight: normal">Sample text document created in order to test some UNG features.</p>' in web_page_content)
         #assert image content is present
-        self.failUnless('<img align="LEFT" width="122" height="30" border="0"'
-            ' name="ung_docs-logo" src="image_module/' in web_page_content)
+        try:
+            self.failUnless('<img align="LEFT" width="122" height="30" border="0"'
+                ' name="ung_docs-logo" src="image_module/' in web_page_content)
+        except AssertionError:
+            raise NotImplementedError("This should fail until implement "
+                    "correct behaviour of images. They should be put under "
+                    "image_module, instead of just a 'tmp' file. \n"
+                    "XXX: Please refactor this try/except code if this"
+                    " functionality is already implemented.")
 
     def test_select_xinha_as_preferred_text_editor(self):
         """test that its possible to select Xinha instead of FCKeditor
@@ -127,9 +133,9 @@ class TestUNGDocsTextEditor(UNGTestMixin):
         #assert text was typed
         self.assertEqual(web_page_content, self.selenium.get_eval("window.document.getElementById('my_text_content').value"))
         #go back to home page
-        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.open_ung_default_page('ung', clear_cache=1, wait_for_activities=1)
         #go back to the created Web Page (the last one modified on the list)
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
         #assert text is the same
         self.selenium.wait_for_condition("selenium.browserbot.getCurrentWindow().document.getElementById('my_text_content')", "5000")
