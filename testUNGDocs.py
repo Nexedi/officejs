@@ -122,9 +122,14 @@ class TestUNGDocs(UNGTestMixin):
                               self.selenium.get_value("//input[@id=\"name\"]"))
 
     def test_help_button_translation(self):
+        """test that help button is translated"""
+        self.open_ung_default_page('ung')
+        self.selenium.click("//div[@id=\"select_language\"]/li/ul/li/"
+                                                             "span[@id=\"fr\"]")
         self.selenium.wait_for_page_to_load("30000")
         self.failUnless(self.selenium.is_text_present("Aide"))
-        self.selenium.click("//div[@id=\"select_language\"]/li/ul/li/span[@id=\"en\"]")
+        self.selenium.click("//div[@id=\"select_language\"]/li/ul/li/"
+                                                             "span[@id=\"en\"]")
         self.selenium.wait_for_page_to_load("30000")
         self.failUnless(self.selenium.is_text_present("Help"))
 
