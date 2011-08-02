@@ -856,22 +856,30 @@ class TestUNGDocs(UNGTestMixin):
             self.selenium.get_text("//button[@value='ung_domain/by_subject/"
                         "subject_UNG Test Cloudooo %d.1']" % test_subject_time))
 
-    def test_change_state_of_document_using_ung_interface_button(self):
-        """test the possibility to change state of a document
-        from within ung default interface, using 'Change State' button"""
-        test_time = int(unittest.time.time())
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_page_template")
+        self.create_document('table', keywords="UNG Test Web Table Subject %d"\
+                                                            % test_subject_time)
+        self.open_ung_default_page('ung', clear_cache=1, wait_for_activities=1)
+        self.selenium.click("//button[@value='ung_domain/by_subject.0']")
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//a[@name=\"document_title\"]")
-        self.selenium.type("//input[@id=\"name\"]", "Functional UNG Test %d" % test_time)
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
+        self.wait_ung_listbox_to_load()
+        self.assertEqual("Ung test web table subject %d" % test_subject_time,
+            self.selenium.get_text("//button[@value='ung_domain/by_subject/"
+               "subject_UNG Test Web Table Subject %d.1']" % test_subject_time))
+        self.selenium.click("//button[@value='ung_domain/by_subject/"
+                "subject_UNG Test Web Table Subject %d.1']" % test_subject_time)
         self.selenium.wait_for_page_to_load("30000")
-        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
-        self.selenium.click("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[1]/td[1]/input")
-        self.selenium.click("//button[@class=\"change_state\"]")
-        self.selenium.wait_for_page_to_load("30000")
-        #XXX it's not implemented yet
-        raise NotImplementedError
+        self.wait_ung_listbox_to_load()
+        self.failUnless(self.selenium.is_element_present(
+                    "//table[@class=\"listbox listbox listbox-table\"]/tbody"
+                                                          "/tr[1]/td[1]/input"))
+        self.failUnless(self.selenium.is_element_present(
+                    "//table[@class=\"listbox listbox listbox-table\"]/tbody"
+                                                          "/tr[1]/td[2]/input"))
+        #assert only one element is present,
+        #because only one 'table' element was created
+        self.failIf(self.selenium.is_element_present(
+                    "//table[@class=\"listbox listbox listbox-table\"]/tbody/"
+                                                           "tr[2]/td[1]/input"))
 
     def test_all_domain_tree_filters(self):
         """test Domain Tree on UNG Docs.
