@@ -230,7 +230,7 @@ class UNGTestMixin(unittest.TestCase):
             #refresh interface 10 times
             for _try in range(10):
                 self.selenium.click("//div/span[@title='Refresh view']")
-                self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+                self.wait_ung_calendar_to_load()
                 if self.selenium.is_text_present(name):
                     break
                 else:
