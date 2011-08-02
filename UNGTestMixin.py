@@ -61,6 +61,14 @@ class UNGTestMixin(unittest.TestCase):
                 ".getCurrentWindow().$('#knowledge_pad_module_ung_knowledge_pad"
                       "_ung_docs_listbox_content').css('opacity') == '1'",
                                         waiting_time)
+
+    def wait_ung_calendar_to_load(self, waiting_time="30000"):
+        """wait until UNG calendar is fully loaded"""
+        self.selenium.wait_for_condition("selenium.browserbot"
+            ".findElementOrNull('loadingpannel').style.display == 'none'",
+                                         waiting_time)
+
+    def wait_add_gadgets_dialog_to_load(self, waiting_time="30000"):
     def clear_cache(self):
         """call method 'Base_clearCache' of bt5 erp5_ui_test, that orders
         portal_catalog to clear all allocated cache"""
