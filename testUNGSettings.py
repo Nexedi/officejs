@@ -12,7 +12,9 @@ class TestUNGSettings(UNGTestMixin):
         """
         self.failIf(self.selenium.is_text_present('Text Format'))
         self.selenium.click("//a[@id='settings']")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name=\'field_my_preferred_text_editor\']\")", "3000")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input"
+                                "[@name=\'field_my_preferred_text_editor\']\")",
+                                          "30000")
         self.failUnless(self.selenium.is_text_present("Text Format"))
         self.failUnless(self.selenium.is_text_present("FCK Editor"))
         self.selenium.check("//input[@value=\'fck_editor\']")
@@ -20,19 +22,29 @@ class TestUNGSettings(UNGTestMixin):
         self.selenium.click("//html/body/div[3]/div[11]/div/button[1]")
         self.selenium.wait_for_page_to_load(5000)
         self.selenium.click("//a[@id='settings']")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name=\'field_my_preferred_text_editor\']\")", "3000")
-        self.assertEqual(u'true', self.selenium.get_attribute("//input[@value=\'fck_editor\']@checked"))
-        self.assertEqual(u'true', self.selenium.get_attribute("//input[@value=\'text/html\']@checked"))
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input"
+                                "[@name=\'field_my_preferred_text_editor\']\")",
+                                          "30000")
+        self.assertEqual(u'true', self.selenium.get_attribute(
+                                      "//input[@value=\'fck_editor\']@checked"))
+        self.assertEqual(u'true', self.selenium.get_attribute(
+                                       "//input[@value=\'text/html\']@checked"))
         self.selenium.click("//a[@id='settings']")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name=\'field_my_preferred_text_editor\']\")", "3000")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input"
+                                "[@name=\'field_my_preferred_text_editor\']\")",
+                                          "30000")
         self.selenium.check("//input[@value=\'text_area\']")
         self.selenium.check("//input[@value=\'text/plain\']")
         self.selenium.click("//html/body/div[3]/div[11]/div/button[1]")
         self.selenium.wait_for_page_to_load(5000)
         self.selenium.click("//a[@id='settings']")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name=\'field_my_preferred_text_editor\']\")", "3000")
-        self.assertEqual(u'true', self.selenium.get_attribute("//input[@value=\'text/plain\']@checked"))
-        self.assertEqual(u'true', self.selenium.get_attribute("//input[@value=\'text_area\']@checked"))
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input"
+                                "[@name=\'field_my_preferred_text_editor\']\")",
+                                          "30000")
+        self.assertEqual(u'true', self.selenium.get_attribute(
+                                      "//input[@value=\'text/plain\']@checked"))
+        self.assertEqual(u'true', self.selenium.get_attribute(
+                                       "//input[@value=\'text_area\']@checked"))
         self.selenium.click("//span[@class=\'ui-icon ui-icon-closethick\']")
         self.selenium.open("WebSite_logout")
         self.selenium.wait_for_page_to_load(5000)
@@ -51,36 +63,50 @@ class TestUNGSettings(UNGTestMixin):
 #        self.selenium.wait_for_page_to_load(30000)
         self.selenium.type("__ac_name", "ung_user2")
         self.selenium.type("__ac_password", "1234")
-        self.selenium.click("//input[@type='submit']")
+        self.selenium.click("//input[@value='Login']")
         self.selenium.wait_for_page_to_load(5000)
         self.selenium.click("//a[@id='settings']")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name=\'field_my_preferred_text_editor\']\")", "3000")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input"
+                                "[@name=\'field_my_preferred_text_editor\']\")",
+                                          "30000")
         self.selenium.check("//input[@value=\'fck_editor\']")
         self.selenium.check("//input[@value=\'text/html\']")
         self.selenium.click("//html/body/div[3]/div[11]/div/button[1]")
         self.selenium.wait_for_page_to_load(5000)
         self.selenium.click("//a[@id='settings']")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name=\'field_my_preferred_text_editor\']\")", "3000")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input"
+                                "[@name=\'field_my_preferred_text_editor\']\")",
+                                          "30000")
         self.selenium.check("//input[@value=\'fck_editor\']")
         self.selenium.check("//input[@value=\'text/html\']")
         self.selenium.click("//a[@id='settings']")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name=\'field_my_preferred_text_editor\']\")", "3000")
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input"
+                                "[@name=\'field_my_preferred_text_editor\']\")",
+                                          "30000")
         self.selenium.click("//html/body/div[3]/div[11]/div/button[1]")
         self.selenium.wait_for_page_to_load(5000)
         self.selenium.click("//a[@id='settings']")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name=\'field_my_preferred_text_editor\']\")", "3000")
-        self.assertEqual(u'true', self.selenium.get_attribute("//input[@value=\'fck_editor\']@checked"))
-        self.assertEqual(u'true', self.selenium.get_attribute("//input[@value=\'text/html\']@checked"))
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input"
+                                "[@name=\'field_my_preferred_text_editor\']\")",
+                                          "30000")
+        self.assertEqual(u'true', self.selenium.get_attribute(
+                                      "//input[@value=\'fck_editor\']@checked"))
+        self.assertEqual(u'true', self.selenium.get_attribute(
+                                       "//input[@value=\'text/html\']@checked"))
         self.selenium.open("WebSite_logout")
         self.selenium.wait_for_page_to_load(5000)
         self.selenium.type("__ac_name", "test_user")
         self.selenium.type("__ac_password", "test_user")
-        self.selenium.click("//input[@type='submit']")
+        self.selenium.click("//input[@value='Login']")
         self.selenium.wait_for_page_to_load(5000)
         self.selenium.click("//a[@id='settings']")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input[@name=\'field_my_preferred_text_editor\']\")", "3000")
-        self.assertEqual(u'true', self.selenium.get_attribute("//input[@value=\'text_area\']@checked"))
-        self.assertEqual(u'true', self.selenium.get_attribute("//input[@value=\'text/plain\']@checked"))
+        self.selenium.wait_for_condition("selenium.isElementPresent(\"//input"
+                                "[@name=\'field_my_preferred_text_editor\']\")",
+                                          "30000")
+        self.assertEqual(u'true', self.selenium.get_attribute(
+                                       "//input[@value=\'text_area\']@checked"))
+        self.assertEqual(u'true', self.selenium.get_attribute(
+                                      "//input[@value=\'text/plain\']@checked"))
 
 
 if __name__ == "__main__":
