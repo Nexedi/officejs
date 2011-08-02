@@ -15,7 +15,8 @@ class TestUNGDocsTableEditor(UNGTestMixin):
         self.selenium.run_script("$(\"#0_table0_cell_c0_r0\").html(\"Gabriel\")")
         self.selenium.run_script("$(\"#0_table0_cell_c1_r1\").html(\"Monnerat\")")
         self.selenium.click("//button[@class=\"save\"]")
-        self.selenium.wait_for_page_to_load("30000")
+        for page_reload in range(2):
+            self.selenium.wait_for_page_to_load("30000")
         self.assertEqual("Gabriel", self.selenium.get_text("//td[@id='0_table0_cell_c0_r0']"))
         self.assertEqual("Monnerat", self.selenium.get_text("//td[@id='0_table0_cell_c1_r1']"))
 
