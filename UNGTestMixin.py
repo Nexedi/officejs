@@ -44,12 +44,12 @@ class UNGTestMixin(unittest.TestCase):
 
     def set_default_tree_view(self):
         """select default opened tree view as 'All Documents'"""
-        try:
-            if not "All Documents" == self.selenium.get_text("//button[@class=\"tree-open\"]"):
-                self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[1]/td/button")
-                self.selenium.wait_for_page_to_load("30000")
-        except:
-            self.selenium.click("//table[@class='your_listbox-table-domain-tree']/tbody/tr[1]/td/button")
+        self.wait_ung_listbox_to_load()
+        if not self.selenium.is_element_present("//button[@class='tree-open']"):
+            self.selenium.click("//table[@class='listbox-table-domain-tree']/tbody/tr[1]/td/button")
+            self.selenium.wait_for_page_to_load("30000")
+        elif not "All Documents" == self.selenium.get_text("//button[@class='tree-open']"):
+            self.selenium.click("//table[@class='listbox-table-domain-tree']/tbody/tr[1]/td/button")
             self.selenium.wait_for_page_to_load("30000")
 
     def clear_cache(self):
