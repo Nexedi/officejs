@@ -102,13 +102,13 @@ class UNGTestMixin(unittest.TestCase):
     def wait_for_activities(self):
         """wait untill all activities end up, trying 60 times to see it,
         sleeping 2 seconds after each try"""
-        activities = urllib2.urlopen(ERP5_URL + 'portal_activities/getMessageList')
+        activities = urllib2.urlopen(ERP5_ACTIVITIES_URL)
         for _try in range(60):
-            #XXX 'readlines' is proxyfied, so url is opened everytime it's called
             message_queue = activities.readlines()
             if not message_queue:
                 break
-            unittest.time.sleep(2) #XXX give time to selenium to recompose page when refresh
+            #give time to selenium to recompose page when refresh
+            unittest.time.sleep(2)
 
     def open_ung_default_page(self, page="", clear_cache=0, wait_for_activities=0):
         """open ung default page
