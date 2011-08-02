@@ -45,14 +45,13 @@ class TestUNGCalendar(UNGTestMixin):
         self.selenium.type("//input[@name=\"start_date_hour\"]", unittest.time.localtime().tm_hour + 1)
         self.selenium.type("//input[@name=\"stop_date_hour\"]", unittest.time.localtime().tm_hour + 1)
         self.selenium.click("//div[@aria-labelledby='ui-dialog-title-new_event_dialog']//button")
-        #XXX handle this behaviour differently: activities is called twice
-        # because sometimes its passing through method even with some present
-        # activities
+        #XXX handle this behaviour differently: wait_for_activities is called
+        # twice because sometimes its passing through method even with some
+        # remaining activities
         self.wait_for_activities()
         self.clear_cache()
         self.wait_for_activities()
-        self.selenium.open("calendar")
-        self.selenium.wait_for_page_to_load("30000")
+        self.open_ung_default_page("calendar")
         self.selenium.wait_for_condition("selenium.isTextPresent('My Event %d')" % test_subject_time, "10000")
         self.failUnless(self.selenium.is_text_present("My Event %d" % test_subject_time))
         self.selenium.type("//input[@name='searchable-text']", "My Event %d" % test_subject_time)
