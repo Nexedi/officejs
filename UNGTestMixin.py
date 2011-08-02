@@ -136,17 +136,24 @@ class UNGTestMixin(unittest.TestCase):
         self.selenium.stop()
         self.assertEqual([], self.verificationErrors)
 
-    def create_document(self, portal_type, name=None, keywords=None):
+    def create_document(self, portal_type, keywords=None,
+                                              wait_for_activities=True, **kw):
         """create web documents, given a portal_type, optionally changing
         properties:
             name = name of the document
             keywords = keyword_list of the document
         """
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_%s_template" % portal_type)
+        self.selenium.open("ERP5Site_createNewWebDocument?template="
+                                                "web_%s_template" % portal_type)
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//a[@name=\"document_title\"]")
-        if name:
-            self.selenium.type("//input[@id=\"name\"]", name)
+        if keywords or kw:
+            self.rename_document(keywords=keywords,
+                                 wait_for_activities=wait_for_activities, **kw)
+        elif wait_for_activities:
+            self.wait_for_activities()
+        return self.selenium.get_eval("selenium.browserbot."
+                                    "getCurrentWindow().location").split('?')[0]
+
     def rename_document(self, url=None, keywords=None, stop_try=False,
                                                 wait_for_activities=True, **kw):
         """Change document attributes. At the end, check if rename was
