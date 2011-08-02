@@ -9,14 +9,10 @@ class TestUNGDocsSharing(UNGTestMixin):
         """test that web_page is correctly shared with another user"""
         self.selenium.open("ERP5Site_createNewWebDocument?template=web_page_template")
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//a[@name=\"document_title\"]")
-        self.selenium.type("//input[@id=\"name\"]", "Document Shared")
-        self.selenium.click("//p[@id=\"more_properties\"]")
-        self.selenium.type("//input[@id=\"version\"]", "002")
-        self.selenium.type("//input[@id=\"language\"]", "pt-br")
-        self.selenium.type("//textarea[@id=\"keyword_list\"]", "My Subject")
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
-        self.selenium.wait_for_page_to_load("30000")
+        self.rename_document(name='Document Shared',
+                              version='002',
+                              language='pt-br',
+                              keywords="My Subject")
         self.selenium.click("//a[@name=\"document_title\"]")
         self.selenium.click("//p[@id=\"more_properties\"]")
         self.assertEqual("002", self.selenium.get_value("//input[@id=\"version\"]"))
