@@ -1,11 +1,14 @@
-from selenium import selenium
 import unittest
-
+from selenium import selenium
 import urllib2
 import os
 
+
 ERP5_URL = "http://localhost:18080/erp5/"
+ERP5_ACTIVITIES_URL = ERP5_URL + \
+                        'portal_activities/getMessageList?include_processing=1'
 UNG_URL = ERP5_URL + "web_site_module/ung/"
+
 
 class UNGTestMixin(unittest.TestCase):
     """Base class for selenium UNG tests, containing useful methods."""
