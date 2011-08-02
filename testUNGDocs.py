@@ -168,7 +168,8 @@ class TestUNGDocs(UNGTestMixin):
 
     def test_web_table_upload_converting_to_web_page(self):
         """test upload of a spreadsheet converting to a Web Page document"""
-        test_file_path = sef.get_file_path("tiolive-ERP5.Freedom.TioLive.Spreadsheet-001-en.ods")
+        test_file_path = self.get_file_path(
+                          "tiolive-ERP5.Freedom.TioLive.Spreadsheet-001-en.ods")
         self.selenium.click("//a[@class=\"ung_docs\"]")
         self.selenium.wait_for_page_to_load("30000")
         self.selenium.click("//input[@id=\"upload\"]")
@@ -176,38 +177,35 @@ class TestUNGDocs(UNGTestMixin):
         self.selenium.type("//input[@id=\"upload-file\"]", test_file_path)
         self.selenium.click("//input[@id=\"submit_document\"]")
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.wait_for_condition("selenium.isTextPresent(\"Opening\")", "30000")
+        self.selenium.wait_for_condition("selenium.isTextPresent(\"Opening\")",
+                                          "30000")
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.wait_for_condition("selenium.isElementPresent(\"//a[@name='document_title']\")", "30000")
+        self.selenium.wait_for_condition("selenium.isElementPresent("
+                                    "\"//a[@name='document_title']\")", "30000")
         self.failUnless(self.selenium.is_text_present("TioLive Spreadsheet"))
 
     def test_cancel_web_page(self):
         """test the action of cancelling a Web Page document"""
-        self.selenium.click("//a[@class=\"ung_docs\"]")
+        self.create_document('page', name='Cancelled Document')
+        self.selenium.click("//a[contains(./@href, 'cancel_action')]")
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_page_template")
-        self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//a[@name=\"document_title\"]")
-        unittest.time.sleep(2)
-        self.selenium.type("//input[@id=\"name\"]", "Cancelled Document")
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/span")
-        self.selenium.wait_for_page_to_load("30000")
-        unittest.time.sleep(1)
-        self.selenium.click("//div[@class=\"action_menu\"]/li/ul/li[1]/a")
-        self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//a[@class=\"ung_docs\"]")
-        self.selenium.wait_for_page_to_load("30000")
+        self.open_ung_default_page('ung')
         #XXX needs to click 'All Documents' tree again -- selecting it before
         #uploading the first file
-        self.selenium.click("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[1]/td[1]/input")
-        self.selenium.click("//button[@class=\"delete\"]")
+        self.selenium.click("//table[@class=\"listbox listbox listbox-table\"]"
+                                                    "/tbody/tr[1]/td[1]/input")
+        self.selenium.click("//button[@class='delete']")
         self.selenium.wait_for_page_to_load("30000")
         self.open_ung_default_page(wait_for_activities=1)
-        self.selenium.click("//table[@class=\"your_listbox-table-domain-tree\"]/tbody/tr[11]/td/button") #Trash
+        self.wait_ung_listbox_to_load()
+        self.selenium.click("//button[@value='ung_domain/trash.0']")  # Trash
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Cancelled Document", self.selenium.get_text("//table/tbody/tr[1]/td[3]"))
-        self.selenium.click("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[1]/td[1]/input")
-        self.selenium.click("//button[@class=\"delete\"]")
+        self.wait_ung_listbox_to_load()
+        self.assertEqual("Cancelled Document", self.selenium.get_text(
+                                                   "//table/tbody/tr[1]/td[3]"))
+        self.selenium.click("//table[@class=\"listbox listbox listbox-table\"]"
+                                                     "/tbody/tr[1]/td[1]/input")
+        self.selenium.click("//button[@class='delete']")
         self.selenium.wait_for_page_to_load("30000")
 
     def test_change_title(self):
