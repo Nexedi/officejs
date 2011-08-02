@@ -121,8 +121,10 @@ class UNGTestMixin(unittest.TestCase):
             self.wait_for_activities()
         self.selenium.open(page)
         self.selenium.wait_for_page_to_load("30000")
-        if page == "calendar":
-            self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        if page == 'ung':
+            self.wait_ung_listbox_to_load()
+        elif page == "calendar":
+            self.wait_ung_calendar_to_load()
 
     def get_file_path(self, filename):
         """returns the absolute path to a test file given a 'filename'"""
