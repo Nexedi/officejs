@@ -1163,20 +1163,25 @@ class TestUNGDocs(UNGTestMixin):
 
     def test_change_state_button(self):
         """test the possibility to change state of many documents
-        from the standard ung default interface, using 'Change State' button"""
+        from the standard ung default interface, using 'Change State' button
+        - this test will change state from 'Draft' to 'Shared'"""
         test_time = int(unittest.time.time())
         #create 2 web_page
         for doc_index in range(2):
             self.create_document('page', name="Functional UNG Test %d - "
                                         "Web Page %d" % (test_time, doc_index))
-        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
+        self.open_ung_default_page('ung', wait_for_activities=1)
         #select the 2 documents created
-        self.selenium.click("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[1]/td[1]/input")
-        self.selenium.click("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[2]/td[1]/input")
+        for doc_index in range(1, 3):
+            self.selenium.click(
+                "//table[@class=\"listbox listbox listbox-table\"]/tbody/"
+                                               "tr[%d]/td[1]/input" % doc_index)
         #try to change state of both documents
+        raise Exception("Need to fix permissions/behaviour when changing "
+                                                "the state.")
         self.selenium.click("//button[@class=\"change_state\"]")
-        self.selenium.wait_for_page_to_load("30000")
-        raise NotImplementedError
+        self.selenium.wait_for_condition(
+                          "selenium.isTextPresent('Change State of Documents')")
 
     def test_select_all_and_deselect_all(self):
         """test the button to select all documents and deselect all documents"""
