@@ -883,11 +883,13 @@ class TestUNGDocs(UNGTestMixin):
 
     def test_all_domain_tree_filters(self):
         """test Domain Tree on UNG Docs.
-        Domain Tree is the box where listbox is filtered by state, document type.
-        All Cases should be tested, including collapse and expand items into the list."""
+        Domain Tree is the box where listbox is filtered by state, document
+        type. All Cases should be tested, including collapse and expand items
+        into the list."""
         test_time = int(unittest.time.time())
         #first, create a web illustration, a web page and a web table
-        web_illustration_name = "Functional UNG Test %d - Web Illustration" % test_time
+        web_illustration_name = "Functional UNG Test %d - Web Illustration" \
+                                                                     % test_time
         web_illustration_keywords = "Ung test %d - web illustration" % test_time
         web_illustration_url = self.create_document('illustration',
                                             name=web_illustration_name,
