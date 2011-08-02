@@ -69,6 +69,13 @@ class UNGTestMixin(unittest.TestCase):
                                          waiting_time)
 
     def wait_add_gadgets_dialog_to_load(self, waiting_time="30000"):
+        """wait until UNG gadgets dialog is fully loaded"""
+        self.selenium.wait_for_condition("selenium.browserbot"
+                ".getCurrentWindow().$('div.gadget-listbox table#gadget-table')"
+                ".children().length > 0",
+                                         waiting_time)
+
+    def clear_user_gadgets(self, user=None, password=None):
     def clear_cache(self):
         """call method 'Base_clearCache' of bt5 erp5_ui_test, that orders
         portal_catalog to clear all allocated cache"""
