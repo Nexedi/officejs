@@ -24,14 +24,15 @@ class UNGTestMixin(unittest.TestCase):
     def init(self):
         """clear cache, open default page, login, wait for activities
         and then set default tree view as 'All Documents'"""
-        self.clear_cache()
-        self.open_ung_default_page()
+        self.selenium.open('')
+        self.selenium.wait_for_page_to_load(30000)
         self.login_as_default_user()
-        self.wait_for_activities()
+        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
         self.set_default_tree_view()
         #XXX all tests parsed may have
-        # <tal:block metal:use-macro="here/Zuite_CommonTemplateForUNG/macros/delete-all-documents"/>
-        # but it was omitted since it's not permited to delete objects
+        # <tal:block metal:use-macro="here/Zuite_CommonTemplateForUNG/
+        #                                         macros/delete-all-documents"/>
+        # but it was omitted since it was not permited to delete objects
 
     def login_as_default_user(self):
         """login as default user 'test_user'"""
