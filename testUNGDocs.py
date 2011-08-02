@@ -65,38 +65,46 @@ class TestUNGDocs(UNGTestMixin):
     def test_web_page(self):
         """test the action of add, cancel, delete and then delete again a
         Web Page document"""
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_page_template")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Web Page", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.create_document('page')
+        self.assertEqual("Web Page", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
         self.selenium.click("//div[@class=\"action_menu\"]/li/ul/li[1]/a")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Cancelled", self.selenium.get_text("//a[@name=\"document_state\"]"))
-        self.selenium.click("//a[@class=\"ung_docs\"]")
+        self.assertEqual("Cancelled", self.selenium.get_text(
+                                               "//a[@name=\"document_state\"]"))
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.assertEqual("All Documents", self.selenium.get_text(
+                                                "//button[@class='tree-open']"))
+        self.selenium.click("//div[@class=\"favorite\"]/a[2]")  # Refresh
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("All Documents", self.selenium.get_text("//button[@class='tree-open']"))
-        self.selenium.click("//div[@class=\"favorite\"]/a[2]")
+        self.wait_ung_listbox_to_load()
+        self.assertEqual("All Documents", self.selenium.get_text(
+                                                "//button[@class='tree-open']"))
+        self.selenium.click("//table[@class=\"listbox listbox listbox-table\"]"
+                                                     "/tbody/tr[1]/td[1]/input")
+        self.selenium.click("//button[@class='delete']")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("All Documents", self.selenium.get_text("//button[@class='tree-open']"))
-        self.selenium.click("//table[@class=\"listbox your_listbox your_listbox-table\"]/tbody/tr[1]/td[1]/input")
-
-        self.selenium.click("//button[@class=\"delete\"]")
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.selenium.click("//button[@value='ung_domain/trash.0']")
         self.selenium.wait_for_page_to_load("30000")
-        self.open_ung_default_page(clear_cache=1, wait_for_activities=1)
-
-        self.selenium.click("//table[@class=\"your_listbox-table-domain-tree\"]/tbody/tr[11]/td/button")
-        self.selenium.wait_for_page_to_load("30000")
-        self.selenium.set_timeout("30000")
+        self.wait_ung_listbox_to_load()
         self.failIf(self.selenium.is_text_present("No result."))
-        self.assertEqual("Deleted", self.selenium.get_text("//table/tbody/tr[1]/td[4]"))
+        self.assertEqual("Deleted", self.selenium.get_text("//table/tbody/"
+                                                                "tr[1]/td[4]"))
         self.selenium.click("//input[@title='Check All']")
-        self.selenium.click("//button[@class=\"delete\"]")
+        self.selenium.click("//button[@class='delete']")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("No result.", self.selenium.get_text("//td[@class=\"listbox-table-no-result-row\"]/span"))
-        self.assertEqual("Trash", self.selenium.get_text("//button[@class='tree-open']"))
-        self.selenium.click("//table[@class=\"your_listbox-table-domain-tree\"]/tbody/tr[3]/td/button")
+        self.wait_ung_listbox_to_load()
+        self.assertEqual("No result.", self.selenium.get_text(
+                           "//td[@class='listbox-table-no-result-row']/span"))
+        self.assertEqual("Trash", self.selenium.get_text(
+                                                "//button[@class='tree-open']"))
+        self.selenium.click("//button[@value='ung_domain/hidden.0']")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("No result.", self.selenium.get_text("//td[@class=\"listbox-table-no-result-row\"]/span"))
-        self.assertEqual("Hidden", self.selenium.get_text("//button[@class='tree-open']"))
+        self.assertEqual("No result.", self.selenium.get_text(
+                          "//td[@class=\"listbox-table-no-result-row\"]/span"))
+        self.assertEqual("Hidden", self.selenium.get_text(
+                                                "//button[@class='tree-open']"))
 
     def test_title_abbreviation(self):
         """test the abbreviation of a long title of the document"""
