@@ -147,12 +147,26 @@ class UNGTestMixin(unittest.TestCase):
         self.selenium.click("//a[@name=\"document_title\"]")
         if name:
             self.selenium.type("//input[@id=\"name\"]", name)
+    def rename_document(self, url=None, keywords=None, stop_try=False,
+                                                wait_for_activities=True, **kw):
+        """Change document attributes. At the end, check if rename was
+        successfull and, if not, repeat steps.
+            url - visit url of document, case given
+            keywords - list of keywords to put under keyword_list
+            **kw - dict of locator:value to type as document attributes"""
+        if url:
+            self.selenium.open(url)
+            self.selenium.wait_for_page_to_load("30000")
+        self.selenium.click("//a[@name='document_title']")
+        self.selenium.click("//p[@id='more_properties']")
+        for locator, value in kw.items():
+            self.selenium.type(locator, value)
         if keywords:
-            self.selenium.type("//textarea[@id=\"keyword_list\"]", keywords)
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]")
+            self.selenium.type("//textarea[@id='keyword_list']", keywords)
+        self.selenium.click("//div[@class='ui-dialog-buttonset']/button[1]")
         self.selenium.wait_for_page_to_load("30000")
-        self.wait_for_activities()
-        return self.selenium.get_eval('selenium.browserbot.getCurrentWindow().location').split('?')[0]
+        if wait_for_activities:
+            self.wait_for_activities()
 
     def create_calendar_event(self, event_type, name, start_month=None,
                                 end_month=None, start_day=None, end_day=None,
