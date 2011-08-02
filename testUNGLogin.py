@@ -1,6 +1,7 @@
 from UNGTestMixin import UNGTestMixin
 import unittest
 
+
 class TestUNGLogin(UNGTestMixin):
     """tests related to login on UNG"""
 
