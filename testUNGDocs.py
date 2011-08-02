@@ -133,26 +133,35 @@ class TestUNGDocs(UNGTestMixin):
     def test_web_table_upload_twice(self):
         """test the twice upload of a spreadsheet file into a Web Table
         document."""
-        test_file_path = sef.get_file_path("tiolive-ERP5.Freedom.TioLive.Spreadsheet-001-en.ods")
+        test_file_path = self.get_file_path(
+                          "tiolive-ERP5.Freedom.TioLive.Spreadsheet-001-en.ods")
         for index in range(2):
             self.selenium.click("//a[@class=\"ung_docs\"]")
             self.selenium.wait_for_page_to_load("30000")
             self.selenium.click("//input[@id=\"upload\"]")
-            self.selenium.select("//select[@name=\"portal_type\"]", "Web Table")
+            self.selenium.select("//select[@name=\"portal_type\"]",
+                                  "Web Table")
             self.selenium.click("//input[@id=\"submit_document\"]")
-            self.assertEqual("Please input a file", self.selenium.get_text("//span[@id='no-input-file']"))
+            self.assertEqual("Please input a file", self.selenium.get_text(
+                                                 "//span[@id='no-input-file']"))
             self.failUnless(self.selenium.is_text_present("Loading..."))
-            self.failUnless(self.selenium.is_element_present("//input[@id=\"upload-file\"]"))
+            self.failUnless(self.selenium.is_element_present(
+                                                "//input[@id=\"upload-file\"]"))
             self.selenium.type("//input[@id=\"upload-file\"]", test_file_path)
             self.selenium.click("//input[@id=\"submit_document\"]")
             self.selenium.wait_for_page_to_load("30000")
-            self.selenium.wait_for_condition("selenium.isTextPresent(\"Opening\")", "30000")
+            self.selenium.wait_for_condition("selenium.isTextPresent("
+                                                        "\"Opening\")", "30000")
             self.selenium.wait_for_page_to_load("30000")
             #XXX this requires enabling a System Preference with Cloudooo
-            self.selenium.wait_for_condition("selenium.isElementPresent(\"//a[@name='document_title']\")", "30000")
-            self.failUnless(self.selenium.is_text_present("TioLive Spreadsheet"))
-            self.assertEqual("1", self.selenium.get_attribute("//td[@id='0_table0_cell_c0_r1']@sdval"))
-            self.assertEqual("2", self.selenium.get_attribute("//td[@id='0_table0_cell_c1_r1']@sdval"))
+            self.selenium.wait_for_condition("selenium.isElementPresent("
+                                    "\"//a[@name='document_title']\")", "30000")
+            self.failUnless(self.selenium.is_text_present(
+                                                        "TioLive Spreadsheet"))
+            self.assertEqual("1", self.selenium.get_attribute(
+                                       "//td[@id='0_table0_cell_c0_r1']@sdval"))
+            self.assertEqual("2", self.selenium.get_attribute(
+                                       "//td[@id='0_table0_cell_c1_r1']@sdval"))
 
     def test_web_table_upload_converting_to_web_page(self):
         """test upload of a spreadsheet converting to a Web Page document"""
