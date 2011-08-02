@@ -852,6 +852,11 @@ class TestUNGCalendar(UNGTestMixin):
         #click Today button
         self.selenium.click("//span[@class='showtoday']")
         self.selenium.wait_for_condition("selenium.browserbot.findElementOrNull('loadingpannel').style.display == 'none'", "10000");
+        #in cases when there are many events on same day, the 'month' view
+        # group them, only showing them after clicking on 'Others##'
+        if self.selenium.is_element_present("//td[@abbr='%s'][@ch='more']" % current_date):
+            self.selenium.click("//td[@abbr='%s'][@ch='more']" % current_date)
+        self.selenium.wait_for_condition("selenium.isTextPresent('%s')" % event_name, 30000)
         self.assertTrue(self.selenium.is_text_present(event_name))
 
         #check button for week view
