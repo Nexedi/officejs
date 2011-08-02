@@ -38,32 +38,28 @@ class TestUNGDocs(UNGTestMixin):
         self.assertEqual("Draft", self.selenium.get_text(
                                                "//a[@name=\"document_state\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        unittest.time.sleep(2)
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Edit More Properties",
+                        self.selenium.get_text("//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        unittest.time.sleep(2)
-        #XXX the "popup" is not complete handled when selenium closes window
-        #so, needs to wait window to complete close before openning it again
-        #maybe its a BUG
         self.selenium.click("//span[@class=\"ui-icon ui-icon-closethick\"]")
-        unittest.time.sleep(2)
         self.selenium.click("//a[@name=\"document_title\"]")
-        unittest.time.sleep(2)
         self.selenium.type("//input[@id=\"name\"]", "Functional UNG Test")
-        #XXX same behaviour as before, maybe it's also a bug
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/span")
+        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]"
+                                                              "/button[1]/span")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
         self.failIf(self.selenium.is_text_present("All Documents"))
-        self.selenium.click("//a[@class=\"ung_docs\"]")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("All Documents", self.selenium.get_text("//button[@class=\"tree-open\"]"))
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.assertEqual("All Documents", self.selenium.get_text(
+                                              "//button[@class=\"tree-open\"]"))
 
-        self.open_ung_default_page(wait_for_activities=1)
-        self.selenium.type("//input[@name=\"field_your_search_text\"]", "Functional UNG Test")
+        self.selenium.type("//input[@name=\"field_your_search_text\"]",
+                            "Functional UNG Test")
         self.selenium.click("//input[@value=\"Search Docs\"]")
-        self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failIf(self.selenium.is_text_present("No result."))
 
     def test_web_page(self):
