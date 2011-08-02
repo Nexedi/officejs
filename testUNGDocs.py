@@ -219,420 +219,594 @@ class TestUNGDocs(UNGTestMixin):
         for Web Illustration, Web Table and Web Page documents"""
 
         #New Web Illustration
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_illustration_template")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Web Illustration", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Draft", self.selenium.get_text("//a[@name=\"document_state\"]"))
-        #First just see properties
+        self.create_document('illustration')
+        self.assertEqual("Web Illustration", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
+        self.assertEqual("Draft", self.selenium.get_text(
+                                               "//a[@name=\"document_state\"]"))
+        #First just check properties
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Web Illustration", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Web Illustration", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Web Illustration", self.selenium.get_value("//input[@id='name']"))
-        self.assertEqual("", self.selenium.get_value("//input[@id='short_title']"))
-        self.assertEqual("001", self.selenium.get_value("//input[@id='version']"))
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
-        self.assertEqual("", self.selenium.get_value("//input[@id='sort_index']"))
-        self.assertEqual("", self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.assertEqual("Web Illustration", self.selenium.get_value(
+                                                         "//input[@id='name']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                  "//input[@id='short_title']"))
+        self.assertEqual("001", self.selenium.get_value(
+                                                      "//input[@id='version']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
+        self.assertEqual("", self.selenium.get_value(
+                                              "//textarea[@id='keyword_list']"))
         self.selenium.click("//span[@class=\"ui-icon ui-icon-closethick\"]")
         #Than check and fill properties, without saving
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Web Illustration", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Web Illustration", self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Web Illustration", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
+        self.assertEqual("Web Illustration", self.selenium.get_value(
+                                                         "//input[@id='name']"))
         self.selenium.type("name", "Functional UNG Test - Web Illustration")
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("", self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                  "//input[@id='short_title']"))
         self.selenium.type("short_title", "Func. UNG Test - Web Illustration")
-        self.assertEqual("001", self.selenium.get_value("//input[@id='version']"))
+        self.assertEqual("001", self.selenium.get_value(
+                                                      "//input[@id='version']"))
         self.selenium.type("version", "002")
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
         self.selenium.type("language", "fr")
-        self.assertEqual("", self.selenium.get_value("//input[@id='sort_index']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
         self.selenium.type("sort_index", "0")
-        self.assertEqual("", self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.assertEqual("", self.selenium.get_value(
+                                              "//textarea[@id='keyword_list']"))
         self.selenium.type("keyword_list", "Functional UNG Test\nUNG Test")
         self.selenium.click("//span[@class=\"ui-icon ui-icon-closethick\"]")
         #Than check and fill properties, saving
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Web Illustration", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Web Illustration", self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Web Illustration", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
+        self.assertEqual("Web Illustration", self.selenium.get_value(
+                                                         "//input[@id='name']"))
         self.selenium.type("name", "Functional UNG Test - Web Illustration")
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("", self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                  "//input[@id='short_title']"))
         self.selenium.type("short_title", "Func. UNG Test - Web Illustration")
-        self.assertEqual("001", self.selenium.get_value("//input[@id='version']"))
+        self.assertEqual("001", self.selenium.get_value(
+                                                      "//input[@id='version']"))
         self.selenium.type("version", "002")
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
         self.selenium.type("language", "fr")
-        self.assertEqual("", self.selenium.get_value("//input[@id='sort_index']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
         self.selenium.type("sort_index", "1")
-        #XXX this is maybe a bug, because keyword_list is recorded even without saving
-        #self.assertEqual("", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.assertEqual("Functional UNG Test\nUNG Test", self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.assertEqual("",
+                     self.selenium.get_value("//textarea[@id='keyword_list']"))
         self.selenium.type("keyword_list", "Functional UNG Test\nUNG Test")
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/span")
+        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/"
+                                                                         "span")
         self.selenium.wait_for_page_to_load("30000")
-        self.wait_for_activities()
-        self.assertEqual("Functional UNG Test - Web Illu...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Illu...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.refresh()
-        self.assertEqual("Functional UNG Test - Web Illu...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Illu...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         #Finally, verify
-        self.selenium.open("")
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.assertEqual("Functional UNG Test - Web Illustration",
+                          self.selenium.get_text(
+                              "//tr[@class='listbox-data-line-0 DataA']/td[3]"))
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Web Illustration", self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]"))
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Web Illu...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Illu...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Functional UNG Test - Web Illustration", self.selenium.get_value("//input[@id='name']"))
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Functional UNG Test - Web Illustration",
+                                self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Func. UNG Test - Web Illustration", self.selenium.get_value("//input[@id='short_title']"))
-        self.assertEqual("002", self.selenium.get_value("//input[@id='version']"))
-        self.assertEqual("fr", self.selenium.get_value("//input[@id='language']"))
-        self.assertEqual("1", self.selenium.get_value("//input[@id='sort_index']"))
-        self.assertEqual("Functional UNG Test\nUNG Test", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.selenium.open("")
-        self.selenium.wait_for_page_to_load("30000")
-        self.selenium.type("//input[@name=\"field_your_search_text\"]", "\"Functional UNG Test - Web Illustration\"")
+        self.assertEqual("Func. UNG Test - Web Illustration",
+                         self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("002", self.selenium.get_value(
+                                                      "//input[@id='version']"))
+        self.assertEqual("fr", self.selenium.get_value(
+                                                     "//input[@id='language']"))
+        self.assertEqual("1", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
+        self.assertEqual("Functional UNG Test\nUNG Test",
+                     self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.open_ung_default_page('ung')
+        self.selenium.type("//input[@name=\"field_your_search_text\"]",
+                            "\"Functional UNG Test - Web Illustration\"")
         self.selenium.click("//input[@value=\"Search Docs\"]")
-        self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failIf(self.selenium.is_text_present("No result."))
         #Change to other
-        self.selenium.open("")
+        self.open_ung_default_page('ung')
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Web Illu...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Illu...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Functional UNG Test - Web Illu...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Functional UNG Test - Web Illu...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.assertEqual("", self.selenium.get_text("//input[@id='name']"))
-        self.selenium.type("name", "Functional UNG Test - Renamed Web Illustration")
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.selenium.type("name", "Functional UNG Test - Renamed Web "
+                                                                 "Illustration")
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Func. UNG Test - Web Illustration", self.selenium.get_value("//input[@id='short_title']"))
-        self.selenium.type("short_title", "Func. UNG Test - Renamed Web Illustration")
-        self.assertEqual("002", self.selenium.get_value("//input[@id='version']"))
+        self.assertEqual("Func. UNG Test - Web Illustration",
+                         self.selenium.get_value("//input[@id='short_title']"))
+        self.selenium.type("short_title", "Func. UNG Test - Renamed Web "
+                                                                 "Illustration")
+        self.assertEqual("002", self.selenium.get_value(
+                                                      "//input[@id='version']"))
         self.selenium.type("version", "003")
-        self.assertEqual("fr", self.selenium.get_value("//input[@id='language']"))
+        self.assertEqual("fr", self.selenium.get_value(
+                                                     "//input[@id='language']"))
         self.selenium.type("language", "en")
-        self.assertEqual("1", self.selenium.get_value("//input[@id='sort_index']"))
+        self.assertEqual("1", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
         self.selenium.type("sort_index", "2")
-        self.assertEqual("Functional UNG Test\nUNG Test", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.selenium.type("keyword_list", "Functional UNG Test Renamed\nUNG Test Renamed")
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/span")
+        self.assertEqual("Functional UNG Test\nUNG Test",
+                     self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.selenium.type("keyword_list", "Functional UNG Test Renamed\n"
+                                                             "UNG Test Renamed")
+        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/"
+                                                                         "span")
         self.selenium.wait_for_page_to_load("30000")
-        self.wait_for_activities()
-        self.assertEqual("Functional UNG Test - Renamed ...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Renamed ...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.refresh()
-        self.assertEqual("Functional UNG Test - Renamed ...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Renamed ...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         #Verify changes
-        self.selenium.open("")
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.assertEqual("Functional UNG Test - Renamed Web Illustration",
+                          self.selenium.get_text(
+                              "//tr[@class='listbox-data-line-0 DataA']/td[3]"))
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Renamed Web Illustration", self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]"))
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Renamed ...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Renamed ...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Functional UNG Test - Renamed Web Illustration", self.selenium.get_value("//input[@id='name']"))
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Functional UNG Test - Renamed Web Illustration",
+                                self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Func. UNG Test - Renamed Web Illustration", self.selenium.get_value("//input[@id='short_title']"))
-        self.assertEqual("003", self.selenium.get_value("//input[@id='version']"))
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
-        self.assertEqual("2", self.selenium.get_value("//input[@id='sort_index']"))
-        self.assertEqual("Functional UNG Test Renamed\nUNG Test Renamed", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.selenium.open("")
-        self.selenium.wait_for_page_to_load("30000")
-        self.selenium.type("//input[@name=\"field_your_search_text\"]", "\"Functional UNG Test - Renamed Web Illustration\"")
+        self.assertEqual("Func. UNG Test - Renamed Web Illustration",
+                         self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("003", self.selenium.get_value(
+                                                      "//input[@id='version']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
+        self.assertEqual("2", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
+        self.assertEqual("Functional UNG Test Renamed\nUNG Test Renamed",
+                     self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.selenium.type("//input[@name=\"field_your_search_text\"]",
+                           "\"Functional UNG Test - Renamed Web Illustration\"")
         self.selenium.click("//input[@value=\"Search Docs\"]")
-        self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failIf(self.selenium.is_text_present("No result."))
 
         #New Web Table
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_table_template")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Web Table", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Draft", self.selenium.get_text("//a[@name=\"document_state\"]"))
+        self.create_document('table')
+        self.assertEqual("Web Table", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
+        self.assertEqual("Draft", self.selenium.get_text(
+                                               "//a[@name=\"document_state\"]"))
         #First just see properties
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Web Table", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Web Table", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Web Table", self.selenium.get_value("//input[@id='name']"))
-        self.assertEqual("", self.selenium.get_value("//input[@id='short_title']"))
-        self.assertEqual("001", self.selenium.get_value("//input[@id='version']"))
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
-        self.assertEqual("", self.selenium.get_value("//input[@id='sort_index']"))
-        self.assertEqual("", self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.assertEqual("Web Table", self.selenium.get_value(
+                                                         "//input[@id='name']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                  "//input[@id='short_title']"))
+        self.assertEqual("001", self.selenium.get_value(
+                                                      "//input[@id='version']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
+        self.assertEqual("", self.selenium.get_value(
+                                              "//textarea[@id='keyword_list']"))
         self.selenium.click("//span[@class=\"ui-icon ui-icon-closethick\"]")
         #Than check and fill properties, without saving
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Web Table", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Web Table", self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Web Table", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
+        self.assertEqual("Web Table", self.selenium.get_value(
+                                                         "//input[@id='name']"))
         self.selenium.type("name", "Functional UNG Test - Web Table")
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("", self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                  "//input[@id='short_title']"))
         self.selenium.type("short_title", "Func. UNG Test - Web Table")
-        self.assertEqual("001", self.selenium.get_value("//input[@id='version']"))
+        self.assertEqual("001", self.selenium.get_value(
+                                                      "//input[@id='version']"))
         self.selenium.type("version", "002")
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
         self.selenium.type("language", "fr")
-        self.assertEqual("", self.selenium.get_value("//input[@id='sort_index']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
         self.selenium.type("sort_index", "0")
-        self.assertEqual("", self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.assertEqual("", self.selenium.get_value(
+                                              "//textarea[@id='keyword_list']"))
         self.selenium.type("keyword_list", "Functional UNG Test\nUNG Test")
         self.selenium.click("//span[@class=\"ui-icon ui-icon-closethick\"]")
         #Than check and fill properties, saving
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Web Table", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Web Table", self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Web Table", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
+        self.assertEqual("Web Table", self.selenium.get_value(
+                                                         "//input[@id='name']"))
         self.selenium.type("name", "Functional UNG Test - Web Table")
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("", self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                  "//input[@id='short_title']"))
         self.selenium.type("short_title", "Func. UNG Test - Web Table")
-        self.assertEqual("001", self.selenium.get_value("//input[@id='version']"))
+        self.assertEqual("001", self.selenium.get_value(
+                                                      "//input[@id='version']"))
         self.selenium.type("version", "002")
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
         self.selenium.type("language", "fr")
-        self.assertEqual("", self.selenium.get_value("//input[@id='sort_index']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
         self.selenium.type("sort_index", "1")
-        #XXX this is maybe a bug, because keyword_list is recorded even without saving
-        #self.assertEqual("", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.assertEqual("Functional UNG Test\nUNG Test", self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.assertEqual("", self.selenium.get_value(
+                                              "//textarea[@id='keyword_list']"))
         self.selenium.type("keyword_list", "Functional UNG Test\nUNG Test")
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/span")
+        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/"
+                                                                         "span")
         self.selenium.wait_for_page_to_load("30000")
-        self.wait_for_activities()
-        self.assertEqual("Functional UNG Test - Web Tabl...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Tabl...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.refresh()
-        self.assertEqual("Functional UNG Test - Web Tabl...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Tabl...",
+                       self.selenium.get_text("//a[@name='document_title']"))
         #Finally, verify
-        self.selenium.open("")
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.assertEqual("Functional UNG Test - Web Table",
+                      self.selenium.get_text(
+                              "//tr[@class='listbox-data-line-0 DataA']/td[3]"))
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Web Table", self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]"))
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Web Tabl...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Tabl...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Functional UNG Test - Web Table", self.selenium.get_value("//input[@id='name']"))
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Functional UNG Test - Web Table",
+                                self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Edit More Properties",
+                        self.selenium.get_text("//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Func. UNG Test - Web Table", self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("Func. UNG Test - Web Table",
+                         self.selenium.get_value("//input[@id='short_title']"))
         self.assertEqual("002", self.selenium.get_value("//input[@id='version']"))
         self.assertEqual("fr", self.selenium.get_value("//input[@id='language']"))
         self.assertEqual("1", self.selenium.get_value("//input[@id='sort_index']"))
-        self.assertEqual("Functional UNG Test\nUNG Test", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.selenium.open("")
-        self.selenium.wait_for_page_to_load("30000")
-        self.selenium.type("//input[@name=\"field_your_search_text\"]", "\"Functional UNG Test - Web Table\"")
+        self.assertEqual("Functional UNG Test\nUNG Test",
+                      self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.selenium.type("//input[@name=\"field_your_search_text\"]",
+                            "\"Functional UNG Test - Web Table\"")
         self.selenium.click("//input[@value=\"Search Docs\"]")
-        self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failIf(self.selenium.is_text_present("No result."))
         #Change to other
-        self.selenium.open("")
+        self.open_ung_default_page('ung')
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Web Tabl...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Tabl...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Functional UNG Test - Web Tabl...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Functional UNG Test - Web Tabl...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.assertEqual("", self.selenium.get_text("//input[@id='name']"))
         self.selenium.type("name", "Functional UNG Test - Renamed Web Table")
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Func. UNG Test - Web Table", self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("Func. UNG Test - Web Table",
+                         self.selenium.get_value("//input[@id='short_title']"))
         self.selenium.type("short_title", "Func. UNG Test - Renamed Web Table")
-        self.assertEqual("002", self.selenium.get_value("//input[@id='version']"))
+        self.assertEqual("002", self.selenium.get_value(
+                                                      "//input[@id='version']"))
         self.selenium.type("version", "003")
-        self.assertEqual("fr", self.selenium.get_value("//input[@id='language']"))
+        self.assertEqual("fr", self.selenium.get_value(
+                                                     "//input[@id='language']"))
         self.selenium.type("language", "en")
-        self.assertEqual("1", self.selenium.get_value("//input[@id='sort_index']"))
+        self.assertEqual("1", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
         self.selenium.type("sort_index", "2")
-        self.assertEqual("Functional UNG Test\nUNG Test", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.selenium.type("keyword_list", "Functional UNG Test Renamed\nUNG Test Renamed")
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/span")
+        self.assertEqual("Functional UNG Test\nUNG Test",
+                     self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.selenium.type("keyword_list",
+                            "Functional UNG Test Renamed\nUNG Test Renamed")
+        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/"
+                                                                         "span")
         self.selenium.wait_for_page_to_load("30000")
-        self.wait_for_activities()
-        self.assertEqual("Functional UNG Test - Renamed ...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Renamed ...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.refresh()
-        self.assertEqual("Functional UNG Test - Renamed ...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Renamed ...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         #Verify changes
-        self.selenium.open("")
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.assertEqual("Functional UNG Test - Renamed Web Table",
+                          self.selenium.get_text(
+                              "//tr[@class='listbox-data-line-0 DataA']/td[3]"))
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Renamed Web Table", self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]"))
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Renamed ...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Renamed ...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Functional UNG Test - Renamed Web Table", self.selenium.get_value("//input[@id='name']"))
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Rename Document",
+                          self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Functional UNG Test - Renamed Web Table",
+                                self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Edit More Properties",
+                        self.selenium.get_text("//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Func. UNG Test - Renamed Web Table", self.selenium.get_value("//input[@id='short_title']"))
-        self.assertEqual("003", self.selenium.get_value("//input[@id='version']"))
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
-        self.assertEqual("2", self.selenium.get_value("//input[@id='sort_index']"))
-        self.assertEqual("Functional UNG Test Renamed\nUNG Test Renamed", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.selenium.open("")
-        self.selenium.wait_for_page_to_load("30000")
-        self.selenium.type("//input[@name=\"field_your_search_text\"]", "\"Functional UNG Test - Renamed Web Table\"")
+        self.assertEqual("Func. UNG Test - Renamed Web Table",
+                         self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("003", self.selenium.get_value(
+                                                      "//input[@id='version']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
+        self.assertEqual("2", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
+        self.assertEqual("Functional UNG Test Renamed\nUNG Test Renamed",
+                     self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.selenium.type("//input[@name=\"field_your_search_text\"]",
+                                  "\"Functional UNG Test - Renamed Web Table\"")
         self.selenium.click("//input[@value=\"Search Docs\"]")
-        self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failIf(self.selenium.is_text_present("No result."))
 
         #New Web Page
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_page_template")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Web Page", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Draft", self.selenium.get_text("//a[@name=\"document_state\"]"))
+        self.create_document('page')
+        self.assertEqual("Web Page",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Draft",
+                       self.selenium.get_text("//a[@name=\"document_state\"]"))
         #First just see properties
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Web Page", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Rename Document",
+                          self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Web Page",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Edit More Properties",
+                        self.selenium.get_text("//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Web Page", self.selenium.get_value("//input[@id='name']"))
-        self.assertEqual("", self.selenium.get_value("//input[@id='short_title']"))
-        self.assertEqual("001", self.selenium.get_value("//input[@id='version']"))
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
-        self.assertEqual("", self.selenium.get_value("//input[@id='sort_index']"))
-        self.assertEqual("", self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.assertEqual("Web Page", self.selenium.get_value(
+                                                         "//input[@id='name']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                  "//input[@id='short_title']"))
+        self.assertEqual("001", self.selenium.get_value(
+                                                      "//input[@id='version']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
+        self.assertEqual("", self.selenium.get_value(
+                                              "//textarea[@id='keyword_list']"))
         self.selenium.click("//span[@class=\"ui-icon ui-icon-closethick\"]")
         #Than check and fill properties, without saving
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Web Page", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Web Page", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
         self.assertEqual("Web Page", self.selenium.get_value("//input[@id='name']"))
         self.selenium.type("name", "Functional UNG Test - Web Page")
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("", self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                  "//input[@id='short_title']"))
         self.selenium.type("short_title", "Func. UNG Test - Web Page")
-        self.assertEqual("001", self.selenium.get_value("//input[@id='version']"))
+        self.assertEqual("001", self.selenium.get_value(
+                                                      "//input[@id='version']"))
         self.selenium.type("version", "002")
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
         self.selenium.type("language", "fr")
-        self.assertEqual("", self.selenium.get_value("//input[@id='sort_index']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
         self.selenium.type("sort_index", "0")
-        self.assertEqual("", self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.assertEqual("", self.selenium.get_value(
+                                              "//textarea[@id='keyword_list']"))
         self.selenium.type("keyword_list", "Functional UNG Test\nUNG Test")
         self.selenium.click("//span[@class=\"ui-icon ui-icon-closethick\"]")
         #Than check and fill properties, saving
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Web Page", self.selenium.get_text("//a[@name=\"document_title\"]"))
-        self.assertEqual("Web Page", self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Web Page", self.selenium.get_text(
+                                               "//a[@name=\"document_title\"]"))
+        self.assertEqual("Web Page", self.selenium.get_value(
+                                                         "//input[@id='name']"))
         self.selenium.type("name", "Functional UNG Test - Web Page")
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("", self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                  "//input[@id='short_title']"))
         self.selenium.type("short_title", "Func. UNG Test - Web Page")
-        self.assertEqual("001", self.selenium.get_value("//input[@id='version']"))
+        self.assertEqual("001", self.selenium.get_value(
+                                                      "//input[@id='version']"))
         self.selenium.type("version", "002")
-        self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
+        self.assertEqual("en", self.selenium.get_value(
+                                                     "//input[@id='language']"))
         self.selenium.type("language", "fr")
-        self.assertEqual("", self.selenium.get_value("//input[@id='sort_index']"))
+        self.assertEqual("", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
         self.selenium.type("sort_index", "1")
-        #XXX this is maybe a bug, because keyword_list is recorded even without saving
-        #self.assertEqual("", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.assertEqual("Functional UNG Test\nUNG Test", self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.assertEqual("", self.selenium.get_value(
+                                              "//textarea[@id='keyword_list']"))
         self.selenium.type("keyword_list", "Functional UNG Test\nUNG Test")
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/span")
+        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/"
+                                                                         "span")
         self.selenium.wait_for_page_to_load("30000")
-        self.wait_for_activities()
-        self.assertEqual("Functional UNG Test - Web Page", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Page",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.refresh()
-        self.assertEqual("Functional UNG Test - Web Page", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Page",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         #Finally, verify
-        self.selenium.open("")
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.assertEqual("Functional UNG Test - Web Page",
+                          self.selenium.get_text(
+                              "//tr[@class='listbox-data-line-0 DataA']/td[3]"))
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Web Page", self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]"))
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Web Page", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Page",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Functional UNG Test - Web Page", self.selenium.get_value("//input[@id='name']"))
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Rename Document",
+                          self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Functional UNG Test - Web Page",
+                                self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Func. UNG Test - Web Page", self.selenium.get_value("//input[@id='short_title']"))
-        self.assertEqual("002", self.selenium.get_value("//input[@id='version']"))
-        self.assertEqual("fr", self.selenium.get_value("//input[@id='language']"))
-        self.assertEqual("1", self.selenium.get_value("//input[@id='sort_index']"))
-        self.assertEqual("Functional UNG Test\nUNG Test", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.selenium.open("")
-        self.selenium.wait_for_page_to_load("30000")
-        self.selenium.type("//input[@name=\"field_your_search_text\"]", "\"Functional UNG Test - Web Page\"")
+        self.assertEqual("Func. UNG Test - Web Page",
+                          self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("002", self.selenium.get_value(
+                                                      "//input[@id='version']"))
+        self.assertEqual("fr", self.selenium.get_value(
+                                                     "//input[@id='language']"))
+        self.assertEqual("1", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
+        self.assertEqual("Functional UNG Test\nUNG Test",
+                     self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.selenium.type("//input[@name=\"field_your_search_text\"]",
+                            "\"Functional UNG Test - Web Page\"")
         self.selenium.click("//input[@value=\"Search Docs\"]")
-        self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failIf(self.selenium.is_text_present("No result."))
         #Change to other
-        self.selenium.open("")
+        self.open_ung_default_page('ung')
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Web Page", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Web Page",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Functional UNG Test - Web Page", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                              "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Functional UNG Test - Web Page",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.assertEqual("", self.selenium.get_text("//input[@id='name']"))
         self.selenium.type("name", "Functional UNG Test - Renamed Web Page")
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Edit More Properties", self.selenium.get_text(
+                                                "//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Func. UNG Test - Web Page", self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("Func. UNG Test - Web Page",
+                         self.selenium.get_value("//input[@id='short_title']"))
         self.selenium.type("short_title", "Func. UNG Test - Renamed Web Page")
-        self.assertEqual("002", self.selenium.get_value("//input[@id='version']"))
+        self.assertEqual("002", self.selenium.get_value(
+                                                      "//input[@id='version']"))
         self.selenium.type("version", "003")
-        self.assertEqual("fr", self.selenium.get_value("//input[@id='language']"))
+        self.assertEqual("fr", self.selenium.get_value(
+                                                     "//input[@id='language']"))
         self.selenium.type("language", "en")
-        self.assertEqual("1", self.selenium.get_value("//input[@id='sort_index']"))
+        self.assertEqual("1", self.selenium.get_value(
+                                                   "//input[@id='sort_index']"))
         self.selenium.type("sort_index", "2")
-        self.assertEqual("Functional UNG Test\nUNG Test", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.selenium.type("keyword_list", "Functional UNG Test Renamed\nUNG Test Renamed")
+        self.assertEqual("Functional UNG Test\nUNG Test",
+                     self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.selenium.type("keyword_list", "Functional UNG Test Renamed\n"
+                                                             "UNG Test Renamed")
         self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/span")
         self.selenium.wait_for_page_to_load("30000")
-        self.wait_for_activities()
-        self.assertEqual("Functional UNG Test - Renamed ...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Renamed ...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.refresh()
-        self.assertEqual("Functional UNG Test - Renamed ...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Renamed ...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         #Verify changes
-        self.selenium.open("")
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.assertEqual("Functional UNG Test - Renamed Web Page",
+                         self.selenium.get_text(
+                              "//tr[@class='listbox-data-line-0 DataA']/td[3]"))
+        self.selenium.click("//tr[@class='listbox-data-line-0 DataA']/td[3]/a")
         self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Renamed Web Page", self.selenium.get_text("//tr[@class='your_listbox-data-line-0 DataA']/td[3]"))
-        self.selenium.click("//tr[@class='your_listbox-data-line-0 DataA']/td[3]/a")
-        self.selenium.wait_for_page_to_load("30000")
-        self.assertEqual("Functional UNG Test - Renamed ...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Functional UNG Test - Renamed ...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        self.assertEqual("Rename Document", self.selenium.get_text("//span[@id=\"ui-dialog-title-edit_document\"]"))
-        self.assertEqual("Functional UNG Test - Renamed Web Page", self.selenium.get_value("//input[@id='name']"))
-        self.assertEqual("Edit More Properties", self.selenium.get_text("//p[@id=\"more_properties\"]"))
+        self.assertEqual("Rename Document", self.selenium.get_text(
+                               "//span[@id=\"ui-dialog-title-edit_document\"]"))
+        self.assertEqual("Functional UNG Test - Renamed Web Page",
+                                self.selenium.get_value("//input[@id='name']"))
+        self.assertEqual("Edit More Properties",
+                        self.selenium.get_text("//p[@id=\"more_properties\"]"))
         self.selenium.click("//p[@id=\"more_properties\"]")
-        self.assertEqual("Func. UNG Test - Renamed Web Page", self.selenium.get_value("//input[@id='short_title']"))
+        self.assertEqual("Func. UNG Test - Renamed Web Page",
+                         self.selenium.get_value("//input[@id='short_title']"))
         self.assertEqual("003", self.selenium.get_value("//input[@id='version']"))
         self.assertEqual("en", self.selenium.get_value("//input[@id='language']"))
         self.assertEqual("2", self.selenium.get_value("//input[@id='sort_index']"))
-        self.assertEqual("Functional UNG Test Renamed\nUNG Test Renamed", self.selenium.get_value("//textarea[@id='keyword_list']"))
-        self.selenium.open("")
-        self.selenium.wait_for_page_to_load("30000")
-        self.selenium.type("//input[@name=\"field_your_search_text\"]", "\"Functional UNG Test - Renamed Web Page\"")
+        self.assertEqual("Functional UNG Test Renamed\nUNG Test Renamed",
+                     self.selenium.get_value("//textarea[@id='keyword_list']"))
+        self.open_ung_default_page('ung', wait_for_activities=1)
+        self.selenium.type("//input[@name=\"field_your_search_text\"]",
+                            "\"Functional UNG Test - Renamed Web Page\"")
         self.selenium.click("//input[@value=\"Search Docs\"]")
-        self.selenium.wait_for_page_to_load("30000")
+        self.wait_ung_listbox_to_load()
         self.failIf(self.selenium.is_text_present("No result."))
 
     def test_subject_list(self):
