@@ -108,22 +108,20 @@ class TestUNGDocs(UNGTestMixin):
 
     def test_title_abbreviation(self):
         """test the abbreviation of a long title of the document"""
-        self.selenium.open("ERP5Site_createNewWebDocument?template=web_page_template")
-        self.selenium.wait_for_page_to_load("30000")
+        self.create_document('page')
         self.selenium.click("//a[@name=\"document_title\"]")
-        unittest.time.sleep(2)
-        self.selenium.type("//input[@id=\"name\"]", "Add a Big Title to Test the abbreviation")
-        unittest.time.sleep(1)
-        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/span")
+        self.selenium.type("//input[@id=\"name\"]",
+                            "Add a Big Title to Test the abbreviation")
+        self.selenium.click("//div[@class=\"ui-dialog-buttonset\"]/button[1]/"
+                                                                         "span")
         self.selenium.wait_for_page_to_load("30000")
-        unittest.time.sleep(1)
-        self.assertEqual("Add a Big Title to Test the ab...", self.selenium.get_text("//a[@name=\"document_title\"]"))
+        self.assertEqual("Add a Big Title to Test the ab...",
+                       self.selenium.get_text("//a[@name=\"document_title\"]"))
         self.selenium.click("//a[@name=\"document_title\"]")
-        unittest.time.sleep(2)
-        self.assertEqual("Add a Big Title to Test the abbreviation", self.selenium.get_value("//input[@id=\"name\"]"))
-        self.selenium.open("")
-        self.selenium.wait_for_page_to_load("30000")
-        self.selenium.click("//div[@id=\"select_language\"]/li/ul/li/span[@id=\"fr\"]")
+        self.assertEqual("Add a Big Title to Test the abbreviation",
+                              self.selenium.get_value("//input[@id=\"name\"]"))
+
+    def test_help_button_translation(self):
         self.selenium.wait_for_page_to_load("30000")
         self.failUnless(self.selenium.is_text_present("Aide"))
         self.selenium.click("//div[@id=\"select_language\"]/li/ul/li/span[@id=\"en\"]")
