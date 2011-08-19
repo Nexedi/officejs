@@ -37,9 +37,9 @@ var AlohaInterface = function() {
             includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Table/plugin.js");
             includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.List/plugin.js");
             includeJS("aloha/aloha/plugins/com.gentics.aloha.plugins.Link/plugin.js");
-            $("div#page_content div.input").html("<div id='aloha_editable'>test</div>");
-            $("#aloha_editable").css("min-height","15em").css("border","5px solid #3399FF").css("overflow","auto");
-            $("#aloha_editable").aloha();
+            $("div#page_content div.input").html("<div id='input_area'>test</div>");
+            $("#input_area").css("min-height","15em").css("border","5px solid #3399FF").css("overflow","auto");
+            $("#input_area").aloha();
         });
     }
     this.saveEdition = function() {
