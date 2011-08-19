@@ -222,7 +222,7 @@ errorMessage = function(message,object) {
 /**
  * returns the current date (number of ms since 1/1/1970 at 12:00 AM)
  */
-currentTime = function() {return Date.now();}
+function getCurrentTime() {return Date.now();}
 
 /**
  * cuts a string if too long

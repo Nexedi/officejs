@@ -22,7 +22,7 @@ var logUser = function() {
     var IDProvider = $("input#id_provider").attr("value");
     if(name) {
         setCurrentStorage(IDProvider ? new JIOStorage(name,IDProvider) : new LocalStorage(name));
-        window.location = "ung-mobile.html";
+        window.location.href = "ung-mobile.html";
     }
 }
 

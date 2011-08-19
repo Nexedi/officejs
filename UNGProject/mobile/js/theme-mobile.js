@@ -73,7 +73,7 @@ Page.prototype = {
                     doc=new JSONIllustrationDocument();
                     break;
             default://renvoie à la page d'accueil
-                    window.location = "ung.html";
+                    window.location.href = "ung.html";
                     return;
                     break;
         }
@@ -329,7 +329,7 @@ getCurrentStorage = function() {
         var dataStorage = JSON.parse(localStorage.getItem("currentStorage"));
         if(!dataStorage) {
             setCurrentStorage(new LocalStorage("ung"));
-            //window.location = "login-mobile.html";
+            //window.location.href = "login-mobile.html";
             return null;
         }//if it's the first connexion
 
@@ -373,8 +373,8 @@ var JSONDocument = function(arg) {
         this.lastUser=getCurrentUser().getName();
         this.title="Untitled";
         this.content="";
-        this.creation=currentTime();
-        this.lastModification=currentTime();
+        this.creation=getCurrentTime();
+        this.lastModification=getCurrentTime();
         this.state=JSONDocument.prototype.states.draft;
     }
 }
@@ -412,7 +412,7 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
     getLastModification:function() {
         var date = (new Date(this.lastModification)).toGMTString();
         var day = date.substring(0,16);
-        var today = (new Date(currentTime())).toGMTString().substring(0,16);
+        var today = (new Date(getCurrentTime())).toGMTString().substring(0,16);
         return (day===today) ? date.substring(17,date.length) : day;
     },
     setLastModification:function(date) {this.lastModification=date;},
@@ -602,13 +602,13 @@ var startDocumentEdition = function(doc) {
     getCurrentStorage().getDocument(getDocumentAddress(doc), function(data) {
         doc.load(data);
         setCurrentDocument(doc);
-        if(supportedDocuments[doc.getType()].editorPage) {window.location = "theme-mobile.html";}
+        if(supportedDocuments[doc.getType()].editorPage) {window.location.href = "theme-mobile.html";}
         else alert("no editor available for this document");
     });
 }
 var stopDocumentEdition = function() {
     saveCurrentDocument();
-    window.location = "ung-mobile.html";
+    window.location.href = "ung-mobile.html";
     return false;
 }
 
@@ -626,7 +626,7 @@ var changeLanguage = function(language) {
 var signOut = function() {
     delete localStorage.currentStorage;
     delete localStorage.currentDocumentID;
-    window.location = "login-mobile.html";
+    window.location.href = "login-mobile.html";
     return false;
 }
 
