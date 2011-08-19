@@ -5,6 +5,7 @@
 /*
  * global variables
  */
+applicationID = window.location.href.split("://")[1].split("/")[0];
 languages = ["fr","en"];
 var availableLanguages = $("#available_languages");
 
@@ -73,7 +74,7 @@ Page.prototype = {
                     doc=new JSONIllustrationDocument();
                     break;
             default://renvoie à la page d'accueil
-                    window.location = "ung.html";
+                    window.location.href = "ung.html";
                     return;
                     break;
         }
@@ -138,8 +139,8 @@ Page.prototype = {
     displayPageTitle: function() {$("title#page_title").html(this.getTitle());},
     displayPageContent: function() {$("div#page_content").html(this.getContent());}
 }
-getCurrentPage = function() {return currentPage;}
-setCurrentPage = function(page) {currentPage = page;}
+function getCurrentPage() {return currentPage;}
+function setCurrentPage(page) {currentPage = page;}
 
 /*
  * User Class
@@ -157,9 +158,9 @@ var User = function(arg) {
         this.name = "UNG";//default name
         this.settings = {
             language: "en",
-            displayPreferences: 15//number of displayed document in the list
+            displayPreferences: 15,//number of displayed document in the list
+            checkAllMethod: "page"//check only the displayed page
         }
-        this.documentList = new DocumentList();
         this.documents = {};
     }
 }
@@ -168,12 +169,12 @@ User.prototype.load({//add methods thanks to the UngObject.load method
     getName: function() {return this.name;},
     setName: function(newName) {this.name = newName;},
     getSetting: function(key) {return this.settings[key];},
-    setSetting: function(key,value) { this.settings[key] = value; },
+    setSetting: function(key,value) {this.settings[key] = value;},
     getSettings: function() {return this.settings;},
     getDocumentList: function() {return this.documentList;},
     setDocumentList: function(list) {this.documentList = list;},
 
-    getIDProvider: function() {return this.IDProvider;},
+    getStorageLocation: function() {return this.storageLocation;},
 
     setAsCurrentUser: function() {
         getCurrentPage().displayUserName(this);
@@ -183,7 +184,7 @@ User.prototype.load({//add methods thanks to the UngObject.load method
     }
 });
 
-getCurrentUser = function() {
+function getCurrentUser() {
     return getCurrentStorage().getUser();
 }
 
@@ -195,10 +196,28 @@ getCurrentUser = function() {
  * Class Storage
  * this class provides usual API to save/load/delete elements
  * @param type : "local" to save in localStorage, or "JIO" for remote storage
- * @param userName : the name of the user concerned by this storage
  */
-var Storage = function(type, userName) {
+var Storage = function(type) {
     this.type = type;
+}
+Storage.prototype = new UngObject();
+Storage.prototype.load({
+    getType: function() {return this.type;},
+    getUser: function() {return this.user;},
+    setUser: function(user) {this.user = user;this.save();},
+    updateUser: function() {localStorage[this.user.name] = JSON.stringify(this.user);},
+    save: function() {
+        this.updateUser();
+        localStorage.setItem("currentStorage", JSON.stringify(this));
+    }
+});
+
+/**
+ * Class LocalStorage
+ * this class provides usual API to save/load/delete documents on the localStorage
+ */
+var LocalStorage = function(userName) {
+    Storage.call(this,"local");
     if(userName) {
         var loaded = this.loadUser(userName)//load an existing user
         if(!loaded) {//create a new user if there was no such one
@@ -207,22 +226,6 @@ var Storage = function(type, userName) {
             this.setUser(user);
         }
     }
-}
-Storage.prototype = new UngObject();
-Storage.prototype.load({
-    getType: function() {return this.type;},
-    getUser: function() {return this.user;},
-
-    loadUser: function(userName) {},
-    setUser: function(user) {this.user = user}
-});
-
-/**
- * Class LocalStorage
- * this class provides usual API to save/load/delete documents on the localStorage
- */
-var LocalStorage = function(userName) {
-    Storage.call(this,"local", userName);
 }
 LocalStorage.prototype = new Storage();
 LocalStorage.prototype.load({
@@ -241,104 +244,130 @@ LocalStorage.prototype.load({
             return false
         }
     },
-    getUser: function() {return this.user;},
-    setUser: function(user) {
-        this.user = user;
-        localStorage[this.user.name] = JSON.stringify(user);
-    },
-    updateUser: function() {localStorage[this.user.name] = JSON.stringify(this.user);},
-    getDocument: function(address, instruction) {
-        var doc = new JSONDocument(this.user.documents[address]);
+    getDocument: function(file, instruction) {
+        var doc = new JSONDocument(this.user.documents[file]);
         if(instruction) instruction(doc);
         return doc;
     },
-    saveDocument: function(doc, address, instruction) {
-        this.user.documents[address] = doc;
-        this.updateUser();
+    saveDocument: function(doc, file, instruction) {
+        this.user.documents[file] = doc;
+        this.save();
         if(instruction) instruction();
     },
-    deleteDocument: function(address, instruction) {
-        delete this.user.documents[address];
-        this.updateUser();
+    deleteDocument: function(file, instruction) {
+        delete this.user.documents[file];
+        this.save();
         if(instruction) instruction();
-    },
-
-    save: function() {
-        this.updateUser();
-        localStorage.setItem("currentStorage", JSON.stringify(this));
     }
 });
 
 
 /**
- * Class JIOStorage
+ * Class JIO
  * this class provides usual API to save/load/delete documents on a remote storage
  */
-var JIOStorage = function(userName, IDProvider) {
-    Storage.call(this,"JIO", userName);
-    if(this.user) this.user.IDProvider = IDProvider;
+var JIOStorage = function(arg) {
+    Storage.call(this,"JIO");
+
+    if(arg.jio && arg.jio.jioFileContent) {
+        this.jio = JIO.initialize(arg.jio.jioFileContent, {"ID":"www.ungproject.com"});
+        this.user = new User(arg.user);
+
+    } else {
+        this.jio = initializeFromDav(arg.userName, arg.storageLocation, {"ID":"www.ungproject.com", "password":arg.applicationPassword});
+        //try to load user parameters
+        var storage = this;
+        JIO.loadDocument(arg.userName+".profile","text",
+            function(data) {//success
+                storage.setUser(new User(JSON.parse(data)));
+                storage.user.storageLocation = arg.storageLocation;
+                storage.save()
+            },
+            function(errorEvent) {//fail
+                if(errorEvent.status==404){//create a new user if there was no such one
+                    var user = new User();
+                    user.setName(arg.userName);
+                    storage.setUser(user);
+                    storage.user.storageLocation = arg.storageLocation;
+                    storage.save();
+                }
+            }
+        ,false);
+    }
+
+    /**
+     * load JIO file from a DAV and create and return the JIO object
+     * @param userName : name of the user
+     * @param location : server location
+     * @param applicant : (optional) information about the person/application needing this JIO object (allow limited access)
+     * @return JIO object
+     */
+    function initializeFromDav(userName, location, applicant) {
+        //get the user personal JIO file
+        $.ajax({
+            url: location+"/dav/"+userName+"/"+applicant.ID+"/"+"jio.json",//we could use userAdress instead...
+            type: "GET",
+            async: false,
+            dataType: "text",
+            headers: {Authorization: "Basic "+Base64.encode(userName+":"+applicant.password)},
+            fields: {withCredentials: "true"},
+            success: function(jioContent){
+                            JIO.initialize(jioContent,applicant);
+                        },
+            error: function(type) {alert("Error "+type.status+" : fail while trying to load jio.json");}
+        });
+        return JIO;
+    }
 }
 JIOStorage.prototype = new Storage();
 JIOStorage.prototype.load({
-    loadUser: function(userName) {
-        //JIO : IDProvider
+    getJIO: function() {return this.jio;},
+    loadUser: function(userName) {//warning no return value
+        JIO.loadDocument(userName+".profile","text",
+            function(data) {setUser(new User(JSON.parse(data)));},
+            function(errorEvent) {if(errorEvent.status==404){}}
+        );
     },
-    getDocument: function(address, instruction) {
-        $.ajax({
-            url: address,
-            type: "GET",
-            dataType: type,
-            headers: {Authorization: "Basic "+btoa("smik:asdf")},
-            fields: {withCredentials: "true"},
-            success: instruction,
-            error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
+    getDocument: function(file, instruction) {
+        JIO.loadDocument(file, "text", function(content) {
+                var doc = new JSONDocument(JSON.parse(content));
+                if(instruction) instruction(doc);
         });
     },
-    saveDocument: function(content, address, instruction) {
-        this.user.documents[address] = doc;
-        $.ajax({
-            url: address,
-            type: "PUT",
-            dataType: "json",
-            data: JSON.stringify(content),
-            headers: {Authorization: "Basic "+btoa("smik:asdf")},
-            fields: {withCredentials: "true"},
-            success: instruction,
-            error: function(type) {
-                if(type.status==201 || type.status==204) {instruction();}//ajax thinks that 201 is an error...
-            }
-        });
+    saveDocument: function(doc, file, instruction) {
+        JIO.saveDocument(JSON.stringify(doc), file, "text", true, instruction)
     },
-    deleteDocument: function(address, instruction) {
-        delete this.user.documents[address];
-        $.ajax({
-            url: address,
-            type: "DELETE",
-            headers: {Authorization: "Basic "+btoa("smik:asdf")},
-            fields: {withCredentials: "true"},
-            success: instruction,
-            error: function(type) {
-                alert(type.status);//ajax thinks that 201 is an error...
-            }
-        });
+    deleteDocument: function(file, instruction) {
+        JIO.deleteDocument(file, instruction)
+    },
+    getDocumentList: function(instruction) {
+        var list = JIO.getDocumentList(instruction, undefined, false);//synchrone operation. Could be asynchronised
+        delete list[this.userName+".profile"];
+        return list;
+    },
+    save: function() {
+        this.updateUser();
+        this.saveDocument(this.user,this.user.getName()+".profile",function() {});
+        localStorage.setItem("currentStorage",JSON.stringify(this));
     }
 });
 
-getCurrentStorage = function() {
-    if(!currentStorage) {//if storage has not been loaded yet
-        var dataStorage = JSON.parse(localStorage.getItem("currentStorage"));
-        if(!dataStorage) {window.location = "login.html";return null;}//if it's the first connexion
+function getCurrentStorage() {
+    if(currentStorage) {return currentStorage;}
 
-        switch(dataStorage.type) {//load the last storage used
-            case "local": currentStorage = new LocalStorage(); break;
-            case "JIO": currentStorage = new JIOStorage(); break;
-        }
-        currentStorage.loadUser(dataStorage.user.name);
-        currentStorage.type = dataStorage.type;
+    var dataStorage = JSON.parse(localStorage.getItem("currentStorage"));
+
+    if(!dataStorage) {window.location.href = "login.html";return null;}//if it's the first connexion
+    if(dataStorage.type == "local") {
+        currentStorage = new LocalStorage(dataStorage.userName);
+    } else {
+        if(!JIO.jioFileContent) {JIO.initialize(dataStorage.jio.jioFileContent, {"ID":"www.ungproject.com"})}
+        currentStorage = new JIOStorage(dataStorage);
     }
+
     return currentStorage;
 }
-setCurrentStorage = function(storage) {
+function setCurrentStorage(storage) {
     currentStorage = storage;
     localStorage.setItem("currentStorage", JSON.stringify(storage));
 }
@@ -413,15 +442,22 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
     getState:function() {return this.state;},
     setState:function(state) {this.state=state;},
 
-    setAsCurrentDocument: function() {
+    //labels
+    getLabel:function() {return this.label},
+    isLabelised:function(label) {return this.label[label]},
+    addLabel:function(label) {this.label[label]=true;},
+    removeLabel:function(label) {delete this.label[label]},
+
+    setAsCurrentDocument: function() {//display informations about this document in the webPage
         setCurrentDocument(this);
     },
-
-    save: function(instruction) {
+    save: function(instruction) {//save the document
         var doc = this;
         getCurrentStorage().saveDocument(doc, getDocumentAddress(this), instruction);
     },
-    remove: function(instruction) {getCurrentStorage().deleteDocument(getDocumentAddress(this), instruction);}
+    remove: function(instruction) {//remove the document
+        getCurrentStorage().deleteDocument(getDocumentAddress(this), instruction);
+    }
 });
 JSONDocument.prototype.states = {
     draft:{"fr":"Brouillon","en":"Draft"},
@@ -591,16 +627,15 @@ saveCurrentDocument = function() {
   * @param doc : the document to edit
   */
 var startDocumentEdition = function(doc) {
-    getCurrentStorage().getDocument(getDocumentAddress(doc), function(data) {
-        doc.load(data);
-        setCurrentDocument(doc);
-        if(supportedDocuments[doc.getType()].editorPage) {window.location = "theme.html";}
+    getCurrentStorage().getDocument(doc.fileName, function(data) {
+        setCurrentDocument(data);
+        if(supportedDocuments[data.getType()].editorPage) {window.location.href = "theme.html";}
         else alert("no editor available for this document");
     });
 }
 var stopDocumentEdition = function() {
     saveCurrentDocument();
-    window.location = "ung.html";
+    window.location.href = "ung.html";
     return false;
 }
 
@@ -609,16 +644,18 @@ var stopDocumentEdition = function() {
  * @param language : the new language
  */
 var changeLanguage = function(language) {
-    getCurrentUser().setSetting("language");
+    getCurrentUser().setSetting("language",language);
     getCurrentStorage().save();
-    getCurrentPage().displayLanguages(user);
+    getCurrentPage().displayLanguages(getCurrentUser());
     window.location.reload();
 }
 
 var signOut = function() {
     delete localStorage.currentStorage;
     delete localStorage.currentDocumentID;
-    window.location = "login.html";
+    delete localStorage.wallet;
+    delete sessionStorage.documentList;
+    window.location.href = "login.html";
     return false
 }
 

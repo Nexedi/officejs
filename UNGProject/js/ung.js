@@ -10,35 +10,41 @@ setCurrentDocumentID = function(ID) {return localStorage.setItem("currentDocumen
 /**
  * class DocumentList
  * This class provides methods to manipulate the list of documents of the current user
- * @param arg : a documentList json object to load
+ * the list object is the documentList returned by the storage.
+ * the detailedList object is the synchronized list containing more detailed information about documents
+ * @param documentList : documents information loaded from the storage
  */
-var DocumentList = function(arg) {
-    //List.call(this);
-    if(arg) {
-        this.load(arg);
-        this.load(new List(arg,JSONDocument));
-        this.selectionList = new List(arg.selectionList);//load methods of selectionList
+var DocumentList = function(documentList) {
+    if(sessionStorage.documentList) {//load from sessionStorage
+        this.load(JSON.parse(sessionStorage.documentList));
     }
     else {
-        List.call(this);
+        if(documentList) {
+            for(var doc in documentList) {
+                this.documentList[doc] = new JSONDocument(documentList[doc]);
+            }
+        } else {this.documentList = {}}
+        this.list = getCurrentStorage().getDocumentList();
         this.displayInformation = {};
         this.displayInformation.page = 1;
-        this.selectionList = new List();
+        this.selectionList = [];
     }
 }
-DocumentList.prototype = new List();
+DocumentList.prototype = new UngObject();
 DocumentList.prototype.load({
 
-    removeDocument: function(doc) {
-        var i = this.find(doc);
-        this.get(i).remove()//delete the file
-        this.remove(i);//remove from the list
-        getCurrentStorage().save();//save changes
+    removeDocument: function(fileName) {
+        getCurrentStorage().remove(fileName)//delete the file
+        delete this.list[fileName];//remove from the list
+        delete this.detailedList[fileName];//
+        this.save();//save changes
     },
 
+    getList: function() {return this.list},
+    getDetailedList: function() {return this.detailedList},
     getSelectionList: function() {return this.selectionList;},
     resetSelectionList: function() {
-        this.selectionList = new List();
+        this.selectionList = [];
 
         //display consequences
         for(var i=this.getDisplayInformation().first-1; i<this.getDisplayInformation().last; i++) {
@@ -47,9 +53,17 @@ DocumentList.prototype.load({
         $("span#selected_row_number a").html(0);//display the selected row number
     },
     checkAll: function() {
-        this.selectionList = new List();
-        for(var i=0; i<this.size(); i++) {
-            this.getSelectionList().add(this.get(i));
+        this.selectionList = [];
+        var list = toArray(this.getList());
+
+        var begin = 0;
+        var end = list.length;
+        if(getCurrentUser().getSetting("checkAllMethod")=="page") {
+            begin = this.getDisplayInformation().first-1;
+            end = this.getDisplayInformation().last;
+        }
+        for(var i=begin; i<end; i++) {
+            this.addToSelection(list[i].fileName);
         }
 
         //display consequences
@@ -58,12 +72,19 @@ DocumentList.prototype.load({
         }
         $("span#selected_row_number a").html(this.size());//display the selected row number
     },
+    addToSelection: function(fileName) {
+        this.getSelectionList().push(fileName);
+    },
+    removeFromSelection: function(fileName) {
+        var selection = getDocumentList().getSelectionList();
+        selection.splice(selection.indexOf(fileName),1);
+    },
 
     deleteSelectedDocuments: function() {
         var selection = this.getSelectionList();
-        while(!selection.isEmpty()) {
-            var doc = selection.pop();
-            this.removeDocument(doc);
+        while(selection.length>0) {
+            var fileName = selection.pop();
+            this.removeDocument(fileName);
         }
         this.display();
     },
@@ -87,17 +108,20 @@ DocumentList.prototype.load({
     },
 
     /* display the list of documents in the web page */
-    displayContent: function() {
+    displayContent: function() {//display the list of document itself
         $("table.listbox tbody").html("");//empty the previous displayed list
+        var list = toArray(this.getList());
+        var detailedList = this.getDetailedList();
         for(var i=this.getDisplayInformation().first-1;i<this.getDisplayInformation().last;i++) {
-            var doc = this.get(i);
-            var ligne = new Line(doc,i);
-            ligne.updateHTML();
-            ligne.display();
-            if(this.getSelectionList().contains(doc)) {ligne.setSelected(true);}//check the box if selected
+            var fileName = list[i].fileName;
+            if(!detailedList[fileName] || new Date(detailedList[fileName].lastModification+1000)<new Date(list[i].lastModify)) {updateDocumentInformation(fileName)}
+            var line = new Line(doc,i);
+            line.updateHTML();
+            line.display();
+            if(this.getSelectionList().indexOf(doc.fileName)) {line.setSelected(true);}//check the box if selected
         }
     },
-    displayListInformation: function() {
+    displayListInformation: function() {//display number of records, first displayed document, last displayed document...
         if(this.size()>0) {
             $("div.listbox-number-of-records").css("display","inline");
 
@@ -108,7 +132,7 @@ DocumentList.prototype.load({
         }
         else {$("div.listbox-number-of-records").css("display","none");}
     },
-    displayNavigationElements: function() {
+    displayNavigationElements: function() {//display buttons first-page, previous, next, last-page
         var lastPage = this.getDisplayInformation().lastPage;
         var disp = function(element,bool) {
             bool ? $(element).css("display","inline") : $(element).css("display","none");
@@ -132,13 +156,12 @@ DocumentList.prototype.load({
     },
 
     /* update the ith document information */
-    updateDocumentInformation: function(i) {
-        var list = this;
-        var doc = list.get(i);
-        getCurrentStorage().getDocument(getDocumentAddress(doc), function(data) {
-            doc.load(data);//todo : replace by data.header
-            doc.setContent("");//
-            list.set(i,doc);
+    updateDocumentInformation: function(fileName) {
+        var list = this.getDetailedList();
+        getCurrentStorage().getDocument(fileName, function(doc) {
+            list[fileName]=doc;
+            list[fileName].fileName = fileName;
+            doc.setContent("");
         });
     },
     /* update the document to be displayed */
@@ -172,7 +195,7 @@ var Line = function(doc, i) {
 Line.prototype = {
     getDocument: function() {return this.document;},
     getID: function() {return this.ID;},
-    getType: function() {return this.document.getType() ? this.document.getType() : "other";},
+    getType: function() {return this.document.getType() || "other";},
     getHTML: function() {return this.html;},
     setHTML: function(newHTML) {this.html = newHTML;},
     setSelected: function(bool) {$("tr td.listbox-table-select-cell input#"+this.getID()).attr("checked",bool)},
@@ -182,16 +205,16 @@ Line.prototype = {
 
     /* add the document of this line to the list of selected documents */
     addToSelection: function() {
-        getDocumentList().getSelectionList().add(this.getDocument());
+        getDocumentList().addToSelection(this.getDocument().fileName);
     },
     /* remove the document of this line from the list of selected documents */
     removeFromSelection: function() {
-        getDocumentList().getSelectionList().removeElement(this.getDocument());
+        getDocumentList().removeFromSelection(this.getDocument().fileName);
     },
     /* check or uncheck the line */
     changeState: function() {
         this.isSelected() ? this.addToSelection() : this.removeFromSelection();
-        $("span#selected_row_number a").html(getDocumentList().getSelectionList().size());//display the selected row number
+        $("span#selected_row_number a").html(getDocumentList().getSelectionList().length);//display the selected row number
     },
 
     /* load the document information in the html of a default line */
