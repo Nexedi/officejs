@@ -105,7 +105,7 @@ div#select_language ul li span {
 div#select_language ul li:hover ul {
     display: block;
 }
-.menu_create_object li li:hover, div#select_language ul li li:hover {
+div#select_language ul li li:hover {
     background-color: #DAE6F6;
 }
         /* other options */
@@ -306,6 +306,9 @@ div.gadget-column {
     z-index: 200;
     background-color: #FFFFFF;
     border: 1px solid #D1D1D1;
+}
+.option_menu li li:hover {
+    background-color: #DAE6F6;
 }
 .option_menu ul {
     list-style: none outside none;

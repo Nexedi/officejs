@@ -17,6 +17,8 @@
         <link type="text/css" rel="stylesheet" href="css/ung.css" />
         <script type="text/javascript" src="js/jquery/jquery.js"></script>
         <script type="text/javascript" src="js/tools.js"></script>
+        <script type="text/javascript" src="unhosted/jio.js"></script>
+
         <script type="text/javascript" src="js/theme.js"></script>
         <script type="text/javascript" src="js/ung.js"></script>
         <script type="text/javascript" src="js/login.js"></script>
@@ -28,6 +30,16 @@
 
         <script type="text/javascript">
             var init = function() {
+                //fill known informations
+                var wallet = getWallet();
+                if(wallet) {
+                    if(wallet.userName) $("input#name").attr("value",wallet.userName);
+                    if(wallet.storageLocation) $("input#storage_location").attr("value",wallet.provider);
+                }
+
+                //log an user after having logged in in their JIO account
+                tryLog();
+
                 tooltip = new Tooltip();
                 $("span.tooltipElement")
                     .mouseover(function() {tooltip.show("sdf")})
@@ -116,15 +128,15 @@
                                                                         </tr>
                                                                         <tr>
                                                                             <td align="center">
-                                                                                <label for="id_provider">
-                                                                                    ID provider
+                                                                                <label for="storage_location">
+                                                                                    Storage Location
                                                                                     <span class="tooltipElement"
                                                                                         onmouseover="tooltip.show('please, indicate the storage server<br/>where your data will be stored<br/>let free to store on your computer')">
                                                                                         (?)</span>
                                                                                 </label>
                                                                             </td>
                                                                             <td>
-                                                                                <input id="id_provider" type="text" value="" name="id_provider" />
+                                                                                <input id="storage_location" type="text" value="" name="storage_location" />
                                                                             </td>
                                                                         </tr>
                                                                         <tr>
