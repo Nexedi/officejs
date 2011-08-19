@@ -6,6 +6,9 @@
 /UNGProject/svg-edit/
 /UNGProject/dav
 /UNGProject/aloha
+/UNGProject/nicEdit
+/storage-dav
+apache2.conf
 
 # buildout
 /bin/
