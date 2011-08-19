@@ -8,7 +8,7 @@
  */
 UngObject = function() {}
 /* return true if this object implements the interface */
-UngObject.prototype.Implements = function(myInterface)
+UngObject.prototype.implement = function(myInterface)
 {
     for(var property in myInterface)
     {
@@ -238,13 +238,13 @@ errorMessage = function(message,object) {
 /**
  * returns the current date (number of ms since 1/1/1970 at 12:00 AM)
  */
-currentTime = function() {return Date.now();}
+function getCurrentTime() {return Date.now();}
 
 /**
  * Paste a toolkit at the mouse position
  */
 Tooltip = function() {
-    this.visible=false; // La variable i nous dit si la bulle est visible ou non
+    this.visible=false;
 }
 Tooltip.prototype = {
     isVisible: function() {return this.visible;},
