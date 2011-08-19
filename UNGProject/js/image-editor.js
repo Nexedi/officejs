@@ -46,7 +46,7 @@ JSONIllustrationDocument.prototype = new JSONDocument();//inherits methods from 
 JSONIllustrationDocument.prototype.saveEdition = function(content) {
     this.setLastUser(getCurrentUser().getName());
     this.setContent(content);
-    this.setLastModification(currentTime());
+    this.setLastModification(getCurrentTime());
     this.setAsCurrentDocument();
 }
 JSONIllustrationDocument.prototype.setAsCurrentDocument = function() {

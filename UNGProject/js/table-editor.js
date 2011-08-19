@@ -39,7 +39,7 @@ JSONSheetDocument.prototype.load({
     saveEdition: function(content) {
         this.setLastUser(getCurrentUser());
         this.setContent(content);
-        this.setLastModification(currentTime());
+        this.setLastModification(getCurrentTime());
         this.setAsCurrentDocument();
     },
 

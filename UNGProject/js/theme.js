@@ -369,9 +369,10 @@ var JSONDocument = function(arg) {
         this.lastUser=getCurrentUser().getName();
         this.title="Untitled";
         this.content="";
-        this.creation=currentTime();
-        this.lastModification=currentTime();
+        this.creation=getCurrentTime();
+        this.lastModification=getCurrentTime();
         this.state=JSONDocument.prototype.states.draft;
+        this.label = {};
     }
 }
 JSONDocument.prototype = new UngObject();//inherits from UngObject
@@ -450,7 +451,7 @@ supportedDocuments = {"text":{editorPage:"text-editor",icon:"images/icons/docume
     undefined:{editorPage:null,icon:"images/icons/other.gif"}
 }
 getDocumentAddress = function(doc) {
-    return getCurrentStorage().getType()=="local" ? doc.getCreation() : "http://"+getCurrentUser().getIDProvider()+"/ungdav/"+doc.getCreation();
+    return doc.getCreation();
 }
 
 /*************************************************

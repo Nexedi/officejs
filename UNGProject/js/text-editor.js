@@ -137,7 +137,7 @@ JSONTextDocument.prototype = new JSONDocument();//inherits methods from JSONDocu
 JSONTextDocument.prototype.saveEdition = function(content) {
     this.setLastUser(getCurrentUser().getName());
     this.setContent(content);
-    this.setLastModification(currentTime());
+    this.setLastModification(getCurrentTime());
     this.setAsCurrentDocument();
 }
 JSONTextDocument.prototype.setAsCurrentDocument = function() {
