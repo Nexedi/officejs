@@ -14,22 +14,85 @@ var displayNewAccountForm = function(bool) {
     }
 }
 
+function logIntoDav(wallet) {
+    var recall = window.location;
+    window.location.href = wallet.storageLocation+"#"+recall;
+}
+
+function initStorage(wallet) {
+    if(!wallet.provider) {//local storage
+        setCurrentStorage(new LocalStorage(wallet.userName));
+    } else {
+        setCurrentStorage(new JIOStorage(wallet));
+    }
+}
+
+
+//unhosted functions
+function getStorageLocation(provider) {
+    //TODO : uses webFinger
+    return "http://"+provider;
+}
+function getApplicationPasswordFromURL() {
+    return window.location.href.split("appPwd:")[1]
+}
+function setWallet(newWallet) {
+    localStorage.setItem("wallet",JSON.stringify(newWallet));
+}
+function getWallet() {
+    return JSON.parse(localStorage.getItem("wallet"))||null;
+}
+var Wallet = function() {
+    this.userName = $("input#name").attr("value");
+    this.provider = $("input#storage_location").attr("value");
+    this.storageLocation = getStorageLocation(this.provider);
+}
+
+
 /**
- * Log an user with it's Name and ID provider
+ * try to log an user after having logged in their Dav account
  */
-var logUser = function() {
-    var name = $("input#name").attr("value");
-    var IDProvider = $("input#id_provider").attr("value");
-    if(name) {
-        setCurrentStorage(IDProvider ? new JIOStorage(name,IDProvider) : new LocalStorage(name));
-        window.location = "ung.html";
+function tryLog() {
+    var wallet = getWallet();
+    var applicationPassword = getApplicationPasswordFromURL();
+    if(applicationPassword) {
+        wallet.applicationPassword = applicationPassword;
+        setWallet(wallet);//to delete for new registration each time
+        initStorage(wallet);
+        waitBeforeSucceed(function() {return getCurrentStorage().getUser();},function(){window.location.href = "ung.html";});
     }
 }
 
 /**
- * create an account (to use only if UNG is also an ID provider)
+ * Log an user with it's Name and storage provider
  */
-var createNewUser = function() {
+function logUser() {
+    var wallet = new Wallet();
+    setWallet(wallet);
+
+    if(!wallet.userName) {return;}
+    if(wallet.provider) {
+            if(!wallet.storageLocation) {alert("unable to find your storage from your provider");return;}
+            if(!wallet.applicationPassword) {logIntoDav(wallet);return;}
+    }
+    initStorage(wallet);
+    waitBeforeSucceed(function() {return getCurrentStorage().getUser();},function(){window.location.href = "ung.html";});
+}
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * create an account (to use only if UNG is also a storage provider)
+ */
+function createNewUser() {
     var form = $("form#create-user")[0];
 
     /* check that the form is complete */
@@ -50,7 +113,7 @@ var createNewUser = function() {
 /**
  * Report an error when filling the form
  */
-var formError = function(message) {
+function formError(message) {
     $("td#form-message").attr("value",message);
     $("td#form-message").css("display","table-cell");
 }
@@ -64,6 +127,7 @@ function testEMail(email) {
     return regEx.test(email);
 }
 
+//TODO
 function setFocus() {
   login = document.getElementById('name');
   password = document.getElementById('password');
