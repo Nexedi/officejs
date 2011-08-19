@@ -50,7 +50,7 @@ var JSONEMail = function(arg) {
         this.bcc = {};
         this.object = "";
         this.recipients = {};
-        this.date = currentTime();
+        this.date = getCurrentTime();
         this.content = "";
         this.attachment = {};
     }
