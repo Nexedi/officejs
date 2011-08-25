@@ -13,11 +13,10 @@
         "unhosted/base64.js"
     ],[//element to check before being ready
         $
-    ]);
+    ], // function to execute then
 
-    //wait until dependencies are ready
-    (function waitUntilLoaded() {!ready() ? setTimeout(waitUntilLoaded,50) : script();})()
-    function script() {
+
+        function() {
 
         /**
          * JIO main object. Contains all IO methods
@@ -481,7 +480,7 @@
                     oneOrEach(file,deleteFileData);
                     indexedStorage.save();
                 }
-                this.storage.deleteDocument(file, newOption);
+                return this.storage.deleteDocument(file, newOption);
 
                 function deleteFileData(fileName) {
                     delete this.getIndex()[fileName];
@@ -508,6 +507,39 @@
             }
         }
 
+
+    /***************************************************************
+    *********************** CryptedStorage *************************/
+        /**
+         * Class CryptedStorage
+         * @class provides usual API to encrypte data storing documents
+         * @param data : object containing every element needed to build the storage
+         * "storage" : the storage to encrypt
+         * "password" : the key to encrypt/decrypt data
+         * "method" : (optional) the algorythm to use - Only sjcl available for the moment
+         * @param applicant : object containing inforamtion about the person/application needing this JIO object
+         */
+        JIO.ReplicateStorage = function(data, applicant) {
+            this.storage = createStorage(data.storage, applicant);
+            this.password = data.password;
+        }
+        JIO.ReplicateStorage.prototype = {
+            userNameAvailable: function(name, option) {return this.storage.userNameAvailable.apply(this.storage,arguments)},
+            loadDocument: function(fileName, option) {
+                var cryptedStorage = this;
+                var newOption = copy(option);
+                newOption.success = function(data) {
+                    if(option.success) {option.success(sjcl.decrypt(data,cryptedStorage.password))}//case asynchronous
+                }
+                var data = this.storage.loadDocument(fileName, newOption);
+                return data ? sjcl.decrypt(data,cryptedStorage.password) : data //case synchronous
+            },
+            saveDocument: function(data, fileName, option) {
+                return this.storage.saveDocument(sjcl.encrypt(data,this.password), fileName, option)
+            },
+            deleteDocument: function(file, option) {return this.storage.deleteDocument.apply(this.storage,arguments)},
+            getDocumentList: function(option) {return this.storage.getDocumentList.apply(this.storage,arguments)}
+        }
 
     /***************************************************************
     *********************** ReplicateStorage *************************/
@@ -627,46 +659,88 @@
          * @param applicant : object containing inforamtion about the person/application needing this JIO object
          */
         JIO.MultipleStorage = function(data, applicant) {
-            this.storageList = {};
+            this.storageList = {};//contains the different storages
+            this.documentList = {};//contains the document list of each storage
             for(var storage in data.storageList) {//create each storage from the list
                 this.storageList[storage]=createStorage(data.storageList[storage], applicant);
             }
         }
         JIO.MultipleStorage.prototype = {
             userNameAvailable: function(userName, option) {
-                if(option.location) {//TODO : think about writing location as a string "a/b/c" in case of spate of multipleStorages
-                    this.storageList[option.location].userNameAvailable(userName,option)
+                var path = userName.split("/");
+                if(path.length>1) {
+                    var storage = path.shift();
+                    var name = path.join("/");
+                    this.storageList[storage].userNameAvailable(name,option)
                 } else {
                     //TODO
                 }
             },//TODO  /return this.storage.userNameAvailable.apply(this.storage,arguments)},
             loadDocument: function(fileName, option) {
-                if(option.location) {
-                    this.storageList[option.location].loadDocument(fileName,option)
+                var path = fileName.split("/");
+                if(path.length>1) {
+                    var storage = path.shift();
+                    var name = path.join("/");
+                    this.storageList[storage].loadDocument(name,option)
                 } else {
-                    //TODO
+                    //TODO : handle name conflicts
+                    var multipleStorage = this;
+                    $.each(this.storageList, function(storage){
+                        if(multipleStorage.documentList[storage][fileName]) {
+                            multipleStorage.storageList[storage].loadDocument(fileName,option)
+                        }
+                    });
                 }
             },
             saveDocument: function(data, fileName, option) {
-                if(option.location) {
-                    this.storageList[option.location].saveDocument(data, fileName, option)
+                var path = fileName.split("/");
+                if(path.length>1) {
+                    var storage = path.shift();
+                    var name = path.join("/");
+                    this.storageList[storage].saveDocument(data, name, option)
                 } else {
-                    //TODO
+                    //TODO : decide how to choose between storages
                 }
             },
             deleteDocument: function(fileName, option) {
-                if(option.location) {
-                    this.storageList[option.location].deleteDocument(fileName, option)
+                var path = fileName.split("/");
+                if(path.length>1) {
+                    var storage = path.shift();
+                    var name = path.join("/");
+                    this.storageList[storage].deleteDocument(name, option)
                 } else {
-                    //TODO
+                    var multipleStorage = this;
+                    $.each(this.storageList, function(storage){
+                        if(multipleStorage.documentList[storage][fileName]) {
+                            multipleStorage.storageList[storage].deleteDocument(fileName,option);
+                            delete multipleStorage.documentList[storage][fileName]
+                        }
+                    });
                 }
             },
             getDocumentList: function(option) {
                 if(option.location) {
                     this.storageList[option.location].getDocumentList(option)
                 } else {
-                    //TODO
+                    var finalList = {};
+                    var multipleStorage = this;
+                    $.each(this.storageList, function(storage){
+                        var documentList = multipleStorage.documentList[storage];
+                        $.each(documentList,function(fileName) {
+                            finalList[storage+"/"+fileName]= copy(documentList[fileName]);
+                            finalList[storage+"/"+fileName].fileName = storage+"/"+fileName;
+                        })
+                    });
                 }
+            },
+
+            updateDocumentList: function() {
+                for(var storage in this.storageList) { this.documentList[storage] = this.storageList[storage].getDocumentList() }
+            },
+            analysePath: function(path) {
+                var storage = path.shift();
+                var address = path.join("/");
+                return {storage: storage, address: address}
             }
         }
 
@@ -704,6 +778,7 @@
                 case "index":return new JIO.IndexedStorage(data, applicant);break;
                 case "multiple":return new JIO.MultipleStorage(data, applicant);break;
                 case "replicate":return new JIO.ReplicateStorage(data, applicant);break;
+                case "encrypte":return new JIO.CryptedStorage(data,applicant);break;
                 //etc
                 default:var waitedNode = null;//create a custom storage from a js file
                     $.ajax({
@@ -720,16 +795,8 @@
         }
 
         /**
-         * return a shallow copy of the object parameter
-         * @param object : the object to copy
-         * @return a shallow copy of the object
-         */
-        function copy(object) {
-            $.extend({}, object);
-        }
-
-        /**
          * delegate a function to a non-object element, or to each element of an array of non-object elements
+         * this function is used to delete a file or a list of files for example
          * @param element : a non-object element, or an array of non-object elements
          * @param f : function to apply
          */
@@ -738,40 +805,52 @@
         }
 
         /**
-         * include js files
-         * @param url : path or array of paths of the js file(s)
-         * @param flag : (optional) array of elements allowing to know if dependencies are ready
-         * @return a ready function which returns true only if the dependencies are ready
-         * @example : includeJS("jquery.js",[$]);
+         * return a shallow copy of the object parameter
+         * @param object : the object to copy
+         * @return a shallow copy of the object
          */
-        function includeJS(url,flag) {
-            oneOrEach(url,includeElement);
-            return function() {
-                return checkArray(flag.slice());
-            }
-
-            function includeElement(element) {//include a js file
-                var head = window.document.getElementsByTagName('head')[0];
-                var script = window.document.createElement('script');
-                script.setAttribute('src', url);
-                script.setAttribute('type', 'text/javascript');
-                head.appendChild(script);
-            }
-            function checkElement(element) {//check if a script is ready
-                switch(typeof element) {
-                    case "function" : return element.call(this);break;
-                    case "undefined" : return false;break;
-                    case "object" : return true;
-                }
-            }
-            function checkArray(array) {//recursive function to check if elements are ready
-                if(!array) return true;
-                var head = array.pop();
-                return checkElement(head) && checkArray(array);
-            }
+        function copy(object) {
+            $.extend({}, object);
         }
 
-        window.JIO = JIO;//the name to use for the framework. Ex : JIO.initialize(...)
+        window.JIO = JIO;//the name to use for the framework. Ex : JIO.initialize(...), JIO.loadDocument...
+    });
+
+
+        /****************************************************************
+        *************************** Loader *****************************/
+
+    /**
+     * include js files
+     * @param url : path or array of paths of the js file(s)
+     * @param flag : (optional) array of elements allowing to know if dependencies are ready
+     * @param instruction : (optional) instruction to execute when dependencies are loaded
+     * @return a ready function which returns true only if the dependencies are ready
+     * @example : includeJS("jquery.js",[$]);
+     */
+    function includeJS(url,flag, instruction) {
+        typeof url != "object" ? includeElement(url) : onEach(url);
+        var ready = function() {
+            return oneOrEach(flag.slice(),function(element){return typeof element != "undefined"});
+        }
+        if(instruction) {
+            (function waitUntilLoaded() {!ready() ? setTimeout(waitUntilLoaded,50) : instruction();})()
+        }
+        return ready;
+
+        function includeElement(element) {//include a js file
+            var head = window.document.getElementsByTagName('head')[0];
+            var script = window.document.createElement('script');
+            script.setAttribute('src', url);
+            script.setAttribute('type', 'text/javascript');
+            head.appendChild(script);
+        }
+
+        function onEach(array,f) {
+            var head = array.pop();
+            if(array.length==0) {return true}
+            return f(head) && oneOrEach(array);
+        }
     }
     
 })();
