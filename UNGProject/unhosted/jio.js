@@ -13,10 +13,10 @@
         "unhosted/base64.js"
     ],[//element to check before being ready
         $
-    ], // function to execute then
+    ], script);// function to execute then
 
 
-        function() {
+    function script() {
 
         /**
          * JIO main object. Contains all IO methods
@@ -814,7 +814,7 @@
         }
 
         window.JIO = JIO;//the name to use for the framework. Ex : JIO.initialize(...), JIO.loadDocument...
-    });
+    }
 
 
         /****************************************************************
