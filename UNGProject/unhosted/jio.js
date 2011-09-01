@@ -552,248 +552,311 @@
     }
 
 
-            getIndex: function() {return this.index},
-            save: function() {
-                this.storage.saveDocument(JSON.stringify(this.getIndex()), "jio.index", "text", true);
+/***************************************************************
+*********************** CryptedStorage *************************/
+    /**
+     * Class CryptedStorage
+     * @class provides usual API to encrypte data storing documents
+     * @param data : object containing every element needed to build the storage
+     * "storage" : the storage to encrypt
+     * "password" : the key to encrypt/decrypt data
+     * "method" : (optional) the algorythm to use - Only sjcl available for the moment
+     * @param applicant : object containing inforamtion about the person/application needing this JIO object
+     */
+    JIO.CryptedStorage = function(data, applicant) {
+        this.storage = createStorage(data.storage, applicant);
+        this.password = data.password;
+    }
+    JIO.CryptedStorage.prototype = {
+        userNameAvailable: function(name, option) {return this.storage.userNameAvailable.apply(this.storage,arguments)},
+        loadDocument: function(fileName, option) {
+            var cryptedStorage = this;
+            var newOption = copy(option);
+            newOption.success = function(data) {
+                if(option.success) {option.success(sjcl.decrypt(cryptedStorage.password,data))}//case asynchronous
             }
+            var data = this.storage.loadDocument(fileName, newOption);
+            return data ? sjcl.decrypt(cryptedStorage.password,data) : data //case synchronous
+        },
+        saveDocument: function(data, fileName, option) {
+            var encryptedData = sjcl.encrypt(this.password,data);
+            return this.storage.saveDocument(encryptedData, fileName, option)
+        },
+        deleteDocument: function(file, option) {return this.storage.deleteDocument.apply(this.storage,arguments)},
+        getDocumentList: function(option) {return this.storage.getDocumentList.apply(this.storage,arguments)}
+    }
+
+
+/***************************************************************
+*********************** AsynchronousStorage *************************/
+    /**
+     * Class AsynchronousStorage
+     * @class manage the pending list of requests
+     * @param data : object containing every element needed to build the storage :
+     * "storage" : the storage to manage
+     * @param applicant : object containing inforamtion about the person/application needing this JIO object
+     */
+    JIO.AsynchronousStorage = function(data, applicant) {
+        this.storage = createStorage(data.storage, applicant);
+        this.pendingList = {};//contains the list of pending actions
+    }
+    JIO.AsynchronousStorage.prototype = {
+        userNameAvailable: function(name, option) {
+            var asynchronousStorage = this;
+            var requestID = this.addPendingAction(this.userNameAvailable, arguments);
+            var instruction = function() {asynchronousStorage.removePendingAction(requestID)}
+            option.success = addInstruction(instruction,option.success,true);
+            option.errorHandler = addInstruction(instruction,option.errorHandler,true);
+            return this.storage.userNameAvailable(name, option);
+        },
+        loadDocument: function(fileName, option) {
+            var asynchronousStorage = this;
+            var requestID = this.addPendingAction(this.loadDocument, arguments);
+            var instruction = function() {asynchronousStorage.removePendingAction(requestID)}
+            option.success = addInstruction(instruction,option.success,true);
+            option.errorHandler = addInstruction(instruction,option.errorHandler,true);
+            return this.storage.loadDocument(fileName, option);
+        },
+        saveDocument: function(data, fileName, option) {
+            var asynchronousStorage = this;
+            var requestID = this.addPendingAction(this.saveDocument, arguments);
+            var instruction = function() {asynchronousStorage.removePendingAction(requestID)}
+            option.success = addInstruction(instruction,option.success,true);
+            option.errorHandler = addInstruction(instruction,option.errorHandler,true);
+            return this.storage.saveDocument(data, fileName, option);
+        },
+        deleteDocument: function(file, option) {
+            var asynchronousStorage = this;
+            var requestID = this.addPendingAction(this.deleteDocument, arguments);
+            var instruction = function() {asynchronousStorage.removePendingAction(requestID)}
+            option.success = addInstruction(instruction,option.success,true);
+            option.errorHandler = addInstruction(instruction,option.errorHandler,true);
+            return this.storage.deleteDocument(file, option);
+        },
+        getDocumentList: function(option) {
+            var asynchronousStorage = this;
+            var requestID = this.addPendingAction(this.getDocumentList, arguments);
+            var instruction = function() {asynchronousStorage.removePendingAction(requestID)}
+            option.success = addInstruction(instruction,option.success,true);
+            option.errorHandler = addInstruction(instruction,option.errorHandler,true);
+            return this.storage.getDocumentList(option);
+        },
+
+        addPendingAction: function(action, argument) {
+            var ID = Date.now();
+            var task = {action: action, arguments:argument}
+            this.getPendingList()[ID] = task;
+            return ID;
+        },
+        removePendingAction: function(ID) {
+            delete this.getPendingList()[ID];
+        },
+        getPendingList: function() {return this.pendingList}
+    }
+
+
+/***************************************************************
+*********************** ReplicateStorage *************************/
+    /**
+     * Class ReplicateStorage
+     * @class provides usual API to replicate save/load/delete in a list of storages
+     * @param data : object containing every element needed to build the storage :
+     * "storageList" : an array containing the different storages ([{"storage1":{...},...])
+     * @param applicant : object containing inforamtion about the person/application needing this JIO object
+     */
+    JIO.ReplicateStorage = function(data, applicant) {
+        this.storageList = [];
+        for(var i = 0; i<data.storageList.length; i++) {//create each storage from the list
+            this.storageList[i]=createStorage(data.storageList[i], applicant);
         }
+    }
+    JIO.ReplicateStorage.prototype = {
 
-
-    /***************************************************************
-    *********************** CryptedStorage *************************/
         /**
-         * Class CryptedStorage
-         * @class provides usual API to encrypte data storing documents
-         * @param data : object containing every element needed to build the storage
-         * "storage" : the storage to encrypt
-         * "password" : the key to encrypt/decrypt data
-         * "method" : (optional) the algorythm to use - Only sjcl available for the moment
-         * @param applicant : object containing inforamtion about the person/application needing this JIO object
+         * check if an user already exists
+         * @param name : the name you want to check
+         * @param option : optional object containing
+         * "errorHandler" : the function to execute if an error occures
+         * @return the answer of the first storage able to answer
          */
-        JIO.ReplicateStorage = function(data, applicant) {
-            this.storage = createStorage(data.storage, applicant);
-            this.password = data.password;
-        }
-        JIO.ReplicateStorage.prototype = {
-            userNameAvailable: function(name, option) {return this.storage.userNameAvailable.apply(this.storage,arguments)},
-            loadDocument: function(fileName, option) {
-                var cryptedStorage = this;
+        userNameAvailable: function(name, option) {
+            return tryCheckUser(this.storageList.slice());
+
+            function tryCheckUser(storageList) {
+                var storage = storageList.pop();
                 var newOption = copy(option);
-                newOption.success = function(data) {
-                    if(option.success) {option.success(sjcl.decrypt(data,cryptedStorage.password))}//case asynchronous
-                }
-                var data = this.storage.loadDocument(fileName, newOption);
-                return data ? sjcl.decrypt(data,cryptedStorage.password) : data //case synchronous
-            },
-            saveDocument: function(data, fileName, option) {
-                return this.storage.saveDocument(sjcl.encrypt(data,this.password), fileName, option)
-            },
-            deleteDocument: function(file, option) {return this.storage.deleteDocument.apply(this.storage,arguments)},
-            getDocumentList: function(option) {return this.storage.getDocumentList.apply(this.storage,arguments)}
-        }
+                newOption.errorHandler = generateErrorHandler(storageList);
+                return storage.userNameAvailable(name,newOption);
+            }
+            function generateErrorHandler(storageList) {
+                return storageList.length>0 ? function() {tryCheckUser(storageList);} : option.errorHandler;
+            }
+        },
 
-    /***************************************************************
-    *********************** ReplicateStorage *************************/
+
         /**
-         * Class ReplicateStorage
-         * @class provides usual API to replicate save/load/delete in a list of storages
-         * @param data : object containing every element needed to build the storage :
-         * "storageList" : an array containing the different storages ([{"storage1":{...},...])
-         * @param applicant : object containing inforamtion about the person/application needing this JIO object
+         * load a document in the storage
+         * @param fileName : the name of the file where the data will be stored
+         * @param option : optional object containing
+         * "errorHandler" : the function to execute if an error occures
+         * @return the content of the document sent by the first storage able to
          */
-        JIO.ReplicateStorage = function(data, applicant) {
-            this.storageList = [];
-            for(var i = 0; i<data.storageList.length; i++) {//create each storage from the list
-                this.storageList[i]=createStorage(data.storageList[i], applicant);
+        loadDocument: function(fileName, option) {
+            return tryLoadDocument(this.storageList.slice());
+
+            function tryLoadDocument(storageList) {
+                var storage = storageList.pop();
+                var newOption = copy(option);
+                newOption.errorHandler = generateErrorHandler(storageList);
+                return storage.loadDocument(fileName,newOption);
             }
-        }
-        JIO.ReplicateStorage.prototype = {
-
-            /**
-             * check if an user already exists
-             * @param name : the name you want to check
-             * @param option : optional object containing
-             * "errorHandler" : the function to execute if an error occures
-             * @return the answer of the first storage able to answer
-             */
-            userNameAvailable: function(name, option) {
-                return tryCheckUser(this.storageList.slice());
-
-                function tryCheckUser(storageList) {
-                    var storage = storageList.pop();
-                    var newOption = copy(option);
-                    newOption.errorHandler = generateErrorHandler(storageList);
-                    return storage.userNameAvailable(name,newOption);
-                }
-                function generateErrorHandler(storageList) {
-                    return storageList.length>0 ? function() {tryCheckUser(storageList);} : option.errorHandler;
-                }
-            },
-
-
-            /**
-             * load a document in the storage
-             * @param fileName : the name of the file where the data will be stored
-             * @param option : optional object containing
-             * "errorHandler" : the function to execute if an error occures
-             * @return the content of the document sent by the first storage able to
-             */
-            loadDocument: function(fileName, option) {
-                return tryLoadDocument(this.storageList.slice());
-
-                function tryLoadDocument(storageList) {
-                    var storage = storageList.pop();
-                    var newOption = copy(option);
-                    newOption.errorHandler = generateErrorHandler(storageList);
-                    return storage.loadDocument(fileName,newOption);
-                }
-                function generateErrorHandler(storageList) {
-                    return storageList.length>0 ? function() {tryLoadDocument(storageList);} : option.errorHandler;
-                }
-            },
-
-
-            /**
-             * save the document in each storage (simply delegate the call to each storage. Perhaps the success function sould be executed only once?)
-             * @param data : the data to store
-             * @param fileName : the name of the file where the data will be stored
-             * @param option : optional object
-             */
-            saveDocument: function(data, fileName, option) {
-                for(var element in this.storageList) {
-                    this.storageList[element].saveDocument(data, fileName, option);
-                }
-            },
-
-
-            /**
-             * delete the document in each storage (simply delegate the call to each storage. Perhaps the success function sould be executed only once?)
-             * @param file : fileName or array of fileNames to delete
-             * @param option : optional object
-             */
-            deleteDocument: function(file, option) {
-                for(var element in this.storageList) {
-                    this.storageList[element].deleteDocument(file, option);
-                }
-            },
-
-
-            /**
-             * load the list of the documents in this storage
-             * @param option : optional object containing
-             * "errorHandler" : the function to execute if an error occures
-             * @return the answer of the first storage able to answer
-             * @example {"file1":{fileName:"file1",creationDate:"Tue, 23 Aug 2011 15:18:32 GMT",lastModified:"Tue, 23 Aug 2011 15:18:32 GMT"},...}
-             */
-            getDocumentList: function(option) {
-                return tryGetDocumentList(this.storageList.slice());
-
-                function tryGetDocumentList(storageList) {
-                    var storage = storageList.pop();
-                    var newOption = copy(option);
-                    newOption.errorHandler = generateErrorHandler(storageList);
-                    return storage.getDocumentList(newOption);
-                }
-                function generateErrorHandler(storageList) {
-                    return storageList.length>0 ? function() {tryGetDocumentList(storageList);} : option.errorHandler;
-                }
+            function generateErrorHandler(storageList) {
+                return storageList.length>0 ? function() {tryLoadDocument(storageList);} : option.errorHandler;
             }
-        }
+        },
 
-    /***************************************************************
-    *********************** MultipleStorage *************************/
+
         /**
-         * Class MultipleStorage
-         * @class provides usual API to save/load/delete documents in a list of storages
-         * @param data : object containing every element needed to build the storage :
-         * "storageList" : an object containing the different storages ({"storage1":{...},...})
-         * @param applicant : object containing inforamtion about the person/application needing this JIO object
+         * save the document in each storage (simply delegate the call to each storage. Perhaps the success function sould be executed only once?)
+         * @param data : the data to store
+         * @param fileName : the name of the file where the data will be stored
+         * @param option : optional object
          */
-        JIO.MultipleStorage = function(data, applicant) {
-            this.storageList = {};//contains the different storages
-            this.documentList = {};//contains the document list of each storage
-            for(var storage in data.storageList) {//create each storage from the list
-                this.storageList[storage]=createStorage(data.storageList[storage], applicant);
+        saveDocument: function(data, fileName, option) {
+            for(var element in this.storageList) {
+                this.storageList[element].saveDocument(data, fileName, option);
+            }
+        },
+
+
+        /**
+         * delete the document in each storage (simply delegate the call to each storage. Perhaps the success function sould be executed only once?)
+         * @param file : fileName or array of fileNames to delete
+         * @param option : optional object
+         */
+        deleteDocument: function(file, option) {
+            for(var element in this.storageList) {
+                this.storageList[element].deleteDocument(file, option);
+            }
+        },
+
+
+        /**
+         * load the list of the documents in this storage
+         * @param option : optional object containing
+         * "errorHandler" : the function to execute if an error occures
+         * @return the answer of the first storage able to answer
+         * @example {"file1":{fileName:"file1",creationDate:"Tue, 23 Aug 2011 15:18:32 GMT",lastModified:"Tue, 23 Aug 2011 15:18:32 GMT"},...}
+         */
+        getDocumentList: function(option) {
+            return tryGetDocumentList(this.storageList.slice());
+
+            function tryGetDocumentList(storageList) {
+                var storage = storageList.pop();
+                var newOption = copy(option);
+                newOption.errorHandler = generateErrorHandler(storageList);
+                return storage.getDocumentList(newOption);
+            }
+            function generateErrorHandler(storageList) {
+                return storageList.length>0 ? function() {tryGetDocumentList(storageList);} : option.errorHandler;
             }
         }
-        JIO.MultipleStorage.prototype = {
-            userNameAvailable: function(userName, option) {
-                var path = userName.split("/");
-                if(path.length>1) {
-                    var storage = path.shift();
-                    var name = path.join("/");
-                    this.storageList[storage].userNameAvailable(name,option)
-                } else {
-                    //TODO
-                }
-            },//TODO  /return this.storage.userNameAvailable.apply(this.storage,arguments)},
-            loadDocument: function(fileName, option) {
-                var path = fileName.split("/");
-                if(path.length>1) {
-                    var storage = path.shift();
-                    var name = path.join("/");
-                    this.storageList[storage].loadDocument(name,option)
-                } else {
-                    //TODO : handle name conflicts
-                    var multipleStorage = this;
-                    $.each(this.storageList, function(storage){
-                        if(multipleStorage.documentList[storage][fileName]) {
-                            multipleStorage.storageList[storage].loadDocument(fileName,option)
-                        }
-                    });
-                }
-            },
-            saveDocument: function(data, fileName, option) {
-                var path = fileName.split("/");
-                if(path.length>1) {
-                    var storage = path.shift();
-                    var name = path.join("/");
-                    this.storageList[storage].saveDocument(data, name, option)
-                } else {
-                    //TODO : decide how to choose between storages
-                }
-            },
-            deleteDocument: function(fileName, option) {
-                var path = fileName.split("/");
-                if(path.length>1) {
-                    var storage = path.shift();
-                    var name = path.join("/");
-                    this.storageList[storage].deleteDocument(name, option)
-                } else {
-                    var multipleStorage = this;
-                    $.each(this.storageList, function(storage){
-                        if(multipleStorage.documentList[storage][fileName]) {
-                            multipleStorage.storageList[storage].deleteDocument(fileName,option);
-                            delete multipleStorage.documentList[storage][fileName]
-                        }
-                    });
-                }
-            },
-            getDocumentList: function(option) {
-                if(option.location) {
-                    this.storageList[option.location].getDocumentList(option)
-                } else {
-                    var finalList = {};
-                    var multipleStorage = this;
-                    $.each(this.storageList, function(storage){
-                        var documentList = multipleStorage.documentList[storage];
-                        $.each(documentList,function(fileName) {
-                            finalList[storage+"/"+fileName]= copy(documentList[fileName]);
-                            finalList[storage+"/"+fileName].fileName = storage+"/"+fileName;
-                        })
-                    });
-                }
-            },
+    }
 
-            updateDocumentList: function() {
-                for(var storage in this.storageList) { this.documentList[storage] = this.storageList[storage].getDocumentList() }
-            },
-            analysePath: function(path) {
+/***************************************************************
+*********************** MultipleStorage *************************/
+    /**
+     * Class MultipleStorage
+     * @class provides usual API to save/load/delete documents in a list of storages
+     * @param data : object containing every element needed to build the storage :
+     * "storageList" : an object containing the different storages ({"storage1":{...},...})
+     * @param applicant : object containing inforamtion about the person/application needing this JIO object
+     */
+    JIO.MultipleStorage = function(data, applicant) {
+        this.storageList = {};//contains the different storages
+        this.documentList = {};//contains the document list of each storage
+        for(var storage in data.storageList) {//create each storage from the list
+            this.storageList[storage]=createStorage(data.storageList[storage], applicant);
+        }
+    }
+    JIO.MultipleStorage.prototype = {
+        userNameAvailable: function(userName, option) {
+            var path = userName.split("/");
+            if(path.length>1) {
                 var storage = path.shift();
-                var address = path.join("/");
-                return {storage: storage, address: address}
+                var name = path.join("/");
+                this.storageList[storage].userNameAvailable(name,option)
+            } else {
+                //TODO
             }
+        },//TODO  /return this.storage.userNameAvailable.apply(this.storage,arguments)},
+        loadDocument: function(fileName, option) {
+            var path = fileName.split("/");
+            if(path.length>1) {
+                var storage = path.shift();
+                var name = path.join("/");
+                this.storageList[storage].loadDocument(name,option)
+            } else {
+                //TODO : handle name conflicts
+                var multipleStorage = this;
+                $.each(this.storageList, function(storage){
+                    if(multipleStorage.documentList[storage][fileName]) {
+                        multipleStorage.storageList[storage].loadDocument(fileName,option)
+                    }
+                });
+            }
+        },
+        saveDocument: function(data, fileName, option) {
+            var path = fileName.split("/");
+            if(path.length>1) {
+                var storage = path.shift();
+                var name = path.join("/");
+                this.storageList[storage].saveDocument(data, name, option)
+            } else {
+                //TODO : decide how to choose between storages
+            }
+        },
+        deleteDocument: function(fileName, option) {
+            var path = fileName.split("/");
+            if(path.length>1) {
+                var storage = path.shift();
+                var name = path.join("/");
+                this.storageList[storage].deleteDocument(name, option)
+            } else {
+                var multipleStorage = this;
+                $.each(this.storageList, function(storage){
+                    if(multipleStorage.documentList[storage][fileName]) {
+                        multipleStorage.storageList[storage].deleteDocument(fileName,option);
+                        delete multipleStorage.documentList[storage][fileName]
+                    }
+                });
+            }
+        },
+        getDocumentList: function(option) {
+            if(option.location) {
+                this.storageList[option.location].getDocumentList(option)
+            } else {
+                var finalList = {};
+                var multipleStorage = this;
+                $.each(this.storageList, function(storage){
+                    var documentList = multipleStorage.documentList[storage];
+                    $.each(documentList,function(fileName) {
+                        finalList[storage+"/"+fileName]= copy(documentList[fileName]);
+                        finalList[storage+"/"+fileName].fileName = storage+"/"+fileName;
+                    })
+                });
+            }
+        },
+
+        updateDocumentList: function() {
+            for(var storage in this.storageList) {this.documentList[storage] = this.storageList[storage].getDocumentList()}
+        },
+        analysePath: function(path) {
+            var storage = path.shift();
+            var address = path.join("/");
+            return {storage: storage, address: address}
         }
+    }
 
 
 
