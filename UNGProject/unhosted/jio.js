@@ -395,114 +395,162 @@
         },
 
 
-    /***************************************************************
-    *********************** IndexedStorage *************************/
         /**
-         * Class IndexedStorage
-         * @class provides usual API to create an index while storing documents
-         * @param data : object containing every element needed to build the storage
-         * "storage" : the storage to index
-         * @param applicant : object containing inforamtion about the person/application needing this JIO object
+         * load the list of the documents in this storage
+         * @param option : optional object containing
+         * "success" : the function to execute when the load is done
+         * "errorHandler" : the function to execute if an error occures
+         * @return null if the request is asynchronous, the list of documents otherwise.
+         * @example {"file1":{fileName:"file1",creationDate:"Tue, 23 Aug 2011 15:18:32 GMT",lastModified:"Tue, 23 Aug 2011 15:18:32 GMT"},...}
          */
-        JIO.IndexedStorage = function(data, applicant) {
-            this.storage = createStorage(data.storage, applicant)//create the object allowing IO in storages
-            this.index = null;
+        getDocumentList: function(option) {
+            var list = this.documents;
+            if(option.success) option.success(list);
+            return list;
+        },
 
-            //initialize the index
-            var storage = this;
-            (function initialize() {//try to download jio.index
-                if(this.storage) {
-                    this.storage.loadDocument("jio.index","text",function(data) {storage.index = this;},function(error) {
-                        if(error.status==404) {createIndex()} else {alert("error "+error.status+" while trying to download jio.index")}
-                    });
-                } else {//if the storage is not ready
-                    setTimeout(initialize,50);
-                }
-            })()
-            function createIndex() {//create a new index if doesn't exist
-                storage.index = {}//for the moment, just consider that the folder is empty
-            }
+
+        save: function() {
+            localStorage[this.userName]=JSON.stringify(this.documents);
         }
-        JIO.IndexedStorage.prototype = {
-            /* delegate the call to the indexed storage */
-            userNameAvailable: function() {return this.storage.userNameAvailable.apply(this.storage,arguments)},
+    }
 
-            /**
-             * load either a document or only its metaData
-             * @param fileName : the name of the file where the data will be stored
-             * @param option : optional object containing
-             * "metaDataOnly" : set to true if only metaData are wanted
-             * @return the content of metaData, or the content of the document
-             */
-            loadDocument: function(fileName, option) {
-                return option.metaDataOnly ? this.getIndex()[fileName] : this.storage.loadDocument.apply(this.storage,arguments)
-            },
+/***************************************************************
+*********************** IndexedStorage *************************/
+    /**
+     * Class IndexedStorage
+     * @class provides usual API to create an index while storing documents
+     * @param data : object containing every element needed to build the storage
+     * "storage" : the storage to index
+     * @param applicant : object containing inforamtion about the person/application needing this JIO object
+     */
+    JIO.IndexedStorage = function(data, applicant) {
+        this.storage = createStorage(data.storage, applicant)//create the object allowing IO in storages
+        this.index = null;
 
-
-            /**
-             * save a document in the storage and update its metaData
-             * @param data : the data to store
-             * @param fileName : the name of the file where the data will be stored
-             * @param option : optional object containing
-             * "success" : the function to execute when the save is done
-             * "metaData" : information to store about the document
-             */
-            saveDocument: function(data, fileName, option) {
-                var fileAlreadyExist = this.getIndex()[fileName];
-                return this.storage.saveDocument(data,fileName,generateSaveOption(fileAlreadyExist));
-
-                function generateSaveOption(fileAlreadyExist) {
-                    var indexedStorage = this;
-                    var saveOption = copy(option);
-                    saveOption.success = function(data) {
-                        var time = Date.now();
-                        indexedStorage.getIndex()[fileName] = option.metaData;
-                        indexedStorage.getIndex()[fileName].lastModified = time;
-                        indexedStorage.getIndex()[fileName].fileName = fileName;
-                        if(!fileAlreadyExist) {indexedStorage.getIndex()[fileName].creationDate = time;}
-                        indexedStorage.save();
-                        option.success(data);
+        //initialize the index
+        var storage = this;
+        (function initialize() {//try to download jio.index
+            if(storage.storage) {
+                var loadOption = {
+                    success: function(data) {storage.index = JSON.parse(data);},
+                    errorHandler: function(error) {
+                        if(error.status==404) {storage.createIndex()} else {alert("error "+error.status+" while trying to download jio.index")}
                     }
-                    return saveOption
                 }
-            },
+                storage.storage.loadDocument("jio.index", loadOption);
+            } else {//if the storage is not ready
+                setTimeout(initialize,50);
+            }
+        })()
+    }
+    JIO.IndexedStorage.prototype = {
+        /* delegate the call to the indexed storage */
+        userNameAvailable: function() {return this.storage.userNameAvailable.apply(this.storage,arguments)},
+
+        /**
+         * load either a document or only its metaData
+         * @param fileName : the name of the file where the data will be stored
+         * @param option : optional object containing
+         * "metaDataOnly" : set to true if only metaData are wanted
+         * @return the content of metaData, or the content of the document
+         */
+        loadDocument: function(fileName, option) {
+            var indexedStorage = this;
+            if(this.getIndex()===undefined) {
+                setTimeout(function() {indexedStorage.loadDocument(fileName, option)},50);
+                return null;
+            } else {
+                return option.metaDataOnly ? this.getIndex()[fileName] : this.storage.loadDocument.apply(this.storage,arguments)
+            }
+        },
 
 
-            /**
-             * Delete a document or a list of documents from the storage and remove its metaData from the index
-             * Data are deleted only if the delete is successful
-             * @param file : fileName or array of fileNames to delete
-             * @param option : optional object containing
-             * "success" : the function to execute when the delete is done
-             */
-            deleteDocument: function(file, option) {
-                var indexedStorage = this;
-                var newOption = copy(option);
-                newOption.success = function() {
-                    if(option.success) {option.success()}
-                    oneOrEach(file,deleteFileData);
+        /**
+         * save a document in the storage and update its metaData
+         * @param data : the data to store
+         * @param fileName : the name of the file where the data will be stored
+         * @param option : optional object containing
+         * "success" : the function to execute when the save is done
+         * "metaData" : information to store about the document
+         */
+        saveDocument: function(data, fileName, option) {
+            var indexedStorage = this;
+            if(this.getIndex()==null) {
+                setTimeout(function() {indexedStorage.saveDocument(data, fileName, option)},50);
+                return null;
+            } else {
+                var fileAlreadyExist = this.getIndex()[fileName]!==undefined;
+                var instruction = function() {
+                    var time = Date.now();
+                    indexedStorage.getIndex()[fileName] = option.metaData || {};
+                    indexedStorage.getIndex()[fileName].lastModified = time;
+                    indexedStorage.getIndex()[fileName].fileName = fileName;
+                    if(!fileAlreadyExist) {indexedStorage.getIndex()[fileName].creationDate = time;}
                     indexedStorage.save();
                 }
-                return this.storage.deleteDocument(file, newOption);
+                option.success = addInstruction(instruction, option.success, true);
+                return this.storage.saveDocument(data,fileName,option);
+            }
+        },
 
-                function deleteFileData(fileName) {
-                    delete this.getIndex()[fileName];
+
+        /**
+         * Delete a document or a list of documents from the storage and remove its metaData from the index
+         * Data are deleted only if the delete is successful
+         * @param file : fileName or array of fileNames to delete
+         * @param option : optional object containing
+         * "success" : the function to execute when the delete is done
+         */
+        deleteDocument: function(file, option) {
+            var indexedStorage = this;
+            if(this.getIndex()===undefined) {
+                setTimeout(function() {indexedStorage.deleteDocument.call(indexedStorage, file, option)},50);
+                return null;
+            } else {
+                var newOption = copy(option);
+                newOption.success = function() {
+                    oneOrEach(file,deleteFileData);
+                    indexedStorage.save();
+                    if(option.success) {option.success()}
                 }
-            },
+                return this.storage.deleteDocument(file, newOption);
+            }
+
+            function deleteFileData(fileName) {
+                delete indexedStorage.getIndex()[fileName];
+            }
+        },
 
 
-            /**
-             * return the list of the documents in the index
-             * @param option : optional object containing
-             * "success" : the function to execute on the list
-             * @return the list of documents.
-             * @example {"file1":{fileName:"file1",creationDate:"Tue, 23 Aug 2011 15:18:32 GMT",lastModified:"Tue, 23 Aug 2011 15:18:32 GMT"},...}
-             */
-            getDocumentList: function(option) {
+        /**
+         * return the list of the documents in the index
+         * @param option : optional object containing
+         * "success" : the function to execute on the list
+         * @return the list of documents.
+         * @example {"file1":{fileName:"file1",creationDate:"Tue, 23 Aug 2011 15:18:32 GMT",lastModified:"Tue, 23 Aug 2011 15:18:32 GMT"},...}
+         */
+        getDocumentList: function(option) {
+            var indexedStorage = this;
+            if(this.getIndex()===undefined) {
+                setTimeout(function() {indexedStorage.getDocumentList.call(indexedStorage, fileName, option)},50);
+                return null;
+            } else {
                 var list = this.getIndex();
                 if(option.success) option.success(list);
                 return list;
-            },
+            }
+        },
+
+        getIndex: function() {return this.index},
+        save: function() {
+            this.storage.saveDocument(JSON.stringify(this.getIndex()), "jio.index", "text", true);
+        },
+        createIndex: function () {//create a new index if doesn't exist
+            this.index = {}//for the moment, just consider that the folder is empty
+        }
+    }
+
 
             getIndex: function() {return this.index},
             save: function() {
