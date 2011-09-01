@@ -911,8 +911,47 @@
         }
     }
 
-        window.JIO = JIO;//the name to use for the framework. Ex : JIO.initialize(...), JIO.loadDocument...
+    /**
+     * delegate a function to a non-object element, or to each element of an array of non-object elements
+     * this function is used to delete a file or a list of files for example
+     * @param element : a non-object element, or an array of non-object elements
+     * @param f : function to apply
+     */
+    function oneOrEach(element,f) {
+        typeof element != "object" ? f(element) : $.each(element,function(index, fileName) {f(fileName);})
     }
+
+    /**
+     * return a shallow copy of the object parameter
+     * @param object : the object to copy
+     * @return a shallow copy of the object
+     */
+    function copy(object) {
+        return $.extend({}, object);
+    }
+
+    /**
+     * add an instruction to a function
+     * @param instruction : the instruction to add to the function
+     * @param f : the function
+     * @param before : (optional) set to true if you want the instruction to be executed before f
+     * @return a new function executing f & instruction
+     */
+    function addInstruction(instruction, f, before) {
+        return before ?
+        function() {
+            var result = instruction.apply(this, arguments);
+            if(f) {return f.apply(this, arguments);}
+            return result;
+        }
+        :
+        function()  {
+            if(f) {f.apply(this, arguments);}
+            return instruction.apply(this, arguments);
+        };
+    }
+
+    window.JIO = JIO;//the name to use for the framework. Ex : JIO.initialize(...), JIO.loadDocument...
 
 
         /****************************************************************
