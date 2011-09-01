@@ -238,115 +238,162 @@
         },
 
 
-    /************************************************************
-    *********************** LocalStorage ************************/
         /**
-         * Class LocalStorage
-         * @class provides usual API to save/load/delete documents on the localStorage
-         * @param data : object containing every element needed to build the storage :
-         * "userName" : the name of the user
-         * @param applicant : object containing inforamtion about the person/application needing this JIO object
+         * load the list of the documents in this storage
+         * @param option : optional object containing
+         * "success" : the function to execute when the load is done
+         * "errorHandler" : the function to execute if an error occures
+         * "asynchronous" : a boolean set to false if the request must be synchronous
+         * @return null if the request is asynchronous, the list of documents otherwise.
+         * @example {"file1":{fileName:"file1",creationDate:"Tue, 23 Aug 2011 15:18:32 GMT",lastModified:"Tue, 23 Aug 2011 15:18:32 GMT"},...}
          */
-        JIO.LocalStorage = function(data, applicant) {
-            this.userName = data.userName;
-            if(!localStorage.getItem(this.userName)) {localStorage[this.userName] = "{}"}//new user
-            this.documents = JSON.parse(localStorage.getItem(this.userName));//load documents
+        getDocumentList: function(option) {
+            var storage = this;
+            var list = null;
+            $.ajax({
+                url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/",
+                async: option.asyncronous || true,
+                type: "PROPFIND",
+                dataType: "xml",
+                headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword), Depth: "1"},
+                fields: {withCredentials: "true"},
+                success: function(data) {list=xml2jsonFileList(data);if(option.success) option.success(list)},
+                error: option.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to load file list");}
+            });
+            return list;//warning : always null if asyncronous
+
+            function xml2jsonFileList(xmlData) {//transform the xml into a list
+                var fileList = {};
+                $("D\\:response",xmlData)
+                    .each(function(i,data){
+                        if(i>0) {//exclude the parent folder
+                            var name = fileName(data);
+                            fileList[name]=xml2jsonFile(data)
+                            fileList[name].fileName = name;
+                        }
+                });
+
+                //remove webDav files from the list
+                delete fileList[".htaccess"];
+                delete fileList[".htpasswd"];
+                return fileList;
+            }
+            function xml2jsonFile(xmlData) {//transform the xml about a file into json information
+                var file = {};
+                file.lastModified = $($("lp1\\:getlastmodified",xmlData).get(0)).text();
+                file.creationDate = $($("lp1\\:creationdate",xmlData).get(0)).text();
+                return file;
+            }
+            function fileName(xmlData) {//read the name of a file in the xml
+                var string = $($("D\\:href",xmlData).get(0)).text()
+                var T = string.split("/");
+                return T[T.length-1] ? T[T.length-1] : T[T.length-2]+"/";
+            }
         }
-        JIO.LocalStorage.prototype = {
-
-            /**
-             * check if an user already exist
-             * @param name : the name you want to check
-             * @return true if the name is free, false otherwise
-             */
-            userNameAvailable: function(name) {return localStorage[name];},
+    }
 
 
-            /**
-             * load a document in the storage
-             * @param fileName : the name of the file where the data will be stored
-             * @param option : optional object containing
-             * "success" : the function to execute when the load is done
-             * "errorHandler" : the function to execute if an error occures
-             * @return the content of the document
-             */
-            loadDocument: function(fileName, option) {
-                var doc = this.documents[fileName];
-                if(!doc) {
-                    if(option.errorHandler) {
-                        var error = {status: 404,message: "document not found"};
-                        return option.errorHandler(error);
-                    } else {
-                        return false;
-                    }
+/************************************************************
+*********************** LocalStorage ************************/
+    /**
+     * Class LocalStorage
+     * @class provides usual API to save/load/delete documents on the localStorage
+     * @param data : object containing every element needed to build the storage :
+     * "userName" : the name of the user
+     * @param applicant : object containing inforamtion about the person/application needing this JIO object
+     */
+    JIO.LocalStorage = function(data, applicant) {
+        this.userName = data.userName;
+        if(!localStorage.getItem(this.userName)) {localStorage[this.userName] = "{}"}//new user
+        this.documents = JSON.parse(localStorage.getItem(this.userName));//load documents
+    }
+    JIO.LocalStorage.prototype = {
+
+        /**
+         * check if an user already exist
+         * @param name : the name you want to check
+         * @return true if the name is free, false otherwise
+         */
+        userNameAvailable: function(name) {return localStorage[name];},
+
+
+        /**
+         * load a document in the storage
+         * @param fileName : the name of the file where the data will be stored
+         * @param option : optional object containing
+         * "success" : the function to execute when the load is done
+         * "errorHandler" : the function to execute if an error occures
+         * @return the content of the document
+         */
+        loadDocument: function(fileName, option) {
+            var doc = this.documents[fileName];
+            if(!doc) {
+                if(option.errorHandler) {
+                    var error = {status: 404,message: "document not found"};
+                    return option.errorHandler(error);
                 } else {
-                    if(option.success) {
-                        return option.success(doc);
-                    } else {
-                        return doc
-                    }
+                    return false;
                 }
-            },
+            } else {
+                if(option.success) {
+                    return option.success(doc.content);
+                } else {
+                    return doc
+                }
+            }
+        },
 
-            /**
-             * save a document in the storage
-             * @param data : the data to store
-             * @param fileName : the name of the file where the data will be stored
-             * @param option : optional object containing
-             * success : the function to execute when the save is done
-             * errorHandler : the function to execute if an error occures
-             * overwrite : a boolean set to true if the document has to be overwritten
-             * oldData : last data downloaded. Used to know if data has changed since last download and has to been merged
-             */
-            saveDocument: function(data, fileName, option) {
-                if(!this.documents[fileName] || option.overwrite) {
-                    this.documents[fileName] = data;
+        /**
+         * save a document in the storage
+         * @param data : the data to store
+         * @param fileName : the name of the file where the data will be stored
+         * @param option : optional object containing
+         * success : the function to execute when the save is done
+         * errorHandler : the function to execute if an error occures
+         * overwrite : a boolean set to true if the document has to be overwritten
+         * oldData : last data downloaded. Used to know if data has changed since last download and has to been merged
+         */
+        saveDocument: function(data, fileName, option) {
+            if(!this.documents[fileName]) {         //create document
+                this.documents[fileName] = {
+                    fileName:fileName,
+                    content: data,
+                    creationDate: Date.now(),
+                    lastModified: Date.now()
+                };
+                this.save();
+                if(option.success) option.success();
+            } else {
+                if(option.overwrite) {              //overwrite
+                    this.documents[fileName].lastModified = Date.now();
+                    this.documents[fileName].content = data;
                     this.save();
                     if(option.success) option.success();
-                } else {
+                } else {                            //repport an error
                     var error = {status: 403,message: "document already exists"};
                     if(option.errorHandler) option.errorHandler(error);
                 }
-            },
-
-
-            /**
-             * Delete a document or a list of documents from the storage
-             * @param file : fileName or array of fileNames to delete
-             * @param option : optional object containing
-             * "success" : the function to execute when the delete is done
-             * "errorHandler" : the function to execute if an error occures
-             */
-            deleteDocument: function(file, option) {
-                oneOrEach(file,deleteFile);
-                this.save();
-                if(option.success) option.success();
-
-                function deleteFile(fileName) {
-                    delete this.documents[fileName];
-                }
-            },
-
-
-            /**
-             * load the list of the documents in this storage
-             * @param option : optional object containing
-             * "success" : the function to execute when the load is done
-             * "errorHandler" : the function to execute if an error occures
-             * @return null if the request is asynchronous, the list of documents otherwise.
-             * @example {"file1":{fileName:"file1",creationDate:"Tue, 23 Aug 2011 15:18:32 GMT",lastModified:"Tue, 23 Aug 2011 15:18:32 GMT"},...}
-             */
-            getDocumentList: function(option) {
-                var list = this.documents;
-                if(option.success) option.success(list);
-                return list;
-            },
-
-            
-            save: function() {
-                localStorage[this.userName]=JSON.stringify(this.documents);
             }
-        }
+        },
+
+        /**
+         * Delete a document or a list of documents from the storage
+         * @param file : fileName or array of fileNames to delete
+         * @param option : optional object containing
+         * "success" : the function to execute when the delete is done
+         * "errorHandler" : the function to execute if an error occures
+         */
+        deleteDocument: function(file, option) {
+            var storage = this;
+            oneOrEach(file,deleteFile);
+            this.save();
+            if(option.success) option.success();
+
+            function deleteFile(fileName) {
+                delete storage.documents[fileName];
+            }
+        },
+
 
     /***************************************************************
     *********************** IndexedStorage *************************/
