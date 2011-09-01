@@ -7,13 +7,13 @@
     /**
      * load dependencies
      */
-    var ready = includeJS([//files to load
-        "unhosted/sjcl.js",
-        "unhosted/jquery.js",
-        "unhosted/base64.js"
-    ],[//element to check before being ready
-        $
-    ], script);// function to execute then
+    var dependenceLoaded = includeJS([//files to load
+        "/unhosted/sjcl.js",
+        "/unhosted/jquery.js",
+        "/unhosted/base64.js"
+    ],function() {// return true only if dependencies are loaded
+        return $!==undefined && sjcl!==undefined && Base64!==undefined; // check jQuery, sjcl & Base64
+    });
 
 
     function script() {
@@ -744,74 +744,58 @@
             }
         }
 
-        /*************************************************************************
-        *************************** other functions *****************************/
 
 
-        /**
-         * function used to address requests to a php file
-         * @param address : address of the target
-         * @param data : data to send to the server
-         * @param instruction : function to execute after receiving the answer
-         * @return void
-         */
-        function request(address, data, instruction) {
-            $.ajax({
-                url: address,
-                type: "POST",
-                async: false,
-                dataType: "text",
-                data: data,
-                success: instruction,
-                error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
-            });
+    /*************************************************************************
+    *************************** other functions *****************************/
+
+
+    /**
+     * function used to address requests to a php file
+     * @param address : address of the target
+     * @param data : data to send to the server
+     * @param instruction : function to execute after receiving the answer
+     * @return void
+     */
+    function request(address, data, instruction) {
+        $.ajax({
+            url: address,
+            type: "POST",
+            async: false,
+            dataType: "text",
+            data: data,
+            success: instruction,
+            error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
+        });
+    }
+
+    /**
+     * Create a tree node from data
+     * @param data : information found in jio.json and needed to create the storage
+     * @param applicant : (optional) information about the person/application needing this JIO object (allow limited access)
+     */
+    function createStorage(data, applicant) {
+        switch(data.type) {
+            case "dav":return new JIO.DAVStorage(data, applicant);break;
+            case "local":return new JIO.LocalStorage(data, applicant);break;
+            case "index":return new JIO.IndexedStorage(data, applicant);break;
+            case "multiple":return new JIO.MultipleStorage(data, applicant);break;
+            case "replicate":return new JIO.ReplicateStorage(data, applicant);break;
+            case "encrypt":return new JIO.CryptedStorage(data,applicant);break;
+            //etc
+            default:var waitedNode = null;//create a custom storage from a js file
+                $.ajax({
+                    url: data.location+"/storage-init.js",//url of the file describing the creation of the storage
+                    type: "GET",
+                    async: false,
+                    dataType: "script",
+                    success: function(script){var CustomStorage = eval(script);waitedNode = new CustomStorage(data)},
+                    error: data.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to instanciate storage"+data.location);}
+                });
+                return waitedNode;
+                break;
         }
-
-        /**
-         * Create a tree node from data
-         * @param data : information found in jio.json and needed to create the storage
-         * @param applicant : (optional) information about the person/application needing this JIO object (allow limited access)
-         */
-        function createStorage(data, applicant) {
-            switch(data.type) {
-                case "dav":return new JIO.DAVStorage(data, applicant);break;
-                case "index":return new JIO.IndexedStorage(data, applicant);break;
-                case "multiple":return new JIO.MultipleStorage(data, applicant);break;
-                case "replicate":return new JIO.ReplicateStorage(data, applicant);break;
-                case "encrypte":return new JIO.CryptedStorage(data,applicant);break;
-                //etc
-                default:var waitedNode = null;//create a custom storage from a js file
-                    $.ajax({
-                        url: data.location+"/storage-init.js",//url of the file describing the creation of the storage
-                        type: "GET",
-                        async: false,
-                        dataType: "script",
-                        success: function(script){var CustomStorage = eval(script);waitedNode = new CustomStorage(data)},
-                        error: data.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to instanciate storage"+data.location);}
-                    });
-                    return waitedNode;
-                    break;
-            }
-        }
-
-        /**
-         * delegate a function to a non-object element, or to each element of an array of non-object elements
-         * this function is used to delete a file or a list of files for example
-         * @param element : a non-object element, or an array of non-object elements
-         * @param f : function to apply
-         */
-        function oneOrEach(element,f) {
-            typeof element != "object" ? f(element) : $.each(element,function(index, fileName) {f(fileName);})
-        }
-
-        /**
-         * return a shallow copy of the object parameter
-         * @param object : the object to copy
-         * @return a shallow copy of the object
-         */
-        function copy(object) {
-            $.extend({}, object);
-        }
+    }
 
         window.JIO = JIO;//the name to use for the framework. Ex : JIO.initialize(...), JIO.loadDocument...
     }
@@ -823,16 +807,14 @@
     /**
      * include js files
      * @param url : path or array of paths of the js file(s)
-     * @param flag : (optional) array of elements allowing to know if dependencies are ready
+     * @param ready : (optional) array of elements allowing to know if dependencies are ready
      * @param instruction : (optional) instruction to execute when dependencies are loaded
-     * @return a ready function which returns true only if the dependencies are ready
+     * @return the ready function
      * @example : includeJS("jquery.js",[$]);
      */
-    function includeJS(url,flag, instruction) {
-        typeof url != "object" ? includeElement(url) : onEach(url);
-        var ready = function() {
-            return oneOrEach(flag.slice(),function(element){return typeof element != "undefined"});
-        }
+    function includeJS(url,ready, instruction) {
+        //path = findURL("jio.js");
+        typeof url != "object" ? includeElement(url) : onEach(url,includeElement);
         if(instruction) {
             (function waitUntilLoaded() {!ready() ? setTimeout(waitUntilLoaded,50) : instruction();})()
         }
@@ -841,15 +823,26 @@
         function includeElement(element) {//include a js file
             var head = window.document.getElementsByTagName('head')[0];
             var script = window.document.createElement('script');
-            script.setAttribute('src', url);
+            script.setAttribute('src', element);
             script.setAttribute('type', 'text/javascript');
             head.appendChild(script);
         }
 
         function onEach(array,f) {
             var head = array.pop();
-            if(array.length==0) {return true}
-            return f(head) && oneOrEach(array);
+            if(head===undefined) {return true}
+            var rep1 = f(head);
+            var rep2 = onEach(array,f);
+            return rep1 && rep2;
+        }
+
+        function findURL(fileName) {
+            var elements = window.document.getElementsByName("script");
+            var jioRegExp = new RegExp("^((.*)/)?"+fileName+"$");
+            for(var e in elements) {
+                if(jioRegExp.test(e.src)) {return e.src.replace(jioRegExp, "$1")}
+            }
+            return "";
         }
     }
     
