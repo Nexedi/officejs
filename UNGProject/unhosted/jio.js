@@ -70,226 +70,172 @@
 
 
 
-        /*************************************************************************
-        ************************* specific storages *****************************/
 
-    /************************************************************
-    *********************** DAVstorage *************************/
+    /*************************************************************************
+    ************************* specific storages *****************************/
+
+/************************************************************
+*********************** DAVstorage *************************/
+    /**
+     * Class DAVStorage
+     * @class provides usual API to save/load/delete documents on a storage webDav
+     * @param data : object containing every element needed to build the storage :
+     * "userName" : the name of the user
+     * "location" : the complete url of the storage
+     * "provider" : the provider of the storage
+     * @param applicant : object containing inforamtion about the person/application needing this JIO object
+     */
+    JIO.DAVStorage = function(data, applicant) {
+        this.userName = data.userName;
+        this.applicationID = applicant.ID;
+        this.applicationPassword = data.password;
+        this.location = data.location;//complete url of the storage
+        this.provider = data.provider;//like "gmail.com", "yahoo.fr"...
+    }
+    JIO.DAVStorage.prototype = {
+
         /**
-         * Class DAVStorage
-         * @class provides usual API to save/load/delete documents on a storage webDav
-         * @param data : object containing every element needed to build the storage :
-         * "userName" : the name of the user
-         * "location" : the complete url of the storage
-         * "provider" : the provider of the storage
-         * @param applicant : object containing inforamtion about the person/application needing this JIO object
+         * check if an user already exist
+         * @param name : the name you want to check
+         * @param option : optional object containing
+         * "success" : the function to execute when the check is done
+         * "errorHandler" : the function to execute if an error occures
+         * "asynchronous" : a boolean set to false if the request must be synchronous
+         * @return null if the request is asynchronous, true if the name is free, false otherwise
          */
-        JIO.DAVStorage = function(data, applicant) {
-            this.userName = data.userName;
-            this.applicationID = applicant.ID;
-            this.applicationPassword = data.password;
-            this.location = data.location;//complete url of the storage
-            this.provider = data.provider;//like "gmail.com", "yahoo.fr"...
-        }
-        JIO.DAVStorage.prototype = {
-
-            /**
-             * check if an user already exist
-             * @param name : the name you want to check
-             * @param option : optional object containing
-             * "success" : the function to execute when the check is done
-             * "errorHandler" : the function to execute if an error occures
-             * "asynchronous" : a boolean set to false if the request must be synchronous
-             * @return null if the request is asynchronous, true if the name is free, false otherwise
-             */
-            userNameAvailable: function(name, option) {
-                var isAvailable = null;
-                $.ajax({
-                    url: this.location + "/dav/"+name,
-                    type: "HEAD",
-                    async: option.asyncronous || true,
-                    success: function() {isAvailable=true;if(option.sucess) option.success();},
-                    error: option.errorHandler || function(type) {if(type.status==404) {isAvailable=false;}else{alert("Error "+type.status+" : fail while trying to check "+name);}}
-                });
-                return isAvailable;//warning : always null if asyncronous
-            },
+        userNameAvailable: function(name, option) {
+            var isAvailable = null;
+            $.ajax({
+                url: this.location + "/dav/"+name,
+                type: "HEAD",
+                async: option.asyncronous || true,
+                success: function() {isAvailable=true;if(option.sucess) option.success();},
+                error: option.errorHandler || function(type) {if(type.status==404) {isAvailable=false;}else{alert("Error "+type.status+" : fail while trying to check "+name);}}
+            });
+            return isAvailable;//warning : always null if asyncronous
+        },
 
 
-            /**
-             * load a document in the storage
-             * @param fileName : the name of the file where the data will be stored
-             * @param option : optional object containing
-             * "type" : the type of data to store
-             * "success" : the function to execute when the load is done
-             * "errorHandler" : the function to execute if an error occures
-             * "asynchronous" : a boolean set to false if the request must be synchronous
-             * @return null if the request is asynchronous, the content of the document otherwise
-             */
-            loadDocument: function(fileName, option) {
-                var data = null;
-                $.ajax({
-                    url: this.location + "/dav/"+this.userName+"/"+this.applicationID+"/"+fileName,
-                    type: "GET",
-                    async: option.asyncronous || true,
-                    dataType: option.type || "text",
-                    headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword)},
-                    fields: {withCredentials: "true"},
-                    success: function(content) {if(option.success) option.success(content);data=content},
-                    error: option.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to load "+fileName);}
-                });
-                return data;//warning : always null if asyncronous
-            },
+        /**
+         * load a document in the storage
+         * @param fileName : the name of the file where the data will be stored
+         * @param option : optional object containing
+         * "type" : the type of data to store
+         * "success" : the function to execute when the load is done
+         * "errorHandler" : the function to execute if an error occures
+         * "asynchronous" : a boolean set to false if the request must be synchronous
+         * @return null if the request is asynchronous, the content of the document otherwise
+         */
+        loadDocument: function(fileName, option) {
+            var data = null;
+            $.ajax({
+                url: this.location + "/dav/"+this.userName+"/"+this.applicationID+"/"+fileName,
+                type: "GET",
+                async: option.asyncronous || true,
+                dataType: option.type || "text",
+                headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword)},
+                fields: {withCredentials: "true"},
+                success: function(content) {if(option.success) option.success(content);data=content},
+                error: option.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to load "+fileName);}
+            });
+            return data;//warning : always null if asyncronous
+        },
 
 
-            /**
-             * save a document in the storage
-             * @param data : the data to store
-             * @param fileName : the name of the file where the data will be stored
-             * @param option : optional object containing
-             * type : the type of data to store
-             * success : the function to execute when the save is done
-             * errorHandler : the function to execute if an error occures
-             * overwrite : a boolean set to true if the document has to be overwritten
-             * asynchronous : a boolean set to false if the request must be synchronous
-             * oldData : last data downloaded. Used to know if data has changed since last download and has to been merged
-             */
-            saveDocument: function(data, fileName, option) {
+        /**
+         * save a document in the storage
+         * @param data : the data to store
+         * @param fileName : the name of the file where the data will be stored
+         * @param option : optional object containing
+         * type : the type of data to store
+         * success : the function to execute when the save is done
+         * errorHandler : the function to execute if an error occures
+         * overwrite : a boolean set to true if the document has to be overwritten
+         * asynchronous : a boolean set to false if the request must be synchronous
+         * oldData : last data downloaded. Used to know if data has changed since last download and has to been merged
+         */
+        saveDocument: function(data, fileName, option) {
 
-                var storage = this;//save the context
+            var storage = this;//save the context
 
-                //check if already exists and for diffs
-                var loadOption = {
-                    type: option.type,
-                    asynchronous: false,//TODO : try to asynchronize
-                    success: function(remoteData) {
-                        merge(remoteData);
-                    },
-                    errorHandler: function(type) {
-                        if(type.status==404) {
-                            save();
-                        } else {
-                            option.errorHandler || save();
-                        }
-                    }
-                }
-                this.loadDocument(fileName, loadOption);
-
-                function save() {
-                    $.ajax({
-                        url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/"+fileName,
-                        type: "PUT",
-                        async: option.asynchronous || true,
-                        dataType: option.type || "text",
-                        data: data,
-                        headers: {Authorization: "Basic "+Base64.encode(storage.userName+":"+storage.applicationPassword)},
-                        fields: {withCredentials: "true"},
-                        success: option.success,
-                        error: function(type) {
-                          if(type.status==201 || type.status==204) {if(option.success) option.success();}//ajax thinks that 201 is an error...
-                          else {option.errorHandler ? option.errorHandler.call(this,type) : alert("Error "+type.status+" : fail while trying to save "+fileName);}
-                        }
-                    });
-                }
-
-                function merge(serverData) {
-                    if(option.overwrite!==false) {
-                        //if(diff(oldData,serverData)) {merge(newData, serverData);}
+            //check if already exists and for diffs
+            var loadOption = {
+                type: option.type,
+                asynchronous: false,//TODO : try to asynchronize
+                success: function(remoteData) {
+                    merge(remoteData);
+                },
+                errorHandler: function(type) {
+                    if(type.status==404) {
                         save();
-                    }
-                }
-
-            },
-
-
-            /**
-             * Delete a document or a list of documents from the storage
-             * @param file : fileName or array of fileNames to delete
-             * @param option : optional object containing
-             * "success" : the function to execute when the delete is done. The function is executed only if every delete are successful
-             * "errorHandler" : the function to execute if an error occures
-             * "asynchronous" : a boolean set to false if the request must be synchronous
-             */
-            deleteDocument: function(file, option) {
-                var storage = this;
-
-                var fileName = typeof file == "string" ? file : file.pop();
-                var successFunction = generateSuccess();
-                $.ajax({
-                    url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/"+fileName,
-                    type: "DELETE",
-                    async: option.asynchronous || true,
-                    headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword)},
-                    fields: {withCredentials: "true"},
-                    success: successFunction,
-                    error: function(type) {
-                        if(type.status==201 || type.status==204) {successFunction();}//ajax thinks that 201 is an error...
-                        else {option.errorHandler ? option.errorHandler(type) : alert("Error "+type.status+" : fail while trying to delete "+fileName);}
-                    }
-                });
-
-                function generateSuccess() {
-                    if(typeof file == "string" || file.length===0) {
-                        return function() {if(option.success) {option.success()}}
                     } else {
-                        return function() {storage.deleteDocument(file,option);}
+                        option.errorHandler || save();
                     }
-                }
-            },
-
-
-            /**
-             * load the list of the documents in this storage
-             * @param option : optional object containing
-             * "success" : the function to execute when the load is done
-             * "errorHandler" : the function to execute if an error occures
-             * "asynchronous" : a boolean set to false if the request must be synchronous
-             * @return null if the request is asynchronous, the list of documents otherwise.
-             * @example {"file1":{fileName:"file1",creationDate:"Tue, 23 Aug 2011 15:18:32 GMT",lastModified:"Tue, 23 Aug 2011 15:18:32 GMT"},...}
-             */
-            getDocumentList: function(option) {
-                var storage = this;
-                var list = null;
-                $.ajax({
-                    url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/",
-                    async: option.asyncronous || true,
-                    type: "PROPFIND",
-                    dataType: "xml",
-                    headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword), Depth: "1"},
-                    fields: {withCredentials: "true"},
-                    success: function(data) {list=xml2jsonFileList(data);if(option.success) option.success(list)},
-                    error: option.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to load file list");}
-                });
-                return list;//warning : always null if asyncronous
-
-                function xml2jsonFileList(xmlData) {//transform the xml into a list
-                    var fileList = {};
-                    $("D\\:response",xmlData)
-                        .each(function(i,data){
-                            if(i>0) {//exclude the parent folder
-                                var name = fileName(data);
-                                fileList[name]=xml2jsonFile(data)
-                                fileList[name].fileName = name;
-                            }
-                    });
-
-                    //remove webDav files from the list
-                    delete fileList[".htaccess"];
-                    delete fileList[".htpasswd"];
-                    return fileList;
-                }
-                function xml2jsonFile(xmlData) {//transform the xml about a file into json information
-                    var file = {};
-                    file.lastModified = $($("lp1\\:getlastmodified",xmlData).get(0)).text();
-                    file.creationDate = $($("lp1\\:creationdate",xmlData).get(0)).text();
-                    return file;
-                }
-                function fileName(xmlData) {//read the name of a file in the xml
-                    var string = $($("D\\:href",xmlData).get(0)).text()
-                    var T = string.split("/");
-                    return T[T.length-1] ? T[T.length-1] : T[T.length-2]+"/";
                 }
             }
-        }
+            this.loadDocument(fileName, loadOption);
+
+            function save() {
+                $.ajax({
+                    url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/"+fileName,
+                    type: "PUT",
+                    async: option.asynchronous || true,
+                    dataType: option.type || "text",
+                    data: data,
+                    headers: {Authorization: "Basic "+Base64.encode(storage.userName+":"+storage.applicationPassword)},
+                    fields: {withCredentials: "true"},
+                    success: option.success,
+                    error: function(type) {
+                      if(type.status==201 || type.status==204) {if(option.success) option.success();}//ajax thinks that 201 is an error...
+                      else {option.errorHandler ? option.errorHandler.call(this,type) : alert("Error "+type.status+" : fail while trying to save "+fileName);}
+                    }
+                });
+            }
+
+            function merge(serverData) {
+                if(option.overwrite!==false) {
+                    //if(diff(oldData,serverData)) {merge(newData, serverData);}
+                    save();
+                }
+            }
+
+        },
+
+
+        /**
+         * Delete a document or a list of documents from the storage
+         * @param file : fileName or array of fileNames to delete
+         * @param option : optional object containing
+         * "success" : the function to execute when the delete is done. The function is executed only if every delete are successful
+         * "errorHandler" : the function to execute if an error occures
+         * "asynchronous" : a boolean set to false if the request must be synchronous
+         */
+        deleteDocument: function(file, option) {
+            var storage = this;
+
+            var fileName = typeof file == "string" ? file : file.pop();
+            var successFunction = generateSuccess();
+            $.ajax({
+                url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/"+fileName,
+                type: "DELETE",
+                async: option.asynchronous || true,
+                headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword)},
+                fields: {withCredentials: "true"},
+                success: successFunction,
+                error: function(type) {
+                    if(type.status==201 || type.status==204) {successFunction();}//ajax thinks that 201 is an error...
+                    else {option.errorHandler ? option.errorHandler(type) : alert("Error "+type.status+" : fail while trying to delete "+fileName);}
+                }
+            });
+
+            function generateSuccess() {
+                if(typeof file == "string" || file.length===0) {
+                    return function() {if(option.success) {option.success()}}
+                } else {
+                    return function() {storage.deleteDocument(file,option);}
+                }
+            }
+        },
 
 
     /************************************************************
