@@ -15,48 +15,58 @@
         return $!==undefined && sjcl!==undefined && Base64!==undefined; // check jQuery, sjcl & Base64
     });
 
-
-    function script() {
+    /**
+     * JIO main object. Contains all IO methods
+     */
+    var JIO = {
+        jioFileContent: null,   //content of jio.json file
+        storage: null,          //the storage tree
 
         /**
-         * JIO main object. Contains all IO methods
+         * prepare and return the jio object
+         * @param jioData : text or json content of jio.json or method to get it
+         * @param applicant : (optional) information about the person/application needing this JIO object (used to limit access)
+         * @return JIO object
          */
-        var JIO = {
-            jioFileContent: null,//content of jio.json file
-            storage: null,//the storage tree
-
-            /**
-             * prepare and return the jio object
-             * @param jioData : text or json content of jio.json or method to get it
-             * @param applicant : (optional) information about the person/application needing this JIO object (used to limit access)
-             * @return JIO object
-             */
-            initialize: function(jioData, applicant) {
+        initialize: function(jioData, applicant) {
+            if(!dependenceLoaded()) {
+                setTimeout(function() {JIO.initialize(jioData, applicant)},50);
+            } else {
                 switch(typeof jioData) {
                     case "string" :this.jioFileContent = jioData;break;
                     case "object" :this.jioFileContent = JSON.stringify(jioData);break;
                     case "function" :this.jioFileContent = jioData();break;
                     default:alert("Error while getting jio.json content");break;
                 }
-                this.storage = createStorage(JSON.parse(this.jioFileContent), applicant)//create the object allowing IO in storages
-                return this;
-            },
+                this.storage = createStorage(JSON.parse( this.jioFileContent ), applicant);//create the object allowing IO in storages
+            }
+        },
 
-            /**
-             * return the state of JIO object
-             * @return true if ready, false otherwise
-             */
-            isReady: function() {return this.jioFileContent && this.storage},
+        /**
+         * return the state of JIO object
+         * @return true if ready, false otherwise
+         */
+        isReady: function() {return this.jioFileContent && this.storage},
 
-            //IO functions
-            userNameAvailable: function(name, option) {return this.storage.userNameAvailable.apply(this.storage,arguments)},
-            loadDocument: function(fileName, option) {return this.storage.loadDocument.apply(this.storage,arguments)},
-            saveDocument: function(data, fileName, option) {return this.storage.saveDocument.apply(this.storage,arguments)},
-            deleteDocument: function(file, option) {return this.storage.deleteDocument.apply(this.storage,arguments)},
-            getDocumentList: function(option) {return this.storage.getDocumentList.apply(this.storage,arguments)}
-
+        //IO functions
+        getLocation: function() {return this.location},
+        userNameAvailable: function(name, option) {
+            return this.storage.userNameAvailable(name, option||{});
+        },
+        loadDocument: function(fileName, option) {
+            return this.storage.loadDocument(fileName, option||{});
+        },
+        saveDocument: function(data, fileName, option) {
+            return this.storage.saveDocument(data, fileName, option||{});
+        },
+        deleteDocument: function(file, option) {
+            return this.storage.deleteDocument(file, option||{});
+        },
+        getDocumentList: function(option) {
+            return this.storage.getDocumentList(option||{});
         }
 
+    }
 
 
 
