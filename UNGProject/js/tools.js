@@ -29,7 +29,8 @@ UngObject.prototype.load = function(data) {
 };
 
 /* Load methods from a class to another class */
-UngObject.prototype.inherits = function(superClass) {
+UngObject.prototype.inherits = function(superClass,arg) {
+    superClass.call(this,arg);//or this.load(new superClass(arg));
     this.prototype.load(superClass.prototype);
 }
 
@@ -44,7 +45,7 @@ UngObject.prototype.equals = function(object) {
     return true;
 }
 
-/* return a copy of the current object */
+/* return a deep copy of the current object */
 UngObject.prototype.copy = function() {
     var copied = new Object();
     for (var property in this) {
@@ -53,123 +54,17 @@ UngObject.prototype.copy = function() {
     return copied;
 }
 
-
 /**
- * Class List
- * this class provides usual API to manipulate list structure
- * @param arg : a json list object
- * @param contentType : the type of the elements of the list
+ * convert an object into an array easier to manipulate
+ * @param object : the object to convert
  */
-var List = function(arg, contentType) {
-    if(arg && arg.headElement) {
-        if(contentType) {
-            this.headElement=new contentType(arg.headElement);
-        } else {
-            this.headElement = arg.headElement;
-        }
-        this.length = arg.length;
-        this.previous = new List(arg.previous, contentType);
+toArray = function(object) {
+    var array = [];
+    for(var element in object) {
+        if(typeof element != "function") array.push(object[element]);
     }
-    else {
-        this.nullElement();
-    }
+    return array
 }
-List.prototype = new UngObject();
-List.prototype.load({
-    nullElement: function() {
-        this.headElement = null;
-        this.previous = undefined;
-        this.length = 0;
-    },
-    size: function() {return this.length;},
-    head: function() {return this.headElement;},
-    tail: function() {return this.previous;},
-    isEmpty: function() {return this.head()===null;},
-    equals: function(list) {
-        return this.head().equals(list.head()) && this.tail().equals(list.tail());
-    },
-    add: function(value) {
-        var t = new List();
-        t.load(this);
-        this.headElement = value;
-        this.previous = t;
-        this.length = t.size()+1;
-    },
-    get: function(i) {
-        if(i>=this.size()) {return null;}
-        if(i==0) {return this.head();}
-        return this.tail().get(i-1);
-    },
-    set: function(i,element) {
-        if(i>=this.size()) {errorMessage("set out of bounds, "+i+" : "+this.size(),this);return}
-        if(i==0) {
-            this.headElement=element;
-        } else {
-            this.tail().set(i-1,element);
-        }
-    },
-    remove: function(i) {
-        if(i>=this.size()) {errorMessage("remove out of bounds, "+i+" : "+this.size(),this);return}//particular case
-        if(i==0) {this.pop();return}//particular case
-        if(i==1) {//init
-            this.previous = this.tail().tail();
-        } else {//recursion
-            this.tail().remove(i-1);
-        }
-        this.length--;
-    },
-    pop: function() {
-        if(this.isEmpty()) {errorMessage("pop on empty list",this);return null;}
-        var h = this.head();
-        this.load(this.tail())
-        return h;
-    },
-    find: function(object) {
-        if(this.isEmpty()) {return -1}//init-false
-        var elt = this.head();
-        if(object.equals) {//init-true
-            if(object.equals(this.head())) {return 0;}//with an adapted comparator
-        } else {
-            if(object===this.head()) {return 0;}//with usual comparator
-        }
-        var recursiveResult = this.tail().find(object);//recursion
-        return recursiveResult>=0 ? this.tail().find(object)+1 : recursiveResult;
-    },
-    contains: function(object) {if(this.isEmpty()) {return false} else {return object===this.head() ? true : this.tail().contains(object)}},
-    insert: function(element,i) {
-        if(i>this.size()) {errorMessage("insert out of bounds, "+i+" : "+this.size(),this);return}//particular case
-        if(i==0) {//init
-            this.add(element);
-        } else {//recursion
-            this.tail().insert(element,i-1);
-            this.length++;
-        }
-    },
-    replace: function(oldElement,newElement) {
-        if(this.isEmpty()) {errorMessage("<<element not found>> when trying to replace",this);return}//init-false
-        if(oldElement===this.head()) {
-            this.set(0,newElement);//init-true
-        } else {
-            this.tail().replace(oldElement,newElement);//recursion
-        }
-    },
-    removeElement: function(element) {//remove each occurence of the element in this list
-        if(this.isEmpty()) {return}
-        this.tail().removeElement(element);
-        if(element.equals) {//init-true
-            if(element.equals(this.head())) {this.pop();}//with an adapted comparator
-        } else {
-            if(element===this.head()) {this.pop();}//with usual comparator
-        }
-    },
-    concat: function(list) {
-        if(list.size()==0) {return this}
-        var l1 = this.copy();
-        var l2 = list.copy();
-        l1.add(l2.get(l2.size()-1));
-        return l2;
-    }
-});
 
 /**
  * load a public file with a basic ajax request
@@ -184,7 +79,6 @@ loadFile = function(address, type, instruction) {
         dataType: type,
 	success: instruction,
         error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
-
     });
 }
 
@@ -195,14 +89,16 @@ loadFile = function(address, type, instruction) {
  */
 waitBeforeSucceed = function(required, func) {
     var nb = 2;//avoid to test too much times
-    var execute = function() {
+    (function execute() {
         try {
             if(!required.call()) {throw 0;}
             func.call();}
-        catch(e) {console.log(e);if(nb<100) {setTimeout(execute,nb*100);}}
+        catch(e) {
+            if(console) {console.log(e)}
+            if(nb<100) {setTimeout(execute,nb*100);}
+        }
         nb*=nb;
-    }
-    execute();
+    })()
 }
 
 /*
@@ -211,12 +107,27 @@ waitBeforeSucceed = function(required, func) {
  */
 tryUntilSucceed = function(func) {
     var nb = 2;//avoid to test too much times
-    var execute = function() {
+    (function execute() {
         try {func.call();}
-        catch(e) {if(nb<100) {setTimeout(execute,nb*200);}console.log(e);}
+        catch(e) {
+            if(console) {console.log(e)}
+            if(nb<100) {setTimeout(execute,nb*200);}
+        }
         nb*=nb;
-    }
-    execute();
+    })()
+}
+
+/**
+ * call a function periodically. Usefull for checking some stuff regularly
+ * @param task : function to execute each period
+ * @param period : time to wait before next execution
+ * @param firstExecution : (optional) if set to false, the task will not be executed at first call
+ */
+recursiveTask = function(task,period,firstExecution) {
+    if(firstExecution!==false) {task.call()}
+    (function recursion() {
+        setTimeout(function() {task.call();recursion()},period);
+    })();
 }
 
 /**
@@ -232,7 +143,7 @@ var resize = function() {
  */
 errorMessage = function(message,object) {
     errorObject = object;
-    console.log(message);
+    if(console) {console.log(message)}
 }
 
 /**
@@ -241,7 +152,15 @@ errorMessage = function(message,object) {
 function getCurrentTime() {return Date.now();}
 
 /**
- * Paste a toolkit at the mouse position
+ * Paste a toolkit at the mouse position.
+ * Just add a common css class to your element needing a tooltip, and initialize with :
+
+        tooltip = new Tooltip();
+        $(".myTooltipClass")
+            .mouseover(function() {tooltip.show("my tooltip text")})
+            .mouseout(function() {tooltip.hide();})
+            .mousemove(function(event) {tooltip.move(event);});
+
  */
 Tooltip = function() {
     this.visible=false;

@@ -21,9 +21,9 @@ function logIntoDav(wallet) {
 
 function initStorage(wallet) {
     if(!wallet.provider) {//local storage
-        setCurrentStorage(new LocalStorage(wallet.userName));
+        Storage.currentStorage = new LocalStorage(wallet.userName);
     } else {
-        setCurrentStorage(new JIOStorage(wallet));
+        Storage.currentStorage = new JIOStorage(wallet);
     }
 }
 

@@ -10,7 +10,8 @@
  * loadContentFromDocument : display the content of the specified document in the editor
  */
 SVGEditor = function() {
-    this.name = "svg-editor";
+    this.name = "svg-edit";       // name to use in dialog boxes
+    this.objectName = "SVGEditor"  // name of the object reference
     
     this.load = function() {$("#svgframe").attr("src", "svg-edit/svg-editor.html");}
     this.saveEdition = function() {
@@ -26,39 +27,20 @@ SVGEditor = function() {
 /**
  * SVG documents
  *
- * editable documents must implements the following arguments and methods
+ * editable documents must override the following arguments and methods of JSONDocument prototype
  * type : a unique type ID
  * saveEdition : set the argument as the new content of the document. Change last modification time and display the changes
  * setAsCurrentDocument : set the document as currentDocument in the local storage and display its properties in the current page
- *
- * @param arg : a json JSONTextDocument object to load
  */
-var JSONIllustrationDocument = function(arg) {
-    JSONDocument.call(this,arg);//inherits properties from JSONDocument
-    if(arg) {this.load(arg);}
-    else {
-        this.type = "illustration";
-    }
-}
 
-JSONIllustrationDocument.prototype = new JSONDocument();//inherits methods from JSONDocument
-
-JSONIllustrationDocument.prototype.saveEdition = function(content) {
+JSONDocument.prototype.type = "text";
+JSONDocument.prototype.saveEdition = function(content) {
     this.setLastUser(getCurrentUser().getName());
     this.setContent(content);
     this.setLastModification(getCurrentTime());
     this.setAsCurrentDocument();
 }
-JSONIllustrationDocument.prototype.setAsCurrentDocument = function() {
-    getCurrentPage().displayDocumentTitle(this);
-    getCurrentPage().displayDocumentState(this);
-    getCurrentPage().displayDocumentContent(this);
-    getCurrentPage().displayLastUserName(this);
-    getCurrentPage().displayLastModification(this);
+JSONDocument.prototype.setAsCurrentDocument = function() {
+    getCurrentPage().displayDocumentInformation(this);
     setCurrentDocument(this);
 }
-
-getCurrentDocument = function() {
-    return new JSONIllustrationDocument(JSON.parse(localStorage.getItem("currentDocument")));
-}
-

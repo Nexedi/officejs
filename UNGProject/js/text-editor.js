@@ -10,7 +10,8 @@
  * loadContentFromDocument : display the content of the specified document in the editor
  */
 var Xinha = function() {
-    this.name = "Xinha";
+    this.name = "Xinha";                // name to use in dialog boxes
+    this.objectName = "Xinha"  // name of the object reference
     this.load = function() {
         _editor_url  = "xinha/";
         getCurrentPage().include("xinha/XinhaCore.js","script");
@@ -28,7 +29,8 @@ var Xinha = function() {
 }
 
 var AlohaInterface = function() {
-    this.name = "Aloha";
+    this.name = "Aloha";                // name to use in dialog boxes
+    this.objectName = "AlohaInterface"  // name of the object reference
     this.load = function() {
         GENTICS_Aloha_base="aloha/aloha/";
         loadFile("aloha/aloha/aloha.js", "script", function(data) {
@@ -53,7 +55,8 @@ var AlohaInterface = function() {
 }
 
 var NicEdit = function() {
-    this.name = "NicEdit";
+    this.name = "NicEdit";       // name to use in dialog boxes
+    this.objectName = "NicEdit"  // name of the object reference
     this.instance = null;
     this.load = function() {
         var nic = this;
@@ -75,7 +78,8 @@ var NicEdit = function() {
 
 
 var TinyEdit = function() {
-    this.name = "TinyEdit";
+    this.name = "Tiny";       // name to use in dialog boxes
+    this.objectName = "TinyEdit"  // name of the object reference
     this.load = function() {
         loadFile("tinyEdit/tinyEdit.js","script",function(data) {
             eval(data);
@@ -114,41 +118,20 @@ var TinyEdit = function() {
 /**
  * Text documents
  *
- * editable documents must implements the following arguments and methods
+ * editable documents must override the following arguments and methods of JSONDocument prototype
  * type : a unique type ID
  * saveEdition : set the argument as the new content of the document. Change last modification time and display the changes
  * setAsCurrentDocument : set the document as currentDocument in the local storage and display its properties in the current page
-
-
-/**
- * class JSONTextDocument
- * @param arg : a json JSONTextDocument object to load
  */
-var JSONTextDocument = function(arg) {
-    JSONDocument.call(this,arg);//inherits properties from JSONDocument
-    if(arg) {this.load(arg);}
-    else {
-        this.type = "text";
-    }
-}
 
-JSONTextDocument.prototype = new JSONDocument();//inherits methods from JSONDocument
-
-JSONTextDocument.prototype.saveEdition = function(content) {
+JSONDocument.prototype.type = "text";
+JSONDocument.prototype.saveEdition = function(content) {
     this.setLastUser(getCurrentUser().getName());
     this.setContent(content);
     this.setLastModification(getCurrentTime());
     this.setAsCurrentDocument();
 }
-JSONTextDocument.prototype.setAsCurrentDocument = function() {
-    getCurrentPage().displayDocumentTitle(this);
-    getCurrentPage().displayDocumentState(this);
-    getCurrentPage().displayDocumentContent(this);
-    getCurrentPage().displayLastUserName(this);
-    getCurrentPage().displayLastModification(this);
+JSONDocument.prototype.setAsCurrentDocument = function() {
+    getCurrentPage().displayDocumentInformation(this);
     setCurrentDocument(this);
-}
-
-getCurrentDocument = function() {
-    return new JSONTextDocument(JSON.parse(localStorage.getItem("currentDocument")));
 }
