@@ -32,9 +32,9 @@
     <script type="text/javascript">
 
         var init = function() {
-            //delete localStorage.documentList;//delete the list for tests
-            setCurrentPage(new Page("ung"));//provide methods on the page
-            getCurrentStorage().getUser().setAsCurrentUser();//initialize the user
+            //initialize page and storage, then user, and then document List
+            Page.initialize("ung");//provide methods on the page
+            Storage.initialize();//initialize storage
 
             if(getCurrentDocumentID()&&getDocumentList().get(getCurrentDocumentID())) {
                 /* update the list with the modifications of the last edited document
@@ -43,12 +43,12 @@
                 delete localStorage.currentDocumentID;
                 getCurrentStorage().save();
             }
-            waitBeforeSucceed(//display the list of documents
-                function(){return Line.loadHTML()},function() {
+            Line.loadHTML(//display the list of documents
+                function() {
                     getDocumentList().resetSelectionList();
-                    getDocumentList().updateDisplayInformation();
                     getDocumentList().display();
-                    resize();}//hack for a bug with firefox
+                    resize();
+                }
             );
         }
         $(window).resize(resize);

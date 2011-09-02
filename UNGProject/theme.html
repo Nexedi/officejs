@@ -32,7 +32,7 @@
         <script type="text/javascript">
             // initialize
             var initPage = function() {
-                setCurrentPage(new Page(supportedDocuments[getCurrentDocument().getType()].editorPage));
+                new Page(supportedDocuments[getCurrentDocument().getType()].editorPage);
             }
 
             var initUser = function() {
