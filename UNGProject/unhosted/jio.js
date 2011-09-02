@@ -12,7 +12,7 @@
         "/unhosted/jquery.js",
         "/unhosted/base64.js"
     ],function() {// return true only if dependencies are loaded
-        return $!==undefined && sjcl!==undefined && Base64!==undefined; // check jQuery, sjcl & Base64
+        return (window.$ && window.sjcl && window.Base64) // check jQuery, sjcl & Base64
     });
 
     /**

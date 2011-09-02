@@ -1,0 +1,226 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title></title>
+    <!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">-->
+    <script type="text/javascript" src="jio.js"></script>
+    <script type="text/javascript">
+
+        var UnitTest = new function () {
+            this.battery = [];   //contains test serials
+            this.testList = []; //contains unit tests
+            this.all = function() {
+                this.battery = [
+                    this.testLocalStorage,
+                    this.testDAVStorage,
+                    this.testIndexedStorage,
+                    this.testCryptedStorage
+                ];
+                this.battery.shift()();
+            }
+            function done() {
+                var nextTest = UnitTest.testList.shift();
+                if(nextTest) {
+                    nextTest();
+                } else {
+                    fireunit.testDone();
+                    var nextSerial = UnitTest.battery.shift();
+                    nextSerial ? nextSerial() : fireunit.log("all tests done");
+                }
+            }
+
+            /* localStorage */
+            this.testLocalStorage = function () {
+                delete localStorage["JIOTest"];
+                UnitTest.testList = [initialize, save, load, getList, remove,   //with a new user
+                            save, save,                                     //try overwrite
+                            load, getList, remove];                         //try with an existing user
+                UnitTest.testList.shift()();
+
+                function initialize() {
+                    JIO.initialize('{"type":"local","userName":"JIOTest"}', {ID:"JIOTest"});
+                    fireunit.ok(JIO.isReady(),"storage created");
+                    done();
+                }
+            }
+
+            this.testDAVStorage = function () {
+                UnitTest.testList = [initialize, save, save, load, getList, remove];
+                UnitTest.testList.shift()();
+
+                function initialize() {
+                    JIO.initialize('{"type":"dav","userName":"test","password":"test","location":"http://[2a01:e35:2e27:460:a288:b4ff:fe83:c4c8]:7890","provider":"notAvailable"}', {ID:"www.ungproject.com"});//[2a01:e35:2e27:460:76f0:6dff:fe31:1119]:8080
+                    fireunit.ok(JIO.isReady(),"storage created");
+                    done();
+                }
+            }
+
+            this.testIndexedStorage = function () {
+                UnitTest.testList = [initialize, save, save, load, getList, remove];
+                UnitTest.testList.shift()();
+
+                function initialize() {
+                    JIO.initialize('{"type":"index","storage":{"type":"dav","userName":"storage","password":"storage","location":"http://[2a01:e35:2e27:460:76f0:6dff:fe31:1119]:8080","provider":"notAvailable"}}', {ID:"www.ungproject.com"});
+                    fireunit.ok(JIO.isReady(),"storage created");
+                    done();
+                }
+            }
+
+            this.testCryptedStorage = function () {
+                UnitTest.testList = [initialize, save, save, load, getList, remove];
+                UnitTest.testList.shift()();
+
+                function initialize() {
+                    JIO.initialize('{"type":"encrypt","storage":{"type":"dav","userName":"storage","password":"storage","location":"http://[2a01:e35:2e27:460:76f0:6dff:fe31:1119]:8080","provider":"notAvailable"},"password":"jio"}', {ID:"www.ungproject.com"});
+                    fireunit.ok(JIO.isReady(),"storage created");
+                    done();
+                }
+            }
+
+            this.testCryptedStorage = function () {
+                UnitTest.testList = [initialize, save, save, load, getList, remove];
+                UnitTest.testList.shift()();
+
+                function initialize() {
+                    JIO.initialize('{"type":"encrypt","storage":{"type":"dav","userName":"storage","password":"storage","location":"http://[2a01:e35:2e27:460:76f0:6dff:fe31:1119]:8080","provider":"notAvailable"},"password":"jio"}', {ID:"www.ungproject.com"});
+                    fireunit.ok(JIO.isReady(),"storage created");
+                    done();
+                }
+            }
+
+
+            function save() {
+                JIO.saveDocument("testContent", "testFile", {
+                    success:function() {
+                        fireunit.ok(true, "file saved");
+                        done();
+                    },
+                    overwrite:true
+                });
+            }
+            function load() {
+                JIO.loadDocument("testFile", {
+                    success:function(data) {
+                        fireunit.ok(true, "file loaded");
+                        fireunit.compare("testContent",data,"correct document content");
+                        done();
+                    }
+                });
+            }
+            function getList() {
+                JIO.getDocumentList({
+                    success:function(data) {
+                        fireunit.ok(true, "list loaded");
+                        fireunit.compare("testFile",data["testFile"].fileName,"correct  list content");
+                        fireunit.log("creationDate : "+data["testFile"].creationDate);
+                        fireunit.log("lastModified : "+data["testFile"].lastModified);
+                        done();
+                    },
+                    errorHandler: console.log
+                });
+            }
+            function remove() {
+                JIO.deleteDocument("testFile",{
+                    success:function() {
+                        fireunit.ok(true, "file removed");
+                        JIO.getDocumentList({
+                            success:function(data) {
+                                fireunit.compare(undefined,data["testFile"],"document removed from the list");
+                                done();
+                            },
+                            errorHandler: console.log
+                        });
+                    },
+                    errorHandler: console.log
+                });
+            }
+
+        }
+    </script>
+    <script type="text/javascript">
+        function reset() {
+            document.getElementById("jio").value="";
+        }
+        function test() {
+            JIO.initialize(document.getElementById("jio").value,{ID:"JIOTest"});
+        }
+        //this part add storages in the jio.json file.
+        //the algorithm is undetermined if there are more than one node storage.
+        function addStorage(type) {
+            var jioContent = document.getElementById("jio").value;
+            if(jioContent=="") {jioContent="{}"}
+            var storage = JSON.parse(jioContent);
+            var bottom = findBottom(storage);
+            
+            function findBottom(storage) {
+                if(isLeaf(storage.type)) {return undefined}
+                if(isOperator(storage.type)) {return findBottom(storage.storage)}
+                if(!storage.type) {return storage} // it means that storage is empty
+                //thus, storage is a node (multiple or replicated)
+                var list = storage.storageList;
+                for(var element in list) {
+                    var bottom = findBottom(list[element]);
+                    if(bottom) {return bottom}
+                }
+                if(storage.type=="multiple") {
+                    list.storageName={};
+                    return list.storageName;
+                } else {
+                    //if(storage.type=="replicate")
+                    list.push({});
+                    return list[list.length-1];
+                }
+
+                function isLeaf(t) {return t=="dav"||t=="local";}
+                function isOperator(t) {return t=="index"||t=="encrypt"||t=="asynchronous"}
+            }
+            if(bottom==undefined) {alert("storage tree complete");return;}
+
+            bottom.type = type;
+            switch(type) {
+                case "local": bottom.userName = "yourName"; break;
+                case "dav":
+                    bottom.userName = "yourName";
+                    bottom.password = "yourPassword";
+                    bottom.location = "storageCompleteURL";
+                    bottom.provider = "notAvailable";
+                    break;
+                case "index": bottom.storage = {}; break;
+                case "encrypt":
+                    bottom.storage = {};
+                    bottom.password = "yourPassword";
+                    break;
+                case "asynchronous": bottom.storage = {}; break;
+                case "multiple": bottom.storageList = {}; break;
+                case "replicate": bottom.storageList = []; break;
+            }
+            document.getElementById("jio").value = JSON.stringify(storage);
+        }
+    </script>
+
+  </head>
+  <body style="width:100%;">
+      <!--<div>
+          <p id="information_message"></p>
+      </div>-->
+      <div style="width:100%;">
+          <div style="width:60%; float:left; text-align: center;">
+              <label style="display:none">jio</label>
+              <textarea id="jio" cols="80" rows="20" wrap="soft"></textarea><br/>
+
+              <input id="reset" type="button" value="reset" onclick="reset()" />
+              <input id="submit" type="button" value="test" onclick="test()" />
+          </div>
+          <div style="width:40%; float:left; text-align: center">
+              <label style="display:none">storage list</label>
+              <h2 class="storage leaf" id="localStorage" style="cursor: pointer" onclick="addStorage('local')">Local Storage</h2>
+              <h2 class="storage leaf" id="DAVStorage" style="cursor: pointer" onclick="addStorage('dav')">DAV Storage</h2>
+              <h2 class="storage operator" id="indexedStorage" style="cursor: pointer" onclick="addStorage('index')">Indexed Storage</h2>
+              <h2 class="storage operator" id="cryptedStorage" style="cursor: pointer" onclick="addStorage('encrypt')">Crypted Storage</h2>
+              <h2 class="storage operator" id="asynchronousStorage" style="cursor: pointer" onclick="addStorage('asynchronous')">Asynchronous Storage</h2>
+              <h2 class="storage node" id="multipleStorage" style="cursor: pointer" onclick="addStorage('multiple')">Multiple Storage</h2>
+              <h2 class="storage node" id="replicateStorage" style="cursor: pointer" onclick="addStorage('replicate')">Replicate Storage</h2>
+          </div>
+      </div>
+  </body>
+</html>
