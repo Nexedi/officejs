@@ -61,8 +61,8 @@ UngObject.prototype.copy = function() {
  * @param once : if set to true, the handler is executed only once
  */
 UngObject.prototype.addEventHandler = function (handler, event, once) {
-    if(!this.listenerList.length) { this.listnerList = [] }
-    this.listernerList.push({handler:handler,event:event,once:once});
+    if(!this.listenerList) { this.listenerList = [] }
+    this.listenerList.push({handler:handler,event:event,once:once});
 }
 
 /* fire an event through all the listeners of the object */

@@ -14,33 +14,17 @@ setCurrentDocumentID = function(ID) {return localStorage.setItem("currentDocumen
  * the detailedList object is the synchronized list containing more detailed information about documents
  * @param documentList : documents information loaded from the storage
  */
-var DocumentList = {
-    inititalize: function() {
-        var data = lo
-    },
-    this.detailedList = {}
-    if(documentList) {
-        for(var doc in documentList) {
-            this.detailedList[doc] = new JSONDocument(documentList[doc]);
-        }
-    }
-    this.displayInformation = {};
-    this.displayInformation.page = 1;
-    this.selectionList = [];
+var DocumentList = new UngObject();
+DocumentList.load({
+    initialize: function() {
 
-     //check the user document list on the remote storage every 10 seconds
-    var list = this;
-    var updateDocumentList = function () {
-        JIO.getDocumentList({
-            success: function(data) {
-                list.detailedList = data;
-            }
-        });
-    }
-    recursiveTask(function() {if(JIO.isReady()){updateDocumentList()}},10000);
-}
-DocumentList.prototype = new UngObject();
-DocumentList.prototype.load({
+        this.displayInformation = {};
+        this.displayInformation.page = 1;
+        this.selectionList = [];
+        this.detailedList = getCurrentStorage().getDocumentList();
+
+        recursiveTask(function() {getCurrentStorage().updateDocumentList()},10000);// ! should display it if any change
+    },
 
     removeDocument: function(fileName) {
         getCurrentStorage().remove(fileName)//delete the file
@@ -195,10 +179,12 @@ DocumentList.prototype.load({
         this.display();
     }
 });
-getDocumentList = function() {
+function getCurrentDocumentList() {
+    return DocumentList;
+}
+function getDocumentList() {
     return getCurrentStorage().getDocumentList();
 }
-
 
 
 

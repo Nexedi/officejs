@@ -1,0 +1,81 @@
+Use of JIO :
+
+Very easy :
+
+1) Call JIO.initialize(jio,applicant)
+jio : string representing the content of jio.json file
+   or function to call to get the content of jio.json
+   or JSON representation of jio.json
+applicant : information about the person/application asking an access to the storage.
+you can precise a password, and ID, etc, to identify the applicant
+
+2) use the standard API of the JIO object in the application: 
+isReady: return true if the storage is ready to be used
+userNameAvailable: ...the role of this function should be defined better when subbscription to storage spaces will be implemented...
+
+loadDocument: get data from the storage
+saveDocument: save data on the storage
+deleteDocument: remove data from the storage
+getDocumentList: get the list of documents of the user
+
+
+MultipleStorage and AsynchronousStorage can't work for the moment and are there only to present ideas
+CustomStorage is a storage load from a js file. We should be careful because it uses a synchronous ajax request
+
+to illustrate:
+JIO.initialize({jio.json}, {applicant});
+if(JIO.isReady()) {JIO.loadDocument(fileName, {success:function() {}})}
+
+
+
+************************************************************************
+
+UNGDocs :
+
+CSS : all the css is in the file ung.css
+HTML : html fils are directly in the main folder :
+- login.html : contains the html to welcome and log users
+- ung.html : contains the html to display document list
+- theme.html : contains the html to display and edit a document
+! html should be factorized, and ung/theme.html should be renamed  more clearly
+JS : js is contained by the following files :
+- tools.js : contains useful  tools functions
+- login.js : contains the script to log user and create their storage
+- ung.js : contains the script to manipulate and display document list
+- theme.js : contains the script to load the page, the user information, the storage...
+- *-editor.js : contains the script to load editors for each document type
+XML : contains html elements to integrate in the page
+! only the xmlElements.xml file should be kept
+
+unhosted/ : contains jio files
+! should be renamed to jio/
+
+mobile/ : contains mobile app
+! we should use a common javascript for mobile app and normal html
+
+*/ : contains editors or external libraries.
+! jquery/ should be moved
+
+
+**********************************************************************
+
+UNGDocs
+
+ung.html is the main page of ung. If there is no default user, redirects to login.html
+
+login.html : loads, asks or creates jio.json, then, create a storage - Storage.create(jio.json) - and redirects to ung.html (the user is saved in the localStorage);
+ung.html : load the Page - Page.initialize(pageName) - and the storage - Storage.initialize();
+Page : loads the content from xml files, display information about user when the storage is ready. Then, loads the editor and display documents information.
+Storage : prepare the storage and load the user
+
+
+***********************************************************************
+
+Test JIO
+
+unhosted/test-jio.html :
+
+this page contains a GUI to create easily your jio.json file.
+there is also some unit test on jio storages. try "UnitTest.all();" in firebug to test all unit tests.
+Warning ! The DAVStorage should be configurated before (manually in the file "test-jio.html")
+

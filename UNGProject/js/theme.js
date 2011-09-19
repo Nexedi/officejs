@@ -7,7 +7,9 @@
  */
 applicationID = window.location.href.split("://")[1].split("/")[0]; //should be removed and better implemented
 LANGUAGES = ["fr","en"];
-
+function getCurrentStorage() {
+    return Storage.currentStorage;
+}
 
 /*
  * Page
@@ -27,20 +29,21 @@ var Page = {
             this.loadXML("xml/"+page+".xml");
         } else {
             //display user information when the storage is ready
-            if (getCurrentStorage()[Storage.USER_READY]) {
+            if (Storage[Storage.USER_READY]) {
                 Page.displayUserInformation(getCurrentUser());
+                DocumentList.initialize();
             } else {
-                getCurrentStorage().addEventHandler(function() {
+                Storage.addEventHandler(function() {
                     Page.displayUserInformation(getCurrentUser());
-                    getCurrentDocumentList()
+                    DocumentList.initialize();
                 },Storage.USER_READY);
             }
             //display the document list when the line factory is ready
             Line.loadHTML(function() {
-                if (getCurrentStorage()[Storage.LIST_READY]) {
+                if (Storage[Storage.LIST_READY]) {
                     getCurrentDocumentList().display();
                 } else {
-                    getCurrentStorage().addEventHandler(function() {
+                    Storage.addEventHandler(function() {
                         getCurrentDocumentList().display();
                     },Storage.LIST_READY);
                 }
@@ -74,7 +77,7 @@ var Page = {
             $(dependencies).find("scriptfile").each(function() {page.include($(this).text(),"script");});//includes js
 
             // load the user, the editor and the document in the page (wait for the storage being ready)
-            getCurrentStorage().addEventHandler(function() {
+            Storage.addEventHandler(function() {
                 Page.displayUserInformation(getCurrentUser());
                 Page.displayDocumentInformation(getCurrentDocument());
                 Page.loadEditor();
@@ -312,7 +315,7 @@ Storage.load({
     updateUser: function() {localStorage[this.getUser().getName()] = JSON.stringify(this.getUser());}
 });
 
-getCurrentStorage = function () {
+function getCurrentStorage() {
     return Storage.currentStorage;
 }
 
@@ -374,13 +377,13 @@ var Document = {
         return doc.getCreation();
     }
 }
-getCurrentDocument = function() {
+function getCurrentDocument() {
     if(!Document.currentDocument) {
         Document.currentDocument = new JSONDocument(JSON.parse(localStorage.getItem("currentDocument")));
     }
     return Document.currentDocument;
 }
-setCurrentDocument = function(doc) {
+function setCurrentDocument(doc) {
     localStorage.setItem("currentDocument",JSON.stringify(doc));
     Document.currentDocument = doc;
 }
