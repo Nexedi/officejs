@@ -14,7 +14,10 @@ setCurrentDocumentID = function(ID) {return localStorage.setItem("currentDocumen
  * the detailedList object is the synchronized list containing more detailed information about documents
  * @param documentList : documents information loaded from the storage
  */
-var DocumentList = function(documentList) {
+var DocumentList = {
+    inititalize: function() {
+        var data = lo
+    },
     this.detailedList = {}
     if(documentList) {
         for(var doc in documentList) {
@@ -193,7 +196,7 @@ DocumentList.prototype.load({
     }
 });
 getDocumentList = function() {
-    return getCurrentUser().getDocumentList();
+    return getCurrentStorage().getDocumentList();
 }
 
 

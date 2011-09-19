@@ -33,14 +33,10 @@ SVGEditor = function() {
  * setAsCurrentDocument : set the document as currentDocument in the local storage and display its properties in the current page
  */
 
-JSONDocument.prototype.type = "text";
+JSONDocument.prototype.type = "image";
 JSONDocument.prototype.saveEdition = function(content) {
     this.setLastUser(getCurrentUser().getName());
     this.setContent(content);
     this.setLastModification(getCurrentTime());
-    this.setAsCurrentDocument();
-}
-JSONDocument.prototype.setAsCurrentDocument = function() {
     getCurrentPage().displayDocumentInformation(this);
-    setCurrentDocument(this);
 }

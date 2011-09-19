@@ -26,11 +26,26 @@ var Page = {
         if(page!="ung" &&page!="mail" && page !=undefined) {
             this.loadXML("xml/"+page+".xml");
         } else {
-            //load the user and the documentList in the page (wait for the storage being ready)
-            getCurrentStorage().addWaiter(function() {
-                getCurrentUser().setAsCurrentUser();
-                getCurrentDocumentList()
-            },Storage.USER_READY);
+            //display user information when the storage is ready
+            if (getCurrentStorage()[Storage.USER_READY]) {
+                Page.displayUserInformation(getCurrentUser());
+            } else {
+                getCurrentStorage().addEventHandler(function() {
+                    Page.displayUserInformation(getCurrentUser());
+                    getCurrentDocumentList()
+                },Storage.USER_READY);
+            }
+            //display the document list when the line factory is ready
+            Line.loadHTML(function() {
+                if (getCurrentStorage()[Storage.LIST_READY]) {
+                    getCurrentDocumentList().display();
+                } else {
+                    getCurrentStorage().addEventHandler(function() {
+                        getCurrentDocumentList().display();
+                    },Storage.LIST_READY);
+                }
+            });
+
         }
     },
     //getters
@@ -59,15 +74,16 @@ var Page = {
             $(dependencies).find("scriptfile").each(function() {page.include($(this).text(),"script");});//includes js
 
             // load the user, the editor and the document in the page (wait for the storage being ready)
-            getCurrentStorage().addWaiter(function() {
-                getCurrentUser().setAsCurrentUser();
-                this.loadEditor();
-                getCurrentDocument().setAsCurrentDocument();
+            getCurrentStorage().addEventHandler(function() {
+                Page.displayUserInformation(getCurrentUser());
+                Page.displayDocumentInformation(getCurrentDocument());
+                Page.loadEditor();
             },Storage.USER_READY);
         });
     },
 
     /* include a javascript or a css file */
+    // could be written better
     include: function(file,type) {
         var object = null;
         switch(type) {
@@ -147,9 +163,8 @@ function getCurrentPage() {return Page;}
 var User = function(arg) {
     if(arg) {
         this.load(arg);
-        if(window.DocumentList) {this.documentList = new DocumentList(arg.documentList);}
-        if(window.LabelList) {this.labelList = new LabelList(arg.labelList);}
-        if(window.GroupList) {this.groupList = new GroupList(arg.groupList);}
+        if(window.LabelList) {this.labelList = new LabelList(arg.labelList);}// labels of the user
+        if(window.GroupList) {this.groupList = new GroupList(arg.groupList);}// contact groups of the user
     }
     else {
         this.name = "UNG";//default name
@@ -172,16 +187,8 @@ User.prototype.load({//add methods thanks to the UngObject.load method
     getSetting: function(key) {return this.settings[key];},
     setSetting: function(key,value) {this.settings[key] = value;},
     getSettings: function() {return this.settings;},
-    getDocumentList: function() {return this.documentList;},
-    setDocumentList: function(list) {this.documentList = list;},
 
-    getStorageLocation: function() {return this.storageLocation;},
-
-    setAsCurrentUser: function() {
-        getCurrentPage().displayUserInformation(this);
-        getCurrentStorage().setUser(this);
-        if(getCurrentPage().getName()=="ung") this.getDocumentList().setAsCurrentDocumentList();
-    }
+    getStorageLocation: function() {return this.storageLocation;}
 });
 
 getCurrentUser = function () {
@@ -193,189 +200,55 @@ getCurrentUser = function () {
 
 
 /**
- * Class Storage
- * this class provides usual API to save/load/delete elements
- * @param type : "local" to save in localStorage, or "JIO" for remote storage
+ * Storage
+ * this element provides usual API to save/load/delete elements
  */
-var Storage = function(type) {
-    Storage.currentStorage = this;
-    this.type = type;
-    this.pendingList = [];
-    
-    //(re)initialize events
-    this.userReady = false;
-}
-Storage.prototype = new UngObject();
-Storage.prototype.load({
-    getType: function() {return this.type;},
-    getUser: function() {return this.user;},
-    setUser: function(user) {
-        this.user = user;
-        user.setAsCurrentUser();
-        this.userName = user.name;
-        fireEvent(Storage.userReady);
-        this.save();
-    },
-    updateUser: function() {localStorage[this.getUser().getName()] = JSON.stringify(this.getUser());},
-    save: function() {
-        this.updateUser();
-        localStorage.setItem("currentStorage", JSON.stringify(this));
-    },
-    addWaiter: function(action, expectedEvent) {
-        this[expectedEvent] ? action() : this.pendingList.push({action:action,expectedEvent:expectedEvent});
-    },
-    fireEvent: function(event) {
-        for (var i=0; i<this.pendingList.length; i++) {
-            var waiter = this.pendingList[i];
-            if(waiter.expectedEvent===event) {
-                waiter.action.apply(this, waiter.argument);
-                this.pendingList(i,1);
-                i--;
-            }
-        }
-    }
-});
-Storage.initialize = function () {
-    var dataStorage = JSON.parse(localStorage.getItem("currentStorage"));
-
-    if(!dataStorage) {window.location.href = "login.html";}//if it's the first connexion
-    if(dataStorage.type == "local") {
-        Storage.currentStorage = new LocalStorage(dataStorage.userName);
-    } else {
-        Storage.currentStorage = new JIOStorage(dataStorage);
-    }
-}
-Storage.USER_READY = "userReady";             // value of the USER_READY event
-
-getCurrentStorage = function () {
-    return Storage.currentStorage;
-}
-
-
-/**
- * Class LocalStorage
- * this class provides usual API to save/load/delete documents on the localStorage
- */
-var LocalStorage = function(userName) {
-    Storage.call(this,"local");
-    if(userName) {
-        var loaded = this.loadUser(userName)//load an existing user
-        if(!loaded) {//create a new user if there was no such one
-            var user = new User();
-            user.setName(userName);
-            user.documents = {};
-            this.setUser(user);
-        }
-    }
-}
-LocalStorage.prototype = new Storage();
-LocalStorage.prototype.load({
-    /* try to load the user information in the storage and save it in the
-     * storage instance.
-     * @param userName : the name of the user
-     * @return : true if the user existed and has been loaded, false otherwise
-     */
-    loadUser: function(userName) {
-        try{
-            if(!localStorage[userName]) {throw "noSuchUser";}
-            this.setUser(new User(JSON.parse(localStorage[userName])));
-            return true;
-        } catch(e) {
-            if(e!="noSuchUser") {alert(e);}
-            return false
-        }
-    },
-    getDocument: function(file, instruction) {
-        var doc = new JSONDocument(this.getUser().documents[file]);
-        if(instruction) instruction(doc);
-        return doc;
-    },
-    getDocumentList: function() {
-        return this.getUser().getDocumentList();
-    },
-    saveDocument: function(doc, file, instruction) {
-        this.user.documents[file] = doc;
-        this.save();
-        if(instruction) instruction();
-    },
-    deleteDocument: function(file, instruction) {
-        delete this.user.documents[file];
-        this.save();
-        if(instruction) instruction();
-    }
-});
-
-
-/**
- * Class JIO
- * this class provides usual API to save/load/delete documents on a remote storage
- */
-var JIOStorage = function(arg) {
-    Storage.call(this,"JIO");
-
-    if(arg.jio && arg.jio.jioFileContent) {
-        //recreate the storage from the localStorage (arg = localStorage.currentStorage)
-        this.jio = JIO.initialize(arg.jio.jioFileContent, {"ID":"www.ungproject.com"});
-        this.setUser(new User(arg.user));
-        waitBeforeSucceed(JIO.isReady,this.save);
-    } else {
-        //load jio from the dav storage
-        this.jio = initializeFromDav(arg.userName, arg.storageLocation, {"ID":"www.ungproject.com", "password":arg.applicationPassword});
+var Storage = new UngObject();
+Storage.load({
+    /* create the storage from storage. Used in the login page */
+    create: function (jioFileContent) {
+        this.jio = JIO.initialize(jioFileContent,{"ID":"www.ungproject.com"});
+        Storage.currentStorage = this;
         //try to load user parameters
         var storage = this;
         var option = {
             success: function(data) {//success
                 storage.setUser(new User(JSON.parse(data)));
-                storage.user.storageLocation = arg.storageLocation;
                 storage.save();
             },
             errorHandler: function(errorEvent) {//fail
                 if(errorEvent.status==404){//create a new user if there was no such one
                     var user = new User();
-                    user.setName(arg.userName);
+                    user.setName(jioFileContent.userName);
                     storage.setUser(user);
-                    storage.user.storageLocation = arg.storageLocation;
+                    storage.user.storageLocation = jioFileContent.location;
                     storage.save();
                 }
             },
             asynchronous: false
         }
-        JIO.loadDocument(arg.userName+".profile", option);
-    }
+        JIO.loadDocument(jioFileContent.userName+".profile", option);
 
-    /**
-     * load JIO file from a DAV and create and return the JIO object
-     * This function will be replaced. The aim is to load JIO in more various ways, and use JIO.initialize after
-     * @param userName : name of the user
-     * @param location : server location
-     * @param applicant : (optional) information about the person/application needing this JIO object (allow limited access)
-     * @return JIO object
-     */
-    function initializeFromDav(userName, location, applicant) {
-        //get the user personal JIO file
-        $.ajax({
-            url: location+"/dav/"+userName+"/"+applicant.ID+"/"+"jio.json",//we could use userAdress instead...
-            type: "GET",
-            async: false,
-            dataType: "text",
-            headers: {Authorization: "Basic "+Base64.encode(userName+":"+applicant.password)},
-            fields: {withCredentials: "true"},
-            success: function(jioContent){
-                            JIO.initialize(jioContent,applicant);
-                        },
-            error: function(type) {alert("Error "+type.status+" : fail while trying to load jio.json");}
-        });
-        return JIO;
-    }
 
-}
-JIOStorage.prototype = new Storage();
-JIOStorage.prototype.load({
+    },
+
+    /* initialize the storage from the localStorage */
+    initialize: function () {
+        var dataStorage = JSON.parse(localStorage.getItem("currentStorage"));
+
+        if(!dataStorage) {window.location.href = "login.html";}//if it's the first connexion
+        this.jio = JIO.initialize(dataStorage.jio.jioFileContent, {"ID":"www.ungproject.com"});
+        Storage.currentStorage = this;
+        
+        this.setUser(new User(dataStorage.user));
+    },
+    USER_READY: "userReady",           // value of the USER_READY event
+    LIST_READY: "listReady",           // value of the LIST_READY event
+
     getJIO: function() {return this.jio;},
     loadUser: function(userName) {//warning no return value
-        var storage = this;
         var option = {
-            success: function(data) {storage.setUser(new User(JSON.parse(data)));},
+            success: function(data) {Storage.setUser(new User(JSON.parse(data)));},
             errorHandler: function(errorEvent) {if(errorEvent.status==404){}}
         }
         JIO.loadDocument(userName+".profile", option);
@@ -399,21 +272,49 @@ JIOStorage.prototype.load({
         JIO.saveDocument(JSON.stringify(doc), fileName, option);
     },
     deleteDocument: function(file, instruction) {
-        var option = {option: {success: instruction}};
+        var option = {success: instruction};
         JIO.deleteDocument(file, option);
     },
-    save: function() {
+    getDocumentList: function(instruction) {
+        instruction(this.documentList());
+        return this.documentList;
+    },
+    updateDocumentList: function() {
+        var option = {
+            success: function(list) {
+                delete list[getCurrentUser().getName()+".profile"];//remove the profile file
+                getCurrentStorage().documentList = list;
+                fireEvent(Storage.LIST_READY);
+            }
+        }
+        JIO.getDocumentList(option);
+    },
+    save: function() { // update and save user information in the localStorage
         this.updateUser();
         this.saveDocument(this.user,this.user.getName()+".profile",function() {
             localStorage.setItem("currentStorage",JSON.stringify(this));
         });
-    }
+    },
 
+    getUser: function() {return this.user;},
+    setUser: function(user) {
+        this.user = user;
+        this.userName = user.getName();
+        fireEvent(Storage.USER_READY);
+
+        this.updateDocumentList();
+        getCurrentStorage().save();
+    },
+    fireEvent: function(event) {
+        Storage[event] = true;
+        UngObject.prototype.fireEvent(event);
+    },
+    updateUser: function() {localStorage[this.getUser().getName()] = JSON.stringify(this.getUser());}
 });
 
-
-
-
+getCurrentStorage = function () {
+    return Storage.currentStorage;
+}
 
 
 
@@ -481,7 +382,7 @@ getCurrentDocument = function() {
 }
 setCurrentDocument = function(doc) {
     localStorage.setItem("currentDocument",JSON.stringify(doc));
-    this.currentDocument = doc;
+    Document.currentDocument = doc;
 }
 
 /**
@@ -564,15 +465,6 @@ JSONDocument.prototype.states = {
     saved:{"fr":"Enregistré","en":"Saved"},
     deleted:{"fr":"Supprimé","en":"Deleted"}
 }
-
-setCurrentDocument = function(doc) {
-    currentDocument = doc;
-    localStorage.setItem("currentDocument",JSON.stringify(doc));
-}
-
-
-
-
 
 
 

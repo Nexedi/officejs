@@ -129,9 +129,6 @@ JSONDocument.prototype.saveEdition = function(content) {
     this.setLastUser(getCurrentUser().getName());
     this.setContent(content);
     this.setLastModification(getCurrentTime());
-    this.setAsCurrentDocument();
-}
-JSONDocument.prototype.setAsCurrentDocument = function() {
     getCurrentPage().displayDocumentInformation(this);
-    setCurrentDocument(this);
 }
+

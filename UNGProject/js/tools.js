@@ -54,6 +54,31 @@ UngObject.prototype.copy = function() {
     return copied;
 }
 
+/*
+ * add an event handler executed when the fireEvent function is called
+ * @param handler : function to execute when the event occures
+ * @param event : the event to consider
+ * @param once : if set to true, the handler is executed only once
+ */
+UngObject.prototype.addEventHandler = function (handler, event, once) {
+    if(!this.listenerList.length) { this.listnerList = [] }
+    this.listernerList.push({handler:handler,event:event,once:once});
+}
+
+/* fire an event through all the listeners of the object */
+UngObject.prototype.fireEvent = function (event) {
+    for (var i=0; i<this.listenerList.length; i++) {
+        var listener = this.listenerList[i];
+        if(listener.event == event) {
+            listener.handler(event);
+            if(listener.once) { // remove the listener if supposed to been executed only once
+                this.listenerList.splice(i,1);
+                i--;
+            }
+        }
+    }
+}
+
 /**
  * convert an object into an array easier to manipulate
  * @param object : the object to convert

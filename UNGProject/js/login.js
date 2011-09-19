@@ -21,9 +21,32 @@ function logIntoDav(wallet) {
 
 function initStorage(wallet) {
     if(!wallet.provider) {//local storage
-        Storage.currentStorage = new LocalStorage(wallet.userName);
+        /**
+         * load JIO file from a DAV and create and return the JIO object
+         * This function will be replaced. The aim is to load JIO in more various ways, and use JIO.initialize after
+         * @param userName : name of the user
+         * @param location : server location
+         * @param applicant : (optional) information about the person/application needing this JIO object (allow limited access)
+         * @return JIO object
+         */
+        (function initializeFromDav(userName, location, applicant) {
+            //get the user personal JIO file
+            $.ajax({
+                url: location+"/dav/"+userName+"/"+applicant.ID+"/"+"jio.json",//we could use userAdress instead...
+                type: "GET",
+                async: false,
+                dataType: "text",
+                headers: {Authorization: "Basic "+Base64.encode(userName+":"+applicant.password)},
+                fields: {withCredentials: "true"},
+                success: function(jioContent){
+                                Storage.create(jioContent);
+                            },
+                error: function(type) {alert("Error "+type.status+" : fail while trying to load jio.json");}
+            });
+            return JIO;
+        })(wallet.userName, wallet.storageLocation, {"ID":"www.ungproject.com", "password":wallet.applicationPassword});
     } else {
-        Storage.currentStorage = new JIOStorage(wallet);
+        Storage.create('{"type":"local","userName":"'+wallet.userName+'"}');
     }
 }
 
