@@ -8,9 +8,9 @@
      * load dependencies
      */
     var dependenceLoaded = includeJS([//files to load
-        "/unhosted/sjcl.js",
-        "/unhosted/jquery.js",
-        "/unhosted/base64.js"
+        "unhosted/sjcl.js",
+        "unhosted/jquery.js",
+        "unhosted/base64.js"
     ],function() {// return true only if dependencies are loaded
         return (window.$ && window.sjcl && window.Base64) // check jQuery, sjcl & Base64
     });
