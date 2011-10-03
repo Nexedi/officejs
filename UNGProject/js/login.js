@@ -39,8 +39,6 @@ function tryLog() {
         wallet.applicationPassword = applicationPassword;
         setWallet(wallet);//to delete for new registration each time
         initStorage(wallet);
-        //go to ung when the storage is ready
-        waitBeforeSucceed(function() {return getCurrentStorage().getUser();},function(){window.location.href = "ung.html";});
     }
 }
  
@@ -58,7 +56,6 @@ function logUser() {
     }
     initStorage(wallet);
     //go to ung when the storage is ready
-    waitBeforeSucceed(function() {return getCurrentStorage().getUser();},function(){window.location.href = "ung.html";});
 }
  
  

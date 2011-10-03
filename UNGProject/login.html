@@ -31,6 +31,9 @@
 
         <script type="text/javascript">
             var init = function() {
+                //go to ung when the storage is ready
+                Storage.addEventHandler(function() {window.location.href = "ung.html";},Storage.STORAGE_CREATED,true);
+
                 //fill known informations
                 var wallet = getWallet();
                 if(wallet) {

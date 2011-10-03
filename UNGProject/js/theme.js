@@ -218,6 +218,7 @@ Storage.load({
             success: function(data) {//success
                 storage.setUser(new User(JSON.parse(data)));
                 storage.save();
+                storage.fireEvent(Storage.STORAGE_CREATED);
             },
             errorHandler: function(errorEvent) {//fail
                 if(errorEvent.status==404){//create a new user if there was no such one
@@ -226,6 +227,7 @@ Storage.load({
                     storage.setUser(user);
                     storage.user.storageLocation = jioFileContent.location;
                     storage.save();
+                    storage.fireEvent(Storage.STORAGE_CREATED);
                 }
             },
             asynchronous: false
@@ -247,6 +249,7 @@ Storage.load({
     },
     USER_READY: "userReady",           // value of the USER_READY event
     LIST_READY: "listReady",           // value of the LIST_READY event
+    STORAGE_CREATED: "storageCreated", // value of the STORAGE_CREATED event
 
     getJIO: function() {return this.jio;},
     loadUser: function(userName) {//warning no return value
