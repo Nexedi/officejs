@@ -6,7 +6,9 @@
  * Class UngObject
  * provides useful general methods
  */
-UngObject = function() {}
+UngObject = function() {
+    this.listenerList = [];
+}
 /* return true if this object implements the interface */
 UngObject.prototype.implement = function(myInterface)
 {

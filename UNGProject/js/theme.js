@@ -287,7 +287,7 @@ Storage.load({
             success: function(list) {
                 delete list[getCurrentUser().getName()+".profile"];//remove the profile file
                 getCurrentStorage().documentList = list;
-                fireEvent(Storage.LIST_READY);
+                Storage.fireEvent(Storage.LIST_READY);
             }
         }
         JIO.getDocumentList(option);
@@ -303,7 +303,7 @@ Storage.load({
     setUser: function(user) {
         this.user = user;
         this.userName = user.getName();
-        fireEvent(Storage.USER_READY);
+        Storage.fireEvent(Storage.USER_READY);
 
         this.updateDocumentList();
         getCurrentStorage().save();
