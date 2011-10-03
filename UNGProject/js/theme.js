@@ -310,7 +310,7 @@ Storage.load({
     },
     fireEvent: function(event) {
         Storage[event] = true;
-        UngObject.prototype.fireEvent(event);
+        UngObject.prototype.fireEvent.call(this,event);
     },
     updateUser: function() {localStorage[this.getUser().getName()] = JSON.stringify(this.getUser());}
 });
