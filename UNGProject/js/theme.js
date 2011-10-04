@@ -210,24 +210,25 @@ var Storage = new UngObject();
 Storage.load({
     /* create the storage from storage. Used in the login page */
     create: function (jioFileContent) {
-        this.jio = JIO.initialize(jioFileContent,{"ID":"www.ungproject.com"});
+        this.jio = jioFileContent;
+        JIO.initialize(jioFileContent,{"ID":"www.ungproject.com"});
         Storage.currentStorage = this;
         //try to load user parameters
         var storage = this;
         var option = {
             success: function(data) {//success
-                storage.setUser(new User(JSON.parse(data)));
-                storage.save();
-                storage.fireEvent(Storage.STORAGE_CREATED);
+                storage.user = new User(JSON.parse(data));
+                storage.userName = storage.user.getName();
+                storage.save(function() {storage.fireEvent(Storage.STORAGE_CREATED);});
             },
             errorHandler: function(errorEvent) {//fail
                 if(errorEvent.status==404){//create a new user if there was no such one
                     var user = new User();
                     user.setName(jioFileContent.userName);
-                    storage.setUser(user);
-                    storage.user.storageLocation = jioFileContent.location;
-                    storage.save();
-                    storage.fireEvent(Storage.STORAGE_CREATED);
+                    storage.user = user;
+                    storage.userName = storage.user.getName();
+                    storage.user.storageLocation = jioFileContent.location;debugger;
+                    storage.save(function() {storage.fireEvent(Storage.STORAGE_CREATED);});
                 }
             },
             asynchronous: false
@@ -295,10 +296,17 @@ Storage.load({
         }
         JIO.getDocumentList(option);
     },
-    save: function() { // update and save user information in the localStorage
+    save: function(instruction) { // update and save user information in the localStorage
         this.updateUser();
         this.saveDocument(this.user,this.user.getName()+".profile",function() {
-            localStorage.setItem("currentStorage",JSON.stringify(this));
+            var storage = {
+                jio:Storage.jio,
+                user:Storage.user,
+                userName:Storage.userName
+            }
+            debugger;
+            localStorage.currentStorage = JSON.stringify(storage);
+            if(instruction) {instruction();}
         });
     },
 
