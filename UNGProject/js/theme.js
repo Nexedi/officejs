@@ -283,7 +283,7 @@ Storage.load({
         JIO.deleteDocument(file, option);
     },
     getDocumentList: function(instruction) {
-        instruction(this.documentList());
+        if(instruction) instruction(this.documentList);
         return this.documentList;
     },
     updateDocumentList: function() {
