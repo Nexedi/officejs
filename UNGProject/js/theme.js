@@ -29,7 +29,7 @@ var Page = {
             this.loadXML("xml/"+page+".xml");
         } else {
             //display user information when the storage is ready
-            if (Storage[Storage.USER_READY]) {
+            if (Storage.user) {
                 Page.displayUserInformation(getCurrentUser());
                 DocumentList.initialize();
             } else {
@@ -40,11 +40,16 @@ var Page = {
             }
             //display the document list when the line factory is ready
             Line.loadHTML(function() {
-                if (Storage[Storage.LIST_READY]) {
-                    getCurrentDocumentList().display();
+                var list = getCurrentDocumentList();
+                if (list && list.detailedList) {
+                    list.display();
+                    list.resetSelectionList();
+                    resize();
                 } else {
                     Storage.addEventHandler(function() {
-                        getCurrentDocumentList().display();
+                        list.display();
+                        list.resetSelectionList();
+                        resize();
                     },Storage.LIST_READY);
                 }
             });
@@ -227,7 +232,7 @@ Storage.load({
                     user.setName(jioFileContent.userName);
                     storage.user = user;
                     storage.userName = storage.user.getName();
-                    storage.user.storageLocation = jioFileContent.location;debugger;
+                    storage.user.storageLocation = jioFileContent.location;
                     storage.save(function() {storage.fireEvent(Storage.STORAGE_CREATED);});
                 }
             },
@@ -243,10 +248,12 @@ Storage.load({
         var dataStorage = JSON.parse(localStorage.getItem("currentStorage"));
 
         if(!dataStorage) {window.location.href = "login.html";}//if it's the first connexion
-        this.jio = JIO.initialize(dataStorage.jio.jioFileContent, {"ID":"www.ungproject.com"});
+        this.jio = dataStorage.jio;
+        JIO.initialize(dataStorage.jio, {"ID":"www.ungproject.com"});
         Storage.currentStorage = this;
-        
-        this.setUser(new User(dataStorage.user));
+
+        //wait for JIO being ready
+        JIO.ready(function(){Storage.setUser(new User(dataStorage.user))});
     },
     USER_READY: "userReady",           // value of the USER_READY event
     LIST_READY: "listReady",           // value of the LIST_READY event
@@ -304,7 +311,6 @@ Storage.load({
                 user:Storage.user,
                 userName:Storage.userName
             }
-            debugger;
             localStorage.currentStorage = JSON.stringify(storage);
             if(instruction) {instruction();}
         });

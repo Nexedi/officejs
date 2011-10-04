@@ -271,7 +271,7 @@ Line.getOriginalHTML = function() {return Line.originalHTML;}
 var createNewDocument = function(type) {
     var newDocument = new JSONDocument();
     newDocument.setType(type);
-    var fileName = DOcument.getAddress(newDocument);
+    var fileName = Document.getAddress(newDocument);
 
     newDocument.save(function() {
         getDocumentList()[fileName]=newDocument;

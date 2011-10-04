@@ -43,13 +43,8 @@
                 delete localStorage.currentDocumentID;
                 getCurrentStorage().save();
             }
-            Line.loadHTML(//display the list of documents
-                function() {
-                    getDocumentList().resetSelectionList();
-                    getDocumentList().display();
-                    resize();
-                }
-            );
+            resize();
+
         }
         $(window).resize(resize);
         $(document).ready(init);

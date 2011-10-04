@@ -39,6 +39,7 @@
                     default:alert("Error while getting jio.json content");break;
                 }
                 this.storage = createStorage(JSON.parse( this.jioFileContent ), applicant);//create the object allowing IO in storages
+                this.ready();
             }
         },
 
@@ -47,6 +48,8 @@
          * @return true if ready, false otherwise
          */
         isReady: function() {return this.jioFileContent && this.storage},
+
+        ready: function(instruction) {this.ready = instruction},
 
         //IO functions
         getLocation: function() {return this.location},
