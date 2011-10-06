@@ -31,19 +31,11 @@
 
         <script type="text/javascript">
             // initialize
-            var initPage = function() {
-                new Page(supportedDocuments[getCurrentDocument().getType()].editorPage);
-            }
-
-            var initUser = function() {
-                var user = getCurrentUser();
-                user.setAsCurrentUser();
-            }
-
             var init = function() {
-                initPage();
-                waitBeforeSucceed(function() {return getCurrentPage().getXML();},initUser);
+                Page.initialize(Document.supportedDocuments[getCurrentDocument().getType()].editorPage);
+                Storage.initialize();
             }
+
             $(document).ready(init);
         </script>
 
@@ -67,7 +59,7 @@
                                 <div class="input"><div  >
 
                                     <a class="email" href="ung/mail.html" lang="en">Email</a>
-                                    <a class="document" href="ung.html" onclick="stopDocumentEdition()" lang="en">Documents</a>
+                                    <a class="document" href="ung.html" onclick="Document.stopDocumentEdition()" lang="en">Documents</a>
                                     <a class="calendar" href="ung/calendar.html" lang="en">Calendar</a>
 
                                 </div></div>
@@ -139,7 +131,7 @@
                                 <label>search_bar</label>
                                 <div class="input"><div  >
 
-                                    <a class="ung_docs" href="ung.html" onclick="stopDocumentEdition()">
+                                    <a class="ung_docs" href="ung.html" onclick="Document.stopDocumentEdition()">
                                         <img src="images/ung/ung-logo.gif" alt="logo"/>
                                     </a>
 
@@ -167,7 +159,7 @@
                                     <a id="last_update">Updated ... by</a>
                                     <a id="author">Unknown</a>
 
-                                    <button type="button" onclick="saveCurrentDocument()">Save</button>
+                                    <button type="button" onclick="Document.saveCurrentDocument()">Save</button>
 
                                     <div class="action_menu">
 

@@ -20,10 +20,19 @@ DocumentList.load({
 
         this.displayInformation = {};
         this.displayInformation.page = 1;
-        this.selectionList = [];
-        this.detailedList = getCurrentStorage().getDocumentList();
+        this.resetSelectionList();
 
-        recursiveTask(function() {getCurrentStorage().updateDocumentList()},10000);// ! should display it if any change
+        //update documentList each 10 seconds
+        Storage.addEventHandler(function() {DocumentList.detailedList = Storage.getDocumentList();},Storage.LIST_READY);
+        recursiveTask(function() {Storage.updateDocumentList();},10000);// ! should display it if any change
+        
+        /* update the list with the modifications of the last edited document
+         * (this method has to been rewritten if using multi users) 
+        if(getCurrentDocumentID()&&getDocumentList().get(getCurrentDocumentID())) {
+            getDocumentList().updateDocumentInformation(getCurrentDocumentID());
+            delete localStorage.currentDocumentID;
+            getCurrentStorage().save();
+        }*/
     },
 
     removeDocument: function(fileName) {
@@ -47,7 +56,7 @@ DocumentList.load({
     },
     checkAll: function() {
         this.selectionList = [];
-        var list = toArray(this.getList());
+        var list = toArray(this.getDetailedList());
 
         var begin = 0;
         var end = list.length;
@@ -107,18 +116,18 @@ DocumentList.load({
         for(var i=this.getDisplayInformation().first-1;i<this.getDisplayInformation().last;i++) {
             var fileName = list[i].fileName;
             var doc = detailedList[fileName];
-            var documentList = this;
+            /*var documentList = this;
             (function tryToDisplay(j) {//update document information before displaying
                 if(!doc || new Date(detailedList[fileName].lastModification+1000)<new Date(list[j].lastModify)) {
                     documentList.updateDocumentInformation(fileName);
                     setTimeout(function(){tryToDisplay.call(this,j)},500);
-                } else {
-                    var line = new Line(doc,j);
+                } else {*/
+                    var line = new Line(doc,i);
                     line.updateHTML();
                     line.display();
-                    if(this.getSelectionList().indexOf(doc.fileName)) {line.setSelected(true);}//check the box if selected
-                }
-            })(i)
+                    if(this.getSelectionList().indexOf(doc.fileName)!=-1) {line.setSelected(true);}//check the box if selected
+                /*}
+            })(i)*/
 
         }
     },
@@ -150,7 +159,7 @@ DocumentList.load({
         }
     },
     display: function() {
-        var list = toArray(this.getList());
+        var list = toArray(this.getDetailedList());
         this.updateDisplayInformation(list);
         this.displayContent(list);
         this.displayListInformation(list);
@@ -158,7 +167,7 @@ DocumentList.load({
     },
 
     /* update the ith document information */
-    updateDocumentInformation: function(fileName) {
+    updateDocumentInformation: function(fileName) {console.log(fileName);
         var list = this.getDetailedList();
         getCurrentStorage().getDocument(fileName, function(doc) {
             list[fileName]=doc;
@@ -166,7 +175,7 @@ DocumentList.load({
             doc.setContent("");
         });
     },
-    /* update the document to be displayed */
+    /* update the variable "displayInformation" (documents to be displayed) */
     updateDisplayInformation: function(list) {
         var infos = this.getDisplayInformation();
         infos.step = getCurrentUser().getSetting("displayPreferences"),//documents per page
@@ -183,7 +192,7 @@ function getCurrentDocumentList() {
     return DocumentList;
 }
 function getDocumentList() {
-    return getCurrentStorage().getDocumentList();
+    return getCurrentStorage().getDocumentList();//equivalent to return DocumentList.getDetailedList();
 }
 
 
@@ -199,9 +208,9 @@ var Line = function(doc, i) {
     this.html = Line.getOriginalHTML();
 }
 Line.prototype = {
-    getDocument: function() {return this.document;},
+    getDocument: function() {return this.document.content;},
     getID: function() {return this.ID;},
-    getType: function() {return this.document.getType() || "other";},
+    getType: function() {return this.document.content.type || "other";},
     getHTML: function() {return this.html;},
     setHTML: function(newHTML) {this.html = newHTML;},
     setSelected: function(bool) {$("tr td.listbox-table-select-cell input#"+this.getID()).attr("checked",bool)},
@@ -271,11 +280,8 @@ Line.getOriginalHTML = function() {return Line.originalHTML;}
 var createNewDocument = function(type) {
     var newDocument = new JSONDocument();
     newDocument.setType(type);
-    var fileName = Document.getAddress(newDocument);
 
     newDocument.save(function() {
-        getDocumentList()[fileName]=newDocument;
-        getCurrentStorage().save();
         Document.startDocumentEdition(newDocument);
     });
 }

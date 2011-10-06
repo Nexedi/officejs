@@ -49,7 +49,7 @@
          */
         isReady: function() {return this.jioFileContent && this.storage},
 
-        ready: function(instruction) {this.ready = instruction},
+        ready: function(instruction) {if(instruction) this.ready = instruction},
 
         //IO functions
         getLocation: function() {return this.location},

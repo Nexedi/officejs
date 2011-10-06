@@ -68,7 +68,7 @@ UngObject.prototype.addEventHandler = function (handler, event, once) {
 }
 
 /* fire an event through all the listeners of the object */
-UngObject.prototype.fireEvent = function (event) {
+UngObject.prototype.fireEvent = function (event) {console.log(event);
     for (var i=0; i<this.listenerList.length; i++) {
         var listener = this.listenerList[i];
         if(listener.event == event) {

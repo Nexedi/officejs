@@ -31,18 +31,10 @@
 
     <script type="text/javascript">
 
-        var init = function() {
+        var init = function() {if(Storage.documentList && Storage.documentList["test.profile"]){debugger;};
             //initialize page and storage, then user, and then document List
             Page.initialize("ung");//provide methods on the page
             Storage.initialize();//initialize storage
-
-            if(getCurrentDocumentID()&&getDocumentList().get(getCurrentDocumentID())) {
-                /* update the list with the modifications of the last edited document
-                 * (this method has to been rewritten if using multi users) */
-                getDocumentList().updateDocumentInformation(getCurrentDocumentID());
-                delete localStorage.currentDocumentID;
-                getCurrentStorage().save();
-            }
             resize();
 
         }

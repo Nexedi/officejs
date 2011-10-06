@@ -40,18 +40,11 @@ var Page = {
             }
             //display the document list when the line factory is ready
             Line.loadHTML(function() {
-                var list = getCurrentDocumentList();
-                if (list && list.detailedList) {
-                    list.display();
-                    list.resetSelectionList();
-                    resize();
-                } else {
-                    Storage.addEventHandler(function() {
-                        list.display();
-                        list.resetSelectionList();
-                        resize();
-                    },Storage.LIST_READY);
-                }
+                Storage.addEventHandler(function() {
+                    DocumentList.detailedList = Storage.getDocumentList();
+                    DocumentList.display()
+                },Storage.LIST_READY);
+                if(DocumentList.getDetailedList()) {DocumentList.display()}
             });
 
         }
@@ -65,7 +58,7 @@ var Page = {
     getDependencies: function() {return $(this.getXML()).find("dependencies");},
     getEditor: function() {return this.editor;},
     loadEditor: function() {   //load the favourite editor of the user
-        this.editor = new (getCurrentUser().getSetting("favouriteEditor")[this.getName()])();
+        this.editor = new window[getCurrentUser().getSetting("favouriteEditor")[this.getName()]]();
     },
 
     //loaders
@@ -75,18 +68,19 @@ var Page = {
         var page = this;
         loadFile(source,"html",function(data) {
             page.xml = data;
-            this.displayPageinformation();
+            Page.displayPageInformation();
 
-            var dependencies = this.getDependencies();
+            var dependencies = Page.getDependencies();
             $(dependencies).find("linkfile").each(function() {page.include($(this).text(),"link");});//includes css
             $(dependencies).find("scriptfile").each(function() {page.include($(this).text(),"script");});//includes js
 
             // load the user, the editor and the document in the page (wait for the storage being ready)
-            Storage.addEventHandler(function() {
+            var initPage = function() {
+                Page.loadEditor();
                 Page.displayUserInformation(getCurrentUser());
                 Page.displayDocumentInformation(getCurrentDocument());
-                Page.loadEditor();
-            },Storage.USER_READY);
+            }
+            Storage[Storage.USER_READY] ? initPage() : Storage.addEventHandler(initPage);
         });
     },
 
@@ -215,7 +209,7 @@ var Storage = new UngObject();
 Storage.load({
     /* create the storage from storage. Used in the login page */
     create: function (jioFileContent) {
-        this.jio = jioFileContent;
+        this.jio = typeof jioFileContent == "string" ? JSON.parse(jioFileContent) : jioFileContent;
         JIO.initialize(jioFileContent,{"ID":"www.ungproject.com"});
         Storage.currentStorage = this;
         //try to load user parameters
@@ -229,16 +223,16 @@ Storage.load({
             errorHandler: function(errorEvent) {//fail
                 if(errorEvent.status==404){//create a new user if there was no such one
                     var user = new User();
-                    user.setName(jioFileContent.userName);
+                    user.setName(storage.jio.userName);
                     storage.user = user;
                     storage.userName = storage.user.getName();
-                    storage.user.storageLocation = jioFileContent.location;
+                    storage.user.storageLocation = storage.jio.location;
                     storage.save(function() {storage.fireEvent(Storage.STORAGE_CREATED);});
                 }
             },
             asynchronous: false
         }
-        JIO.loadDocument(jioFileContent.userName+".profile", option);
+        JIO.loadDocument(storage.jio.userName+".profile", option);
 
 
     },
@@ -297,14 +291,19 @@ Storage.load({
         var option = {
             success: function(list) {
                 delete list[getCurrentUser().getName()+".profile"];//remove the profile file
-                getCurrentStorage().documentList = list;
+
+                //treat JSON documents
+                for (var element in list) {
+                    list[element].content = new JSONDocument(list[element].content);
+                }
+                
+                Storage.documentList = list;if(Storage.documentList["test.profile"]){debugger;};
                 Storage.fireEvent(Storage.LIST_READY);
             }
         }
         JIO.getDocumentList(option);
     },
     save: function(instruction) { // update and save user information in the localStorage
-        this.updateUser();
         this.saveDocument(this.user,this.user.getName()+".profile",function() {
             var storage = {
                 jio:Storage.jio,
@@ -322,14 +321,12 @@ Storage.load({
         this.userName = user.getName();
         Storage.fireEvent(Storage.USER_READY);
 
-        this.updateDocumentList();
         getCurrentStorage().save();
     },
     fireEvent: function(event) {
         Storage[event] = true;
         UngObject.prototype.fireEvent.call(this,event);
-    },
-    updateUser: function() {localStorage[this.getUser().getName()] = JSON.stringify(this.getUser());}
+    }
 });
 
 function getCurrentStorage() {
@@ -353,6 +350,7 @@ var Document = {
     saveCurrentDocument: function() {
         getCurrentPage().getEditor().saveEdition();
         getCurrentDocument().save();
+        localStorage.currentDocument = JSON.stringify(getCurrentDocument());
     },
 
      /**
@@ -360,7 +358,7 @@ var Document = {
       * @param doc : the document to edit
       */
     startDocumentEdition: function(doc) {
-        getCurrentStorage().getDocument(doc.fileName, function(data) {
+        getCurrentStorage().getDocument(Document.getAddress(doc), function(data) {
             this.setCurrentDocument(data);
             if(Document.supportedDocuments[data.getType()].editorPage) {window.location.href = "theme.html";}
             else alert("no editor available for this document");
