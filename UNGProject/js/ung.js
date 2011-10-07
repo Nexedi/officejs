@@ -24,21 +24,12 @@ DocumentList.load({
 
         //update documentList each 10 seconds
         Storage.addEventHandler(function() {DocumentList.detailedList = Storage.getDocumentList();},Storage.LIST_READY);
-        recursiveTask(function() {Storage.updateDocumentList();},10000);// ! should display it if any change
-        
-        /* update the list with the modifications of the last edited document
-         * (this method has to been rewritten if using multi users) 
-        if(getCurrentDocumentID()&&getDocumentList().get(getCurrentDocumentID())) {
-            getDocumentList().updateDocumentInformation(getCurrentDocumentID());
-            delete localStorage.currentDocumentID;
-            getCurrentStorage().save();
-        }*/
+        recursiveTask(function() {Storage.updateDocumentList();},10000);
     },
 
     removeDocument: function(fileName) {
-        getCurrentStorage().remove(fileName)//delete the file
-        delete this.detailedList[fileName];//
-        this.save();//save changes
+        getCurrentStorage().deleteDocument(fileName)//delete the file
+        delete this.getDetailedList()[fileName];
     },
 
     get: function(fileName) {return this.getDetailedList()[fileName]},
@@ -78,8 +69,7 @@ DocumentList.load({
         this.getSelectionList().push(fileName);
     },
     removeFromSelection: function(fileName) {
-        var selection = getDocumentList().getSelectionList();
-        selection.splice(selection.indexOf(fileName),1);
+        this.getSelectionList().splice(this.getSelectionList().indexOf(fileName),1);
     },
 
     deleteSelectedDocuments: function() {
@@ -116,19 +106,13 @@ DocumentList.load({
         for(var i=this.getDisplayInformation().first-1;i<this.getDisplayInformation().last;i++) {
             var fileName = list[i].fileName;
             var doc = detailedList[fileName];
-            /*var documentList = this;
-            (function tryToDisplay(j) {//update document information before displaying
-                if(!doc || new Date(detailedList[fileName].lastModification+1000)<new Date(list[j].lastModify)) {
-                    documentList.updateDocumentInformation(fileName);
-                    setTimeout(function(){tryToDisplay.call(this,j)},500);
-                } else {*/
-                    var line = new Line(doc,i);
-                    line.updateHTML();
-                    line.display();
-                    if(this.getSelectionList().indexOf(doc.fileName)!=-1) {line.setSelected(true);}//check the box if selected
-                /*}
-            })(i)*/
-
+            var line = new Line(doc,i);
+            line.updateHTML();
+            line.display();
+            if(!doc.updated) {
+                line.updateDocumentInformation();
+            }
+            if(this.getSelectionList().indexOf(doc.fileName)!=-1) {line.setSelected(true);}//check if selected
         }
     },
     displayListInformation: function(list) {//display number of records, first displayed document, last displayed document...
@@ -166,15 +150,6 @@ DocumentList.load({
         this.displayNavigationElements();
     },
 
-    /* update the ith document information */
-    updateDocumentInformation: function(fileName) {console.log(fileName);
-        var list = this.getDetailedList();
-        getCurrentStorage().getDocument(fileName, function(doc) {
-            list[fileName]=doc;
-            list[fileName].fileName = fileName;
-            doc.setContent("");
-        });
-    },
     /* update the variable "displayInformation" (documents to be displayed) */
     updateDisplayInformation: function(list) {
         var infos = this.getDisplayInformation();
@@ -208,9 +183,13 @@ var Line = function(doc, i) {
     this.html = Line.getOriginalHTML();
 }
 Line.prototype = {
-    getDocument: function() {return this.document.content;},
+    getDocument: function() {return this.document;},
+    setDocument: function(doc) {
+        this.document = doc;
+        this.updateHTML();
+    },
     getID: function() {return this.ID;},
-    getType: function() {return this.document.content.type || "other";},
+    getType: function() {return this.document.type || "other";},
     getHTML: function() {return this.html;},
     setHTML: function(newHTML) {this.html = newHTML;},
     setSelected: function(bool) {$("tr td.listbox-table-select-cell input#"+this.getID()).attr("checked",bool)},
@@ -220,18 +199,29 @@ Line.prototype = {
 
     /* add the document of this line to the list of selected documents */
     addToSelection: function() {
-        getDocumentList().addToSelection(this.getDocument().fileName);
+        DocumentList.addToSelection(this.getDocument().fileName);
     },
     /* remove the document of this line from the list of selected documents */
     removeFromSelection: function() {
-        getDocumentList().removeFromSelection(this.getDocument().fileName);
+        DocumentList.removeFromSelection(this.getDocument().fileName);
     },
     /* check or uncheck the line */
     changeState: function() {
         this.isSelected() ? this.addToSelection() : this.removeFromSelection();
-        $("span#selected_row_number a").html(getDocumentList().getSelectionList().length);//display the selected row number
+        $("span#selected_row_number a").html(DocumentList.getSelectionList().length);//display the selected row number
     },
-
+    /* update document information of the line */
+    updateDocumentInformation: function() {
+        var line = this;
+        var list = DocumentList.getDetailedList();
+        var fileName = this.getDocument().fileName;
+        getCurrentStorage().getDocumentMetaData(fileName, function(doc) {
+            doc.fileName = fileName;
+            doc.updated = true;
+            list[fileName] = doc;
+            line.setDocument(list[fileName]);
+        });
+    },
     /* load the document information in the html of a default line */
     updateHTML: function() {
         var line = this;
@@ -250,8 +240,8 @@ Line.prototype = {
                         .attr("src",Document.supportedDocuments[this.getType()].icon)//icon
                     .end()
                 .end()
-                .find("a.listbox-document-title").html(this.getDocument().getTitle()).end()
-                .find("a.listbox-document-state").html(this.getDocument().getState()[getCurrentUser().getSetting("language")]).end()
+                .find("a.listbox-document-title").html(this.getDocument().getTitle()||"unknown").end()
+                .find("a.listbox-document-state").html(this.getDocument().getState()?this.getDocument().getState()[getCurrentUser().getSetting("language")]:"?").end()
                 .find("a.listbox-document-date").html(this.getDocument().getLastModification()).end()
             .end());
     },
@@ -264,7 +254,6 @@ Line.loadHTML = function(callback) {
         Line.originalHTML = $(data).find("line table tbody").html();
         callback(Line.getOriginalHTML());
     });
-    return Line.originalHTML;
 }
 /* return the html code of a default line */
 Line.getOriginalHTML = function() {return Line.originalHTML;}

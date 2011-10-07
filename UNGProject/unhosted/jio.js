@@ -49,7 +49,7 @@
          */
         isReady: function() {return this.jioFileContent && this.storage},
 
-        ready: function(instruction) {if(instruction) this.ready = instruction},
+        ready: function(instruction) {if(instruction) this.isReady() ? instruction() : this.ready = instruction},
 
         //IO functions
         getLocation: function() {return this.location},
@@ -309,6 +309,7 @@
         this.userName = data.userName;
         if(!localStorage.getItem(this.userName)) {localStorage[this.userName] = "{}"}//new user
         this.documents = JSON.parse(localStorage.getItem(this.userName));//load documents
+        // HACK : re-stringify the content :
     }
     JIO.LocalStorage.prototype = {
 
@@ -357,13 +358,13 @@
          * oldData : last data downloaded. Used to know if data has changed since last download and has to been merged
          */
         saveDocument: function(data, fileName, option) {
-            if(!this.documents[fileName]) {         //create document
+            if(!this.documents[fileName]) {       //create document
                 this.documents[fileName] = {
                     fileName:fileName,
                     content: data,
                     creationDate: Date.now(),
                     lastModified: Date.now()
-                };
+                }
                 this.save();
                 if(option.success) option.success();
             } else {
@@ -407,13 +408,14 @@
          * @example {"file1":{fileName:"file1",creationDate:"Tue, 23 Aug 2011 15:18:32 GMT",lastModified:"Tue, 23 Aug 2011 15:18:32 GMT"},...}
          */
         getDocumentList: function(option) {
-            var list = this.documents;
+            var list = copy(this.documents);
             if(option.success) option.success(list);
             return list;
         },
 
 
         save: function() {
+            var s = JSON.stringify(this.documents);
             localStorage[this.userName]=JSON.stringify(this.documents);
         }
     }

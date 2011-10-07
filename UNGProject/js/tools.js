@@ -6,9 +6,7 @@
  * Class UngObject
  * provides useful general methods
  */
-UngObject = function() {
-    this.listenerList = [];
-}
+UngObject = function() {}
 /* return true if this object implements the interface */
 UngObject.prototype.implement = function(myInterface)
 {
@@ -63,22 +61,28 @@ UngObject.prototype.copy = function() {
  * @param once : if set to true, the handler is executed only once
  */
 UngObject.prototype.addEventHandler = function (handler, event, once) {
-    if(!this.listenerList) { this.listenerList = [] }
-    this.listenerList.push({handler:handler,event:event,once:once});
+    this.getListenerList().push({handler:handler,event:event,once:once});
 }
 
 /* fire an event through all the listeners of the object */
 UngObject.prototype.fireEvent = function (event) {console.log(event);
-    for (var i=0; i<this.listenerList.length; i++) {
-        var listener = this.listenerList[i];
+    var list = this.getListenerList();
+    for (var i=0; i<list.length; i++) {
+        var listener = list[i];
         if(listener.event == event) {
             listener.handler(event);
             if(listener.once) { // remove the listener if supposed to been executed only once
-                this.listenerList.splice(i,1);
+                list.splice(i,1);
                 i--;
             }
         }
     }
+}
+
+/* getter for the listenerList */
+UngObject.prototype.getListenerList = function() {
+    if (!this.listenerList) {this.listenerList = []}
+    return this.listenerList;
 }
 
 /**

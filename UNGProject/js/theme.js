@@ -42,7 +42,7 @@ var Page = {
             Line.loadHTML(function() {
                 Storage.addEventHandler(function() {
                     DocumentList.detailedList = Storage.getDocumentList();
-                    DocumentList.display()
+                    DocumentList.display();
                 },Storage.LIST_READY);
                 if(DocumentList.getDetailedList()) {DocumentList.display()}
             });
@@ -57,8 +57,8 @@ var Page = {
     getContent: function() {return $(this.getXML()).find("content").html();},
     getDependencies: function() {return $(this.getXML()).find("dependencies");},
     getEditor: function() {return this.editor;},
-    loadEditor: function() {   //load the favourite editor of the user
-        this.editor = new window[getCurrentUser().getSetting("favouriteEditor")[this.getName()]]();
+    loadEditor: function(editor) {   //load the favourite editor of the user
+        this.editor = new editor();
     },
 
     //loaders
@@ -76,11 +76,24 @@ var Page = {
 
             // load the user, the editor and the document in the page (wait for the storage being ready)
             var initPage = function() {
-                Page.loadEditor();
-                Page.displayUserInformation(getCurrentUser());
-                Page.displayDocumentInformation(getCurrentDocument());
+                var editor = window[getCurrentUser().getSetting("favouriteEditor")[Page.getName()]];
+                if(!editor) {// this hack doesn't work and I have no idea why
+                    setTimeout(function() {initPage()},500);console.log("try");
+                    $.ajax({
+                        url: "js/text-editor.js",
+                        type: "GET",
+                        dataType: "text",
+                        success: function(data) {eval(data);},
+                        error: function(type) {alert("Error "+type.status+" : fail while trying to load "+"js/text-editor.js");}
+                    });
+                }
+                else {
+                    Page.loadEditor(editor);
+                    Page.displayUserInformation(getCurrentUser());
+                    Page.displayDocumentInformation(getCurrentDocument());
+                }
             }
-            Storage[Storage.USER_READY] ? initPage() : Storage.addEventHandler(initPage);
+            Storage[Storage.USER_READY] ? initPage() : Storage.addEventHandler(initPage,Storage.USER_READY);
         });
     },
 
@@ -229,10 +242,9 @@ Storage.load({
                     storage.user.storageLocation = storage.jio.location;
                     storage.save(function() {storage.fireEvent(Storage.STORAGE_CREATED);});
                 }
-            },
-            asynchronous: false
+            }
         }
-        JIO.loadDocument(storage.jio.userName+".profile", option);
+        JIO.ready(function(){JIO.loadDocument(storage.jio.userName+".profile", option)});
 
 
     },
@@ -270,10 +282,22 @@ Storage.load({
         };
         JIO.loadDocument(fileName, option);
     },
+    getDocumentMetaData: function(fileName, instruction) {
+        //optimized only if an indexedStorage is included in the storage
+        var option = {
+            metaDataOnly: true,
+            success:function(content) {
+                var doc = new JSONDocument(JSON.parse(content));
+                if(instruction) instruction(doc);
+            }
+        };
+        JIO.loadDocument(fileName, option);
+    },
     saveDocument: function(doc, fileName, instruction) {
         var metaData = doc.copy();
         delete metaData.content;
         var option = {
+            overwrite: true,
             success: instruction,
             metaData: metaData
         };
@@ -291,28 +315,40 @@ Storage.load({
         var option = {
             success: function(list) {
                 delete list[getCurrentUser().getName()+".profile"];//remove the profile file
+                var documentList = Storage.documentList || [];
 
                 //treat JSON documents
                 for (var element in list) {
-                    list[element].content = new JSONDocument(list[element].content);
+                    if(!documentList[element]) {
+                        documentList[element] = new JSONDocument(list[element]);
+                    } else {
+                        documentList[element].load(list[element])
+                    }
                 }
-                
-                Storage.documentList = list;if(Storage.documentList["test.profile"]){debugger;};
+                Storage.documentList = documentList;
                 Storage.fireEvent(Storage.LIST_READY);
             }
         }
         JIO.getDocumentList(option);
     },
     save: function(instruction) { // update and save user information in the localStorage
-        this.saveDocument(this.user,this.user.getName()+".profile",function() {
-            var storage = {
-                jio:Storage.jio,
-                user:Storage.user,
-                userName:Storage.userName
-            }
-            localStorage.currentStorage = JSON.stringify(storage);
-            if(instruction) {instruction();}
-        });
+        var user = this.user;
+        var metaData = user.copy();
+        delete metaData.content;
+        var option = {
+            success: function() {
+                var storage = {
+                    jio:Storage.jio,
+                    user:Storage.user,
+                    userName:Storage.userName
+                }
+                localStorage.currentStorage = JSON.stringify(storage);
+                if(instruction) {instruction();}
+            },
+            overwrite: true,
+            metaData: metaData
+        };
+        JIO.saveDocument(JSON.stringify(user), user.getName()+".profile", option);
     },
 
     getUser: function() {return this.user;},
@@ -358,11 +394,14 @@ var Document = {
       * @param doc : the document to edit
       */
     startDocumentEdition: function(doc) {
-        getCurrentStorage().getDocument(Document.getAddress(doc), function(data) {
-            this.setCurrentDocument(data);
-            if(Document.supportedDocuments[data.getType()].editorPage) {window.location.href = "theme.html";}
-            else alert("no editor available for this document");
-        });
+        if(Document.supportedDocuments[doc.getType()].editorPage) {
+            getCurrentStorage().getDocument(doc.getAddress(), function(data) {
+                this.setCurrentDocument(data);
+                window.location.href = "theme.html";
+            });
+        } else {
+            alert("no editor available for this document");
+        }
     },
 
      /**
@@ -383,13 +422,6 @@ var Document = {
         "table":{editorPage:"table-editor",icon:"images/icons/table.png"},
         "other":{editorPage:null,icon:"images/icons/other.gif"},
         undefined:{editorPage:null,icon:"images/icons/other.gif"}
-    },
-
-     /**
-      * generate a unique name for the document
-      */
-    getAddress: function(doc) {
-        return doc.getCreation();
     }
 }
 function getCurrentDocument() {
@@ -417,8 +449,8 @@ var JSONDocument = function(arg) {
         this.lastUser=getCurrentUser().getName();
         this.title="Untitled";
         this.content="";
-        this.creation=getCurrentTime();
-        this.lastModification=getCurrentTime();
+        this.creationDate=getCurrentTime();
+        this.lastModified=getCurrentTime();
         this.state=JSONDocument.prototype.states.draft;
         this.label = {};
     }
@@ -453,9 +485,9 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
     setLastUser:function(user) {this.lastUser = user;},
 
     //dates
-    getCreation:function() {return this.creation;},
-    getLastModification:function() {return (new Date(this.lastModification)).toUTCString();},
-    setLastModification:function(date) {this.lastModification=date;},
+    getCreation:function() {return this.creationDate;},
+    getLastModification:function() {return (new Date(this.lastModified)).toUTCString();},
+    setLastModification:function(date) {this.lastModified=date;},
 
     //state
     getState:function() {return this.state;},
@@ -471,11 +503,14 @@ JSONDocument.prototype.load({//add methods thanks to the UngObject.load method
         setCurrentDocument(this);
     },
     save: function(instruction) {//save the document
-        var doc = this;
-        getCurrentStorage().saveDocument(doc, Document.getAddress(this), instruction);
+        getCurrentStorage().saveDocument(this, this.getAddress(), instruction);
     },
     remove: function(instruction) {//remove the document
-        getCurrentStorage().deleteDocument(Document.getAddress(this), instruction);
+        getCurrentStorage().deleteDocument(this.getAddress(), instruction);
+    },
+     /* generate a unique name for the document */
+    getAddress: function() {
+        return this.getCreation()+".json";
     }
 });
 JSONDocument.prototype.states = {
@@ -483,6 +518,7 @@ JSONDocument.prototype.states = {
     saved:{"fr":"Enregistré","en":"Saved"},
     deleted:{"fr":"Supprimé","en":"Deleted"}
 }
+JSONDocument.UPDATED = "updated";
 
 
 
@@ -522,7 +558,7 @@ share = function() {alert("share");}
 editDocumentSettings = function() {
     Document.saveCurrentDocument();
     loadFile("xml/xmlElements.xml", "html", function(data) {
-        $("rename", data).dialog({
+        $(data).find("rename").dialog({
             autoOpen: true,
             height: 131,
             width: 389,

@@ -31,7 +31,7 @@
 
     <script type="text/javascript">
 
-        var init = function() {if(Storage.documentList && Storage.documentList["test.profile"]){debugger;};
+        var init = function() {
             //initialize page and storage, then user, and then document List
             Page.initialize("ung");//provide methods on the page
             Storage.initialize();//initialize storage
@@ -445,23 +445,23 @@
                             <div class="input"><div  >
                                 <div class="toolbar">
                                     <button class="delete ung_button"
-                                            onclick="getDocumentList().deleteSelectedDocuments()">Delete
+                                            onclick="DocumentList.deleteSelectedDocuments()">Delete
                                     </button>
                                     <button name="#" class="change_state ung_button">Change State</button>
 
                                     <div class="listbox-navigation">
-                                        <button class="listbox_first_page your_listbox_first_page ung_button" onclick="getDocumentList().changePage(event)">
+                                        <button class="listbox_first_page your_listbox_first_page ung_button" onclick="DocumentList.changePage(event)">
                                             <span class="image"> </span>
                                         </button>
-                                        <button class="listbox_previous_page your_listbox_previous_page ung_button" onclick="getDocumentList().changePage(event)">
+                                        <button class="listbox_previous_page your_listbox_previous_page ung_button" onclick="DocumentList.changePage(event)">
                                             <span class="image"> </span>
                                         </button>
-                                        <input class="listbox_set_page your_listbox_set_page" value="1" size="1" onkeypress="if(event.keyCode==13){getDocumentList().changePage(event)}" />
+                                        <input class="listbox_set_page your_listbox_set_page" value="1" size="1" onkeypress="if(event.keyCode==13){DocumentList.changePage(event)}" />
                                         /<span class="listbox_last_page">1</span>
-                                        <button class="listbox_next_page your_listbox_next_page ung_button" onclick="getDocumentList().changePage(event)">
+                                        <button class="listbox_next_page your_listbox_next_page ung_button" onclick="DocumentList.changePage(event)">
                                             <span class="image"> </span>
                                         </button>
-                                        <button class="listbox_last_page your_listbox_last_page ung_button" onclick="getDocumentList().changePage(event)">
+                                        <button class="listbox_last_page your_listbox_last_page ung_button" onclick="DocumentList.changePage(event)">
                                             <span class="image"> </span>
                                         </button>
                                     </div>
@@ -546,7 +546,7 @@
                                                                     name="your_listbox_checkAll:method"
                                                                     value="1" alt="Check All"
                                                                     title="Check All"
-                                                                    onclick="getDocumentList().checkAll()"
+                                                                    onclick="DocumentList.checkAll()"
                                                                     src="images/icons/checkall.png" />
                                                             &nbsp;
 
@@ -555,7 +555,7 @@
                                                                     name="your_listbox_uncheckAll:method"
                                                                     value="1" alt="Uncheck All"
                                                                     title="Uncheck All"
-                                                                    onclick="getDocumentList().resetSelectionList()"
+                                                                    onclick="DocumentList.resetSelectionList()"
                                                                     src="images/icons/decheckall.png" />
                                                         </th>
 

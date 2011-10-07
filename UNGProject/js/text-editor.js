@@ -9,7 +9,7 @@
  * saveEdition : save the edition made by this editor to the current document
  * loadContentFromDocument : display the content of the specified document in the editor
  */
-var Xinha = function() {
+Xinha = function() {
     this.name = "Xinha";                // name to use in dialog boxes
     this.objectName = "Xinha"  // name of the object reference
     this.load = function() {
@@ -28,7 +28,7 @@ var Xinha = function() {
     this.load();
 }
 
-var AlohaInterface = function() {
+AlohaInterface = function() {
     this.name = "Aloha";                // name to use in dialog boxes
     this.objectName = "AlohaInterface"  // name of the object reference
     this.load = function() {
@@ -54,7 +54,7 @@ var AlohaInterface = function() {
     this.load();
 }
 
-var NicEdit = function() {
+NicEdit = function() {
     this.name = "NicEdit";       // name to use in dialog boxes
     this.objectName = "NicEdit"  // name of the object reference
     this.instance = null;
@@ -77,7 +77,7 @@ var NicEdit = function() {
 }
 
 
-var TinyEdit = function() {
+TinyEdit = function() {
     this.name = "Tiny";       // name to use in dialog boxes
     this.objectName = "TinyEdit"  // name of the object reference
     this.load = function() {
