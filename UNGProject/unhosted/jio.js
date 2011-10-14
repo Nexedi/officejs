@@ -9,7 +9,7 @@
      */
     var dependenceLoaded = includeJS([//files to load
         "unhosted/sjcl.js",
-        "unhosted/jquery.js",
+        "js/jquery/jquery.js",
         "unhosted/base64.js"
     ],function() {// return true only if dependencies are loaded
         return (window.$ && window.sjcl && window.Base64) // check jQuery, sjcl & Base64
@@ -968,7 +968,7 @@
      * @param ready : (optional) array of elements allowing to know if dependencies are ready
      * @param instruction : (optional) instruction to execute when dependencies are loaded
      * @return the ready function
-     * @example : includeJS("jquery.js",[$]);
+     * @example : includeJS("js/jquery/jquery.js",[$]);
      */
     function includeJS(url,ready, instruction) {
         //path = findURL("jio.js");
