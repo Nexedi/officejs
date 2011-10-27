@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<!--
+        Copyright 2009 OpenAjax Alliance
+
+        Licensed under the Apache License, Version 2.0 (the "License"); 
+        you may not use this file except in compliance with the License. 
+        You may obtain a copy of the License at
+        
+                http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software 
+        distributed under the License is distributed on an "AS IS" BASIS, 
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+        See the License for the specific language governing permissions and 
+        limitations under the License.
+-->
+
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>widget</title>
+    
+    <script src="loader.js"></script>
+    
+	<script>
+	    (function() {
+        
+        var scriptsLoaded = false,
+            windowLoaded = false;
+        
+        function onWindowLoad( event ) {
+            windowLoaded = true;
+            loadWidget();
+        }
+        function onScriptsLoad( success, error ) {
+            // XXX handle error (success == false)
+            scriptsLoaded = true;
+            loadWidget();
+        }
+        function loadWidget() {
+            if ( scriptsLoaded && windowLoaded ) {
+    	        OpenAjax.widget._createRemoteWidget( document.getElementById("oaa_widget") );
+            }
+        }
+        
+        function queryURLParam( param ) {
+            var result = new RegExp( "[\\?&]" + param + "=([^&#]*)" ).exec( window.location.search );
+            if ( result ) {
+                return decodeURIComponent( result[1].replace( /\+/g, "%20" ) );
+            }
+            return null;
+        }
+        
+        window.onload = onWindowLoad;
+
+        var head = document.getElementsByTagName('HEAD').item(0);
+        
+        var base = document.createElement( "base" );
+        base.setAttribute( "href", queryURLParam( "oawb" ) );
+        head.appendChild( base );
+
+        // load OpenAjax Hub files
+        var scripts;
+        var oaaHubJS = queryURLParam( "oawh" );
+        var m = oaaHubJS.match( /openajax(?:ManagedHub-.+|-mashup)\.js$/i );
+        if ( m ) {
+            var hubRoot = oaaHubJS.substring( 0, m.index );
+            var baseName = oaaHubJS.substring( m.index );
+            switch ( baseName.toLowerCase() ) {
+                case "openajaxmanagedhub-all.js":
+                    scripts = [ { src: hubRoot + "OpenAjaxManagedHub-all.js" } ];
+                    break;
+                case "openajaxmanagedhub-core.js":
+                    scripts = [ { src: hubRoot + "OpenAjaxManagedHub-core.js" },
+                                { src: hubRoot + "json2.js" },
+                    	        { src: hubRoot + "crypto.js" },
+                    	        { src: hubRoot + "iframe.js" },
+                    	        { src: hubRoot + "FIM.js" } ];
+                    break;
+                case "openajaxmanagedhub-std.js":
+                    scripts = [ { src: hubRoot + "OpenAjaxManagedHub-std.js" },
+                                { src: hubRoot + "FIM.js" } ];
+                    break;
+                case "openajax-mashup.js":
+                    scripts = [ { src: hubRoot + "OpenAjax-mashup.js" },
+                    	        { src: hubRoot + "containers/iframe/json2.js" },
+                    	        { src: hubRoot + "containers/iframe/crypto.js" },
+                    	        { src: hubRoot + "containers/iframe/iframe.js" },
+                    	        { src: hubRoot + "containers/iframe/FIM.js" } ];
+                    break;
+            }
+        }
+        
+        // load "loader.js" -- assume it is a sibling of this file
+        scripts.push( { src: /(.+:\/\/.+\/)/.exec( window.location.href )[1] + "loader.js" } );
+        
+        __openajax_widget__._loadScripts( scripts, false, onScriptsLoad );
+
+        })();
+	</script>
+    
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="oaa_widget"></div>
+</body>
+</html>

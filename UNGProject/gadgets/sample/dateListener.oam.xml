@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+        Copyright 2006-2008 OpenAjax Alliance
+
+        Licensed under the Apache License, Version 2.0 (the "License"); 
+        you may not use this file except in compliance with the License. 
+        You may obtain a copy of the License at
+        
+                http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software 
+        distributed under the License is distributed on an "AS IS" BASIS, 
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+        See the License for the specific language governing permissions and 
+        limitations under the License.
+-->
+<widget name="DateListener" id="http://openajax.org/samples/widgets/DateListener"
+		spec="1.0" version='0.9' width="300" height="24" sandbox="true"
+		xmlns="http://openajax.org/metadata">
+    <description>This is a test widget that tests the UI representation of various parts of the OAA spec</description>
+    <properties>
+      <property name="date" datatype="Date" defaultValue="" sharedAs="date"></property>
+<!--
+      <property name="subscribedDate" datatype="Date" defaultValue="" readonly="false" sharedAs="date">
+        // subscribe="true"
+        <description>last date published by another gadget</description>
+      </property>
+      <property name="publishedDate" datatype="String" defaultValue="" readonly="false" hidden="false" sharedAs="datestring">
+        // publish="true" 
+        <description>when this value is changed, this date will be published to other gadgets</description>
+      </property>
+      <property name="hiddenDate" datatype="String" defaultValue="" readonly="false" hidden="true" sharedAs="datestring">
+        // publish="true"
+        <description>when this value is changed, this date will be published to other gadgets</description>
+      </property>
+-->
+    </properties>
+
+    <content>
+    <![CDATA[
+        <script>
+            var w__WID__ = OpenAjax.widget.byId("__WID__");
+            
+            w__WID__.onLoad = function() {
+                document.getElementById("__WID__date").value = this.OpenAjax.getPropertyValue( "date" );
+            };
+            
+            w__WID__.handleClick = function() {
+//                alert("click!");
+            };
+            
+            w__WID__.handleChange = function() {
+                this.OpenAjax.setPropertyValue( "date", document.getElementById("__WID__date").value );
+            };
+            
+            w__WID__.onChangeDate = function( event ) {
+                document.getElementById("__WID__date").value = event.newValue;
+            };
+        </script>
+        
+        <label id="__WID__date_label" for="__WID__date" style="border: 1px solid red;">date last broadcast: </label>
+        <input id="__WID__date" name="__WID__date" onclick="OpenAjax.widget.byId('__WID__').handleClick();" onChange="OpenAjax.widget.byId('__WID__').handleChange();"/>
+    ]]>
+    </content>
+</widget>
