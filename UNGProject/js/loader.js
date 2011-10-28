@@ -1466,7 +1466,7 @@ ProxyWidget.prototype._connectToHub = function()
 {
     var widgetBaseURI = encodeURIComponent( this._spec._src_.slice( 0, this._spec._src_.lastIndexOf("/") + 1 ));
     //AP var stubURI = _loaderRoot + "widget.html?oawb=" + widgetBaseURI + "&oawh=" + encodeURIComponent( _hubBaseJS );
-    var stubURI = "http://localhost/js/widget.html?oawb=" + widgetBaseURI + "&oawh=" + encodeURIComponent( _hubBaseJS );
+    var stubURI = "js/widget.html?oawb=" + widgetBaseURI + "&oawh=" + encodeURIComponent( _hubBaseJS );
 
     this._container = new OpenAjax.hub.IframeContainer( _hub, this._id,
             {   Container: {
