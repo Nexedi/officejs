@@ -16,6 +16,15 @@
     <link type="text/css" rel="stylesheet" href="css/ung.css" />
     <link type="text/css" rel="stylesheet" href="css/jquery-ui.css" />
     <link type="text/css" rel="stylesheet" href="css/gadget.css" />
+    <script type="text/javascript" src="openajaxhub/src/OpenAjax-mashup.js"></script>
+    <script type="text/javascript" src="dojo/dojo/dojo.js"></script>
+    <script type="text/javascript" src="openajaxhub/src/containers/inline/inline.js"></script>
+    <script type="text/javascript" src="openajaxhub/src/containers/iframe/iframe.js"></script>
+    <script type="text/javascript" src="openajaxhub/src/containers/iframe/FIM.js"></script>
+    <script type="text/javascript" src="openajaxhub/src/containers/iframe/json2.js"></script>
+    <script type="text/javascript" src="openajaxhub/src/containers/iframe/crypto.js"></script>
+
+
     <script type="text/javascript" src="js/jquery/jquery.js"></script>
     <script type="text/javascript" src="js/jquery/jquery-ui.js"></script>
     <script type="text/javascript" src="js/tools.js"></script>
@@ -23,11 +32,35 @@
 
     <script type="text/javascript" src="js/theme.js"></script>
     <script type="text/javascript" src="js/ung.js"></script>
+    <script type="text/javascript" src="js/loader.js"></script>
 
-    <link rel="icon" type="image/x-icon"
-        href="images/ung/favicon.ico" />
-    <link rel="shortcut icon" type="image/x-icon"
-        href="images/ung/favicon.ico" />
+    <link href="dojo/dijit/themes/tundra/tundra.css" rel="stylesheet">
+    <!--link href="dojo/dojo/resources/dojo.css" rel="stylesheet"-->
+
+    <link href="gadgets/layout/css/whitebox/whitebox.css" rel="stylesheet"/>
+    <link href="gadgets/layout/css/default/mashup.css" rel="stylesheet"/>
+    <script src="gadgets/layout/absolutelayout/absolutelayout.js"></script>
+    <script src="gadgets/layout/browser.js"></script>
+    <script src="gadgets/layout/gadgetsite.js"></script>
+    <link href="gadgets/layout/absolutelayout/absolutelayout.css" rel="stylesheet"/>
+
+    <script type="text/javascript" src="js/minimashup.js"></script>
+    <script>
+        mashupMaker.layout = new AbsoluteLayout();
+    </script>
+
+    <script src="gadgets/refimpldojo.js"></script>
+    <script type="text/javascript" src="gadgets/toolbar.js"></script>
+    <script>
+        var baseURL = window.location.protocol + "//" + window.location.host + window.location.pathname.substring( 0, window.location.pathname.lastIndexOf("/")+1 );
+        djConfig = { usePlainJson: true, parseOnLoad: false, isDebug: false,
+                modulePaths: { "nomad": baseURL + "nomad"} };
+    </script>
+
+
+
+    <link rel="icon" type="image/x-icon" href="images/ung/favicon.ico" />
+    <link rel="shortcut icon" type="image/x-icon" href="images/ung/favicon.ico" />
 
     <script type="text/javascript">
 
@@ -348,7 +381,16 @@
                                                         </div>
 
                                                         <div id="add_new_gadget_link">
-                                                            <a title="Add gadgets" id="add-gadgets" href="..."><span>Add gadgets</span></a>
+                                                            <div id="mashupToolbarContainer">
+                                                                <div id="mashupToolbar" dojoType="dijit.Toolbar">
+                                                                    <div id="searchResults" dojoType="dijit.form.DropDownButton" showLabel="true" iconClass="nomadToolbarIcon nomadIconSearchResults">
+                                                                        <span>Add gadgets</span>
+                                                                        <div id="searchResultsMenu" dojoType="nomad.widget.PaletteMenu">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!--a title="Add gadgets" id="add-gadgets"><span>Add gadgets</span></a-->
                                                         </div>
 
                                                 </div>
@@ -363,7 +405,10 @@
                                                     <div id="page_wrapper">
 
                                                         <!-- No gadgets message -->
-                                                        <div>
+                                                        <div id="gadget_container">
+                                                        <div id="__replaceablecontent__">
+                                                        <!-- Here is where the gadgets appear-->
+                                                        </div>
                                                             <h3> Your tab is empty. </h3>
                                                             <h4> Please  use link (<b>Add gadgets</b>) to prepare it yourself. </h4>
                                                         </div>

@@ -1,3 +1,4 @@
+/UNGProject/dojo/
 /UNGProject/xinha/
 /UNGProject/nbproject/
 /UNGProject/jquery_sheet_editor/
@@ -17,3 +18,6 @@ apache2.conf
 /.installed.cfg
 /.mr.developer.cfg
 /parts/
+
+#vi
+*.swp

@@ -1,0 +1,173 @@
+  /* styles for the banner and toolbar */
+
+  .banner {
+    background-image: url('../../images/OAAright.jpg');
+    background-repeat: repeat-x;
+    margin: 0;
+    height: 47px;
+    width: 100%;
+  }
+  .banner-left {
+    float: left;
+    height: 47px;
+    width: 320px;
+  }
+  .banner-right {
+    float: right;
+    height: 47px;
+    width: 1px;
+  }
+  .nomadToolbarIcon {
+    background-repeat: no-repeat;
+    width: 24px;
+    height: 24px;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .nomadIconHelp {
+    background-image: url('../../images/help.gif');
+  }
+  .nomadIconView {
+    background-image: url('../../images/view.gif');
+  }
+  .nomadIconImport {
+    background-image: url('../../images/plus-circle.png');
+  }
+  .nomadIconRefresh {
+    background-image: url('../../images/refreshResults.gif');
+  }
+  .nomadIconSearchResults {
+    background-image: url('../../images/plus-circle.png');
+  }
+  .nomadCheckedMenuItemIcon {
+    background-image: url('../../images/checkmark.gif');
+  }
+  .nomadIconNoBinding {
+    background-image: url('../../images/noBind.gif');
+  }
+  .nomadIconSingleBinding {
+    background-image: url('../../images/singleBind.gif');
+  }
+  .nomadIconMultipleBinding {
+    background-image: url('../../images/multipleBind.gif');
+  }
+  .nomadIconPreferences {
+    background-image: url('../../images/gear_small.gif');
+  }
+  .preEdit input {
+    font-style: italic;
+    font-weight: lighter;
+    color: #999;
+  }
+  input.postEdit {
+    font-style: normal;
+    font-weight: normal;
+    color: #000;
+  }
+
+  /* styles for palette*/
+
+  .nomadIconWidget {
+    background-image: url('../../images/component_18x18.gif');
+  }
+  .paletteItemIconRow {
+    display: none;
+  }
+  .dijitMenuItemHover .paletteItemIconRow {
+    display: table-row;
+  }
+  .dijitMenuItemHoverIE .paletteItemIconRow {
+    display: block;
+  }
+  .dijitMenuItemHover .nomadIconInfo {
+    background-image: url('../../images/info.png');
+  }
+  .dijitMenuItemHover .nomadIconRun {
+    background-image: url('../../images/run.gif');
+  }
+  .dijitMenuItemHover .nomadIconBookmark {
+    background-image: url('../../images/folder.gif');
+  }
+
+  .nomadPaletteItem {
+    cursor: default;
+  }
+  .dijitMenu .nomadInnerMenu {
+    border: 0;
+  }
+  .paletteScrollButton {
+    width: 100%;
+    height: 18px;
+  }
+  .nomadIconScrollUp {
+    background-image: url('../../images/uparrow.gif');
+  }
+  .nomadIconScrollDown {
+    background-image: url('../../images/downarrow.gif');
+  }
+  .dijitTitlePane.paletteNorgie {
+    min-width: 200px;
+  }
+
+  .dijitMenu .paletteNorgie .dijitTitlePaneTitle {
+    background-image: none;
+    background-color: #e0d138;
+  }
+
+  .nomadWiringOverlayCurrent {
+    background-color: purple;
+  }
+  .nomadWiringOverlayRecommended {
+    background-color: yellow;
+  }
+  .nomadWiringOverlayPossible {
+   /* background-color: gray;*/
+  }
+  .dijitTooltip .dijitTooltipContainer {
+    width: 200px;
+  }
+  #propertyDialog .gadgetBody {
+    border: none;
+    padding: 0;
+    height: auto;
+  }
+
+  .nomadErrorMsg {
+    color: red;
+    font-style: italic;
+  }
+
+  .tundra .nomadMultiSelect select, .tundra .nomadMultiSelect input {
+    /* use same layout styles for both major components of the multiselect control */
+    /*border: 1px solid #B3B3B3;*/
+    margin: 0em 0.1em;
+  }
+
+  /* dojo 1.1 doesn't necessarily gray text anymore due to '.dijitReset' rule it introduced */
+  input[disabled], textarea[disabled], option[disabled], optgroup[disabled], select[disabled] {
+    color: graytext;
+  }
+
+  /* dojo 1.1 is causing things in buttons to be vertical-align: middle which
+   * is bothering the arrows on our WiringDropDownButtons
+   */
+  .wiringButton .dijitButtonNode * {
+    display: -moz-inline-box;
+    display: inline-block;
+  }
+
+  .wiringButton .dijitA11yDownArrow {
+    margin-left: 0.8em;
+    font-size: 0.75em;
+    color: #848484;
+  }
+
+    /* had to specify directly, IE wasn't inheriting well */
+/*
+  #searchOptions.dijitMenuItemHover {
+    background-color: #f7f7f7;
+    color: #000;
+  }
+*/
+

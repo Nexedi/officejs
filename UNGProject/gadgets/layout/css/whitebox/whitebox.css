@@ -1,0 +1,114 @@
+      html body { 
+            background:#DADADA;       
+            margin:0px;
+       }
+
+      .properties {
+          display:none;
+      }
+
+      .gadgetBody {
+          position:relative;
+          padding:4px;
+          height:100%;
+          overflow:hidden;
+          background:white;
+          border-right: solid 1px #dfdfdf;
+          border-bottom: solid 1px #dfdfdf;
+          border-left: solid 1px #dfdfdf;
+      }
+
+      .gadgetFrame { 
+          width:100%;
+          height:100%;
+          margin:0;
+          padding:0;
+          border:none;
+       }
+
+      .gadgetDragAvatar { 
+          position:absolute;
+          display:none;
+          background:url(smallish_widget.png) center left no-repeat;
+          height:50px;
+          padding-left:54px;
+          overflow:hidden;
+      }
+
+      .gadgetDragAvatar div { 
+          overflow:hidden;
+          background:#DADADA;
+          height:100%;
+          background:#fef49c;
+          border:1px solid #BCA902;
+          padding:2px;
+          font-size:14px;
+       }
+
+      .gadgetDropTarget { 
+          position:absolute;
+          background:darkgray;
+          width:4px;
+       }
+      .gadgetContainer .gadgetBoxHeader {
+          height:4px;
+          background:#DAE6F6; /* url(corner_dg_TR.gif) 100% 0 no-repeat;*/
+       }
+
+      .gadgetContainer .gadgetBoxHeader div {
+          width:4px;
+          height:4px;
+          background:#DAE6F6; /*  url(corner_dg_TL.gif) 0 0 no-repeat;*/
+       }
+
+      .gadgetContainer .gadgetBoxContent {
+          background:#DAE6F6;
+          padding:5px 9px 0px 9px;
+      }
+
+      .gadgetContainer .gadgetBoxFooter {
+          height:16px;
+          background:#DAE6F6; /*  url(corner_db_BR16.png) 100% 0 no-repeat;*/
+          cursor:se-resize;
+       }
+
+      .gadgetContainer .gadgetBoxFooter div  {
+          height:16px;
+          width:16px;
+          background:#DAE6F6; /*  url(corner_dg_BL16.png) 0 0 no-repeat;*/
+       }
+
+      .gadgetHeader {
+          position:relative;
+          height:20px;
+          cursor:move;
+          background:#DADADA;
+      }
+
+       .absDeleteImg { 
+          margin-top:3px;
+          margin-right:4px;
+          cursor:pointer;
+          float:right;
+       }
+
+       .absPropEditImg { 
+          margin-top:2px;
+          margin-right:4px;
+          margin-left:4px;
+          cursor:pointer;
+          float:left;
+       }
+
+       .absSizerImg { 
+          float:right;
+          cursor:se-resize;
+       }
+
+      .gadgetTitle {
+          overflow:hidden;
+          font-size:16px;
+          padding-top:2px;
+          white-space:nowrap;          
+      }
+
