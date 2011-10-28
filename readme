@@ -79,3 +79,20 @@ this page contains a GUI to create easily your jio.json file.
 there is also some unit test on jio storages. try "UnitTest.all();" in firebug to test all unit tests.
 Warning ! The DAVStorage should be configurated before (manually in the file "test-jio.html")
 
+
+***********************************************************************
+
+Gadgets
+
+Most of it was based on : https://openajaxallianc.svn.sourceforge.net/svnroot/openajaxallianc/gadgets/trunk/samples/mashup
+
+
+gadgets:
+
+gadgets/refimpldojo.js : One of the central parts of the system. Pretty much the default implementation. The only alterations were suspending translations for now and cosmetics on the printouts
+js/minimashup.js : The other central part of the system. Mostly cosmetic fixes that differ from the default implementation
+
+
+
+
+
