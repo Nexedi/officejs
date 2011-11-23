@@ -30,9 +30,11 @@
 
         <script type="text/javascript">
             // initialize
+            var thedialog;
             var init = function() {
                 Page.initialize(Document.supportedDocuments[getCurrentDocument().getType()].editorPage);
                 Storage.initialize();
+                thedialog = $("#diag").dialog({title:"",modal: true, autoOpen: false});
             }
 
             $(document).ready(init);
@@ -40,7 +42,7 @@
 
     </head>
     <body>
-
+       <div id="diag" style="padding:0;"></div>
         <div class="container">
             <div class="navigation">
 

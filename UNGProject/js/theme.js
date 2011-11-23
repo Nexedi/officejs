@@ -558,12 +558,11 @@ share = function() {alert("share");}
 editDocumentSettings = function() {
     Document.saveCurrentDocument();
     loadFile("xml/xmlElements.xml", "html", function(data) {
-        $(data).find("rename").dialog({
-            autoOpen: true,
-            height: 131,
-            width: 389,
-            modal: true,
-            buttons: {
+        thedialog.html($(data).find("rename"))
+        thedialog.dialog("option", "width", 400);
+        thedialog.dialog("option", "height", 200);
+
+        thedialog.dialog("option", "buttons", {
                 "Save": function(){
                     var doc = getCurrentDocument();
                     doc.setTitle($(this).find("#name").attr("value"));
@@ -571,10 +570,10 @@ editDocumentSettings = function() {
                     doc.setVersion($(getCurrentDocument()).find("#version").attr("value"));
                     Document.saveCurrentDocument();
                     doc.setAsCurrentDocument();//diplay modifications
-                    $(this).dialog("close");
+                    thedialog.dialog("close");
                 },
                 Cancel: function() {
-                    $(this).dialog("close");
+                    thedialog.dialog("close");
                 }
             }
         });
