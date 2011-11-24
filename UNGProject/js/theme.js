@@ -576,7 +576,7 @@ editDocumentSettings = function() {
                     thedialog.dialog("close");
                 }
             }
-        });
+        );
         $("p#more_properties") .click(function(){
             $("div#more_property").show();
             $("p#hide_properties").show();
