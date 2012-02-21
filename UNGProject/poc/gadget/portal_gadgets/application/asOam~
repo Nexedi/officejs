@@ -1,0 +1,20 @@
+<html>
+
+ <head>
+    <title>Gadget POC</title>
+     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.js" type="text/javascript"></script>
+  </head> 
+
+  <script>
+    $(function() {
+        $("#datepicker" ).datepicker();
+    });
+  </script>
+
+  <body>
+    <div id="datepicker">
+      <p>Simple <a href="http://www.apple.com/toto">body</a> ggg</p>
+    </div>
+  </body>
+
+</html>
