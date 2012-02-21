@@ -21,3 +21,5 @@ apache2.conf
 
 #vi
 *.swp
+*~
+
