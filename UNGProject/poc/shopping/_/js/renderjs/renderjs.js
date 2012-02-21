@@ -1,15 +1,16 @@
-var ERP5={
+var RenderJs={
+  
     bootstrap: function (root){
-      // load application gadget
-      ERP5.load(root);
+      // initial load application gadget
+      RenderJs.load(root);
     },
     
     load: function (root) {
             // Load gadget layout by traversing DOM
             gadget_list = root.find("[gadget]");
             
-            // Load siblings
-            gadget_list.each(function(i,v){ERP5.loadGadgetFromUrl($(this));});
+            // Load chilren
+            gadget_list.each(function(i,v){RenderJs.loadGadgetFromUrl($(this));});
     },
 
     loadGadgetFromUrl: function(gadget) {
@@ -18,10 +19,10 @@ var ERP5={
             //console.log(url);
             $.ajax({url:url,
                     success: function (data) {
-                              ERP5.parse (data);
+                              RenderJs.parse (data);
                               gadget.append(data);
                               // a gadget may contain sub gadgets
-                              ERP5.load(gadget);
+                              RenderJs.load(gadget);
                               //console.log(url+ data);
                               gadget.find("a").each(
                                 function(){
@@ -36,27 +37,25 @@ var ERP5={
     },
     
     // XXX: finish below
-    
-    save: function () {
-            // XXX: Save gadget layoyut by traversing DOM and using some kind of storage
-            console.log("XXX: save"); 
-    },
         
     parse: function (data){
              // XXX: Parse an HTML document and get out .js and .css
              // XXX: load .css
              // XXX: load .jss (see requirejs)
-//               $.ajax({url:"jquery-ui.js",
-//                       type: "script"});
+             //  $.ajax({url:"jquery-ui.js",
+             //            type: "script"});
 
     },
-      
 
+    
+    save: function () {
+            // XXX: Save gadget layoyut by traversing DOM and using some kind of storage
+            console.log("XXX: save"); 
+    },
 }
-   
 
 // init all when DOM is ready
 $(document).ready(function() {
-   ERP5.bootstrap($("#application"));
+   RenderJs.bootstrap($("#application"));
  });
      
