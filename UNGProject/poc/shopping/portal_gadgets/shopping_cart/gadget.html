@@ -1,0 +1,17 @@
+<h3> Shopping cart </h3>
+
+<div class="shopping-cart">
+
+</div>
+
+
+
+<script type="text/javascript" language="javascript"> 
+
+  function updateShoppingCart(){
+    shopping_cart = localStorage.getItem("ivan_new_shopping_cart");
+    $(".shopping-cart").html(shopping_cart);
+    
+  }
+  updateShoppingCart();
+</script>  
