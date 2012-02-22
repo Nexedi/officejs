@@ -23,7 +23,7 @@ var RenderJs={
                               // a gadget may contain sub gadgets
                               RenderJs.load(gadget);
                               //console.log(url+ data);
-                              gadget.find("a1").each(
+                              gadget.find("a").each(
                                 function(){
                                   $(this).click(
                                     function(){

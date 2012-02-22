@@ -1,0 +1,130 @@
+<!-- Pure HTMl template part which is to be filled by javascript for given object -->
+
+<article class="productdetail">
+
+  
+  <h3 class="product-title">Bar Stud Stool (bar stools)</h3>
+
+  <div class="product-gallery tabber">
+                      
+                      <ul>
+                          <li><a href="#pic-1"><img src="img/product-dummy-small-1.jpg"></a></li>
+                          <li><a href="#pic-2"><img src="img/product-dummy-small-2.jpg"></a></li>
+                      </ul>
+                      
+                      <div id="pic-1">
+                      <a href="#">
+                      <img src="img/product-dummy-large.jpg">
+                      <strong>Zoom</strong>
+                      </a>
+                      </div>
+                      
+                      
+                      <div id="pic-2">
+                      <a href="#">
+                      <img src="img/product-dummy-large.jpg">
+                      <strong>Zoom</strong>
+                      </a>
+                      </div>
+                      
+                      
+  </div>
+                  
+                  <div class="product-action">
+                      
+                      <form action="#" method="post">
+                          <ol>
+                              <li class="short-description">Donec placerat. Nullam nibh dolor, blandit sed, fermentum id, imperdiet sit amet, neque. </li>
+                              <li><a href="#" class="more">more details &raquo;</a></li>
+                              <li class="swatches">
+                                  select a color:
+                                  
+                                  <ul>
+                                      <li><a href="#"><img src="img/swatch-1.jpg"></a></li>
+                                      <li><a href="#"><img src="img/swatch-2.jpg"></a></li>
+                                      <li><a href="#"><img src="img/swatch-3.jpg"></a></li>
+                                  </ul>
+                              </li>
+                              <li>
+                                  <strong class="price">299,99 &euro;</strong>
+                                  <span class="old">499,99 &euro;</span>
+                              </li>
+                              <li>
+                                  <label for="select-option-1">Option1:</label>
+                                  <select name="option-1" id="select-option-1">
+                                      <option>1</option>
+                                      <option>2</option>
+                                      <option>3</option>
+                                  </select>
+                              </li>
+                              <li>
+                                  <label for="select-option-2">Option2:</label>
+                                  <select name="option-2" id="select-option-2">
+                                      <option>1</option>
+                                      <option>2</option>
+                                      <option>3</option>
+                                  </select>
+                              </li>
+                              <li>
+                                  <label for="input-amount">Amount:</label>
+                                  <input type="text" name="amount" id="input-amount" value="1">
+                              </li>
+                              <li class="availability">
+                                  <label>Availability:</label>
+                                  <strong class="ok">In Stock</strong>
+                                  <!--<strong class="no">Out of Stock</strong>//-->
+                              </li> 
+                              <li>
+                                  <button type="submit">Add to Cart</button>
+                              </li>
+                          </ol>
+                      </form>
+
+                  </div>
+                  
+                  <ul class="tools">
+                      <li><a href="#">zoom  </a></li>
+                      <li class="last"><a href="#">print this page</a></li>
+                  </ul>
+              
+</article>
+              
+<article class="product-description">
+              
+  <div class="tabber">
+                      
+                      <ul>
+                          <li><a href="#desc-1">Description</a></li>
+                          <li class="current"><a href="#desc-2">Technical Details</a></li>
+                      </ul>
+                      
+                      <div id="desc-1">
+                          <p>Desc-1</p>
+                      </div>
+                      
+  </div>
+                  
+</article>
+
+
+<link href="portal_gadgets/product/gadget.css" media="all" type="text/css" rel="stylesheet">
+
+<script type="text/javascript" language="javascript"> 
+
+  function updateProduct(url){
+  $.ajax({
+    url: url,
+    dataType: 'json',
+    success: function(data){
+               price = data.price;
+               title = data.title;
+               description = data.description;
+               $(".price").html(price);
+               $(".product-title").html(title);
+               $(".short-description").html(title);
+               $("#desc-1 p").html(description);
+               }
+  });} 
+  // first one
+  updateProduct("ecommerce/pc/laptop/thinkpadT400/index.json");
+</script>  
