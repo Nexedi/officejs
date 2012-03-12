@@ -1,0 +1,4 @@
+Ajax-zation of ERP5 UI.
+Depends on jstorage (for localStorage).
+Depends on jqgrid (listbox rendering).
+To enable this bt5 after install remove "_disable" from ids of "form_view_disable" and "view_main_disable"

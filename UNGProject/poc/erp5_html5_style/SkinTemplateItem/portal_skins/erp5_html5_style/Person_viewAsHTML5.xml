@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<ZopeData>
+  <record id="1" aka="AAAAAAAAAAE=">
+    <pickle>
+      <global name="ZopePageTemplate" module="Products.PageTemplates.ZopePageTemplate"/>
+    </pickle>
+    <pickle>
+      <dictionary>
+        <item>
+            <key> <string>_bind_names</string> </key>
+            <value>
+              <object>
+                <klass>
+                  <global name="NameAssignments" module="Shared.DC.Scripts.Bindings"/>
+                </klass>
+                <tuple/>
+                <state>
+                  <dictionary>
+                    <item>
+                        <key> <string>_asgns</string> </key>
+                        <value>
+                          <dictionary>
+                            <item>
+                                <key> <string>name_subpath</string> </key>
+                                <value> <string>traverse_subpath</string> </value>
+                            </item>
+                          </dictionary>
+                        </value>
+                    </item>
+                  </dictionary>
+                </state>
+              </object>
+            </value>
+        </item>
+        <item>
+            <key> <string>_text</string> </key>
+            <value> <unicode encoding="cdata"><![CDATA[
+
+<!doctype html>\n
+\n
+<!--[if lt IE 7 ]> <html class="ie ie6 no-js" lang="en"> <![endif]-->\n
+<!--[if IE 7 ]>    <html class="ie ie7 no-js" lang="en"> <![endif]-->\n
+<!--[if IE 8 ]>    <html class="ie ie8 no-js" lang="en"> <![endif]-->\n
+<!--[if IE 9 ]>    <html class="ie ie9 no-js" lang="en"> <![endif]-->\n
+<!--[if gt IE 9]><!--><html class="no-js" lang="en"><!--<![endif]-->\n
+<!-- the "no-js" class is for Modernizr. -->\n
+\n
+<head id="www-sitename-com" data-template-set="html5-reset">\n
+\n
+\t<meta charset="utf-8">\n
+\t\n
+\t<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame -->\n
+\t<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">\n
+\t\n
+\t<title></title>\n
+\t\n
+\t<meta name="title" content="">\n
+\t<meta name="description" content="">\n
+\t<!-- Google will often use this as its description of your page/site. Make it good. -->\n
+\t\n
+\t<meta name="google-site-verification" content="">\n
+\t<!-- Speaking of Google, don\'t forget to set your site up: http://google.com/webmasters -->\n
+\t\n
+\t<meta name="author" content="Your Name Here">\n
+\t<meta name="Copyright" content="Copyright Your Name Here 2011. All Rights Reserved.">\n
+\n
+\t<!-- Dublin Core Metadata : http://dublincore.org/ -->\n
+\t<meta name="DC.title" content="Project Name">\n
+\t<meta name="DC.subject" content="What you\'re about.">\n
+\t<meta name="DC.creator" content="Who made this site.">\n
+\t\n
+\t<!--  Mobile Viewport Fix\n
+\tj.mp/mobileviewport & davidbcalhoun.com/2010/viewport-metatag \n
+\tdevice-width : Occupy full width of the screen in its current orientation\n
+\tinitial-scale = 1.0 retains dimensions instead of zooming out if page height > device height\n
+\tmaximum-scale = 1.0 retains dimensions instead of zooming in if page width < device width\n
+\t-->\n
+\t<!-- Uncomment to use Ã use thoughtfully!\n
+\t<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;">\n
+\t-->\n
+\n
+\t<link rel="shortcut icon" href="favicon.ico">\n
+\t<!-- This is the traditional favicon.\n
+\t\t - size: 16x16 or 32x32\n
+\t\t - transparency is OK\n
+\t\t - see wikipedia for info on browser support: http://mky.be/favicon/ -->\n
+\t\n
+\n
+</head>\n
+\n
+<body>\n
+\n
+\n
+  <!-- Gadget layout start here -->\n
+  <div id="application" gadget="gadgets/application/gadget"\n
+                        gadget:property="{}"></div>\n
+\n
+  <!-- here comes the javascript -->\n
+  <script src="jquery/core/jquery.js"></script>\n
+\n
+  <!-- Gadget library goes here -->\n
+  <script src="renderjs.js"></script>\n
+\n
+</body>\n
+</html>
+
+]]></unicode> </value>
+        </item>
+        <item>
+            <key> <string>content_type</string> </key>
+            <value> <string>text/html</string> </value>
+        </item>
+        <item>
+            <key> <string>expand</string> </key>
+            <value> <int>0</int> </value>
+        </item>
+        <item>
+            <key> <string>id</string> </key>
+            <value> <string>Person_viewAsHTML5</string> </value>
+        </item>
+        <item>
+            <key> <string>output_encoding</string> </key>
+            <value> <string>iso-8859-15</string> </value>
+        </item>
+        <item>
+            <key> <string>title</string> </key>
+            <value> <unicode></unicode> </value>
+        </item>
+      </dictionary>
+    </pickle>
+  </record>
+</ZopeData>

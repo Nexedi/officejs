@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<ZopeData>
+  <record id="1" aka="AAAAAAAAAAE=">
+    <pickle>
+      <global name="ZopePageTemplate" module="Products.PageTemplates.ZopePageTemplate"/>
+    </pickle>
+    <pickle>
+      <dictionary>
+        <item>
+            <key> <string>_bind_names</string> </key>
+            <value>
+              <object>
+                <klass>
+                  <global name="NameAssignments" module="Shared.DC.Scripts.Bindings"/>
+                </klass>
+                <tuple/>
+                <state>
+                  <dictionary>
+                    <item>
+                        <key> <string>_asgns</string> </key>
+                        <value>
+                          <dictionary>
+                            <item>
+                                <key> <string>name_subpath</string> </key>
+                                <value> <string>traverse_subpath</string> </value>
+                            </item>
+                          </dictionary>
+                        </value>
+                    </item>
+                  </dictionary>
+                </state>
+              </object>
+            </value>
+        </item>
+        <item>
+            <key> <string>_text</string> </key>
+            <value> <unicode encoding="cdata"><![CDATA[
+
+<!-- Breadcrumb  -->\n
+<div class="status" id="status">\n
+                <div class="breadcrumb" id="breadcrumb">\n
+                  \n
+    \n
+      <a href="http://km:12001/erp5/view">ERP5</a>\n
+      /\n
+    \n
+    \n
+      <a href="http://km:12001/erp5/person_module/view">Persons</a>\n
+      /\n
+    \n
+    \n
+      <a href="http://km:12001/erp5/person_module/1/view">Ivan Tyagov</a>\n
+      /\n
+    \n
+  \n
+                </div>\n
+                <div class="logged_in_as" id="logged_in_as">\n
+                  \n
+                    <span class="logged_txt">Logged In as :</span>\n
+                    zope\n
+                  \n
+                </div>\n
+                <p class="clear"></p>\n
+                \n
+                <div class="transition_message" id="transition_message"></div>\n
+                \n
+</div>
+
+]]></unicode> </value>
+        </item>
+        <item>
+            <key> <string>content_type</string> </key>
+            <value> <string>text/html</string> </value>
+        </item>
+        <item>
+            <key> <string>expand</string> </key>
+            <value> <int>0</int> </value>
+        </item>
+        <item>
+            <key> <string>id</string> </key>
+            <value> <string>gadget</string> </value>
+        </item>
+        <item>
+            <key> <string>output_encoding</string> </key>
+            <value> <string>iso-8859-15</string> </value>
+        </item>
+        <item>
+            <key> <string>title</string> </key>
+            <value> <unicode></unicode> </value>
+        </item>
+      </dictionary>
+    </pickle>
+  </record>
+</ZopeData>
