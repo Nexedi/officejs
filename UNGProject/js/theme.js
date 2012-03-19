@@ -94,7 +94,8 @@ var Page = {
                 }
             }
             Storage[Storage.USER_READY] ? initPage() : Storage.addEventHandler(initPage,Storage.USER_READY);
-        });
+ 			setTimeout("Document.saveCurrentDocument()",200);
+	    });
     },
 
     /* include a javascript or a css file */
