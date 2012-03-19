@@ -43,6 +43,11 @@ SheetEditor = function() {
     this.load();
 }
 
+parseDom=function(arg){
+	var objE=document.createElement("div");
+	objE.innerHTML=arg;
+	return objE.childNodes;
+}
 
 function inlineMenu(I){
                 I = (I ? I.length : 0);
