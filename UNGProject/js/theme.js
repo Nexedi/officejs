@@ -58,7 +58,7 @@ var Page = {
     getDependencies: function() {return $(this.getXML()).find("dependencies");},
     getEditor: function() {return this.editor;},
     loadEditor: function(editor) {   //load the favourite editor of the user
-        this.editor = new editor();
+	this.editor = new editor();
     },
 
     //loaders
@@ -76,6 +76,7 @@ var Page = {
 
             // load the user, the editor and the document in the page (wait for the storage being ready)
             var initPage = function() {
+
                 var editor = window[getCurrentUser().getSetting("favouriteEditor")[Page.getName()]];
                 if(!editor) {// this hack doesn't work and I have no idea why
                     setTimeout(function() {initPage()},500);console.log("try");
@@ -90,9 +91,13 @@ var Page = {
                 else {
                     Page.loadEditor(editor);
                     Page.displayUserInformation(getCurrentUser());
+
                     Page.displayDocumentInformation(getCurrentDocument());
+
                 }
+
             }
+
             Storage[Storage.USER_READY] ? initPage() : Storage.addEventHandler(initPage,Storage.USER_READY);
  			setTimeout("Document.saveCurrentDocument()",200);
 	    });
@@ -386,7 +391,7 @@ var Document = {
       */
     saveCurrentDocument: function() {
         getCurrentPage().getEditor().saveEdition();
-        getCurrentDocument().save();
+	getCurrentDocument().save();
         localStorage.currentDocument = JSON.stringify(getCurrentDocument());
     },
 
