@@ -54,19 +54,19 @@
         //IO functions
         getLocation: function() {return this.location},
         userNameAvailable: function(name, option) {
-            return this.storage.userNameAvailable(name, option||{});
+            return this.storage.userNameAvailable(name, option !== undefined ? option : {});
         },
         loadDocument: function(fileName, option) {
-            return this.storage.loadDocument(fileName, option||{});
+            return this.storage.loadDocument(fileName, option !== undefined ? option : {});
         },
         saveDocument: function(data, fileName, option) {
-            return this.storage.saveDocument(data, fileName, option||{});
+            return this.storage.saveDocument(data, fileName, option !== undefined ? option : {});
         },
         deleteDocument: function(file, option) {
-            return this.storage.deleteDocument(file, option||{});
+            return this.storage.deleteDocument(file, option !== undefined ? option : {});
         },
         getDocumentList: function(option) {
-            return this.storage.getDocumentList(option||{});
+            return this.storage.getDocumentList(option !== undefined ? option : {});
         }
 
     }
@@ -111,11 +111,13 @@
             $.ajax({
                 url: this.location + "/dav/"+name,
                 type: "HEAD",
-                async: option.asyncronous || true,
+                async: option.asynchronous !== undefined ? option.asynchronous : true,
                 success: function() {isAvailable=true;if(option.sucess) option.success();},
-                error: option.errorHandler || function(type) {if(type.status==404) {isAvailable=false;}else{alert("Error "+type.status+" : fail while trying to check "+name);}}
+                error: option.errorHandler !== undefined ?
+                    option.errorHandler :
+                    function(type) {if(type.status==404) {isAvailable=false;}else{alert("Error "+type.status+" : fail while trying to check "+name);}}
             });
-            return isAvailable;//warning : always null if asyncronous
+            return isAvailable;//warning : always null if asynchronous
         },
 
 
@@ -134,14 +136,16 @@
             $.ajax({
                 url: this.location + "/dav/"+this.userName+"/"+this.applicationID+"/"+fileName,
                 type: "GET",
-                async: option.asyncronous || true,
-                dataType: option.type || "text",
+                async: option.asynchronous !== undefined ? option.asynchronous : true,
+                dataType: option.type !== undefined ? option.type : "text",
                 headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword)},
                 fields: {withCredentials: "true"},
                 success: function(content) {if(option.success) option.success(content);data=content},
-                error: option.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to load "+fileName);}
+                error: option.errorHandler !== undefined ?
+                    option.errorHandler :
+                    function(type) {alert("Error "+type.status+" : fail while trying to load "+fileName);}
             });
-            return data;//warning : always null if asyncronous
+            return data;//warning : always null if asynchronous
         },
 
 
@@ -162,7 +166,7 @@
             var storage = this;//save the context
 
             //check if already exists and for diffs
-            var loadOption = {
+            this.loadDocument(fileName, {
                 type: option.type,
                 asynchronous: false,//TODO : try to asynchronize
                 success: function(remoteData) {
@@ -172,18 +176,18 @@
                     if(type.status==404) {
                         save();
                     } else {
-                        option.errorHandler || save();
+                        option.errorHandler !== undefined ?
+                            option.errorHandler : save();
                     }
                 }
-            }
-            this.loadDocument(fileName, loadOption);
+            });
 
             function save() {
                 $.ajax({
                     url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/"+fileName,
                     type: "PUT",
-                    async: option.asynchronous || true,
-                    dataType: option.type || "text",
+                    async: option.asynchronous !== undefined ? option.asynchronous : true,
+                    dataType: option.type !== undefined ? option.type : "text",
                     data: data,
                     headers: {Authorization: "Basic "+Base64.encode(storage.userName+":"+storage.applicationPassword)},
                     fields: {withCredentials: "true"},
@@ -193,16 +197,16 @@
                       else {option.errorHandler ? option.errorHandler.call(this,type) : alert("Error "+type.status+" : fail while trying to save "+fileName);}
                     }
                 });
-            }
+            }// end save function
 
             function merge(serverData) {
                 if(option.overwrite!==false) {
                     //if(diff(oldData,serverData)) {merge(newData, serverData);}
                     save();
                 }
-            }
+            }// end merge function
 
-        },
+        },// end saveDocument function
 
 
         /**
@@ -221,7 +225,7 @@
             $.ajax({
                 url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/"+fileName,
                 type: "DELETE",
-                async: option.asynchronous || true,
+                async: option.asynchronous !== undefined ? option.asynchronous : true,
                 headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword)},
                 fields: {withCredentials: "true"},
                 success: successFunction,
@@ -255,15 +259,15 @@
             var list = null;
             $.ajax({
                 url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/",
-                async: option.asyncronous || true,
+                async: option.asynchronous !== undefined ? option.asynchronous : true,
                 type: "PROPFIND",
                 dataType: "xml",
                 headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword), Depth: "1"},
                 fields: {withCredentials: "true"},
                 success: function(data) {list=xml2jsonFileList(data);if(option.success) option.success(list)},
-                error: option.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to load file list");}
+                error: option.errorHandler !== undefined ? option.errorHandler : function(type) {alert("Error "+type.status+" : fail while trying to load file list");}
             });
-            return list;//warning : always null if asyncronous
+            return list;//warning : always null if asynchronous
 
             function xml2jsonFileList(xmlData) {//transform the xml into a list
                 var fileList = {};
@@ -372,7 +376,7 @@
                     this.documents[fileName].lastModified = Date.now();
                     this.documents[fileName].content = data;
                     this.save();
-                    if(option.success) option.success();
+                    if(option.success !== undefined) option.success();
                 } else {                            //repport an error
                     var error = {status: 403,message: "document already exists"};
                     if(option.errorHandler) option.errorHandler(error);
@@ -430,7 +434,7 @@
      * @param applicant : object containing inforamtion about the person/application needing this JIO object
      */
     JIO.IndexedStorage = function(data, applicant) {
-        this.storage = createStorage(data.storage, applicant)//create the object allowing IO in storages
+        this.storage = createStorage(data.storage, applicant);//create the object allowing IO in storages
         this.index = null;
 
         //initialize the index
@@ -488,7 +492,7 @@
                 var fileAlreadyExist = this.getIndex()[fileName]!==undefined;
                 var instruction = function() {
                     var time = Date.now();
-                    indexedStorage.getIndex()[fileName] = option.metaData || {};
+                    indexedStorage.getIndex()[fileName] = (option.metaData !== undefined ? option.metaData : {});
                     indexedStorage.getIndex()[fileName].lastModified = time;
                     indexedStorage.getIndex()[fileName].fileName = fileName;
                     if(!fileAlreadyExist) {indexedStorage.getIndex()[fileName].creationDate = time;}
@@ -816,7 +820,7 @@
             if(path.length>1) {
                 var storage = path.shift();
                 var name = path.join("/");
-                this.storageList[storage].saveDocument(data, name, option)
+                this.storageList[storage].saveDocument(data, name, option);
             } else {
                 //TODO : decide how to choose between storages
             }
@@ -995,7 +999,7 @@
                     async: false,
                     dataType: "script",
                     success: function(script){var CustomStorage = eval(script);waitedNode = new CustomStorage(data)},
-                    error: data.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to instanciate storage"+data.location);}
+                    error: data.errorHandler !== undefined ? data.errorHandler : function(type) {alert("Error "+type.status+" : fail while trying to instanciate storage"+data.location);}
                 });
                 return waitedNode;
                 break;
