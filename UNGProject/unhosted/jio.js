@@ -373,16 +373,20 @@
                     lastModified: Date.now()
                 }
                 this.save();
-                if(option.success) option.success();
+                if(option.success !== undefined) option.success();
             } else {
-                if(option.overwrite) {              //overwrite
+                if(option.overwrite === undefined ||
+                   option.overwrite) { // overwrite (true or undefined)
                     this.documents[fileName].lastModified = Date.now();
                     this.documents[fileName].content = data;
                     this.save();
                     if(option.success !== undefined) option.success();
-                } else {                            //repport an error
-                    var error = {status: 403,message: "document already exists"};
-                    if(option.errorHandler) option.errorHandler(error);
+                } else {        // repport an error
+                    if(option.errorHandler !== undefined) {
+                        option.errorHandler(
+                            {status: 403, message: "document already exists"}
+                        );
+                    }
                 }
             }
         },
