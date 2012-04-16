@@ -7,13 +7,16 @@
     /**
      * load dependencies
      */
-    var dependenceLoaded = includeJS([//files to load
-        "unhosted/sjcl.js",
-        "js/jquery/jquery.js",
-        "unhosted/base64.js"
-    ],function() {// return true only if dependencies are loaded
-        return (window.$ && window.sjcl && window.Base64) // check jQuery, sjcl & Base64
-    });
+    var dependenceLoaded = function () {
+        try {
+            // check jQuery, sjcl & Base64
+            if (window.$ && window.sjcl && window.Base64)
+                return true;
+            else return false;
+        } catch (e) {
+            return false;
+        }
+    };
 
     /**
      * JIO main object. Contains all IO methods
@@ -1047,51 +1050,5 @@
     }
 
     window.JIO = JIO;//the name to use for the framework. Ex : JIO.initialize(...), JIO.loadDocument...
-
-
-        /****************************************************************
-        *************************** Loader *****************************/
-
-    /**
-     * include js files
-     * @param url : path or array of paths of the js file(s)
-     * @param ready : (optional) array of elements allowing to know if dependencies are ready
-     * @param instruction : (optional) instruction to execute when dependencies are loaded
-     * @return the ready function
-     * @example : includeJS("js/jquery/jquery.js",[$]);
-     */
-    function includeJS(url,ready, instruction) {
-        //path = findURL("jio.js");
-        typeof url != "object" ? includeElement(url) : onEach(url,includeElement);
-        if(instruction) {
-            (function waitUntilLoaded() {!ready() ? setTimeout(waitUntilLoaded,50) : instruction();})()
-        }
-        return ready;
-
-        function includeElement(element) {//include a js file
-            var head = window.document.getElementsByTagName('head')[0];
-            var script = window.document.createElement('script');
-            script.setAttribute('src', element);
-            script.setAttribute('type', 'text/javascript');
-            head.appendChild(script);
-        }
-
-        function onEach(array,f) {
-            var head = array.pop();
-            if(head===undefined) {return true}
-            var rep1 = f(head);
-            var rep2 = onEach(array,f);
-            return rep1 && rep2;
-        }
-
-        function findURL(fileName) {
-            var elements = window.document.getElementsByName("script");
-            var jioRegExp = new RegExp("^((.*)/)?"+fileName+"$");
-            for(var e in elements) {
-                if(jioRegExp.test(e.src)) {return e.src.replace(jioRegExp, "$1")}
-            }
-            return "";
-        }
-    }
     
 })();
