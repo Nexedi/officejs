@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>JIO</title>
+  <script type="text/javascript" src="js/jquery/jquery.js"></script>
+  <script type="text/javascript" src="unhosted/base64.js"></script>
+  <script type="text/javascript" src="unhosted/sjcl.js"></script>
+  <script type="text/javascript" src="unhosted/jio.js"></script>
+</head>
+<body>
+  <div id="divbody">
+    <div id="divmessage">
+      
+    </div>
+    <div id="divdebug" style="color: grey">
+      
+    </div>
+    <div id="diverror" style="color: red">
+      
+    </div>
+  </div>
+  <script type="text/javascript">
+    <!--
+////////////////////////////////////////////////////////////////////////////////
+var objectDump = function (o) {
+    console.log (JSON.stringify(o));
+};
+////////////////////////////////////////////////////////////////////////////////
+// Preparing JIO
+JIO.PubSub.start_saving = function (o,r) {
+    console.log ('start_saving received');
+    objectDump(o);
+    $('#divmessage').html($('#divmessage').html() + '<br/>' + 
+                          'Saving "' + o.fileName + '"...');
+    $('#divdebug').html($('#divdebug').html() + '<br/>' +
+                        'save remainingjobs: ' + r);
+};
+JIO.PubSub.stop_saving = function (o) {
+    console.log ('stop_saving received');
+    objectDump(o);
+    $('#divmessage').html($('#divmessage').html() + '<br/>' + 
+                          'Saving ended with result: ' + o.status + ', message: ' + o.message);
+};
+JIO.PubSub.start_loading = function (o,r) {
+    console.log ('start_loading received');
+    objectDump(o);
+    $('#divmessage').html($('#divmessage').html() + '<br/>' + 
+                          'Loading "' + o.fileName + '"...');
+    $('#divdebug').html($('#divdebug').html() + '<br/>' +
+                        'load remainingjobs: ' + r);
+};
+JIO.PubSub.stop_loading = function (o) {
+    console.log ('stop_loading received');
+    objectDump(o);
+    $('#divmessage').html($('#divmessage').html() + '<br/>' + 
+                          'Loading ended with result: ' + o.status + ', message: ' + o.message);
+};
+JIO.PubSub.start_deleting = function (o,r) {
+    console.log ('start_deleting received');
+    objectDump(o);
+    $('#divmessage').html($('#divmessage').html() + '<br/>' + 
+                          'Deleting "' + o.fileName + '"...');
+    $('#divdebug').html($('#divdebug').html() + '<br/>' +
+                        'delete remainingjobs: ' + r);
+};
+JIO.PubSub.stop_deleting = function (o) {
+    console.log ('stop_deleting received');
+    objectDump(o);
+    $('#divmessage').html($('#divmessage').html() + '<br/>' +
+                          'Deleting ended with result: ' + o.status + ', message: ' + o.message);
+};
+JIO.PubSub.start_gettinglist = function (o) {
+    console.log ('start_deleting received');
+    objectDump(o);
+    $('#divmessage').html($('#divmessage').html() + '<br/>' + 
+                          'Getting list...');
+};
+JIO.PubSub.stop_gettinglist = function (o) {
+    console.log ('stop_deleting received');
+    objectDump(o);
+    $('#divmessage').html($('#divmessage').html() + '<br/>' +
+                          'Getting list ended with result: ' + o.status + ', message: ' + o.message);
+    $('#divdebug').html($('#divdebug').html() + '<br/>' +
+                        'getList: ' + JSON.stringify(o.list));
+};
+JIO.initialize({"type":"local","userName":"tristan"},{"ID":"www.ungproject.com"});
+if ( !JIO.isReady() ) alert('Not ready');
+// Let's test!
+JIO.loadDocument("SonNom");
+JIO.saveDocument("Inside the document.","SonNom");
+JIO.saveDocument("Inside the document.","SonNom");
+JIO.saveDocument("Inside the document.","SonNom2");
+JIO.getDocumentList();
+JIO.loadDocument("SonNom");
+JIO.deleteDocument("SonNom");
+JIO.deleteDocument("SonNom");
+JIO.deleteDocument("SonNom3");
+JIO.getDocumentList();
+////////////////////////////////////////////////////////////////////////////////
+        //-->
+  </script>
+</body>
+</html>
