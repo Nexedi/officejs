@@ -17,12 +17,16 @@
             return false;
         }
     };
+    
+    var queue = null;       // the jobs manager
+    var jioStorage = null;
+    var applicant = null;
 
     /**
      * JIO main object. Contains all IO methods
      */
     var JIO = {
-        jioMessage: null,       // the jobs manager
+        listener: null,
 
         /**
          * prepare and return the jio object
@@ -31,23 +35,32 @@
          * @return JIO object
          */
         initialize: function(jioData, applicant) {
-            if(!dependenceLoaded()) {
+            // JIO initialize
+            // jioData: object containing storage informations
+            //     {type:,userName:,etc}
+            // applicant: a string of the applicant name
+            applicant = {"ID":applicant};
+            if (!applicant && !userName) return false; // TODO to know: return false or alert user ?
+            if (!dependenceLoaded()) {
                 setTimeout(function() {JIO.initialize(jioData, applicant)},50);
             } else {
                 switch(typeof jioData) {
                 case "string" :
-                    this.jioMessage = new JIO.Message(JSON.parse(jioData), applicant);
+                    jioStorage = JSON.parse(jioData);
                     break;
                 case "object" :
-                    this.jioMessage = new JIO.Message(jioData, applicant);
+                    jioStorage = jioData;
                     break;
                 case "function" :
-                    this.jioMessage = new JIO.Message(jioData(), applicant);
+                    jioStorage = jioData();
                     break;
                 default:
                     alert("Error while getting jio.json content");
                     break;
                 }
+                queue = new JIO.MessageQueue();
+                this.listener = new JIO.JobListener(100);
+                this.listener.listen();
             }
         },
 
@@ -55,7 +68,7 @@
          * return the state of JIO object
          * @return true if ready, false otherwise
          */
-        isReady: function() {if(this.jioMessage) return true; return false;},
+        isReady: function() {if(queue && jioStorage) return true; return false;},
 
         //IO functions
         getLocation: function() {return this.location},
@@ -63,27 +76,109 @@
             // return this.storage.userNameAvailable(name, options !== undefined ? options : {});
         },
         loadDocument: function(fileName, options) {
-            return this.jioMessage.pushMessage (
-                {"method":"load","fileName":fileName,"status":"initial"},
-                options);
+            alert ('niy');
+            // return this.jioMessage.postMessage (
+            //     {"method":"load","fileName":fileName,"status":"initial"},
+            //     options);
         },
         saveDocument: function(data, fileName, options) {
-            return this.jioMessage.pushMessage (
+            console.log ('saveDoc');
+            return queue.pushMessage (jioStorage,
                 {"method":"save","fileName":fileName,"fileContent":data,"status":"initial"},
                 options);
         },
         deleteDocument: function(fileName, options) {
-            return this.jioMessage.pushMessage (
-                {"method":"delete","fileName":fileName,"status":"initial"},
-                options);
+            alert ('niy');
+            // return this.jioMessage.postMessage (
+            //     {"method":"delete","fileName":fileName,"status":"initial"},
+            //     options);
         },
         getDocumentList: function(options) {
-            return this.jioMessage.pushMessage (
-                {"method":"getList","status":"initial"},
-                options);
+            alert ('niy');
+            // return this.jioMessage.postMessage (
+            //     {"method":"getList","status":"initial"},
+            //     options);
+        },
+        
+        publish: function(event,obj) {
+            pubSub.publish(event,obj);
+        },
+        subscribe: function(event,func) {
+            pubSub.subscribe(event,func);
+        },
+        unsubscribe: function(event) {
+            pubSub.unsubscribe(event);
         }
     }
+    /*************************************************************************
+    ******************************** Events *********************************/
 
+    var pubSub = new function () {
+        var topics = {};
+        $.JIOPubSub = function (id) {
+            var callbacks;
+            var topic = id && topics[id];
+            if (!topic) {
+                callbacks = $.Callbacks();
+                topic = {
+                    publish: callbacks.fire,
+                    subscribe: callbacks.add,
+                    unsubscribe: callbacks.remove
+                };
+                if (id) {
+                    topics[id] = topic;
+                }
+            }
+            return topic;
+        }
+        this.publish = function (eventname,obj) {
+            $.JIOPubSub('jio:'+eventname).publish(obj);
+        },
+        this.subscribe = function (eventname,func) {
+            $.JIOPubSub('jio:'+eventname).subscribe(func);
+        },
+        this.unsubscribe = function (eventname) {
+            $.JIOPubSub('jio:'+eventname).unsubscribe();
+        }
+    };
+
+    /*************************************************************************
+    ************************ JIO Job Listener *******************************/
+
+    JIO.JobListener = function (interval) {
+        this.interval = interval;
+        this.id = null;
+    };
+    
+    JIO.JobListener.prototype = {
+
+        /**
+         * Set the time between two joblist check in millisec
+         */
+        setIntervalDelay: function (interval) {
+            this.interval = interval;
+        },
+
+        /**
+         * Wait for jobs in the joblist inside the localStorage
+         */
+        listen: function () {this.id = setInterval (function(){
+            
+            // if there are jobs
+            if (getJobArrayFromLocalStorage().length > 0) {
+                console.log ('listen');
+                queue.doAll();
+            }
+        },this.interval);},
+
+        /**
+         * Stop the listener
+         */
+        stop: function () {
+            clearInterval (this.id);
+            this.id = null;
+        }
+    };
 
     /*************************************************************************
     ****************************** Messages *********************************/
@@ -92,69 +187,217 @@
      *     Function parameters
      * Parameter storage: Constains {type:local/dav/...,userName:...,...}.
      *                    Must be an 'object'.
-     * Parameter job: Contains {method:save/load/delete,
+     * Parameter job: Contains {[id:..,]method:save/load/delete,
      *                fileName:name,fileContent:content[,status:"initial"]}.
      *                May be a 'string' or an 'object'
-     * Parameter options: //TODO options documentation
      */
-    JIO.Message = function (storage, applicant) {
-        this.storage = storage;
-        this.messagequeue = new JIO.MessageQueue(applicant);
+
+    JIO.MessageQueue = function () {
+        //// set first job ID
+        this.jobid = 1;
+        var localjoblist = getJobArrayFromLocalStorage();
+        if (localjoblist.length > 0) {
+            this.jobid = localjoblist[localjoblist.length - 1].id + 1;
+        }
+
+        // job remaining object
+        this.remaining = {'save':0,'load':0,'delete':0,'getList':0};
+
+        // current job array, it is necessary even if 'ongoing' status exists.
+        // because if we close and re-open browser during an action, the job
+        // will stay in 'ongoing' status, but all jobs are terminated.
+        this.currentjobarray = [];
+        
+        this.status = {'save':'done','load':'done','delete':'done','getList':'done'};
+
+        // subscribe an event
+        var t = this;
+        JIO.subscribe ('job_terminated', function (o) {
+            // check result of a terminated job
+
+            console.log ('job_terminated received');
+            var checkremaining = function(method) {
+                var cpt = 0;
+                for (var i in t.currentjobarray) {
+                    if (t.currentjobarray[i].method === method) cpt ++;
+                }
+                return cpt;
+            };
+            
+            objectDump(o);
+            //// remove in current jobarray
+            var newcurrentjobarray = [];
+            for (var i in t.currentjobarray) {
+                if (t.currentjobarray[i].id !== o.job.id)
+                    newcurrentjobarray.push(t.currentjobarray[i]);
+            }
+            t.currentjobarray = newcurrentjobarray;
+            //// end removing
+
+            //// analysing job method
+            switch (o.job.method) {
+            case 'save':
+                if (checkremaining('save') === 0) {
+                    t.status.save = 'done';
+                    JIO.publish ('stop_saving');
+                }
+                break;
+            case 'load':
+                if (checkremaining('load') === 0) JIO.publish ('stop_loading');
+                break;
+            case 'delete':
+                if (checkremaining('delete') === 0) JIO.publish ('stop_deleting');
+                break;
+            case 'getList':
+                if (checkremaining('getList') === 0) {
+                    // TODO merge list if necessary (we can create this.getList,
+                    // deleted after sending the event) -> merge here or show
+                    // possible actions (manually, auto, ...)
+
+                    JIO.publish ('stop_gettinglist',o.getList);
+                }
+                break;
+            }
+            //// end analyse
+
+            //// check result
+            if (o.job.status !== 'done') { // if it failed
+                t.fail(o.job);
+            } else {    // if done
+                t.done(o.job);
+            }
+            //// end check result
+
+        });
+
+        // // do all jobs at start, event the failed job
+        // this.doAll ({'checkstatus':function(){return true;}});
+
     };
-    JIO.Message.prototype = {
-        /**
-         * pushMessage: Add a job on a storage joblist
-         */
-        pushMessage: function (job,options) {
-            // transforming job to an object
-            if ((typeof job) === 'string') job = JSON.parse(job);
-            // send messages
-            this.messagequeue.pushMessage(this.storage,job);
-            var result = this.messagequeue.doJobs(options);
-            return 'success';
-        } // end pushMessage
-    }; // end JIO.Message
-    JIO.MessageQueue = function (applicant) {
-        this.applicant = applicant;
-        this.storages = {};
-    };
+
     JIO.MessageQueue.prototype = {
 
         pushMessage: function (storage,job) {
-            if (this.storages[storage.type] === undefined) {
-                this.storages[storage.type] =
-                    createStorage(storage,this.applicant);
-            }
-            this.storages[storage.type].addJob (job);
+            // Add a job to the Job list
+            // storage : the storage object
+            // job : the job object
+
+            //// Adding job to the list in localStorage
+            if (!job) return false;
+            // transforming job to an object
+            if ((typeof job) === 'string') job = JSON.parse(job);
+            // create joblist in local storage if unset
+            if (!localStorage.joblist) localStorage.joblist = "[]";
+            // set job id
+            job.id = this.jobid;
+            this.jobid ++;
+            // set job storage
+            job.storage = storage;
+            // post the message
+            var localjoblist = getJobArrayFromLocalStorage();
+            localjoblist.push(job);
+            setJobArrayToLocalStorage (localjoblist);
+            //// job added
         }, // end pushMessage
 
-        doJobs: function (options) {
-            var ret = {'status':'success','message':''};
-            for (var k in this.storages) {
-                var res = this.storages[k].wakeUp(options);
-                if (res.status !== 'success') {
-                    ret.status = 'fail';
-                    ret.message += " " + res.message;
+        doAll: function (options) {
+            // Do all jobs in the list
+            // options : object containing
+            //     checkstatus: function (job) {
+            //         true if we can do the job, otherwise false }
+            console.log ('doAll');
+
+            //// check options, and set default settings if not set yet
+            options = checkOptions(options,{'checkstatus':function(status){
+                return (status === 'initial');}});
+            //// do All jobs
+            jobarray = getJobArrayFromLocalStorage();
+            for (var i in jobarray) {
+                if (options.checkstatus(jobarray[i].status)) {
+                    this.currentjobarray.push (jobarray[i]);
+                    console.log ('ongoing');
+                    jobarray[i].status = 'ongoing';
+                    setJobArrayToLocalStorage(jobarray);
+                    objectDump(localStorage);
+                    this.do(jobarray[i]);
                 }
             }
-            return ret;
+            //// end, continue doing jobs asynchronously
+        },
+
+        do: function (job) {
+            console.log ('do');
+            // Do a job
+
+
+            //// analysing job method
+            switch (job.method) {
+            case 'save':
+                if (this.status.save === 'done') {
+                    this.status.save = 'ongoing';
+                    JIO.publish ('start_saving',{'job':job});
+                }
+                createStorage(job.storage).saveDocumentFromJob(job);
+                break;
+            case 'load':
+                break;
+            case 'delete':
+                break;
+            case 'getList':
+                break;
+            default:
+                // TODO do an appropriate error reaction : unknown job method
+                alert ('Unknown job method: ' + job.method);
+                this.fail (job);
+                break;
+            }
+            //// end method analyse
+        },
+        
+        done: function (job) {
+            // This job is supposed done, we can remove it from localStorage.
+
+            var localjoblist = getJobArrayFromLocalStorage ();
+            var newjoblist = [];
+            //// find this unique job inside the list
+            for (var i in localjoblist) {
+                // if found, it won't be in newjoblist
+                if (localjoblist[i].id !== job.id) {
+                    // not found, add to the new list
+                    newjoblist.push ( localjoblist[i] );
+                }
+            }
+            //// job supposed found
+            // save to local storage
+            setJobArrayToLocalStorage (newjoblist);
+        },
+
+        fail: function (job) {
+            // This job cannot be done, change its status into localStorage.
+
+            var localjoblist = getJobArrayFromLocalStorage ();
+            //// find this unique job inside the list
+            for (var i in localjoblist) {
+                if (localjoblist[i].id === job.id) {
+                    localjoblist[i] = job;
+                    break;
+                }
+            }
+            // save to local storage
+            setJobArrayToLocalStorage (localjoblist);
+        },
+        
+        clean: function () {
+            // Clean the job list, removing all jobs that have failed.
+            // It also change the localStorage Job list
+            
+            // TODO
+            alert ('niy');
         }
+        
     }; // end JIO.MessageQueue
 
 
-    /*************************************************************************
-    ******************************** Events *********************************/
-
-    JIO.PubSub = {
-        start_saving: function (currentjob,nbremainingjobs) {},
-        stop_saving: function (retobject) {},
-        start_loading: function (currentjob,nbremainingjobs) {},
-        stop_loading: function (retobject) {},
-        start_deleting: function (currentjob,nbremainingjobs) {},
-        stop_deleting: function (retobject) {},
-        start_gettinglist: function (currentjob,nbremainingjobs) {},
-        stop_gettinglist: function (retobject) {}
-    };
 
     /*************************************************************************
     ************************* specific storages *****************************/
@@ -168,97 +411,19 @@
      * "userName" : the name of the user
      * @param applicant : object containing inforamtion about the person/application needing this JIO object
      */
-    JIO.LocalStorage = function(data, applicant) {
+    JIO.LocalStorage = function(data) {
+        //// check user's localStorage part
         this.userName = data.userName;
         if(!localStorage.getItem(this.userName)) {
-            localStorage[this.userName] = '{}'; // new user
+            localStorage[this.userName] = '{}'; // Create user
         }
+        //// end check
+
+        //// loading documents
         this.documents = JSON.parse(localStorage.getItem(this.userName)); //load documents
-        this.jobs = [];
-        this.currentjob = null;
+
     }
     JIO.LocalStorage.prototype = {
-        addJob: function (job) {return this.jobs.push(job);},
-        getJobArray: function () {return this.jobs;},
-        getCurrentJob: function () {return this.currentjob;},
-
-        /**
-         * wakeUp: check if there's something to do in this.jobs, and do them
-         *         if it is possible.
-         * @param options: all options are optionnal
-         *        { 'retryfailedjobs': true/false (def: false) }
-         */
-        wakeUp: function(options) {
-            // count 'method' jobs
-            var countjobs = function (method) {
-                var c = 0; var countnow = false;
-                for (var j in this.jobs) {
-                    if (countnow && this.jobs[j].method === method) c ++;
-                    if (j === k) countnow = true;
-                } return c;
-            };
-            // If there's no jobs, good! There's nothing to do!
-            if (this.jobs === []) return {'status':'success'};
-            // checkOptions
-            options = checkOptions (options,{ 'retryfailedjobs': false });
-            // browse jobs
-            var newjobs = [];
-            var ret = {'status':'success','message':''};
-            for (var k in this.jobs) {
-                this.currentjob = this.jobs[k];
-                var result = {};
-                // Do job. Don't retry if not required, but try if not tried yet.
-                if ((!options.retryfailedjobs) && this.currentjob.status !== 'initial') continue;
-                switch (this.currentjob.method) {
-                case 'getList':
-                    var getlist = {'ret':{'status':'success','message':''},
-                                   'count':countjobs('getList')};
-                    JIO.PubSub.start_gettinglist(this.currentjob,getlist.count);
-                    result = this.getDocumentList(options);
-                    getlist.ret = result;
-                    if (getlist.count == 0)
-                        JIO.PubSub.stop_gettinglist(getlist.ret);
-                    break;
-                case 'delete':
-                    var vdelete = {'ret':{'status':'success','message':''},
-                                   'count':countjobs('delete')};
-                    JIO.PubSub.start_deleting(this.currentjob,vdelete.count);
-                    result = this.deleteDocument(this.currentjob.fileName,options);
-                    vdelete.ret= result;
-                    if (vdelete.count == 0)
-                        JIO.PubSub.stop_deleting(vdelete.ret);
-                    break;
-                case 'load':
-                    var load = {'ret':{'status':'success','message':''},
-                                'count':countjobs('load')};
-                    JIO.PubSub.start_loading(this.currentjob,load.count);
-                    result = this.loadDocument(this.currentjob.fileName,options);
-                    load.ret = result;
-                    if(load.count == 0)
-                        JIO.PubSub.stop_loading(load.ret);
-                    break;
-                case 'save':
-                    var save = {'ret':{'status':'success','message':''},
-                                'count':countjobs('save')};
-                    JIO.PubSub.start_saving (this.currentjob,save.count);
-                    result = this.saveDocument(this.currentjob.fileContent,this.currentjob.fileName,options);
-                    save.ret = result;
-                    if(save.count == 0)
-                        JIO.PubSub.stop_saving(save.ret);
-                    break;
-                };
-                // if errors, fill return value
-                if (result.status !== 'success') {
-                    ret.status = 'fail';
-                    ret.message += '"'+this.currentjob.fileName+'" in LocalStorage, '+ result.message;
-                    this.currentjob.status = result.status;
-                    newjobs.append = this.currentjob;
-                }
-                this.currentjob = null;
-            };
-            this.jobs = newjobs;
-            return ret;
-        }, // end wakeUp
 
         /**
          * check if an user already exist
@@ -288,41 +453,45 @@
         }, // end loadDocument
 
         /**
-         * save a document in the storage
-         * @param data : the data to store
-         * @param fileName : the name of the file where the data will be stored
-         * @param option : optional object containing
-         * onsuccess : the function to execute when the save is done
-         * onerror : the function to execute if an error occures
+         * save a document in the local storage from a job
+         * @param job : contains all the information to save the document
+         * @param options : optional object containing
          * overwrite : a boolean set to true if the document has to be overwritten
          */
-        saveDocument: function(data, fileName, options) {
-            options = checkOptions(options,{'overwrite':true,
-                                            'onsuccess':function(){},
-                                            'onerror':function(){}});
-            if(!this.documents[fileName]) { // create document
-                this.documents[fileName] = {
-                    'fileName': fileName,
-                    'content': data,
-                    'creationDate': Date.now(),
-                    'lastModified': Date.now()
+        saveDocumentFromJob: function(job, options) {
+            console.log ('saving');
+            var t = this;
+            // wait a little in order to let some other instructions to continue
+            setTimeout(function () {
+
+                options = checkOptions(options,{'overwrite':true});
+                if(!t.documents[job.fileName]) { // create document
+                    t.documents[job.fileName] = {
+                        'fileName': job.fileName,
+                        'content': job.fileContent,
+                        'creationDate': Date.now(),
+                        'lastModified': Date.now()
+                    }
+                    t.writeToLocalStorage();
+                    job.status='done';
+                    job.message='success';
+                } else {
+                    if(options.overwrite) { // overwrite
+                        t.documents[job.fileName].lastModified = Date.now();
+                        t.documents[job.fileName].content = job.fileContent;
+                        t.writeToLocalStorage();
+                        job.status='done';
+                        job.message='success';
+                    } else {
+                        job.status='fail';
+                        job.message='Document already exists.';
+                        job.errno=403;
+                    }
                 }
-                this.save();
-            } else {
-                if(options.overwrite) { // overwrite
-                    this.documents[fileName].lastModified = Date.now();
-                    this.documents[fileName].content = data;
-                    this.save();
-                } else { // repport an error
-                    options.onerror(
-                        {'status': 403, 'message': "Document already exists."}
-                    );
-                    return {'status':'fail','message':'Document already exists.'};
-                }
-            }
-            options.onsuccess({'status':'success','message':''});
-            return {'status':'success','message':''};
-        }, // end saveDocument
+                JIO.publish('job_terminated',{'job':job});
+            }, 100);
+            return;
+        }, // end saveDocumentFromJob
 
         /**
          * Delete a document or a list of documents from the storage
@@ -369,79 +538,29 @@
         },
 
 
-        save: function() {
+        writeToLocalStorage: function() {
             localStorage[this.userName] = JSON.stringify(this.documents);
         }
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    /*************************************************************************
-    *************************** other functions *****************************/
-
-
-    /**
-     * function used to address requests to a php file
-     * @param address : address of the target
-     * @param data : data to send to the server
-     * @param instruction : function to execute after receiving the answer
-     * @return void
-     */
-    function request(address, data, instruction) {
-        $.ajax({
-            url: address,
-            type: "POST",
-            async: false,
-            dataType: "text",
-            data: data,
-            success: instruction,
-            error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
-        });
-    }
+    ///////////
+    // Tools //
+    ///////////
 
     /**
      * Create a tree node from data
      * @param data : information found in jio.json and needed to create the storage
      * @param applicant : (optional) information about the person/application needing this JIO object (allow limited access)
      */
-    function createStorage(data, applicant) {
+    function createStorage(data) {
         switch(data.type) {
-        case "dav":return new JIO.DAVStorage(data, applicant);break;
-        case "local":return new JIO.LocalStorage(data, applicant);break;
-        case "index":return new JIO.IndexedStorage(data, applicant);break;
-        case "multiple":return new JIO.MultipleStorage(data, applicant);break;
-        case "replicate":return new JIO.ReplicateStorage(data, applicant);break;
-        case "encrypt":return new JIO.CryptedStorage(data,applicant);break;
+        case "dav":return new JIO.DAVStorage(data);break;
+        case "local":return new JIO.LocalStorage(data);break;
+        case "index":return new JIO.IndexedStorage(data);break;
+        case "multiple":return new JIO.MultipleStorage(data);break;
+        case "replicate":return new JIO.ReplicateStorage(data);break;
+        case "encrypt":return new JIO.CryptedStorage(data);break;
             //etc
         default:
             // var waitedNode = null;//create a custom storage from a js file
@@ -467,46 +586,6 @@
         }
     }
 
-    /**
-     * delegate a function to a non-object element, or to each element of an array of non-object elements
-     * this function is used to delete a file or a list of files for example
-     * @param element : a non-object element, or an array of non-object elements
-     * @param f : function to apply
-     */
-    function oneOrEach(element,f) {
-        typeof element != "object" ? f(element) : $.each(element,function(index, fileName) {f(fileName);})
-    }
-
-    /**
-     * return a shallow copy of the object parameter
-     * @param object : the object to copy
-     * @return a shallow copy of the object
-     */
-    function copy(object) {
-        return $.extend({}, object);
-    }
-
-    /**
-     * add an instruction to a function
-     * @param instruction : the instruction to add to the function
-     * @param f : the function
-     * @param before : (optional) set to true if you want the instruction to be executed before f
-     * @return a new function executing f & instruction
-     */
-    function addInstruction(instruction, f, before) {
-        return before ?
-        function() {
-            var result = instruction.apply(this, arguments);
-            if(f) {return f.apply(this, arguments);}
-            return result;
-        }
-        :
-        function()  {
-            if(f) {f.apply(this, arguments);}
-            return instruction.apply(this, arguments);
-        };
-    }
-
     var checkOptions = function (current,defaultopts) {
         if(!current) {
             return defaultopts;
@@ -516,6 +595,16 @@
                 current[k] = defaultopts[k];
         }
         return current;
+    };
+
+    var getJobArrayFromLocalStorage = function () {
+        var localjoblist = [];
+        if (localStorage.joblist)
+            localjoblist = JSON.parse(localStorage.joblist);
+        return localjoblist;
+    };
+    var setJobArrayToLocalStorage = function (jobarray) {
+        localStorage.joblist = JSON.stringify(jobarray);
     };
 
     // TESTS
