@@ -5,6 +5,8 @@
   <title>JIO</title>
   <script type="text/javascript" src="js/jquery/jquery.js"></script>
   <script type="text/javascript" src="unhosted/jio.js"></script>
+
+  <script type="text/javascript" src="unhosted/jquery.storage.js"></script>  
   <script type="text/javascript" src="unhosted/base64.js"></script>
   <script type="text/javascript" src="unhosted/jio.storage.js"></script>
   <!-- <script type="text/javascript" src="unhosted/sjcl.js"></script> -->
@@ -70,25 +72,30 @@ $.jio('subscribe',{'event':'start_gettingList', 'func': function ( o ) {
 }});
 $.jio('subscribe',{'event':'stop_gettingList', 'func': function ( o ) {
     $('#divmessage').html($('#divmessage').html() + '<br />' +
-                          'Getting list ended: ' + toString(o.job.list) );
+                          'Getting list ended: ' + toString(o) );
 }});
 
 
 
-// $.jio({'storage':{'type':'local','userName':'tristan'},
-//        'applicant':{'ID':'www.ungproject.org'}});
-$.jio({'storage':{'type':'dav','userName':'tristan','password':'test',
-                  'location':'https://ca-davstorage:8080','provider':'Unknown'},
+$.jio({'storage':{'type':'local','userName':'tristan'},
        'applicant':{'ID':'www.ungproject.org'}});
+// $.jio({'storage':{'type':'dav','userName':'tristan','password':'test',
+//                   'location':'https://ca-davstorage:8080','provider':'Unknown'},
+//        'applicant':{'ID':'www.ungproject.org'}});
+
+// TODO
+// doc string
+// localStorage.status
 
 
 // $.jio('isAvailable',{'userName':'toto'});
 // $.jio('isAvailable',{'userName':'tristan'});
-// $.jio('save',{'fileName':'SonNom','fileContent':'SonContenu'});
-// $.jio({'fileName':'SonNom','fileContent':'SonContenu','method':'save'});
-// $.jio({'fileName':'SonNom2','fileContent':'SonContenu2','method':'save'});
-// $.jio('load',{'fileName':'SonNom'});
-$.jio('getList');
+// $.jio('saveDocument',{'fileName':'SonNom','fileContent':'SonContenu'});
+// $.jio({'fileName':'SonNom','fileContent':'SonContenu','method':'saveDocument'});
+// $.jio({'fileName':'SonNom2','fileContent':'SonContenu2','method':'saveDocument'});
+// $.jio('loadDocument',{'fileName':'SonNom'});
+// $.jio('removeDocument',{'fileName':'SonNom'});
+// $.jio('getDocumentList');
 
 
 

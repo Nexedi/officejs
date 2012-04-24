@@ -1,60 +1,236 @@
 
 ;(function ( $ ) {
     
+    // TODO do we realy need to check dependencies ?
     // test dependencies
     try {
-        if (Base64) {}
+        if ($.jio && Base64) {}
         else {return false;}
     } catch (e) {
-        $.error('Base64 is required by jio.storage.js');
+        $.error('jio.js and base64.js '+
+                ' are required by jio.storage.js');
         return false;
     };
 
     ////////////////////////////////////////////////////////////////////////////
     // private vars
-    var attr = {
-        'jobMethodObject': {
-            'available': {
-                'start_event':'start_testingNameAvailability',
-                'stop_event':'stop_testingNameAvailability',
-                'func':'checkNameAvailability',
-                'retvalue':'isAvailable' }, // returns 'boolean'
-            'save': {
-                'start_event':'start_saving',
-                'stop_event':'stop_saving',
-                'func':'saveDocument',
-                'retvalue':'isSaved' }, // returns 'boolean'
-            'load': {
-                'start_event':'start_loading',
-                'stop_event':'stop_loading',
-                'func':'loadDocument',
-                'retvalue':'fileContent' }, // returns the file content 'string'
-            'getList': {
-                'start_event':'start_gettingList',
-                'stop_event':'stop_gettingList',
-                'func':'getDocumentList',
-                'retvalue':'list' }, // returns the document list 'array'
-            'remove': {
-                'start_event':'start_removing',
-                'stop_event':'stop_removing',
-                'func':'removeDocument',
-                'retvalue':'isRemoved' } // returns 'boolean'
-        }
-    };
+    var jioAttributeObject = $.jio('getJioAttributes');
     // end private vars
     ////////////////////////////////////////////////////////////////////////////
     
     ////////////////////////////////////////////////////////////////////////////
     // Tools
-    var objectDump = function (o) {
-        // TODO DEBUG we can remove this function
-        console.log (JSON.stringify(o));
-    };
-    var toString = function (o) {
-        // TODO DEBUG we can remove this function
-        return (JSON.stringify(o));
-    };
+
     // end Tools
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Local Storage
+    var LocalStorage = function ( options ) {
+        // LocalStorage constructor
+        // initializes the local storage for jio and create user if necessary.
+
+        this.userName = options.storage.userName;
+    };
+    LocalStorage.prototype = {
+        checkNameAvailability: function ( job ) {
+            // checks the availability of the [job.userName].
+            // if the name already exists, it is not available.
+            // job: the job object
+            // job.userName: the name we want to check.
+
+            // wait a little in order to simulate asynchronous operation
+            setTimeout(function () {
+                var available = true;
+                var localStor = jioAttributeObject.localStorage.getAll();
+                for (var k in localStor) {
+                    var splitk = k.split('/');
+                    if (splitk[0] === 'jio' && splitk[1] === job.userName) {
+                        available = false;
+                        break;
+                    }
+                }
+                if (!available) {
+                    job.status = 'done';
+                    job.message = ''+ job.userName + ' is not available.';
+                    job.isAvailable = false;
+                    $.jio('publish',{'event': 'job_done',
+                                     'job': job});
+                } else {
+                    job.status = 'done';
+                    job.message = ''+ job.userName + ' is available.';
+                    job.isAvailable = true;
+                    $.jio('publish',{'event': 'job_done',
+                                     'job': job});
+                }
+            }, 100);
+        }, // end userNameAvailable
+
+        saveDocument: function ( job ) {
+            // Save a document in the local storage
+            // job : the job object
+            // job.options : the save options object
+            // job.options.overwrite : true -> overwrite
+            // job.options.force : true -> save even if jobdate < existingdate
+            //                             or overwrite: false
+
+            var settings = $.extend({'overwrite':true,
+                                     'force':false},job.options);
+            var t = this;
+            // wait a little in order to simulate asynchronous saving
+            setTimeout (function () {
+                // reading
+                var doc = jioAttributeObject.localStorage.getItem(
+                    'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
+                        job.fileName);
+                if (!doc) { // create document
+                    doc = {
+                        'fileName': job.fileName,
+                        'fileContent': job.fileContent,
+                        'creationDate': Date.now (),
+                        'lastModified': Date.now ()
+                    }
+                    // writing
+                    jioAttributeObject.localStorage.setItem(
+                        'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
+                            job.fileName, doc);
+                    job.status = 'done';
+                    job.message = 'Document saved.';
+                    job.isSaved = true;
+                    $.jio('publish',{'event':'job_done',
+                                     'job':job});
+                    return true;
+                }
+                if ( settings.overwrite || settings.force ) { // overwrite
+                    if ( ! settings.force ) { // force write
+                        // checking modification date
+                        if ( doc.lastModified >= job.lastModified ) {
+                            // date problem!
+                            job.status = 'fail';
+                            job.message = 'Modification date is earlier than ' +
+                                'existing modification date.';
+                            job.isSaved = false;
+                            $.jio('publish',{'event':'job_fail',
+                                             'job':job});
+                            return false;
+                        }
+                    }
+                    doc.lastModified = Date.now();
+                    doc.fileContent = job.fileContent;
+                    // writing
+                    jioAttributeObject.localStorage.setItem(
+                        'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
+                            job.fileName, doc);
+                    job.status = 'done';
+                    job.message = 'Document saved';
+                    job.isSaved = true;
+                    $.jio('publish',{'event':'job_done',
+                                     'job':job});
+                    return true;
+                }
+                // already exists
+                job.status = 'fail';
+                job.message = 'Document already exists.';
+                job.errno = 403;
+                job.isSaved = false;
+                $.jio('publish',{'event':'job_fail',
+                                 'job': job});
+                return false;
+            }, 100);
+        }, // end saveDocument
+
+        loadDocument: function ( job ) {
+            // load a document in the storage, copy the content into the job
+            // job : the job
+            
+            var t = this;
+            // wait a little in order to simulate asynchronous operation
+            setTimeout(function () {
+                var doc = jioAttributeObject.localStorage.getItem(
+                    'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
+                        job.fileName);
+                if (!doc) {
+                    job.status = 'fail';
+                    job.errno = 404;
+                    job.message = 'Document not found.';
+                    $.jio('publish',{'event':'job_fail',
+                                     'job':job});
+                } else {
+                    job.status = 'done';
+                    job.message = 'Document loaded.';
+                    job.fileContent = doc.fileContent;
+                    $.jio('publish',{'event':'job_done',
+                                     'job':job});
+                }
+            }, 100);
+        }, // end loadDocument
+
+        getDocumentList: function (job) {
+            var t = this;
+            setTimeout(function () {
+                var localStor = jioAttributeObject.localStorage.getAll();
+                job.list = [];
+                for (var k in localStor) {
+                    var splitk = k.split('/');
+                    if (splitk[0] === 'jio' &&
+                        splitk[1] === 'local' &&
+                        splitk[2] === job.storage.userName &&
+                        splitk[3] === job.applicant.ID) {
+                        // TODO error here
+                        console.log (JSON.stringify (localStor[k]));
+                        job.list.push ({
+                            'fileName':localStor[k].fileName,
+                            'creationDate':localStor[k].creationDate,
+                            'lastModified':localStor[k].lastModified});
+                    }
+                }
+                console.log (JSON.stringify (job.list));
+                job.status = 'done';
+                job.message = 'List received.';
+                $.jio('publish',{'event':'job_done',
+                                 'job':job});
+            }, 100);
+        }, // end getDocumentList
+
+        removeDocument: function ( job ) {
+            var t = this;
+            setTimeout (function () {
+                var doc = jioAttributeObject.localStorage.getItem(
+                    'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
+                        job.fileName);
+                if (!doc) {
+                    // job.status = 'fail';
+                    // job.errno = 404;
+                    // job.message = 'Document not found.';
+                    // job.isRemoved = false;
+                    // $.jio('publish',{'event':'job_fail',
+                    //                  'job':job});
+                    job.status = 'done';
+                    job.message = 'Document already removed.';
+                    job.isRemoved = true;
+                    $.jio('publish',{'event':'job_done',
+                                     'job':job});
+                } else {
+                    jioAttributeObject.localStorage.deleteItem(
+                        'jio/local/'+
+                            job.storage.userName+'/'+job.applicant.ID+'/'+
+                            job.fileName);
+                    job.status = 'done';
+                    job.message = 'Document removed.';
+                    job.isRemoved = true;
+                    $.jio('publish',{'event':'job_done',
+                                     'job':job});
+                }
+            }, 100);
+        }
+    };
+
+    // add key to storageObject
+    $.jio('addStorageType',{'type':'local','creator':function (options) {
+        return new LocalStorage(options);
+    }});
+
+    // end Local Storage
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
@@ -280,11 +456,11 @@
                     $("D\\:response",xmlData).each(function(i,data) {
                         if(i>0) { // exclude parent folder
                             var file = {};
-                            var nt = ($($("D\\:href",
+                            var pathArray = ($($("D\\:href",
                                           xmlData).get(i)).text()).split('/');
-                            file.fileName = (nt[nt.length-1] ?
-                                             nt[nt.length-1] :
-                                             nt[nt.length-2]+'/');
+                            file.fileName = (pathArray[pathArray.length-1] ?
+                                             pathArray[pathArray.length-1] :
+                                             pathArray[pathArray.length-2]+'/');
                             if (file.fileName === '.htaccess' ||
                                 file.fileName === '.htpasswd')
                                 return;
@@ -352,8 +528,8 @@
     };
 
     // add key to storageObject
-    $.jio('addStorageType',{'type':'dav','creator':function (o) {
-        return new DAVStorage(o);
+    $.jio('addStorageType',{'type':'dav','creator':function (options) {
+        return new DAVStorage(options);
     }});
 
     // end DAVStorage
