@@ -176,12 +176,11 @@
                         splitk[1] === 'local' &&
                         splitk[2] === job.storage.userName &&
                         splitk[3] === job.applicant.ID) {
-                        // TODO error here
-                        console.log (JSON.stringify (localStor[k]));
+                        fileObject = JSON.parse(localStor[k]);
                         job.list.push ({
-                            'fileName':localStor[k].fileName,
-                            'creationDate':localStor[k].creationDate,
-                            'lastModified':localStor[k].lastModified});
+                            'fileName':fileObject.fileName,
+                            'creationDate':fileObject.creationDate,
+                            'lastModified':fileObject.lastModified});
                     }
                 }
                 console.log (JSON.stringify (job.list));

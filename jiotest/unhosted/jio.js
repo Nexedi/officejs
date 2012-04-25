@@ -2,13 +2,12 @@
 ;(function ( $ ) {
 
     ////////////////////////////////////////////////////////////////////////////
-    // private vars
+    // constants
     var jioAttributeObject = {
         'jobMethodObject': {
-            'isAvailable': {
+            'checkNameAvailability': {
                 'start_event':'start_checkingNameAvailability',
                 'stop_event':'stop_checkingNameAvailability',
-                'func':'checkNameAvailability',
                 'retvalue':'isAvailable' }, // returns 'boolean'
             'saveDocument': {
                 'start_event':'start_saving',
@@ -27,18 +26,17 @@
                 'stop_event':'stop_removing',
                 'retvalue':'isRemoved' } // returns 'boolean'
         },
-        'localStorage': null,
-        'tabid': 0,
+        'localStorage': null,   // where the browser stores data
+        'tabid': 0,             // this jio id
         'queue': null,          // the job manager
         'storage': null,        // the storage given at init
         'applicant': null,      // the applicant given at init
         'listener': null,       // the job listener
         'pubsub': null,         // publisher subscriber
         'isReady': false,       // check if jio is ready
-        'storageTypeObject': {}
+        'storageTypeObject': {} // ex: {'type':'local','creator': fun ...}
     };
-
-    // end private vars
+    // end constants
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
@@ -118,7 +116,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Tools
     var createStorageObject = function ( options ) {
-        // create a storage thanks to jioAttributeObject.storageTypeObject
+        // Create a storage thanks to storages types set with 'addStorageType'.
 
         if (!jioAttributeObject.storageTypeObject[ options.storage.type ])
             return null;       // error!
@@ -131,9 +129,9 @@
     ////////////////////////////////////////////////////////////////////////////
     // Publisher Subcriber
     var PubSub = function () {
-        if (!$.jiopubsub) {
+        if (!this.eventAction) {
             var topics = {};
-            $.jiopubsub = function (id) {
+            this.eventAction = function (id) {
                 var callbacks;
                 var topic = id && topics[id];
                 if (!topic) {
@@ -153,13 +151,13 @@
     };
     PubSub.prototype = {
         publish: function (eventname,obj) {
-            $.jiopubsub(eventname).publish(obj);
+            this.eventAction(eventname).publish(obj);
         },
         subscribe: function (eventname,func) {
-            $.jiopubsub(eventname).subscribe(func);
+            this.eventAction(eventname).subscribe(func);
         },
         unsubscribe: function (eventname) {
-            $.jiopubsub(eventname).unsubscribe();
+            this.eventAction(eventname).unsubscribe();
         }
     };
     jioAttributeObject.pubsub = new PubSub();
@@ -170,6 +168,7 @@
     // Job & JobQueue
     var Job = function ( options ) {
         // Job constructor
+        
         console.log ('Job');
         var job = $.extend({},options);
         job['id']=0;
@@ -178,6 +177,9 @@
     };
 
     var JobQueue = function () {
+        // JobQueue is a queue of jobs. It will regulary copy this queue
+        // into localStorage to resume undone tasks.
+
         // restore job list from local storage, if it exists
         this.jobObject = jioAttributeObject.localStorage.getItem(
             'jio/jobObject/' + jioAttributeObject.tabid);
@@ -210,14 +212,14 @@
             })) {
                 switch (job.method) {
                     // TODO merging is done with jio? or by the user's scripts?
-                case 'isAvailable':
+                case 'checkNameAvailability':
                     // TODO merge name availability between storages
                     // TODO send job ?
                     $.jio('publish',{'event':
                                      jioAttributeObject.jobMethodObject[
                                          job.method].stop_event, 'job':job});
                     return;
-                case 'getList':
+                case 'getDocumentList':
                     // TODO merge list if necessary (we can create
                     // this.getList, deleted after sending the event,
                     // filled with done event) -> merge here or show
@@ -244,7 +246,7 @@
                 if (methods.isReady()) {
                     t.done(o.job);
                     returnedJobAnalyse (o.job);
-                    t.setJobObjectToLocalStorage();
+                    t.copyJobQueueToLocalStorage();
                 }
             },50);
         }});
@@ -253,7 +255,7 @@
                 if (methods.isReady()) {
                     t.fail(o.job);
                     returnedJobAnalyse (o.job);
-                    t.setJobObjectToLocalStorage();
+                    t.copyJobQueueToLocalStorage();
                 }
             },50);
         }});
@@ -262,7 +264,8 @@
 
     JobQueue.prototype = {
         isThereJobsWhere: function( func ) {
-            // check if there is jobs where [func](job) == true
+            // Check if there is jobs, in the queue,
+            // where [func](job) == true.
 
             if (!func)
                 return true;
@@ -272,15 +275,15 @@
             }
             return false;
         },
-        setJobObjectToLocalStorage: function () {
-            // set the jobs to the local storage
+        copyJobQueueToLocalStorage: function () {
+            // Copy job queue into localStorage.
 
             return jioAttributeObject.localStorage.setItem(
                 'jio/jobObject/' + jioAttributeObject.tabid,
                 this.jobObject);
         },
         addJob: function ( options ) {
-            // Add a job to the Job list
+            // Add a job to the queue
             // options.storage : the storage object
             // options.job : the job object (may be a 'string')
 
@@ -295,16 +298,19 @@
             // set job id
             options.job.id = this.jobid;
             this.jobid ++;
-            // save the new job
+            // save the new job into the queue
             this.jobObject[this.jobid] = options.job;
             // save into localStorage
-            this.setJobObjectToLocalStorage();
+            this.copyJobQueueToLocalStorage();
         }, // end addJob
         
         removeJob: function ( options ) {
-            // remove a job from localStorage
+            // Remove job(s) from queue where [options.where](job) === true.
+            // If there is no job in [options], then it will treat all job.
+            // If there is no [where] function, then it will remove all selected
+            // job. It means that if no option was given, it'll remove all jobs.
             // options.job : the job object containing at least {id:..}.
-            // options.where : remove values where options.where(a,b) === true
+            // options.where : remove values where options.where(job) === true
             
             console.log ('removeJob');
             //// set tests functions
@@ -331,41 +337,43 @@
                 $.error ('No jobs was found, when trying to remove some.');
             }
             //// end modifying
-            this.setJobObjectToLocalStorage();
+            this.copyJobQueueToLocalStorage();
 
             console.log ('end removeJob');
         },
 
         resetAll: function () {
-            // reset All job to 'initial'
+            // Reset all job to 'initial'.
             
             for (var id in this.jobObject) {
                 this.jobObject[id].status = 'initial';
             }
-            this.setJobObjectToLocalStorage();
+            this.copyJobQueueToLocalStorage();
         },
 
         invokeAll: function () {
-            // Do all jobs in the list
+            // Do all jobs in the queue.
+
             //// do All jobs
             for (var i in this.jobObject) {
                 if (this.jobObject[i].status === 'initial') {
                     this.invoke(this.jobObject[i]);
                 }
             }
-            this.setJobObjectToLocalStorage();
+            this.copyJobQueueToLocalStorage();
             //// end, continue doing jobs asynchronously
         },
 
         invoke: function (job) {
-            // Do a job
+            // Do a job invoking the good method in the good storage.
 
             console.log ('invoke');
             //// analysing job method
-            // browsing methods
+            // if the method does not exist, do nothing
             if (!jioAttributeObject.jobMethodObject[job.method])
-                // TODO do an appropriate error reaction ? unknown job method
-                return false; 
+                return false;   // suppose never happen
+            // test if a similar job is on going, in order to publish a start
+            // event if it is the first of his kind (method).
             if (!this.isThereJobsWhere(function (testjob){
                 return (testjob.method === job.method &&
                         testjob.method === 'ongoing');
@@ -379,30 +387,29 @@
             } else {
                 job.status = 'ongoing';
             }
-            // create an object and use it to save,load,...!
+            // Create a storage object and use it to save,load,...!
             createStorageObject(
                 {'storage':job.storage,
                  'applicant':jioAttributeObject.applicant})[job.method](job);
             //// end method analyse
-            console.log ('end invoke');
         },
 
         done: function (job) {
-            // This job is supposed done, we can remove it from localStorage.
+            // This job is supposed done, we can remove it from queue.
             
             this.removeJob ({'job':job});
         },
 
         fail: function (job) {
-            // This job cannot be done, change its status into localStorage.
+            // This job cannot be done, change its status.
 
             this.jobObject[job.id] = job;
             // save to local storage
-            this.setJobObjectToLocalStorage ();
+            this.copyJobQueueToLocalStorage ();
         },
         clean: function () {
             // Clean the job list, removing all jobs that have failed.
-            // It also change the localStorage Job list
+            // It also change the localStorage job queue
 
             this.removeJob (undefined,
                             {'where':function (job) {
@@ -426,9 +433,13 @@
     JobListener.prototype = {
         setIntervalDelay: function (interval) {
             // Set the time between two joblist check in millisec
+
             this.interval = interval;
         },
         start: function () {
+            // Start the listener. It will always check if there are jobs in the
+            // queue
+
             if (!this.id) {
                 this.id = setInterval (function () {
                     // if there are jobs
@@ -459,6 +470,10 @@
     // jio methods
     var methods = {
         init: function ( options ) {
+            // Initialize jio. Create/Update all jio attributes and start
+            // listening to jobs. If jio is already initialized, arguments
+            // will be given to 'doMethod' which will treat them as a 'job'.
+
             var settings = $.extend({},options);
             // if already initialized
             if (methods.isReady()) {
@@ -512,14 +527,22 @@
                 jioAttributeObject.listener = new JobListener();
             jioAttributeObject.listener.start();
             jioAttributeObject.isReady = true;
+            return true;
         },
         isReady: function () {
-            // check if jio is ready
+            // Check if jio is ready to use.
+
             return jioAttributeObject.isReady;
         },
         addStorageType: function ( options ) {
+            // Add a storage type to jio. Jio must have keys/types which are
+            // bound to a storage creation function. ex: 'local', will
+            // create a LocalStorage (in jio.storage.js).
+            // It can replace a older type with a newer creation function.
+            // options.type : the type of the storage.
+            // options.creator : the function to create a storage object.
+
             var settings = $.extend({},options);
-            // add LocalStorage to storage object
             if (settings.type && settings.creator) {
                 jioAttributeObject.storageTypeObject[
                     settings.type] = settings.creator;
@@ -528,10 +551,15 @@
             return false;
         },
         getApplicant: function () {
-            // return applicant
+            // return applicant set at init of jio
+
             return jioAttributeObject.applicant;
         },
         publish: function ( options ) {
+            // publish a jio event
+            // options.event : contains the event name.
+            // options[*] : are the arguments sent with this event.
+            
             if (!methods.isReady()) return null;
             console.log ('publish ' + options.event);
             var tmp = $.extend({},options);
@@ -539,34 +567,55 @@
             jioAttributeObject.pubsub.publish(options.event,tmp);
         },
         subscribe: function ( options ) {
+            // subscribe to a jio event. We can subscribe to jio event even
+            // if jio is not initialized.
+            // options.event : contains the event name.
+            // options.func : will call this function after receiving event.
+
             console.log ('subscribe');
             jioAttributeObject.pubsub.subscribe(options.event,options.func);
         },
         unsubscribe: function ( options ) {
+            // unsubscribe to a jio event.
+            // options.event : contains the event name.
+            // TODO I wonder if it works.. ?
+
             console.log ('unsubscribe');
             jioAttributeObject.pubsub.unsubscribe(options.event);
         },
         doMethod: function ( options ) {
-
+            // Do a method in jio. The method is set in [options.method],
+            // it can be everything but itself.
+            
             // $.jio({'fileName':'a','fileContent':'b','method':'save'}
             if (options.method) {
-                if (methods[options.method]) {
-                    methods[options.method]( options );
-                } else {
-                    $.error ('Method ' + options.method + ' not found.')
+                if (options.method === 'doMethod') {
+                    $.error ('Cannot do method "doMethod" recursively.');
+                    return null;
                 }
+                if (methods[options.method]) {
+                    return methods[options.method]( options );
+                }
+                $.error ('Method ' + options.method + ' not found.')
             }
+            return null;
         },
-        checkUserNameAvailability: function ( options ) {
+        checkNameAvailability: function ( options ) {
+            // Check the user availability in the storage set in [options]
+            // or in the storage set at init. At the end of the job,
+            // 'job_done' will be sent with this job and its 'isAvailable'
+            // return value.
+            // options.storage : the storage where to remove (optional)
+            // options.applicant : the applicant (optional)
 
-            // $.jio('checkUserNameAvailability',{'userName':'toto'});
+            // $.jio('checkNameAvailability',{'userName':'toto'});
             console.log ('isAvailable');
             if (!methods.isReady()) return null;
             var settings = $.extend ({
                 'userName': jioAttributeObject.storage.userName,
                 'storage': jioAttributeObject.storage,
                 'applicant': jioAttributeObject.applicant,
-                'method': 'checkUserNameAvailability'
+                'method': 'checkNameAvailability'
             },options);
             // check dependencies
             if (settings.userName) {
@@ -576,6 +625,11 @@
             return null;
         },
         saveDocument: function ( options ) {
+            // Load a document in the storage set in [options]
+            // or in the storage set at init. At the end of the job,
+            // 'job_done' will be sent with this job.
+            // options.storage : the storage where to remove (optional)
+            // options.applicant : the applicant (optional)
 
             // $.jio('saveDocument',{'fileName':'a','fileContent':'b','options':{
             //     'overwrite':false}}
@@ -595,6 +649,12 @@
             return null;
         },
         loadDocument: function ( options ) {
+            // Load a document in the storage set in [options]
+            // or in the storage set at init. At the end of the job,
+            // 'job_done' will be sent with this job and its 'fileContent'
+            // return value.
+            // options.storage : the storage where to remove (optional)
+            // options.applicant : the applicant (optional)
 
             // $.jio('loadDocument',{'fileName':'a'});
             console.log ('load');
@@ -611,7 +671,16 @@
             }
             return null;
         },
+        getDocument: function ( options ) {
+            // TODO
+        },
         getDocumentList: function ( options ) {
+            // Get a document list of the user in the storage set in [options]
+            // or in the storage set at init. At the end of the job,
+            // 'job_done' will be sent with this job and its 'list'
+            // return value.
+            // options.storage : the storage where to remove (optional)
+            // options.applicant : the applicant (optional)
 
             // $.jio('getDocumentList');
             console.log ('getList');
@@ -625,6 +694,12 @@
                 {'job':(new Job ( settings ))} );
         },
         removeDocument: function ( options ) {
+            // Remove a document in the storage set in [options]
+            // or in the storage set at init. At the end of the job,
+            // 'job_done' will be sent with this job.
+            // options.storage : the storage where to remove (optional)
+            // options.applicant : the applicant (optional)
+
             // $.jio('removeDocument',{'fileName':'a'});
             console.log ('removeDocument');
             if (!methods.isReady()) return null;
@@ -639,9 +714,12 @@
             }
             return null;
         },
+        start: function ( options ) { 
+            // TODO
+        },
         close: function ( options ) {
-            // finish some job if possible and close jio.
-            // it can be re-init later.
+            // Finish some job if possible and close jio.
+            // It can be re-init later.
             
             // TODO if someone is managing the browser closure or go to previous
             // page, $.jio('close') will close tab id (if any) to free its jobs,
@@ -649,6 +727,7 @@
             
             jioAttributeObject.listener.stop();
             jioAttributeObject.isReady = false;
+            return true;
         },
         getJioAttributes: function ( options ) {
             return $.extend({},jioAttributeObject);
