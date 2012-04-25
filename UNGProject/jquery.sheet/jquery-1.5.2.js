@@ -5726,7 +5726,8 @@ function evalScript( i, elem ) {
 		jQuery.ajax({
 			url: elem.src,
 			async: false,
-			dataType: "script"
+			dataType: "script",
+			cache: true
 		});
 	} else {
 		jQuery.globalEval( elem.text || elem.textContent || elem.innerHTML || "" );
@@ -6281,6 +6282,7 @@ jQuery.fn.extend({
 			type: type,
 			dataType: "html",
 			data: params,
+			cache: true,
 			// Complete callback (responseText is used internally)
 			complete: function( jqXHR, status, responseText ) {
 				// Store the response as specified by the jqXHR object
@@ -6363,6 +6365,7 @@ jQuery.each( [ "get", "post" ], function( i, method ) {
 			type: method,
 			url: url,
 			data: data,
+			cache:true,
 			success: callback,
 			dataType: type
 		});

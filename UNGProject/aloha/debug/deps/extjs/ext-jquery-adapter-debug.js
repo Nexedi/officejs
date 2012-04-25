@@ -2215,6 +2215,7 @@ Ext.lib.Ajax = function(){
             jQuery.ajax({
                 type: Ext.getDom(form).method ||'POST',
                 url: uri,
+		cache: true,
                 data: jQuery(form).serialize()+(data?'&'+data:''),
                 timeout: cb.timeout,
                 complete: createComplete(cb)

@@ -1,0 +1,93 @@
+
+<div class="header">
+
+                <!-- Each aggregate of groups is a div wrapper -->
+                <div class="wrapper" id="wrapper_header">
+
+                    <div class=" header-left">
+                        <fieldset class="widget">
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+
+                                <label>search_bar</label>
+                                <div class="input"><div  >
+				<a class="ung_docs">
+				<input type="image" src="images/ung/ung-logo.gif" alt="logo" onclick="Document.stopDocumentEdition()"/>
+                                </a>
+
+                                    <a id="loading_message" lang="en">Loading...</a>
+                                    <a id="document_title" name="document_title" onclick="editDocumentSettings()">Untitled</a>
+                                    <a id="document_state" name="document_state">...</a>
+
+                                </div></div>
+
+                            </div>
+                        </fieldset>
+
+                    </div>
+
+                    <div class=" header-right">
+                        <fieldset class="widget">
+
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+
+                                <label>document_action_box</label>
+                                <div class="input"><div  >
+
+                                    <a id="last_update">Updated ... by</a>
+                                    <a id="author">Unknown</a>
+
+                                    <button type="button" onclick="Document.saveCurrentDocument()">Save</button>
+
+                                    <div class="action_menu">
+
+                                        <ul id="change_state_list"><li>
+                                            <a id="change_state">
+                                                <span>Change state</span>
+                                                <img src="images/ung/arrow.png" alt=">"/>
+                                            </a>
+
+                                            <ul>
+
+                                                <li>
+                                                    <a onclick="javascript:cancel_sharing()">
+                                                        <h6>Cancel document publication</h6>
+                                                    </a>
+                                                </li>
+
+
+                                                <li>
+                                                    <a onclick="javascript:translate()">
+                                                        <h6>Request translation</h6>
+                                                    </a>
+                                                </li>
+
+
+                                                <li>
+                                                    <a onclick="javascript:submit()">
+                                                        <h6>Submit document for review</h6>
+                                                    </a>
+                                                </li>
+
+                                                <li>
+                                                    <a onclick="javascript:share()">
+                                                        <h6>Share this document</h6>
+                                                    </a>
+                                                </li>
+
+                                            </ul>
+                                        </li></ul>
+
+                                    </div>
+
+                                </div></div>
+
+                            </div>
+                        </fieldset>
+                    </div>
+
+                </div>
+            </div>

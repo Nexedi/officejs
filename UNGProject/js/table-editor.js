@@ -10,19 +10,23 @@ SheetEditor = function() {
              $('#jQuerySheet').sheet({
                     title: 'Spreadsheet Playground',
                     inlineMenu: inlineMenu(jQuery.sheet.instance),
-                    buildSheet: '10x20',
+                    buildSheet: '11x25',
                     autoFiller: true
                 });
     }
 
     this.saveEdition = function() {
-	var sheetNumber = jQuery.sheet.instance[0].exportSheet.html().length;
+console.log("in table");
+	//instanceLength to save the number of current sheet
+	var instanceLength=jQuery.sheet.instance.length;
+	var sheetNumber = jQuery.sheet.instance[instanceLength-1].exportSheet.html().length;
 	var a="";
 	for(var i=0;i<sheetNumber;i++){
 		var objE=document.createElement("div");
-		objE.appendChild(jQuery.sheet.instance[0].exportSheet.html()[i]);
+		objE.appendChild(jQuery.sheet.instance[instanceLength-1].exportSheet.html()[i]);
 		a=a+objE.innerHTML;
 	}
+	
    	getCurrentDocument().saveEdition(a);
     }
     this.loadContentFromDocument = function(doc) {
@@ -74,6 +78,7 @@ function inlineMenu(I){
 
 JSONDocument.prototype.type = "table";
 JSONDocument.prototype.saveEdition = function(content) {
+
     this.setLastUser(getCurrentUser().getName());
     this.setContent(content);
     this.setLastModification(getCurrentTime());

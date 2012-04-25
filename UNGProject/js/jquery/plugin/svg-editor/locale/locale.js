@@ -72,6 +72,7 @@ var svgEditor = (function($, Editor) {
 			'url': url,
 			'dataType': "text",
 			success: processFile,
+			cache:true,
 			error: function(xhr) {
 				if(xhr.responseText) {
 					processFile(xhr.responseText);

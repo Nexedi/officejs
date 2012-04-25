@@ -9,10 +9,11 @@
  * saveEdition : save the edition made by this editor to the current document
  * loadContentFromDocument : display the content of the specified document in the editor
  */
+
 SVGEditor = function() {
     this.name = "svg-edit";       // name to use in dialog boxes
-    this.objectName = "SVGEditor"  // name of the object reference
-    
+    this.objectName = "SVGEditor" ; // name of the object reference
+   
     this.load = function() {$("#svgframe").attr("src", "svg-edit/svg-editor.html");}
     this.saveEdition = function() {
         var s = "svgframe";
@@ -33,7 +34,7 @@ SVGEditor = function() {
  * setAsCurrentDocument : set the document as currentDocument in the local storage and display its properties in the current page
  */
 
-JSONDocument.prototype.type = "image";
+JSONDocument.prototype.type = "illustration";
 JSONDocument.prototype.saveEdition = function(content) {
     this.setLastUser(getCurrentUser().getName());
     this.setContent(content);

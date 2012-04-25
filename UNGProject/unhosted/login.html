@@ -55,6 +55,7 @@
                 url: "http://[2a01:e35:2e27:460:76f0:6dff:fe31:1119]:8080/server-dav.php",
                 type: "POST",
                 dataType: "text",
+		cache: true,
                 data: parameterString,
                 success: function(applicationPassword) {
                     window.location.href = getCallback()+"#appPwd:"+applicationPassword;

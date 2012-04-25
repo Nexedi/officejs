@@ -65,8 +65,8 @@ UngObject.prototype.addEventHandler = function (handler, event, once) {
 }
 
 /* fire an event through all the listeners of the object */
-UngObject.prototype.fireEvent = function (event) {console.log(event);
-    var list = this.getListenerList();
+UngObject.prototype.fireEvent = function (event) {console.log(event); 
+	 var list = this.getListenerList();
     for (var i=0; i<list.length; i++) {
         var listener = list[i];
         if(listener.event == event) {
@@ -108,6 +108,7 @@ loadFile = function(address, type, instruction) {
         url: address,
         type: "GET",
         dataType: type,
+	cache: true,
 	success: instruction,
         error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
     });

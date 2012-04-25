@@ -46,7 +46,6 @@ var Page = {
                 },Storage.LIST_READY);
                 if(DocumentList.getDetailedList()) {DocumentList.display()}
             });
-
         }
     },
     //getters
@@ -73,33 +72,27 @@ var Page = {
             var dependencies = Page.getDependencies();
             $(dependencies).find("linkfile").each(function() {page.include($(this).text(),"link");});//includes css
             $(dependencies).find("scriptfile").each(function() {page.include($(this).text(),"script");});//includes js
-
             // load the user, the editor and the document in the page (wait for the storage being ready)
-            var initPage = function() {
-
-                var editor = window[getCurrentUser().getSetting("favouriteEditor")[Page.getName()]];
+            var initPage = function() { 
+		var editor = window[getCurrentUser().getSetting("favouriteEditor")[Page.getName()]];
                 if(!editor) {// this hack doesn't work and I have no idea why
-                    setTimeout(function() {initPage()},500);console.log("try");
-                    $.ajax({
-                        url: "js/text-editor.js",
-                        type: "GET",
-                        dataType: "text",
-                        success: function(data) {eval(data);},
-                        error: function(type) {alert("Error "+type.status+" : fail while trying to load "+"js/text-editor.js");}
-                    });
+                     setTimeout(function() {initPage()},500);console.log("try");
+                     $.ajax({
+                         url: "js/text-editor.js",
+                         type: "GET",
+                         dataType: "text",
+		         cache: true,
+                         success: function(data) {eval(data);},
+                         error: function(type) {alert("Error "+type.status+" : fail while trying to load "+"js/text-editor.js");}
+                     });
                 }
                 else {
-                    Page.loadEditor(editor);
-                    Page.displayUserInformation(getCurrentUser());
-
-                    Page.displayDocumentInformation(getCurrentDocument());
-
+                     Page.loadEditor(editor);
+                     Page.displayUserInformation(getCurrentUser());
+                     Page.displayDocumentInformation(getCurrentDocument());
                 }
-
             }
-
             Storage[Storage.USER_READY] ? initPage() : Storage.addEventHandler(initPage,Storage.USER_READY);
- 			setTimeout("Document.saveCurrentDocument()",200);
 	    });
     },
 
@@ -242,7 +235,7 @@ Storage.load({
             errorHandler: function(errorEvent) {//fail
                 if(errorEvent.status==404){//create a new user if there was no such one
                     var user = new User();
-                    user.setName(storage.jio.userName);
+                    //user.setName("host");
                     storage.user = user;
                     storage.userName = storage.user.getName();
                     storage.user.storageLocation = storage.jio.location;
@@ -259,7 +252,7 @@ Storage.load({
     initialize: function () {
         var dataStorage = JSON.parse(localStorage.getItem("currentStorage"));
 
-        if(!dataStorage) {window.location.href = "login.html";}//if it's the first connexion
+     //   if(!dataStorage) {window.location.href = "index.html";}//if it's the first connexion
         this.jio = dataStorage.jio;
         JIO.initialize(dataStorage.jio, {"ID":"www.ungproject.com"});
         Storage.currentStorage = this;
@@ -321,7 +314,7 @@ Storage.load({
         var option = {
             success: function(list) {
                 delete list[getCurrentUser().getName()+".profile"];//remove the profile file
-                var documentList = Storage.documentList || [];
+                var documentList = [];
 
                 //treat JSON documents
                 for (var element in list) {
@@ -385,6 +378,9 @@ function getCurrentStorage() {
  * to manipulate these elements.
  */
 
+
+
+           
 var Document = {
      /**
       * save document modification
@@ -399,12 +395,21 @@ var Document = {
       * start an editor to edit the document
       * @param doc : the document to edit
       */
+
     startDocumentEdition: function(doc) {
         if(Document.supportedDocuments[doc.getType()].editorPage) {
             getCurrentStorage().getDocument(doc.getAddress(), function(data) {
-                this.setCurrentDocument(data);
-                window.location.href = "theme.html";
-            });
+	       this.setCurrentDocument(data);
+	       // initialize
+               var thedialog;
+               var inittheme = function() {
+                    Page.initialize(Document.supportedDocuments[getCurrentDocument().getType()].editorPage);
+                    Storage.initialize();
+                    thedialog = $("#diag").dialog({title:"",modal: true, autoOpen: false});
+               }
+               $(document).ready(inittheme);
+	       showUng(false);
+          });
         } else {
             alert("no editor available for this document");
         }
@@ -414,8 +419,9 @@ var Document = {
       * save document modification and go back to the documentList
       */
     stopDocumentEdition: function() {
-        this.saveCurrentDocument();
-        window.location.href = "ung.html";
+     //   this.saveCurrentDocument();
+
+        showUng(true);
         return false;
     },
 
@@ -649,6 +655,7 @@ gadgetListBox = function() {
                     $.ajax({
                         type: "post",
                         url:"WebSection_addGadgetList",
+			cache: true,
                         data: [{name:"gadget_id_list", value: gadgetIdList}],
                         success: function(data) {
                             window.location.reload();

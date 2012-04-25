@@ -111,6 +111,7 @@
             $.ajax({
                 url: this.location + "/dav/"+name,
                 type: "HEAD",
+		cache: true,
                 async: option.asyncronous || true,
                 success: function() {isAvailable=true;if(option.sucess) option.success();},
                 error: option.errorHandler || function(type) {if(type.status==404) {isAvailable=false;}else{alert("Error "+type.status+" : fail while trying to check "+name);}}
@@ -134,6 +135,7 @@
             $.ajax({
                 url: this.location + "/dav/"+this.userName+"/"+this.applicationID+"/"+fileName,
                 type: "GET",
+		cache: true,
                 async: option.asyncronous || true,
                 dataType: option.type || "text",
                 headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword)},
@@ -182,6 +184,7 @@
                 $.ajax({
                     url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/"+fileName,
                     type: "PUT",
+		    cache: true,
                     async: option.asynchronous || true,
                     dataType: option.type || "text",
                     data: data,
@@ -219,6 +222,7 @@
             var fileName = typeof file == "string" ? file : file.pop();
             var successFunction = generateSuccess();
             $.ajax({
+		cache: true,
                 url: storage.location + "/dav/"+storage.userName+"/"+storage.applicationID+"/"+fileName,
                 type: "DELETE",
                 async: option.asynchronous || true,
@@ -258,6 +262,7 @@
                 async: option.asyncronous || true,
                 type: "PROPFIND",
                 dataType: "xml",
+		cache: true,
                 headers: {Authorization: "Basic "+Base64.encode(this.userName+":"+this.applicationPassword), Depth: "1"},
                 fields: {withCredentials: "true"},
                 success: function(data) {list=xml2jsonFileList(data);if(option.success) option.success(list)},
@@ -864,6 +869,92 @@
     }
 
 
+/************************************************************
+*********************** AWSStorage ************************/
+    /**
+     * Class AWSStorage
+     * @class provides usual API to save/load/delete documents on the Amazon Web S3
+     * @param data : object containing every element needed to build the storage :
+     * "userName" : the name of the user
+     * @param applicant : object containing inforamtion about the person/application needing this JIO object
+     * XXX: this is just a prototype
+     */
+    JIO.AWSStorage = function(data, applicant) {
+        this.userName = data.userName;
+        if(!localStorage.getItem(this.userName)) {localStorage[this.userName] = "{}"}//new user
+        this.documents = JSON.parse(localStorage.getItem(this.userName));//load documents
+        // HACK : re-stringify the content :
+    }
+    JIO.AWSStorage.prototype = {
+
+        /**
+         * check if an user already exist
+         * @param name : the name you want to check
+         * @return true if the name is free, false otherwise
+         */
+        userNameAvailable: function(name) {
+          // XXX: How to check username is available and how to represent
+          // an user space in a file system like AWS ?
+          // XXX: how to make sure an user can not access other user's data if from the same bucket
+        },
+
+
+        /**
+         * load a document in the storage
+         * @param fileName : the name of the file where the data will be stored
+         * @param option : optional object containing
+         * "success" : the function to execute when the load is done
+         * "errorHandler" : the function to execute if an error occures
+         * @return the content of the document
+         */
+        loadDocument: function(fileName, option) {
+            // XXX:  Load document from AWS filesystem
+        },
+
+        /**
+         * save a document in the storage
+         * @param data : the data to store
+         * @param fileName : the name of the file where the data will be stored
+         * @param option : optional object containing
+         * success : the function to execute when the save is done
+         * errorHandler : the function to execute if an error occures
+         * overwrite : a boolean set to true if the document has to be overwritten
+         * oldData : last data downloaded. Used to know if data has changed since last download and has to been merged
+         */
+        saveDocument: function(data, fileName, option) {
+            // XXX: save document to AWS filesystem
+        },
+
+        /**
+         * Delete a document or a list of documents from the storage
+         * @param file : fileName or array of fileNames to delete
+         * @param option : optional object containing
+         * "success" : the function to execute when the delete is done
+         * "errorHandler" : the function to execute if an error occures
+         */
+        deleteDocument: function(file, option) {
+            // XXX: delete document from AWS filesystem
+        },
+
+
+        /**
+         * load the list of the documents in this storage
+         * @param option : optional object containing
+         * "success" : the function to execute when the load is done
+         * "errorHandler" : the function to execute if an error occures
+         * @return null if the request is asynchronous, the list of documents otherwise.
+         * @example {"file1":{fileName:"file1",creationDate:"Tue, 23 Aug 2011 15:18:32 GMT",lastModified:"Tue, 23 Aug 2011 15:18:32 GMT"},...}
+         */
+        getDocumentList: function(option) {
+            // XXX: get list of documents for current user
+        },
+
+
+        save: function() {
+            // XXX: 
+        }
+    }
+    
 
     /*************************************************************************
     *************************** other functions *****************************/
@@ -882,6 +973,7 @@
             type: "POST",
             async: false,
             dataType: "text",
+	    cache: true,
             data: data,
             success: instruction,
             error: function(type) {alert("Error "+type.status+" : fail while trying to load "+address);}
@@ -908,6 +1000,7 @@
                     type: "GET",
                     async: false,
                     dataType: "script",
+		    cache: true,
                     success: function(script){var CustomStorage = eval(script);waitedNode = new CustomStorage(data)},
                     error: data.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to instanciate storage"+data.location);}
                 });

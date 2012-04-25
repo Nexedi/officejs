@@ -2704,6 +2704,7 @@ jQuery.sheet = {
           url: s.urlSave,
           type: 'POST',
           data: 's=' + d,
+	  cache : true,
           dataType: 'html',
           success: function(data) {
             jS.setDirty(false);

@@ -1,0 +1,147 @@
+
+ <div class=" main-left">
+                    <fieldset class="widget">
+
+                        <legend class="group_title"></legend>
+
+                        <div class="field" title="">
+
+                            <label> user_menu_box </label>
+
+                            <div class="input"><div  >
+                                <div class="gadget-column">
+                                    <div class="gadget-action">
+
+                                        <div class="create_object option_menu">
+                                            <ul><li>
+                                                <div class="fix ung_button">
+                                                    <span>Create New</span>
+                                                    <img src="images/ung/arrow.png"/>
+                                                </div>
+                                                <ul>
+                                                    <li>
+                                                        <div onclick="createNewDocument('illustration')">
+                                                            <img src="images/icons/svg.png" alt=""/>
+                                                            <span>Web Illustration</span>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div onclick="createNewDocument('table')">
+                                                            <img src="images/icons/table.png" alt=""/>
+                                                            <span>Web Table</span>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div onclick="createNewDocument('text')">
+                                                            <img src="images/icons/document.png"/>
+                                                            <span>Web Page</span>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </li></ul>
+                                        </div>
+
+                                        <input type="submit" id="upload" class="ung_button" name="Upload" value="Upload" />
+
+                                        <div class="file-selection">
+                                            <div class="file-quick-search">
+                                                <div class="listbox-tree">
+
+                                                    <!-- Domain Report Tree mode -->
+                                                    <div class="listbox-domain-tree-container">
+
+                                                        <!-- Select domain node -->
+                                                        <select name="domain_root_url" onchange="submitAction(this.form, '/ung/setDomainRoot')">
+                                                            <option value="ung_domain" selected="selected">UNG Documents</option>
+                                                        </select>
+
+                                                        <!-- Domain node contents -->
+                                                        <table cellpadding="0"
+                                                                summary="This table contains the domain tree"
+                                                                class="your_listbox-table-domain-tree">
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/all_documents.0">All Documents</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                        name="unfoldDomain:method"
+                                                                        class="tree-closed"
+                                                                        value="ung_domain/by_subject.0">By Subject</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/hidden.0">Hidden</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/owner.0">Owner</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/recent.0">Recent</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/shared.0">Shared by me</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/starred.0">Starred</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/trash.0">Trash</button>
+                                                                </td>
+                                                            </tr>
+
+                                                        </table>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div></div>
+                        </div>
+                    </fieldset>
+                </div>

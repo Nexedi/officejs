@@ -23,6 +23,7 @@ Xinha = function() {
     }
     this.loadContentFromDocument = function(doc) {
         var setText = function() {xinha_editors.input_area.setEditorContent(doc.getContent());}
+
         tryUntilSucceed(setText);
     }
     this.load();
@@ -45,6 +46,9 @@ AlohaInterface = function() {
         });
     }
     this.saveEdition = function() {
+console.log("in text");
+console.log("editables 's length is : ")
+console.log(editables.length);
         getCurrentDocument().saveEdition(GENTICS.Aloha.editables[0].getContents());
     }
     this.loadContentFromDocument = function(doc) {

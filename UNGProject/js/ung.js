@@ -22,9 +22,9 @@ DocumentList.load({
         this.displayInformation.page = 1;
         this.resetSelectionList();
 
-        //update documentList each 10 seconds
-        Storage.addEventHandler(function() {DocumentList.detailedList = Storage.getDocumentList();},Storage.LIST_READY);
-        recursiveTask(function() {Storage.updateDocumentList();},10000);
+        Storage.addEventHandler(function() {DocumentList.detailedList = Storage.getDocumentList();},Storage.LIST_READY);;
+	
+	setTimeout("Storage.updateDocumentList()",1500);
     },
 
     removeDocument: function(fileName) {
@@ -269,7 +269,6 @@ Line.getOriginalHTML = function() {return Line.originalHTML;}
 var createNewDocument = function(type) {
     var newDocument = new JSONDocument();
     newDocument.setType(type);
-
     newDocument.save(function() {
         Document.startDocumentEdition(newDocument);
     });

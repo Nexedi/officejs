@@ -1,0 +1,78 @@
+<div class="container">
+            <div class="navigation">
+
+                <!-- Each aggregate of groups is a div wrapper -->
+                <div class="wrapper" id="wrapper_navigation">
+
+                    <div class=" navigation-left">
+                        <fieldset class="widget">
+
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+
+                                <label>navigation_box</label>
+                                <div class="input"><div  >
+
+                                    <a class="email"  lang="en">Email</a>
+                                    <a class="document"  onclick="Document.stopDocumentEdition()" lang="en">Documents</a>
+                                    <a class="calendar" href="ung/calendar.html" lang="en">Calendar</a>
+
+                                </div></div>
+
+                            </div>
+
+                        </fieldset>
+                    </div>
+
+                    <div class=" navigation-right">
+                        <fieldset class="widget">
+                            <legend class="group_title"></legend>
+
+                            <div class="field" title="">
+
+                                <label>your_language</label>
+                                <div class="input"><div  >
+
+                                    <div id="select_language">
+                                        <ul><li>
+                                            <span id="current_language">en</span>
+                                            <img src="images/ung/arrow_20C.png" alt=">"/>
+                                            <ul id="available_languages">
+                                                <li></li>
+                                            </ul>
+                                        </li></ul>
+                                    </div>
+
+                                </div></div>
+                            </div>
+
+                            <div class="field" title="">
+
+                                <label>Login Box</label>
+                                <div class="input"><div  >
+
+                                    <a id="right_message" lang="en">Not Implemented yet</a>
+                                    <div id="preference_dialog" title="UNG Preferences"></div>
+
+
+                                    <a id="userName">Unknown</a>
+
+                                    | <a id="settings" href="#" lang="en">Parametres</a>
+                                    | <a id="help" href="#" lang="en">Help</a>
+                                    | <a id="sign_out" href="index.html" onclick="signOut()">Sign out</a>
+
+                                </div></div>
+
+                            </div>
+
+                        </fieldset>
+                    </div>
+
+                </div>
+
+            </div>
+      </div>
+</div>
+	
+

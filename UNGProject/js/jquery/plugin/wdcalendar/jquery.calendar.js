@@ -1160,6 +1160,7 @@
                     type: option.method,//
                     url: option.url,
                     data: param,   
+		    cache: true,
                     //dataType: "text",  // fixed jquery 1.4 not support Ms Date Json Format /Date(@Tickets)/
                     dataType: "json",
                     dataFilter: function(data, type) { 

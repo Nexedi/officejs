@@ -1,0 +1,20 @@
+<root>
+    <title> Page Table - Table Page </title>
+    <content>
+        <label>
+            Page Content
+        </label>        
+        <table>    
+   		<tr>             
+            		<td  colspan="2"style="vertical-align: top; ">
+                        	<div id="jQuerySheet" class="jQuerySheet" style="height: 100%; width: 100%">
+                        	</div>
+			</td>
+		</tr>
+	</table>
+    </content>
+    <dependencies>
+        <scriptfile>js/table-editor.js</scriptfile>
+    </dependencies>
+
+</root>

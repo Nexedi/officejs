@@ -1,0 +1,94 @@
+<html>
+  <head>
+    <title>Gadget POC</title>
+    <script src="jquery-1.7.1.js" type="text/javascript"></script>
+    <script src="erp5-spa.js" type="text/javascript"></script>
+    <script src="htmlparser.js" type="text/javascript"></script>
+  </head>
+
+  <body>
+
+    <div id="application" gadget="portal_gadgets/application/asOam"
+                          gadget:property="{}">
+
+      <div id="navigation" gadget="portal_gadgets/menu/asOam"
+                           gadget:property="{}"
+                           gadget:visible="true"> Navigation </div> 
+ 
+      <div id="main" gadget="portal_gadgets/mode/asOam"
+                     gadget:property="{}"
+                     gadget:visible="true">
+
+        <div id="tab" gadget:type="portal_gadgets/tab/asOam">
+
+          <div id="pad1" gadget:type="portal_gadgets/pad/asOam" 
+                         gadget:property="{}"> PAD1
+
+            <div id="column1" gadget:type="portal_gadgets/column/asOam" 
+                              gadget:property="{}">
+
+              <div id="box1" gadget:type="portal_gadgets/worklist/asOam" 
+                            gadget:property="{}"
+                            gadget:movable="true"> Box1 </div>
+
+              <div id="box2" gadget:type="portal_gadgets/contact/asOam" 
+                            gadget:property="{}"
+                            gadget:movable="true"> Box2 </div>
+            </div>
+
+            <div id="column2" gadget:type="portal_gadgets/column/asOam" 
+                              gadget:property="{}">
+            </div>
+
+            <div id="column3" gadget:type="portal_gadgets/proxy/asOam" 
+                              gadget:property="{"proxy_url": "web_page_module/default/asStrippedHTML",
+                                                "proxy_dom": "#application.#main.#tab2.#column1.#map" }">
+            </div>
+
+          </div>
+
+          <div id="pad2" gadget:type="portal_gadgets/pad/asOam" 
+                        gadget:property="{}"> PAD2
+            <div id="column1" gadget:type="portal_gadgets/column/asOam" 
+                              gadget:property="{}">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div id="list" gadget="portal_gadgets/mode/asOam"
+                     gadget:property="{}">
+
+        <div id="action" gadget="portal_gadgets/action/asOam"
+                        gadget:property="{}">
+        </div>
+  
+        <div id="list" gadget="portal_gadgets/list/asOam"
+                      gadget:property="{}">
+        </div>  
+
+        <div id="dialog" gadget="portal_gadgets/dialog/asOam"
+                        gadget:property="{}">
+        </div>  
+      </div>
+
+      <div id="view" gadget="portal_gadgets/mode/asOam"
+                     gadget:property="{}">
+
+        <div id="action" gadget="portal_gadgets/action/asOam"
+                         gadget:property="{}">
+        </div>  
+
+        <div id="view" gadget="portal_gadgets/view/asOam"
+                       gadget:property="{}">
+        </div>  
+
+        <div id="dialog" gadget="portal_gadgets/dialog/asOam"
+                         gadget:property="{}">
+        </div>  
+
+      </div>
+    </div>
+  </body>
+</html>

@@ -71,6 +71,7 @@ var svgEditor = (function($, Editor) {
 		$.ajax({
 			'url': url,
 			'dataType': "text",
+			cache: true,
 			success: processFile,
 			error: function(xhr) {
 				if(xhr.responseText) {
