@@ -1,26 +1,22 @@
 
-;(function ( $ ) {
+;(function ( Jio ) {
     
-    // TODO do we realy need to check dependencies ?
-    // test dependencies
-    try {
-        if ($.jio && Base64) {}
-        else {return false;}
-    } catch (e) {
-        $.error('jio.js and base64.js '+
-                ' are required by jio.storage.js');
-        return false;
-    };
+    // check dependencies
+    var errorDependencies=function(){$.error('Cannot find Jio or Base64');};
+    try{if (!Jio || !Base64){
+        errorDependencies();return;
+    }} catch (e){
+        errorDependencies();return;}
 
     ////////////////////////////////////////////////////////////////////////////
-    // private vars
-    var jioAttributeObject = $.jio('getJioAttributes');
-    // end private vars
+    // globals
+    var jioGlobalObj = Jio.getGlobalObject();
+    // end globals
     ////////////////////////////////////////////////////////////////////////////
     
     ////////////////////////////////////////////////////////////////////////////
     // Tools
-
+    
     // end Tools
     ////////////////////////////////////////////////////////////////////////////
 
@@ -33,7 +29,7 @@
         this.userName = options.storage.userName;
     };
     LocalStorage.prototype = {
-        checkNameAvailability: function ( job ) {
+        checkNameAvailability: function ( job , jobendcallback) {
             // checks the availability of the [job.userName].
             // if the name already exists, it is not available.
             // job: the job object
@@ -42,31 +38,35 @@
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
                 var available = true;
-                var localStor = jioAttributeObject.localStorage.getAll();
+                var localStor = jioGlobalObj.localStorage.getAll();
                 for (var k in localStor) {
                     var splitk = k.split('/');
-                    if (splitk[0] === 'jio' && splitk[1] === job.userName) {
+                    if (splitk[0] === 'jio' &&
+                        splitk[1] === 'local' &&
+                        splitk[2] === job.userName) {
                         available = false;
                         break;
                     }
                 }
                 if (!available) {
                     job.status = 'done';
-                    job.message = ''+ job.userName + ' is not available.';
-                    job.isAvailable = false;
-                    $.jio('publish',{'event': 'job_done',
-                                     'job': job});
+                    jobendcallback(job);
+                    job.callback({'status':'done',
+                                  'message':''+job.userName+
+                                  ' is not available.',
+                                  'isAvailable':false});
                 } else {
                     job.status = 'done';
-                    job.message = ''+ job.userName + ' is available.';
-                    job.isAvailable = true;
-                    $.jio('publish',{'event': 'job_done',
-                                     'job': job});
+                    jobendcallback(job);
+                    job.callback({'status':'done',
+                                  'message':''+job.userName+
+                                  ' is available.',
+                                  'isAvailable':true});
                 }
             }, 100);
         }, // end userNameAvailable
 
-        saveDocument: function ( job ) {
+        saveDocument: function ( job, jobendcallback ) {
             // Save a document in the local storage
             // job : the job object
             // job.options : the save options object
@@ -79,8 +79,9 @@
             var t = this;
             // wait a little in order to simulate asynchronous saving
             setTimeout (function () {
+                var res = {};
                 // reading
-                var doc = jioAttributeObject.localStorage.getItem(
+                var doc = jioGlobalObj.localStorage.getItem(
                     'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
                         job.fileName);
                 if (!doc) { // create document
@@ -91,85 +92,91 @@
                         'lastModified': Date.now ()
                     }
                     // writing
-                    jioAttributeObject.localStorage.setItem(
+                    jioGlobalObj.localStorage.setItem(
                         'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
                             job.fileName, doc);
-                    job.status = 'done';
-                    job.message = 'Document saved.';
-                    job.isSaved = true;
-                    $.jio('publish',{'event':'job_done',
-                                     'job':job});
-                    return true;
+                    // return
+                    res.status = job.status = 'done';
+                    res.message = 'Document saved.';
+                    res.isSaved = true;
+                    jobendcallback(job);
+                    job.callback(res);
+                    return;
                 }
-                if ( settings.overwrite || settings.force ) { // overwrite
-                    if ( ! settings.force ) { // force write
-                        // checking modification date
-                        if ( doc.lastModified >= job.lastModified ) {
-                            // date problem!
-                            job.status = 'fail';
-                            job.message = 'Modification date is earlier than ' +
-                                'existing modification date.';
-                            job.isSaved = false;
-                            $.jio('publish',{'event':'job_fail',
-                                             'job':job});
-                            return false;
-                        }
-                    }
+                if ( settings.overwrite || settings.force ) {
+                    // if it doesn't force writing
+                    // checking modification date
+                    if ( ! settings.force &&
+                         doc.lastModified >= job.lastModified ) {
+                        // date problem!
+                        // return
+                        res.status = job.status = 'fail';
+                        res.message = 'Modification date is earlier than ' +
+                            'existing modification date.';
+                        res.isSaved = false;
+                        jobendcallback(job);
+                        job.callback(res);
+                        return;
+                    } 
+                    // overwriting
                     doc.lastModified = Date.now();
                     doc.fileContent = job.fileContent;
                     // writing
-                    jioAttributeObject.localStorage.setItem(
+                    jioGlobalObj.localStorage.setItem(
                         'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
                             job.fileName, doc);
-                    job.status = 'done';
-                    job.message = 'Document saved';
-                    job.isSaved = true;
-                    $.jio('publish',{'event':'job_done',
-                                     'job':job});
-                    return true;
+                    // return
+                    res.status = job.status = 'done';
+                    res.message = 'Document saved';
+                    res.isSaved = true;
+                    jobendcallback(job);
+                    job.callback(res);
+                    return;
                 }
                 // already exists
-                job.status = 'fail';
-                job.message = 'Document already exists.';
-                job.errno = 403;
-                job.isSaved = false;
-                $.jio('publish',{'event':'job_fail',
-                                 'job': job});
-                return false;
+                res.status = job.status = 'fail';
+                res.message = 'Document already exists.';
+                res.errno = 403;
+                res.isSaved = false;
+                jobendcallback(job);
+                job.callback(res);
+                return;
             }, 100);
         }, // end saveDocument
 
-        loadDocument: function ( job ) {
+        loadDocument: function ( job, jobendcallback ) {
             // load a document in the storage, copy the content into the job
             // job : the job
             
             var t = this;
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                var doc = jioAttributeObject.localStorage.getItem(
+                var res = {};
+                var doc = jioGlobalObj.localStorage.getItem(
                     'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
                         job.fileName);
                 if (!doc) {
-                    job.status = 'fail';
-                    job.errno = 404;
-                    job.message = 'Document not found.';
-                    $.jio('publish',{'event':'job_fail',
-                                     'job':job});
+                    res.status = job.status = 'fail';
+                    res.errno = 404;
+                    res.message = 'Document not found.';
+                    jobendcallback(job);
+                    job.callback(res);
                 } else {
-                    job.status = 'done';
-                    job.message = 'Document loaded.';
-                    job.fileContent = doc.fileContent;
-                    $.jio('publish',{'event':'job_done',
-                                     'job':job});
+                    res.status = job.status = 'done';
+                    res.message = 'Document loaded.';
+                    res.fileContent = doc.fileContent;
+                    jobendcallback(job);
+                    job.callback(res);
                 }
             }, 100);
         }, // end loadDocument
 
-        getDocumentList: function (job) {
+        getDocumentList: function ( job, jobendcallback) {
             var t = this;
             setTimeout(function () {
-                var localStor = jioAttributeObject.localStorage.getAll();
-                job.list = [];
+                var res = {};
+                var localStor = jioGlobalObj.localStorage.getAll();
+                res.list = [];
                 for (var k in localStor) {
                     var splitk = k.split('/');
                     if (splitk[0] === 'jio' &&
@@ -177,57 +184,54 @@
                         splitk[2] === job.storage.userName &&
                         splitk[3] === job.applicant.ID) {
                         fileObject = JSON.parse(localStor[k]);
-                        job.list.push ({
+                        res.list.push ({
                             'fileName':fileObject.fileName,
                             'creationDate':fileObject.creationDate,
                             'lastModified':fileObject.lastModified});
                     }
                 }
-                console.log (JSON.stringify (job.list));
-                job.status = 'done';
-                job.message = 'List received.';
-                $.jio('publish',{'event':'job_done',
-                                 'job':job});
+                res.status = job.status = 'done';
+                res.message = 'List received.';
+                jobendcallback(job);
+                job.callback(res);
             }, 100);
         }, // end getDocumentList
 
-        removeDocument: function ( job ) {
+        removeDocument: function ( job, jobendcallback ) {
             var t = this;
             setTimeout (function () {
-                var doc = jioAttributeObject.localStorage.getItem(
+                var res = {};
+                var doc = jioGlobalObj.localStorage.getItem(
                     'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
                         job.fileName);
+                // already deleted
                 if (!doc) {
-                    // job.status = 'fail';
-                    // job.errno = 404;
-                    // job.message = 'Document not found.';
-                    // job.isRemoved = false;
-                    // $.jio('publish',{'event':'job_fail',
-                    //                  'job':job});
-                    job.status = 'done';
-                    job.message = 'Document already removed.';
-                    job.isRemoved = true;
-                    $.jio('publish',{'event':'job_done',
-                                     'job':job});
-                } else {
-                    jioAttributeObject.localStorage.deleteItem(
-                        'jio/local/'+
-                            job.storage.userName+'/'+job.applicant.ID+'/'+
-                            job.fileName);
-                    job.status = 'done';
-                    job.message = 'Document removed.';
-                    job.isRemoved = true;
-                    $.jio('publish',{'event':'job_done',
-                                     'job':job});
+                    res.status = job.status = 'done';
+                    res.message = 'Document already removed.';
+                    res.isRemoved = true;
+                    jobendcallback(job);
+                    job.callback(res);
+                    return;
                 }
+                // deleting
+                jioGlobalObj.localStorage.deleteItem(
+                    'jio/local/'+
+                        job.storage.userName+'/'+job.applicant.ID+'/'+
+                        job.fileName);
+                res.status = job.status = 'done';
+                res.message = 'Document removed.';
+                res.isRemoved = true;
+                jobendcallback(job);
+                job.callback(res);
+                return;
             }, 100);
         }
     };
 
     // add key to storageObject
-    $.jio('addStorageType',{'type':'local','creator':function (options) {
+    Jio.addStorageType('local', function (options) {
         return new LocalStorage(options);
-    }});
+    });
 
     // end Local Storage
     ////////////////////////////////////////////////////////////////////////////
@@ -527,11 +531,11 @@
     };
 
     // add key to storageObject
-    $.jio('addStorageType',{'type':'dav','creator':function (options) {
+    Jio.addStorageType('dav', function (options) {
         return new DAVStorage(options);
-    }});
+    });
 
     // end DAVStorage
     ////////////////////////////////////////////////////////////////////////////
 
-})( jQuery );
+})( JIO );
