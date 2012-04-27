@@ -34,6 +34,10 @@
             // if the name already exists, it is not available.
             // job: the job object
             // job.userName: the name we want to check.
+            // jobendcallback : the function called at the end of the job.
+
+            // returns {'status':string,'message':string,'isAvailable':boolean}
+            // in the jobendcallback arguments.
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
@@ -73,6 +77,10 @@
             // job.options.overwrite : true -> overwrite
             // job.options.force : true -> save even if jobdate < existingdate
             //                             or overwrite: false
+            // jobendcallback : the function called at the end of the job.
+
+            // returns {'status':string,'message':string,'isSaved':boolean}
+            // in the jobendcallback arguments.
 
             var settings = $.extend({'overwrite':true,
                                      'force':false},job.options);
@@ -88,8 +96,8 @@
                     doc = {
                         'fileName': job.fileName,
                         'fileContent': job.fileContent,
-                        'creationDate': Date.now (),
-                        'lastModified': Date.now ()
+                        'creationDate': job.lastModified,
+                        'lastModified': job.lastModified
                     }
                     // writing
                     jioGlobalObj.localStorage.setItem(
@@ -119,7 +127,7 @@
                         return;
                     } 
                     // overwriting
-                    doc.lastModified = Date.now();
+                    doc.lastModified = job.lastModified;
                     doc.fileContent = job.fileContent;
                     // writing
                     jioGlobalObj.localStorage.setItem(
@@ -145,9 +153,17 @@
         }, // end saveDocument
 
         loadDocument: function ( job, jobendcallback ) {
-            // load a document in the storage, copy the content into the job
-            // job : the job
+            // Load a document from the storage. It returns a document object
+            // containing all information of the document and its content.
+            // job : the job object
+            // job.fileName : the document name we want to load.
+            // jobendcallback : the function called at the end of the job.
             
+            // returns {'status':string,'message':string,'document':object}
+            // in the jobendcallback arguments.
+            // document object is {'fileName':string,'fileContent':string,
+            // 'creationDate':date,'lastModified':date}
+
             var t = this;
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
@@ -164,7 +180,11 @@
                 } else {
                     res.status = job.status = 'done';
                     res.message = 'Document loaded.';
-                    res.fileContent = doc.fileContent;
+                    res.document = {
+                        'fileContent': doc.fileContent,
+                        'fileName': doc.fileName,
+                        'creationDate': doc.creationDate,
+                        'lastModified': doc.lastModified};
                     jobendcallback(job);
                     job.callback(res);
                 }
@@ -172,6 +192,17 @@
         }, // end loadDocument
 
         getDocumentList: function ( job, jobendcallback) {
+            // Get a document list from the storage. It returns a document
+            // array containing all the user documents informations, but not
+            // their content.
+            // job : the job object
+            // jobendcallback : the function called at the end of the job.
+
+            // returns {'status':string,'message':string,'list':array}
+            // in the jobendcallback arguments.
+            // the list is [object,object] -> object = {'fileName':string,
+            // 'lastModified':date,'creationDate':date}
+
             var t = this;
             setTimeout(function () {
                 var res = {};
@@ -198,6 +229,13 @@
         }, // end getDocumentList
 
         removeDocument: function ( job, jobendcallback ) {
+            // Remove a document from the storage.
+            // job : the job object
+            // jobendcallback : the function called at the end of the job.
+
+            // returns {'status':string,'message':string,'isRemoved':boolean}
+            // in the jobendcallback arguments.
+
             var t = this;
             setTimeout (function () {
                 var res = {};
@@ -228,7 +266,7 @@
         }
     };
 
-    // add key to storageObject
+    // add key to storageObjectType of global jio
     Jio.addStorageType('local', function (options) {
         return new LocalStorage(options);
     });

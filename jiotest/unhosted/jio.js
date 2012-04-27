@@ -25,6 +25,10 @@
                 'start_event':'start_loading',
                 'stop_event':'stop_loading',
                 'retvalue':'fileContent' }, // returns the file content 'string'
+            'getDocument': {
+                'start_event':'start_gettingDocument',
+                'stop_event':'stop_gettingDocument',
+                'retvalue':'document' }, // returns the document object
             'getDocumentList': {
                 'start_event':'start_gettingList',
                 'stop_event':'stop_gettingList',
@@ -600,7 +604,7 @@
             // or in the storage set at init. At the end of the job,
             // 'job_done' will be sent with this job and its 'isAvailable'
             // return value.
-            // options.storage : the storage where to remove (optional)
+            // options.storage : the storage where to check (optional)
             // options.applicant : the applicant (optional)
             // options.callback(result) : called to get the result.
 
@@ -628,7 +632,7 @@
             // Load a document in the storage set in [options]
             // or in the storage set at init. At the end of the job,
             // 'job_done' will be sent with this job.
-            // options.storage : the storage where to remove (optional)
+            // options.storage : the storage where to save (optional)
             // options.applicant : the applicant (optional)
             // options.callback(result) : called to get the result.
 
@@ -658,13 +662,14 @@
             // or in the storage set at init. At the end of the job,
             // 'job_done' will be sent with this job and its 'fileContent'
             // return value.
-            // options.storage : the storage where to remove (optional)
+            // options.storage : the storage where to load (optional)
             // options.applicant : the applicant (optional)
             // options.callback(result) : called to get the result.
 
             // jio.loadDocument({'fileName':'file','callback':
             //     function (result) { alert('content: '+
-            //         result.fileContent); }});
+            //         result.doc.fileContent + ' creation date: ' +
+            //         result.doc.creationDate); }});
 
             console.log ('load');
             if (!this.isReady()) return null;
@@ -676,19 +681,15 @@
             },options);
             // check dependencies
             if ( settings.fileName && settings.storage && settings.applicant) {
-                return jioGlobalObj.queue.addJob ( new Job ( settings ) );
+                return this.queue.addJob ( new Job ( settings ) );
             }
             return null;
-        },
-
-        getDocument: function ( options ) {
-            // TODO (don't forgot to add this method to constants)
         },
 
         getDocumentList: function ( options ) {
             // Get a document list of the user in the storage set in [options]
             // or in the storage set at init.
-            // options.storage : the storage where to remove (optional)
+            // options.storage : the storage where to get the list (optional)
             // options.applicant : the applicant (optional)
             // options.callback(result) : called to get the result.
 
