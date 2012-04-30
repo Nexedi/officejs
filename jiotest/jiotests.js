@@ -1,84 +1,11 @@
 
-var cookieOrLocal = null;
-var browserStorage = function () {
-};
-browserStorage.prototype = {
-    getItem: function (name) {
-        return JSON.parse(localStorage.getItem(name));
-    },
-    setItem: function (name,value) {
-        if (name)
-            return localStorage.setItem(name,JSON.stringify(value));
-    },
-    getAll: function() {
-        return localStorage;
-    },
-    deleteItem: function (name) {
-        if (name)
-            delete localStorage[name];
-    }
-};
-var cookieStorage = function () {
-};
-cookieStorage.prototype = {
-    getItem: function (name) {
-        var cookies = document.cookie.split(';');
-        for (var i in cookies) {
-            var x = cookies[i].substr(0, cookies[i].indexOf('='));
-            var y = cookies[i].substr(cookies[i].indexOf('=')+1);
-            x = x.replace(/^\s+|\s+$/g,"");
-            if( x == name ) return unescape(y);
-        }
-        return null;
-    },
-    setItem: function (name,value) {
-        // function to store into cookies
-        if (value != undefined) {
-            document.cookie = name+'='+JSON.stringify(value)+';domain='+
-                window.location.hostname+
-                ';path='+window.location.pathname;
-            return true;
-        }
-        return false;
-    },
-    getAll: function() {
-        var retObject = {};
-        var cookies = document.cookie.split(':');
-        for (var i in cookies) {
-            var x = cookies[i].substr(0, cookies[i].indexOf('='));
-            var y = cookies[i].substr(cookies[i].indexOf('=')+1);
-            x = x.replace(/^\s+|\s+$/g,"");
-            retObject[x] = unescape(y);
-        }
-        return retObject;
-    },
-    deleteItem: function (name) {
-        document.cookie = name+'=null;domain='+window.location.hostname+
-            ';path='+window.location.pathname+
-            ';expires=Thu, 01-Jan-1970 00:00:01 GMT';
-    }
-};
-// set good localStorage
-try {
-    if (localStorage.getItem) {
-        cookieOrLocal = new browserStorage();
-    } else {
-        cookieOrLocal = new cookieStorage();
-    }
-}
-catch (e) {
-    cookieOrLocal = new cookieStorage();
-}
-
-
 //// clear jio localstorage
-for (var k in cookieOrLocal.getAll()) {
+for (var k in LocalOrCookieStorage.getAll()) {
     var splitk = k.split('/');
     if ( splitk[0] === 'jio' )
-        cookieOrLocal.deleteItem(k);
+        LocalOrCookieStorage.deleteItem(k);
 }
 //// end clear jio localstorage
-
 
 //// QUnit Tests ////
 
@@ -151,11 +78,12 @@ test ('Check name availability', function () {
     var mytest = function (value){
         o.f = function (result) {
             deepEqual(result.isAvailable,value,'checking name availabality');};
-        var spy = t.spy(o,'f');
+        t.spy(o,'f');
         o.jio.checkNameAvailability(
             {'userName':'MrCheckName','callback': o.f});
         clock.tick(510);
-        ok (o.f.calledOnce, 'callback called once');
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
     };
 
     // new jio
@@ -163,11 +91,11 @@ test ('Check name availability', function () {
                           {"ID":'noid'});
 
     // name must be available
-    cookieOrLocal.deleteItem ('jio/local/MrCheckName/jiotests/file');
+    LocalOrCookieStorage.deleteItem ('jio/local/MrCheckName/jiotests/file');
     mytest(true);
 
     // name must be unavailable
-    cookieOrLocal.setItem ('jio/local/MrCheckName/jiotests/file',{});
+    LocalOrCookieStorage.setItem ('jio/local/MrCheckName/jiotests/file',{});
     mytest(false);
 
     o.jio.stop();
@@ -182,20 +110,23 @@ test ('Document save', function () {
     var mytest = function (value,lm,cd){
         o.f = function (result) {
             deepEqual(result.isSaved,value,'saving document');};
-        var spy = t.spy(o,'f');
+        t.spy(o,'f');
         o.jio.saveDocument(
             {'fileName':'file','fileContent':'content','callback': o.f});
         clock.tick(510);
-        ok (o.f.calledOnce, 'callback called once');
-        // check content
-        var tmp = cookieOrLocal.getItem ('jio/local/MrSaveName/jiotests/file');
-        deepEqual (tmp,{'fileName':'file','fileContent':'content',
-                        'lastModified':lm,'creationDate':cd},'check content');
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+        else {
+            // check content
+            var tmp = LocalOrCookieStorage.getItem ('jio/local/MrSaveName/jiotests/file');
+            deepEqual (tmp,{'fileName':'file','fileContent':'content',
+                            'lastModified':lm,'creationDate':cd},'check content');
+        }
     };
 
     o.jio = JIO.createNew({'type':'local','userName':'MrSaveName'},
                           {"ID":'jiotests'});
-    cookieOrLocal.deleteItem ('jio/local/MrSaveName/jiotests/file');
+    LocalOrCookieStorage.deleteItem ('jio/local/MrSaveName/jiotests/file');
     // save and check document existence
     clock.tick(200);
     mytest(true,200,200);       // value, lastmodified, creationdate
@@ -215,22 +146,23 @@ test ('Document load', function () {
     var mytest = function (res,value){
         o.f = function (result) {
             deepEqual(result[res],value,'loading document');};
-        var spy = t.spy(o,'f');
+        t.spy(o,'f');
         o.jio.loadDocument(
             {'fileName':'file','callback': o.f});
         clock.tick(510);
-        ok (o.f.calledOnce, 'callback called once');
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
     };
     o.jio = JIO.createNew({'type':'local','userName':'MrLoadName'},
                           {"ID":'jiotests'});
     // load a non existing file
-    cookieOrLocal.deleteItem ('jio/local/MrLoadName/jiotests/file');
+    LocalOrCookieStorage.deleteItem ('jio/local/MrLoadName/jiotests/file');
     mytest ('status','fail');
     
     // re-load file after saving it manually
     var doc = {'fileName':'file','fileContent':'content',
                'lastModified':1234,'creationDate':1000};
-    cookieOrLocal.setItem ('jio/local/MrLoadName/jiotests/file',doc);
+    LocalOrCookieStorage.setItem ('jio/local/MrLoadName/jiotests/file',doc);
     mytest ('document',doc);
 
     o.jio.stop();
@@ -245,21 +177,123 @@ test ('Document remove', function () {
     var mytest = function (){
         o.f = function (result) {
             deepEqual(result.isRemoved,true,'removing document');};
-        var spy = t.spy(o,'f');
+        t.spy(o,'f');
         o.jio.removeDocument(
             {'fileName':'file','callback': o.f});
         clock.tick(510);
-        ok (o.f.calledOnce, 'callback called once');
-        // check if the file is still there
-        var tmp = cookieOrLocal.getItem ('jio/local/MrRemoveName/jiotests/file');
-        ok (!tmp, 'check no content');
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+        else {
+            // check if the file is still there
+            var tmp = LocalOrCookieStorage.getItem ('jio/local/MrRemoveName/jiotests/file');
+            ok (!tmp, 'check no content');
+        }
     };
     o.jio = JIO.createNew({'type':'local','userName':'MrRemoveName'},
                           {"ID":'jiotests'});
     // test removing a file
-    cookieOrLocal.setItem ('jio/local/MrRemoveName/jiotests/file',{});
+    LocalOrCookieStorage.setItem ('jio/local/MrRemoveName/jiotests/file',{});
     mytest ();
 
+    o.jio.stop();
+});
+
+module ('Jio DAVStorage');
+
+test ('Check name availability', function () {
+    // Test if DavStorage can check the availabality of a name.
+    
+    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+    var mytest = function (value,errno) {
+        var server = t.sandbox.useFakeServer();
+        server.respondWith ("PROPFIND",
+                            "https://ca-davstorage:8080/dav/davcheck/",
+                            [errno, {'Content-Type': 'text/xml' },
+                             '']);
+        o.f = function (result) {
+            deepEqual (result.isAvailable,value,'checking name availability');};
+        t.spy(o,'f');
+        o.jio.checkNameAvailability({'userName':'davcheck','callback':o.f});
+        clock.tick(500);
+        server.respond();
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    
+    o.jio = JIO.createNew({'type':'dav','userName':'davcheck',
+                           'password':'checkpwd',
+                           'location':'https://ca-davstorage:8080'},
+                          {'ID':'jiotests'});
+    // 404 error, the name does not exist, name is available.
+    mytest (true,404);
+    // 200 error, responding ok, the name already exists, name is not available.
+    mytest (false,200);
+    // 405 error, random error, name is not available by default.
+    mytest (false,405);
+
+    o.jio.stop();
+});
+
+test ('Document save', function () {
+    // Test if DavStorage can save documents.
+
+    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+    var mytest = function (message,value,errnoput,errnoget,
+                           lastmodified,overwrite,force) {
+        var server = t.sandbox.useFakeServer();
+        server.respondWith ("PUT",
+                            "https://ca-davstorage:8080/dav/davsave/jiotests/file",
+                            [errnoput, {'Content-Type':'x-www-form-urlencoded'},
+                             'content']);
+        server.respondWith ("MKCOL",
+                            "https://ca-davstorage:8080/dav/davsave/jiotests/file",
+                            [200, {'Content-Type':'x-www-form-urlencoded'},
+                             'content']);
+        server.respondWith ("GET",
+                            "https://ca-davstorage:8080/dav/davsave/jiotests/file",
+                            [errnoget, {}, 'content']);
+        o.f = function (result) {
+            deepEqual (result.isSaved,value,message);};
+        t.spy(o,'f');
+        o.jio.saveDocument({'fileName':'file','fileContent':'content',
+                            'options':{'force':force,'overwrite':overwrite},
+                            'lastModified':lastmodified,
+                            'callback':o.f});
+        clock.tick(500);
+        server.respond();
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    o.jio = JIO.createNew({'type':'dav','userName':'davsave',
+                           'password':'checkpwd',
+                           'location':'https://ca-davstorage:8080'},
+                          {'ID':'jiotests'});
+    // note: http errno:
+    //     200 OK
+    //     201 Created
+    //     204 No Content
+    //     403 Forbidden
+    //     404 Not Found
+    // the path does not exist, we want to create it, and save the file.
+    mytest('create path if not exists, and create document',
+           true,403,404,999);
+    // the document does not exist, we want to create it
+    mytest('create document',
+           true,201,404,10000);
+    // the document already exists, we want to overwrite it
+    mytest('overwrite document',
+           true,204,200,10100,true);
+    // the document already exists, we don't want to overwrite it
+    mytest('do not overwrite document',
+           false,204,200,10200,false);
+    // the document is already exists, it is younger than the one we want
+    // to save.
+    mytest('younger than the one we want to save',
+           false,204,200,900,true,false);
+    // the document is already exists, it is the youngest but we want to
+    // force overwriting
+    mytest('youngest but force overwrite',
+           true,204,200,700,true,true);
     o.jio.stop();
 });
 

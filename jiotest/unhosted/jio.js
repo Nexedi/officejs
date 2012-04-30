@@ -4,7 +4,7 @@
     
     // check dependencies
     var errorDependencies=function(){console.error('Cannot find jQuery.');};
-    try{if(!jQuery){
+    try{if(!(jQuery && LocalOrCookieStorage)){
         errorDependencies();return null;
     }}catch(e){
         errorDependencies();return null;}
@@ -25,10 +25,6 @@
                 'start_event':'start_loading',
                 'stop_event':'stop_loading',
                 'retvalue':'fileContent' }, // returns the file content 'string'
-            'getDocument': {
-                'start_event':'start_gettingDocument',
-                'stop_event':'stop_gettingDocument',
-                'retvalue':'document' }, // returns the document object
             'getDocumentList': {
                 'start_event':'start_gettingList',
                 'stop_event':'stop_gettingList',
@@ -43,85 +39,11 @@
     ////////////////////////////////////////////////////////////////////////////
     // jio globals
     var jioGlobalObj = {
-        'localStorage': null,   // where the browser stores data
+        'localStorage': LocalOrCookieStorage,   // where the browser stores data
         'queueID': 1,
         'storageTypeObject': {} // ex: {'type':'local','creator': fun ...}
     };
     // end jio globals
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
-    // cookies & localStorage
-    var browserStorage = function () {
-    };
-    browserStorage.prototype = {
-        getItem: function (name) {
-            return JSON.parse(localStorage.getItem(name));
-        },
-        setItem: function (name,value) {
-            if (name)
-                return localStorage.setItem(name,JSON.stringify(value));
-        },
-        getAll: function() {
-            return localStorage;
-        },
-        deleteItem: function (name) {
-            if (name)
-                delete localStorage[name];
-        }
-    };
-    var cookieStorage = function () {
-    };
-    cookieStorage.prototype = {
-        getItem: function (name) {
-            var cookies = document.cookie.split(';');
-            for (var i in cookies) {
-                var x = cookies[i].substr(0, cookies[i].indexOf('='));
-                var y = cookies[i].substr(cookies[i].indexOf('=')+1);
-                x = x.replace(/^\s+|\s+$/g,"");
-                if( x == name ) return unescape(y);
-            }
-            return null;
-        },
-        setItem: function (name,value) {
-            // function to store into cookies
-            if (value != undefined) {
-                document.cookie = name+'='+JSON.stringify(value)+';domain='+
-                    window.location.hostname+
-                    ';path='+window.location.pathname;
-                return true;
-            }
-            return false;
-        },
-        getAll: function() {
-            var retObject = {};
-            var cookies = document.cookie.split(':');
-            for (var i in cookies) {
-                var x = cookies[i].substr(0, cookies[i].indexOf('='));
-                var y = cookies[i].substr(cookies[i].indexOf('=')+1);
-                x = x.replace(/^\s+|\s+$/g,"");
-                retObject[x] = unescape(y);
-            }
-            return retObject;
-        },
-        deleteItem: function (name) {
-            document.cookie = name+'=null;domain='+window.location.hostname+
-                ';path='+window.location.pathname+
-                ';expires=Thu, 01-Jan-1970 00:00:01 GMT';
-        }
-    };
-    // set good localStorage
-    try {
-        if (localStorage.getItem) {
-            jioGlobalObj.localStorage = new browserStorage();
-        } else {
-            jioGlobalObj.localStorage = new cookieStorage();
-        }
-    }
-    catch (e) {
-        jioGlobalObj.localStorage = new cookieStorage();
-    }
-    // end cookies & localStorages
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
@@ -369,6 +291,9 @@
         },
 
         ended: function (job) {
+            // It is a callback function called just before user callback.
+            // It is called to manage jobObject according to the ended job.
+
             console.log ('ended');
             switch (job.status) {
             case 'done':
@@ -461,15 +386,17 @@
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
-    // Toucher
-    var Toucher = function () {
-        // The toucher is a little thread that show activity of this jio.
+    // ActivityUpdater
+    var ActivityUpdater = function () {
+        // The activity updater is a little thread that proves activity of this
+        // jio instance.
+
         this.interval = 400;
         this.id = null;
     };
-    Toucher.prototype = {
+    ActivityUpdater.prototype = {
         start: function (id) {
-            // start the toucher
+            // start the updater
             console.log ('start touching jio/id/'+id);
             if (!this.id) {
                 this.touch(id);
@@ -483,7 +410,7 @@
             }            
         },
         stop: function () {
-            // stop the toucher
+            // stop the updater
             console.log ('stop touching');
             if (this.id) {
                 clearInterval (this.id);
@@ -497,7 +424,7 @@
                                                Date.now() );
         }
     };
-    // end Toucher
+    // end ActivityUpdater
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
@@ -522,7 +449,7 @@
         this['pubsub']    = new PubSub();
         this['queue']     = new JobQueue(this.pubsub);
         this['listener']  = new JobListener(this.queue);
-        this['toucher']   = new Toucher();
+        this['updater']   = new ActivityUpdater();
         this['ready']     = false;
 
         // check storage type
@@ -544,7 +471,7 @@
             // initializing objects
             this.queue.init({'jioID':this.id});
             // start touching
-            this.toucher.start(this.id);
+            this.updater.start(this.id);
             // start listening
             this.listener.start();
             // is now ready
@@ -557,7 +484,7 @@
             
             this.queue.close();
             this.listener.stop();
-            this.toucher.stop();
+            this.updater.stop();
             this.ready = false;
             this.id = 0;
             return true;
@@ -568,7 +495,7 @@
             
             this.queue.close();
             this.listener.stop();
-            this.toucher.stop();
+            this.updater.stop();
             // TODO
             this.ready = false;
             return true;

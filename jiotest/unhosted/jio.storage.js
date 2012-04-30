@@ -15,12 +15,6 @@
     ////////////////////////////////////////////////////////////////////////////
     
     ////////////////////////////////////////////////////////////////////////////
-    // Tools
-    
-    // end Tools
-    ////////////////////////////////////////////////////////////////////////////
-
-    ////////////////////////////////////////////////////////////////////////////
     // Local Storage
     var LocalStorage = function ( options ) {
         // LocalStorage constructor
@@ -284,84 +278,95 @@
             // create folders in dav storage, synchronously
             // options : contains mkcol list
             // options.location : the davstorage locations
-            // options.path : if path=/foo/bar then creates location/dav/foo/bar
+            // options.path: if path=/foo/bar then creates location/dav/foo/bar
+            // options.success: the function called if success
             
-            var settings = $.extend ({},options);
-            if (options.location && options.path) {
-                var ok = false;
-                $.ajax ( {
-                    url: options.location + '/dav/' + options.path,
-                    type: 'MKCOL',
-                    async: false,
-                    // xhrFields: {withCredentials: 'true'}, // cross domain
-                    success: function () {
-                        // done
-                        console.log ('ok');
-                        ok = true;
-                    },
-                    error: function (type) {
-                        switch (type.status) {
-                        case 405: // Method Not Allowed
-                            ok = true; // already done
-                            break;
-                        }
-                        console.log ('error?');
-                    }
-                } );
-                return ok;
-            } else {
-                return false;
-            }
-        },
-        checkNameAvailability: function ( job ) {
+            var settings = $.extend ({'success':function(){},
+                                      'error':function(){}},options);
             $.ajax ( {
-                url: job.storage.location + '/dav/' + job.userName,
-                type: "HEAD",
+                url: options.location + '/dav/' + options.path,
+                type: 'MKCOL',
                 async: true,
                 // xhrFields: {withCredentials: 'true'}, // cross domain
                 success: function () {
-                    job.status = 'done';
-                    job.message = job.userName + ' is not available.';
-                    job.isAvailable = false;
-                    $.jio('publish',{'event':'job_done',
-                                     'job':job});
+                    // done
+                    settings.success();
                 },
                 error: function (type) {
                     switch (type.status) {
-                    case 301:   // Moved Permanantly
-                        job.status = 'done';
-                        job.message = job.userName + ' is not available.';
-                        job.isAvailable = false;
-                        $.jio('publish',{'event':'job_done',
-                                         'job':job});
-                        break;
-                    case 404:   // Not Found
-                        // TODO always returning 404 !! Why ??
-                        console.warn ('always returning 404 ?');
-                        job.status = 'done';
-                        job.message = job.userName + ' is available.';
-                        job.isAvailable = true;
-                        $.jio('publish',{'event':'job_done',
-                                         'job':job});
+                    case 405: // Method Not Allowed
+                        // already exists
+                        settings.success();
                         break;
                     default:
-                        job.status = 'fail';
-                        job.message = 'Cannot check if ' + job.userName +
-                            ' is available.';
-                        job.isAvailable = false;
-                        job.errno = type.status;
-                        // $.error ( type.status ': Fail while trying to check ' +
-                        //           job.userName );
-                        $.jio('publish',{'event':'job_fail',
-                                         'job':job});
+                        settings.error();
                         break;
                     }
                 }
-            });
+            } );
         },
-        saveDocument: function ( job ) {
+        checkNameAvailability: function ( job, jobendcallback ) {
+            // checks the availability of the [job.userName].
+            // if the name already exists, it is not available.
+            // job: the job object.
+            // job.userName: the name we want to check.
+            // jobendcallback: the function called at the end of the job.
+
+            // returns {'status':string,'message':string,'isAvailable':boolean}
+            // in the jobendcallback arguments.
+
+            $.ajax ( {
+                url: job.storage.location + '/dav/' + job.storage.userName + '/',
+                async: true,
+                type: 'PROPFIND',
+                dataType: 'xml',
+                headers: {'Authorization': 'Basic '+Base64.encode(
+                    job.storage.userName + ':' +
+                        job.storage.password ), Depth: '1'},
+                success: function (xmlData) {
+                    var res = {};
+                    res.status = job.status = 'done';
+                    res.message = job.userName + ' is not available.';
+                    res.isAvailable = false;
+                    jobendcallback(job);
+                    job.callback(res);
+                },
+                error: function (type) {
+                    var res = {};
+                    switch(type.status){
+                    case 404:
+                        res.status = job.status = 'done';
+                        res.message = job.userName + ' is available.';
+                        res.isAvailable = true;
+                        break;
+                    default:
+                        res.status = job.status = 'fail';
+                        res.message = 'Cannot check if ' + job.userName +
+                            ' is available.';
+                        res.isAvailable = false;
+                        break;
+                    }
+                    res.errno = type.status;
+                    jobendcallback(job);
+                    job.callback(res);
+                }
+            } );
+        },
+        saveDocument: function ( job, jobendcallback ) {
+            // Save a document in a DAVStorage
+            // job: the job object
+            // job.options: the save options object
+            // job.options.overwrite: true -> overwrite
+            // job.options.force: true -> save even if jobdate < existingdate
+            //                            or overwrite: false
+            // jobendcallback: the function called at the end of the job.
+
+            // returns {'status':string,'message':string,'isSaved':boolean}
+            // in the jobendcallback arguments.
+
             var settings = $.extend ({'overwrite':true,
                                       'force':false},job.options);
+            var res = {};
             // TODO if path of ../dav/user/applic does not exists, it won't work !!
             var saveOnDav = function () {
                 //// save on dav
@@ -378,19 +383,19 @@
                         job.storage.userName + ':' + job.storage.password )},
                     // xhrFields: {withCredentials: 'true'}, // cross domain
                     success: function () {
-                        job.status = 'done';
-                        job.message = 'Document saved.';
-                        job.isSaved = true;
-                        $.jio('publish',{'event':'job_done',
-                                         'job':job});
+                        res.status = job.status = 'done';
+                        res.message = 'Document saved.';
+                        res.isSaved = true;
+                        jobendcallback(job);
+                        job.callback(res);
                     },
                     error: function (type) {
-                        job.status = 'fail';
-                        job.message = 'Cannot save document.';
-                        job.errno = type.status;
-                        job.isSaved = false;
-                        $.jio('publish',{'event':'job_fail',
-                                         'job':job});
+                        res.status = job.status = 'fail';
+                        res.message = 'Cannot save document.';
+                        res.errno = type.status;
+                        res.isSaved = false;
+                        jobendcallback(job);
+                        job.callback(res);
                     }
                 } );
                 //// end saving on dav
@@ -399,6 +404,7 @@
             if (settings.force) {
                 return saveOnDav();
             }
+            var mkcol = this.mkcol;
             //// start loading document 
             $.ajax ( {
                 url: job.storage.location + '/dav/' +
@@ -410,43 +416,68 @@
                 headers: {'Authorization':'Basic '+Base64.encode(
                     job.storage.userName + ':' + job.storage.password )},
                 // xhrFields: {withCredentials: 'true'}, // cross domain
-                success: function (content) {      // TODO content ?
+                success: function () {
                     // TODO merge files
-
                     // Document already exists
                     if (settings.overwrite) { // overwrite
                         // TODO check date !!!
+                        // response headers contains
+                        // Date:          Mon, 30 Apr 2012 15:17:21 GMT
+                        // Last-Modified: Mon, 30 Apr 2012 15:06:59 GMT
                         return saveOnDav();
                     }
                     // do not overwrite
-                    job.status = 'fail';
-                    job.message = 'Document already exists.';
-                    job.errno = 302;
-                    job.isSaved = false;
-                    $.jio('publish',{'event':'job_fail',
-                                     'job':job});
-                    return false;
+                    res.status = job.status = 'fail';
+                    res.message = 'Document already exists.';
+                    res.errno = 302;
+                    res.isSaved = false;
+                    jobendcallback(job);
+                    job.callback(res);
                 },
                 error: function (type) {
                     switch (type.status) {
                     case 404:   // Document not found
                         // we can save on it
-                        return saveOnDav();
+                        mkcol({ // create col if not exist
+                            location:job.storage.location,
+                            path:'/dav/'+job.storage.userName+job.applicant.ID,
+                            success:function(){
+                                // and finaly save document
+                                saveOnDav()
+                            },
+                            error:function(){
+                                res.status = job.status = 'fail';
+                                res.message = 'Cannot create document.';
+                                res.errno = type.status;
+                                res.isSaved = false;
+                                jobendcallback(job);
+                                job.callback(res);
+                            }});
+                        break;
                     default:    // Unknown error
-                        job.status = 'fail';
-                        job.message = 'Unknown error.';
-                        job.errno = type.status;
-                        job.isSaved = false;
-                        $.jio('publish',{'event':'job_fail',
-                                         'job':job});
-                        return false;
+                        res.status = job.status = 'fail';
+                        res.message = 'Unknown error.';
+                        res.errno = type.status;
+                        res.isSaved = false;
+                        jobendcallback(job);
+                        job.callback(res);
+                        break;
                     }
                 }
             } );
             //// end loading document
         },
-        loadDocument: function ( job ) {
-            // load the document into davstorage
+        loadDocument: function ( job, jobendcallback ) {
+            // Load a document from a DAVStorage. It returns a document object
+            // containing all information of the document and its content.
+            // job: the job object
+            // job.fileName: the document name we want to load.
+            // jobendcallback: the function called at the end of the job.
+            
+            // returns {'status':string,'message':string,'document':object}
+            // in the jobendcallback arguments.
+            // document object is {'fileName':string,'fileContent':string,
+            // 'creationDate':date,'lastModified':date} //TODO!!
 
             // TODO check if job's features are good
             $.ajax ( {
@@ -462,27 +493,38 @@
                         job.storage.password )},
                 // xhrFields: {withCredentials: 'true'}, // cross domain
                 success: function (content) {
-                    job.status = 'done';
-                    job.message = 'Document loaded.';
-                    job.fileContent = content;
-                    $.jio('publish',{'event':'job_done',
-                                     'job':job});
+                    res.status = job.status = 'done';
+                    res.message = 'Document loaded.';
+                    res.fileContent = content;
+                    jobendcallback(job);
+                    job.callback(res);
                 },
                 error: function (type) {
                     switch (type.status) {
                     case 404:
-                        job.message = 'Document not found.'; break;
+                        res.message = 'Document not found.'; break;
                     default:
-                        job.message = 'Cannot load "' + job.fileName + '".'; break;
+                        res.message = 'Cannot load "' + job.fileName + '".'; break;
                     }
-                    job.status = 'fail';
-                    job.errno = type.status;
-                    $.jio('publish',{'event':'job_fail',
-                                     'job':job});
+                    res.status = job.status = 'fail';
+                    res.errno = type.status;
+                    jobendcallback(job);
+                    job.callback(res);
                 }
             } );
         },
-        getDocumentList: function ( job ) {
+        getDocumentList: function ( job, jobendcallback ) {
+            // Get a document list from a DAVStorage. It returns a document
+            // array containing all the user documents informations, but their
+            // content.
+            // job: the job object
+            // jobendcallback: the function called at the end of the job.
+
+            // returns {'status':string,'message':string,'list':array}
+            // in the jobendcallback arguments.
+            // the list is [object,object] -> object = {'fileName':string,
+            // 'lastModified':date,'creationDate':date}
+
             $.ajax ( {
                 url: job.storage.location + '/dav/' + 
                     job.storage.userName + '/' + job.applicant.ID + '/',
@@ -512,22 +554,29 @@
                             documentArrayList.push (file);
                         }
                     });
-                    job.status = 'done';
-                    job.message = 'List received.';
-                    job.list = documentArrayList;
-                    $.jio('publish',{'event':'job_done',
-                                     'job':job});
+                    res.status = job.status = 'done';
+                    res.message = 'List received.';
+                    res.list = documentArrayList;
+                    jobendcallback(job);
+                    job.callback(res);
                 },
                 error: function (type) {
-                    job.status = 'fail';
-                    job.message = 'Cannot get list.';
-                    job.errno = type.status;
-                    $.jio('publish',{'event':'job_fail',
-                                     'job':job});
+                    res.status = job.status = 'fail';
+                    res.message = 'Cannot get list.';
+                    res.errno = type.status;
+                    jobendcallback(job);
+                    job.callback(res);
                 }
             } );
         },
-        removeDocument: function ( job ) {
+        removeDocument: function ( job, jobendcallback ) {
+            // Remove a document from a DAVStorage.
+            // job: the job object
+            // jobendcallback: the function called at the end of the job.
+
+            // returns {'status':string,'message':string,'isRemoved':boolean}
+            // in the jobendcallback arguments.
+            
             $.ajax ( {
                 url: job.storage.location + '/dav/' +
                     job.storage.userName + '/' +
@@ -540,29 +589,27 @@
                         job.storage.password )},
                 // xhrFields: {withCredentials: 'true'}, // cross domain
                 success: function () {
-                    job.status = 'done';
-                    job.message = 'Document removed.';
-                    job.isRemoved = true;
-                    $.jio('publish',{'event':'job_done',
-                                     'job':job});
+                    res.status = job.status = 'done';
+                    res.message = 'Document removed.';
+                    res.isRemoved = true;
+                    jobendcallback(job);
+                    job.callback(res);
                 },
                 error: function (type) {
                     switch (type.status) {
                     case 404:
-                        job.status = 'done';
-                        job.message = 'Document already removed.';
-                        job.errno = type.status;
-                        $.jio('publish',{'event':'job_done',
-                                         'job':job});
+                        res.stauts = job.status = 'done';
+                        res.message = 'Document already removed.';
+                        res.errno = type.status;
                         break;
                     default:
-                        job.status = 'fail';
-                        job.message = 'Cannot remove "' + job.fileName + '".';
-                        job.errno = type.status;
-                        $.jio('publish',{'event':'job_fail',
-                                         'job':job});
+                        res.status = job.status = 'fail';
+                        res.message = 'Cannot remove "' + job.fileName + '".';
+                        res.errno = type.status;
                         break;
                     }
+                    jobendcallback(job);
+                    job.callback(res);
                 }
             } );
         }
