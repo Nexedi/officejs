@@ -529,12 +529,15 @@
         if (this.storage)
             if (!jioGlobalObj.storageTypeObject[this.storage.type])
                 $.error('Unknown storage type "' + this.storage.type +'"');
+
+        // start jio process
+        this.start();
     };
     // JIO Prototype
     JioCons.prototype = {
         start: function () {
             // Start JIO: start listening to jobs and make it ready
-            
+            if (this.id !== 0) return false;
             // set a new jio id
             this.id = getNewQueueID();
             console.log (this.id);
@@ -556,6 +559,7 @@
             this.listener.stop();
             this.toucher.stop();
             this.ready = false;
+            this.id = 0;
             return true;
         },
         kill: function () {
