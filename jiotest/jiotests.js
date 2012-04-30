@@ -71,7 +71,16 @@ catch (e) {
 }
 
 
-// //// QUnit Tests ////
+//// clear jio localstorage
+for (var k in cookieOrLocal.getAll()) {
+    var splitk = k.split('/');
+    if ( splitk[0] === 'jio' )
+        cookieOrLocal.deleteItem(k);
+}
+//// end clear jio localstorage
+
+
+//// QUnit Tests ////
 
 module ('Jio Global tests');
 
@@ -92,10 +101,8 @@ test ( "Jio simple methods", function () {
     ok ( JIO.addStorageType('qunit', function(){}) ,
          "adding storage type.");
 
-    deepEqual ( o.jio.isReady(), false, '1 must be not ready');
-    deepEqual ( o.jio.start(), true, '1 must be ready now');
+    deepEqual ( o.jio.isReady(), true, '1 must be not ready');
 
-    o.jio2.start();
     ok ( o.jio2.id !== o.jio.id, '1 and 2 must be different');
 
     deepEqual ( o.jio.stop(), true, '1 must be stopped');
@@ -115,7 +122,6 @@ test ( 'Jio Publish/Sububscribe/Unsubscribe methods', function () {
 
     var o = {};
     o.jio = JIO.createNew();
-    o.jio.start();
 
     var spy1 = this.spy();
 
@@ -138,41 +144,32 @@ test ('Check name availability', function () {
     // Test if LocalStorage can check the availabality of a name.
     // We remove MrCheckName from local storage, and checking must return true.
     // We now add MrCheckName to local storage, and checking must return false.
-    var o = {}
+
+    var o = {};
     var clock = this.sandbox.useFakeTimers();
-    // name must be available
-    o.f = function (result) {
-        deepEqual ( result.isAvailable, true,
-                    'checking name availabality');
+    var t = this;
+    var mytest = function (value){
+        o.f = function (result) {
+            deepEqual(result.isAvailable,value,'checking name availabality');};
+        var spy = t.spy(o,'f');
+        o.jio.checkNameAvailability(
+            {'userName':'MrCheckName','callback': o.f});
+        clock.tick(510);
+        ok (o.f.calledOnce, 'callback called once');
     };
-    var spy = this.spy(o,'f');
 
-    cookieOrLocal.deleteItem ('jio/local/MrCheckName/jiotests/file');
-
+    // new jio
     o.jio = JIO.createNew({'type':'local','userName':'noname'},
                           {"ID":'noid'});
-    o.jio.start();
-    o.jio.checkNameAvailability(
-        {'userName':'MrCheckName','callback': o.f});
-    
-    clock.tick(510);
-    ok (o.f.calledOnce, 'callback called once');
-    
-    // name must not be available
-    o.f2 = function (result) {
-        deepEqual ( result.isAvailable, false,
-                    'another checking name availabality');
-    };
-    var spy2 = this.spy(o,'f2');
-    
-    cookieOrLocal.setItem ('jio/local/MrCheckName/jiotests/file',{});
 
-    o.jio.checkNameAvailability(
-        {'userName':'MrCheckName','callback': o.f2});
-    
-    clock.tick(510);
-    ok (o.f2.calledOnce, 'another callback called once');
-    
+    // name must be available
+    cookieOrLocal.deleteItem ('jio/local/MrCheckName/jiotests/file');
+    mytest(true);
+
+    // name must be unavailable
+    cookieOrLocal.setItem ('jio/local/MrCheckName/jiotests/file',{});
+    mytest(false);
+
     o.jio.stop();
 });
 
@@ -181,49 +178,30 @@ test ('Document save', function () {
     // We launch a saving to localstorage and we check if the file is
     // realy saved. Then save again and check if 
 
-    var o = {}
-    var clock = this.sandbox.useFakeTimers();
-    // save and check document existence
-    o.f = function (result) {
-        deepEqual ( result.isSaved, true,
-                    'saving document');
+    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+    var mytest = function (value,lm,cd){
+        o.f = function (result) {
+            deepEqual(result.isSaved,value,'saving document');};
+        var spy = t.spy(o,'f');
+        o.jio.saveDocument(
+            {'fileName':'file','fileContent':'content','callback': o.f});
+        clock.tick(510);
+        ok (o.f.calledOnce, 'callback called once');
+        // check content
+        var tmp = cookieOrLocal.getItem ('jio/local/MrSaveName/jiotests/file');
+        deepEqual (tmp,{'fileName':'file','fileContent':'content',
+                        'lastModified':lm,'creationDate':cd},'check content');
     };
-    var spy = this.spy(o,'f');
 
-    cookieOrLocal.deleteItem ('jio/local/MrSaveName/jiotests/file');
-
-    clock.tick(200);
     o.jio = JIO.createNew({'type':'local','userName':'MrSaveName'},
                           {"ID":'jiotests'});
-    o.jio.start();
-    o.jio.saveDocument(
-        {'fileName':'file','fileContent':'content','callback': o.f});
-    
-    clock.tick(510);
-    ok (o.f.calledOnce, 'callback called once');
-    
-    // check content
-    var tmp = cookieOrLocal.getItem ('jio/local/MrSaveName/jiotests/file');
-    deepEqual (tmp,{'fileName':'file','fileContent':'content',
-                    'lastModified':200,'creationDate':200}, 'check content');
+    cookieOrLocal.deleteItem ('jio/local/MrSaveName/jiotests/file');
+    // save and check document existence
+    clock.tick(200);
+    mytest(true,200,200);       // value, lastmodified, creationdate
     
     // re-save and check modification date
-    o.f2 = function (result) {
-        deepEqual ( result.isSaved, true,
-                    'saving document again');
-    };
-    var spy2 = this.spy(o,'f2');
-
-    o.jio.saveDocument(
-        {'fileName':'file','fileContent':'content','callback': o.f2});
-    
-    clock.tick(510);
-    ok (o.f2.calledOnce, 'another callback called once');
-
-    // check content
-    tmp = cookieOrLocal.getItem ('jio/local/MrSaveName/jiotests/file');
-    deepEqual (tmp,{'fileName':'file','fileContent':'content',
-                    'lastModified':710,'creationDate':200}, 'check content');
+    mytest(true,710,200);       // 710 = 200 + 510 ms (clock tick)
 
     o.jio.stop();
 });
@@ -233,43 +211,27 @@ test ('Document load', function () {
     // We launch a loading from localstorage and we check if the file is
     // realy loaded.
 
-    var o = {}
-    var clock = this.sandbox.useFakeTimers();
-    // load a non existing file
-    o.f = function (result) {
-        deepEqual ( result.status, 'fail',
-                    'loading document');
+    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+    var mytest = function (res,value){
+        o.f = function (result) {
+            deepEqual(result[res],value,'loading document');};
+        var spy = t.spy(o,'f');
+        o.jio.loadDocument(
+            {'fileName':'file','callback': o.f});
+        clock.tick(510);
+        ok (o.f.calledOnce, 'callback called once');
     };
-    var spy = this.spy(o,'f');
-
-    cookieOrLocal.deleteItem ('jio/local/MrLoadName/jiotests/file');
-
     o.jio = JIO.createNew({'type':'local','userName':'MrLoadName'},
                           {"ID":'jiotests'});
-    o.jio.start();
-    o.jio.loadDocument(
-        {'fileName':'file','callback': o.f});
-    
-    clock.tick(510);
-    ok (o.f.calledOnce, 'callback called once');
+    // load a non existing file
+    cookieOrLocal.deleteItem ('jio/local/MrLoadName/jiotests/file');
+    mytest ('status','fail');
     
     // re-load file after saving it manually
-    var tmp = cookieOrLocal.setItem ('jio/local/MrLoadName/jiotests/file',
-                                 {'fileName':'file','fileContent':'content',
-                                  'lastModified':1234,'creationDate':1000});
-    o.f2 = function (result) {
-        deepEqual ( result.document,
-                    {'fileName':'file','fileContent':'content',
-                     'lastModified':1234,'creationDate':1000},
-                    'loading document again, check content');
-    };
-    var spy2 = this.spy(o,'f2');
-
-    o.jio.loadDocument(
-        {'fileName':'file','callback': o.f2});
-    
-    clock.tick(510);
-    ok (o.f2.calledOnce, 'another callback called once');
+    var doc = {'fileName':'file','fileContent':'content',
+               'lastModified':1234,'creationDate':1000};
+    cookieOrLocal.setItem ('jio/local/MrLoadName/jiotests/file',doc);
+    mytest ('document',doc);
 
     o.jio.stop();
 });
@@ -279,28 +241,24 @@ test ('Document remove', function () {
     // We launch a remove from localstorage and we check if the file is
     // realy removed.
 
-    var o = {}
-    var clock = this.sandbox.useFakeTimers();
-
-    o.f = function (result) {
-        deepEqual ( result.isRemoved, true,
-                    'removing document');
+    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+    var mytest = function (){
+        o.f = function (result) {
+            deepEqual(result.isRemoved,true,'removing document');};
+        var spy = t.spy(o,'f');
+        o.jio.removeDocument(
+            {'fileName':'file','callback': o.f});
+        clock.tick(510);
+        ok (o.f.calledOnce, 'callback called once');
+        // check if the file is still there
+        var tmp = cookieOrLocal.getItem ('jio/local/MrRemoveName/jiotests/file');
+        ok (!tmp, 'check no content');
     };
-    var spy = this.spy(o,'f');
-
-    cookieOrLocal.setItem ('jio/local/MrRemoveName/jiotests/file',{});
-
     o.jio = JIO.createNew({'type':'local','userName':'MrRemoveName'},
                           {"ID":'jiotests'});
-    o.jio.start();
-    o.jio.removeDocument(
-        {'fileName':'file','callback': o.f});
-    
-    clock.tick(510);
-    ok (o.f.calledOnce, 'callback called once');
-    
-    var tmp = cookieOrLocal.getItem ('jio/local/MrRemoveName/jiotests/file');
-    ok (!tmp, 'check no content');
+    // test removing a file
+    cookieOrLocal.setItem ('jio/local/MrRemoveName/jiotests/file',{});
+    mytest ();
 
     o.jio.stop();
 });
