@@ -13,10 +13,13 @@
   <script type="text/javascript" src="unhosted/base64.js"></script>
   <script type="text/javascript" src="unhosted/jio.storage.js"></script>
   <script type="text/javascript" >
-    var jio = JIO.createNew({'type':'dav','userName':'davremove','password':'test',
-                             'location':'https://ca-davstorage:8080'},
-                            {'ID':'jiotests'});
-jio.removeDocument({'fileName':'file','callback':function(r){alert (JSON.stringify(r));}});
+    var getXML = function (lol) {
+        var tmp = '';
+        $.ajax({url: lol,async:false,
+            dataType:'text',success:function(xml){tmp=xml}});
+        return tmp;
+    }
+alert(getXML('responsexml/davlist'));
   </script>
 </body>
 </html>

@@ -7,6 +7,15 @@ for (var k in LocalOrCookieStorage.getAll()) {
 }
 //// end clear jio localstorage
 
+//// Tools
+var getXML = function (url) {
+    var tmp = '';
+    $.ajax({'url':url,async:false,
+            dataType:'text',success:function(xml){tmp=xml}});
+    return tmp;
+};
+//// end tools
+
 //// QUnit Tests ////
 
 module ('Jio Global tests');
@@ -272,40 +281,15 @@ test ('Check name availability', function () {
 
 test ('Document load', function () {
     // Test if DavStorage can load documents.
+
+    var davload = getXML('responsexml/davload');
     var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
     var mytest = function (message,doc,errprop,errget) {
         var server = t.sandbox.useFakeServer();
         server.respondWith (
             "PROPFIND","https://ca-davstorage:8080/dav/davload/jiotests/file",
             [errprop,{'Content-Type':'text/xml; charset="utf-8"'},
-             '<?xml version="1.0" encoding="utf-8"?>' +
-             '<D:multistatus xmlns:D="DAV:">' +
-             '<D:response xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/">' +
-             '<D:href>/dav/davload/jiotests/file</D:href>' +
-             '<D:propstat>' +
-             '<D:prop>' +
-             '<lp1:resourcetype/>' +
-             '<lp1:creationdate>2012-05-02T10:06:42Z</lp1:creationdate>' +
-             '<lp1:getcontentlength>201</lp1:getcontentlength>' +
-             '<lp1:getlastmodified>Wed, 02 May 2012 10:06:39 GMT</lp1:getlastmodified>' +
-             '<lp1:getetag>"c9-4bf0ad7e45226"</lp1:getetag>' +
-             '<lp2:executable>F</lp2:executable>' +
-             '<D:supportedlock>' +
-             '<D:lockentry>' +
-             '<D:lockscope><D:exclusive/></D:lockscope>' +
-             '<D:locktype><D:write/></D:locktype>' +
-             '</D:lockentry>' +
-             '<D:lockentry>' +
-             '<D:lockscope><D:shared/></D:lockscope>' +
-             '<D:locktype><D:write/></D:locktype>' +
-             '</D:lockentry>' +
-             '</D:supportedlock>' +
-             '<D:lockdiscovery/>' +
-             '</D:prop>' +
-             '<D:status>HTTP/1.1 200 OK</D:status>' +
-             '</D:propstat>' +
-             '</D:response>' +
-             '</D:multistatus>']);
+             davload]);
         server.respondWith (
             "GET","https://ca-davstorage:8080/dav/davload/jiotests/file",
             [errget,{},'content']);
@@ -341,6 +325,7 @@ test ('Document load', function () {
 test ('Document save', function () {
     // Test if DavStorage can save documents.
 
+    var davsave = getXML('responsexml/davsave');
     var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
     var mytest = function (message,value,errnoput,errnoprop,
                            lastmodified,overwrite,force) {
@@ -349,34 +334,7 @@ test ('Document save', function () {
             // lastmodified = 7000, creationdate = 5000
             "PROPFIND","https://ca-davstorage:8080/dav/davsave/jiotests/file",
             [errnoprop,{'Content-Type':'text/xml; charset="utf-8"'},
-             '<?xml version="1.0" encoding="utf-8"?>' +
-             '<D:multistatus xmlns:D="DAV:">' +
-             '<D:response xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/">' +
-             '<D:href>/dav/davsave/jiotests/file</D:href>' +
-             '<D:propstat>' +
-             '<D:prop>' +
-             '<lp1:resourcetype/>' +
-             '<lp1:creationdate>Thu, 01 Jan 1970 00:00:05 GMT</lp1:creationdate>' +
-             '<lp1:getcontentlength>7</lp1:getcontentlength>' +
-             '<lp1:getlastmodified>Thu, 01 Jan 1970 00:00:07 GMT</lp1:getlastmodified>' +
-             '<lp1:getetag>"c9-4bf0ad7e45226"</lp1:getetag>' +
-             '<lp2:executable>F</lp2:executable>' +
-             '<D:supportedlock>' +
-             '<D:lockentry>' +
-             '<D:lockscope><D:exclusive/></D:lockscope>' +
-             '<D:locktype><D:write/></D:locktype>' +
-             '</D:lockentry>' +
-             '<D:lockentry>' +
-             '<D:lockscope><D:shared/></D:lockscope>' +
-             '<D:locktype><D:write/></D:locktype>' +
-             '</D:lockentry>' +
-             '</D:supportedlock>' +
-             '<D:lockdiscovery/>' +
-             '</D:prop>' +
-             '<D:status>HTTP/1.1 200 OK</D:status>' +
-             '</D:propstat>' +
-             '</D:response>' +
-             '</D:multistatus>']);
+             davsave]);
         server.respondWith ("PUT",
                             "https://ca-davstorage:8080/dav/davsave/jiotests/file",
                             [errnoput, {'Content-Type':'x-www-form-urlencoded'},
@@ -440,92 +398,17 @@ test ('Document save', function () {
 test ('Get Document List', function () {
     // Test if DavStorage can get a list a document.
 
+    var davlist = getXML('responsexml/davlist');
     var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
     var mytest = function (message,value,errnoprop) {
         var server = t.sandbox.useFakeServer();
         server.respondWith (
-            "PROPFIND","https://ca-davstorage:8080/dav/davlist/jiotests/",
+            "PROPFIND",'https://ca-davstorage:8080/dav/davlist/jiotests/',
             [errnoprop,{'Content-Type':'text/xml; charset="utf-8"'},
-             '<?xml version="1.0" encoding="utf-8"?>' +
-             '<D:multistatus xmlns:D="DAV:">' +
-             '<D:response xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/">' +
-             '<D:href>/dav/davgetlist/jiotests/</D:href>' +
-             '<D:propstat>' +
-             '<D:prop>' +
-             '<lp1:resourcetype><D:collection/></lp1:resourcetype>' +
-             '<lp1:creationdate>2012-05-02T12:48:33Z</lp1:creationdate>' +
-             '<lp1:getlastmodified>Wed, 02 May 2012 12:48:33 GMT</lp1:getlastmodified>' +
-             '<lp1:getetag>"1000-4bf0d1aeb9e43"</lp1:getetag>' +
-             '<D:supportedlock>' +
-             '<D:lockentry>' +
-             '<D:lockscope><D:exclusive/></D:lockscope>' +
-             '<D:locktype><D:write/></D:locktype>' +
-             '</D:lockentry>' +
-             '<D:lockentry>' +
-             '<D:lockscope><D:shared/></D:lockscope>' +
-             '<D:locktype><D:write/></D:locktype>' +
-             '</D:lockentry>' +
-             '</D:supportedlock>' +
-             '<D:lockdiscovery/>' +
-             '<D:getcontenttype>httpd/unix-directory</D:getcontenttype>' +
-             '</D:prop>' +
-             '<D:status>HTTP/1.1 200 OK</D:status>' +
-             '</D:propstat>' +
-             '</D:response>' +
-             '<D:response xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/">' +
-             '<D:href>/dav/davgetlist/jiotests/file</D:href>' +
-             '<D:propstat>' +
-             '<D:prop>' +
-             '<lp1:resourcetype/>' +
-             '<lp1:creationdate>2012-05-02T12:48:31Z</lp1:creationdate>' +
-             '<lp1:getcontentlength>201</lp1:getcontentlength>' +
-             '<lp1:getlastmodified>Wed, 02 May 2012 12:48:27 GMT</lp1:getlastmodified>' +
-             '<lp1:getetag>"c9-4bf0d1a845df9"</lp1:getetag>' +
-             '<lp2:executable>F</lp2:executable>' +
-             '<D:supportedlock>' +
-             '<D:lockentry>' +
-             '<D:lockscope><D:exclusive/></D:lockscope>' +
-             '<D:locktype><D:write/></D:locktype>' +
-             '</D:lockentry>' +
-             '<D:lockentry>' +
-             '<D:lockscope><D:shared/></D:lockscope>' +
-             '<D:locktype><D:write/></D:locktype>' +
-             '</D:lockentry>' +
-             '</D:supportedlock>' +
-             '<D:lockdiscovery/>' +
-             '</D:prop>' +
-             '<D:status>HTTP/1.1 200 OK</D:status>' +
-             '</D:propstat>' +
-             '</D:response>' +
-             '<D:response xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/">' +
-             '<D:href>/dav/davgetlist/jiotests/memo</D:href>' +
-             '<D:propstat>' +
-             '<D:prop>' +
-             '<lp1:resourcetype/>' +
-             '<lp1:creationdate>2012-05-01T17:41:13Z</lp1:creationdate>' +
-             '<lp1:getcontentlength>223</lp1:getcontentlength>' +
-             '<lp1:getlastmodified>Wed, 02 May 2012 10:48:33 GMT</lp1:getlastmodified>' +
-             '<lp1:getetag>"c9-4bf0d1aeb9e43"</lp1:getetag>' +
-             '<lp2:executable>F</lp2:executable>' +
-             '<D:supportedlock>' +
-             '<D:lockentry>' +
-             '<D:lockscope><D:exclusive/></D:lockscope>' +
-             '<D:locktype><D:write/></D:locktype>' +
-             '</D:lockentry>' +
-             '<D:lockentry>' +
-             '<D:lockscope><D:shared/></D:lockscope>' +
-             '<D:locktype><D:write/></D:locktype>' +
-             '</D:lockentry>' +
-             '</D:supportedlock>' +
-             '<D:lockdiscovery/>' +
-             '</D:prop>' +
-             '<D:status>HTTP/1.1 200 OK</D:status>' +
-             '</D:propstat>' +
-             '</D:response>' +
-             '</D:multistatus>']);
+             davlist]);
         o.f = function (result) {
             var objectifyDocumentArray = function (array) {
-                var obj ={};
+                var obj = {};
                 for (var k in array) {obj[array[k].fileName] = array[k];}
                 return obj;
             };
