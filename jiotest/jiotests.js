@@ -168,6 +168,42 @@ test ('Document load', function () {
     o.jio.stop();
 });
 
+test ('Get document list', function () {
+    // Test if LocalStorage can get a list of documents.
+    // We create 2 documents inside localStorage to check them.
+
+    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+    var mytest = function (value){
+        o.f = function (result) {
+            var objectifyDocumentArray = function (array) {
+                var obj ={};
+                for (var k in array) {obj[array[k].fileName] = array[k];}
+                return obj;
+            };
+            deepEqual (objectifyDocumentArray(result.list),
+                       objectifyDocumentArray(value),'getting list');
+        };
+        t.spy(o,'f');
+        o.jio.getDocumentList({'callback': o.f});
+        clock.tick(510);
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    o.jio = JIO.createNew({'type':'local','userName':'MrListName'},
+                          {"ID":'jiotests'});
+    var doc1 = {'fileName':'file','fileContent':'content',
+                'lastModified':1,'creationDate':0};
+    var doc2 = {'fileName':'memo','fileContent':'test',
+                'lastModified':5,'creationDate':2};
+    LocalOrCookieStorage.setItem ('jio/local/MrListName/jiotests/file',doc1);
+    LocalOrCookieStorage.setItem ('jio/local/MrListName/jiotests/memo',doc2);
+    delete doc1.fileContent;
+    delete doc2.fileContent;
+    mytest ([doc1,doc2]);
+
+    o.jio.stop();
+});
+
 test ('Document remove', function () {
     // Test if LocalStorage can remove documents.
     // We launch a remove from localstorage and we check if the file is
@@ -234,24 +270,127 @@ test ('Check name availability', function () {
     o.jio.stop();
 });
 
+test ('Document load', function () {
+    // Test if DavStorage can load documents.
+    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+    var mytest = function (message,doc,errprop,errget) {
+        var server = t.sandbox.useFakeServer();
+        server.respondWith (
+            "PROPFIND","https://ca-davstorage:8080/dav/davload/jiotests/file",
+            [errprop,{'Content-Type':'text/xml; charset="utf-8"'},
+             '<?xml version="1.0" encoding="utf-8"?>' +
+             '<D:multistatus xmlns:D="DAV:">' +
+             '<D:response xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/">' +
+             '<D:href>/dav/davload/jiotests/file</D:href>' +
+             '<D:propstat>' +
+             '<D:prop>' +
+             '<lp1:resourcetype/>' +
+             '<lp1:creationdate>2012-05-02T10:06:42Z</lp1:creationdate>' +
+             '<lp1:getcontentlength>201</lp1:getcontentlength>' +
+             '<lp1:getlastmodified>Wed, 02 May 2012 10:06:39 GMT</lp1:getlastmodified>' +
+             '<lp1:getetag>"c9-4bf0ad7e45226"</lp1:getetag>' +
+             '<lp2:executable>F</lp2:executable>' +
+             '<D:supportedlock>' +
+             '<D:lockentry>' +
+             '<D:lockscope><D:exclusive/></D:lockscope>' +
+             '<D:locktype><D:write/></D:locktype>' +
+             '</D:lockentry>' +
+             '<D:lockentry>' +
+             '<D:lockscope><D:shared/></D:lockscope>' +
+             '<D:locktype><D:write/></D:locktype>' +
+             '</D:lockentry>' +
+             '</D:supportedlock>' +
+             '<D:lockdiscovery/>' +
+             '</D:prop>' +
+             '<D:status>HTTP/1.1 200 OK</D:status>' +
+             '</D:propstat>' +
+             '</D:response>' +
+             '</D:multistatus>']);
+        server.respondWith (
+            "GET","https://ca-davstorage:8080/dav/davload/jiotests/file",
+            [errget,{},'content']);
+        o.f = function (result) {
+            deepEqual (result.document,doc,message);};
+        t.spy(o,'f');
+        o.jio.loadDocument({'fileName':'file','callback':o.f});
+        clock.tick(500);
+        server.respond();
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    o.jio = JIO.createNew({'type':'dav','userName':'davload',
+                           'password':'checkpwd',
+                           'location':'https://ca-davstorage:8080'},
+                          {'ID':'jiotests'});
+    // note: http errno:
+    //     200 OK       
+    //     201 Created  
+    //     204 No Content
+    //     207 Multi Status
+    //     403 Forbidden
+    //     404 Not Found
+    // load an inexistant document.
+    mytest ('load inexistant document',{},404,404);
+    // load a document.
+    mytest ('load document',{'fileName':'file','fileContent':'content',
+                             'lastModified':1335953199000,
+                             'creationDate':1335953202000},207,200);
+    o.jio.stop();
+});
+
 test ('Document save', function () {
     // Test if DavStorage can save documents.
 
     var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-    var mytest = function (message,value,errnoput,errnoget,
+    var mytest = function (message,value,errnoput,errnoprop,
                            lastmodified,overwrite,force) {
         var server = t.sandbox.useFakeServer();
+        server.respondWith (
+            // lastmodified = 7000, creationdate = 5000
+            "PROPFIND","https://ca-davstorage:8080/dav/davsave/jiotests/file",
+            [errnoprop,{'Content-Type':'text/xml; charset="utf-8"'},
+             '<?xml version="1.0" encoding="utf-8"?>' +
+             '<D:multistatus xmlns:D="DAV:">' +
+             '<D:response xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/">' +
+             '<D:href>/dav/davsave/jiotests/file</D:href>' +
+             '<D:propstat>' +
+             '<D:prop>' +
+             '<lp1:resourcetype/>' +
+             '<lp1:creationdate>Thu, 01 Jan 1970 00:00:05 GMT</lp1:creationdate>' +
+             '<lp1:getcontentlength>7</lp1:getcontentlength>' +
+             '<lp1:getlastmodified>Thu, 01 Jan 1970 00:00:07 GMT</lp1:getlastmodified>' +
+             '<lp1:getetag>"c9-4bf0ad7e45226"</lp1:getetag>' +
+             '<lp2:executable>F</lp2:executable>' +
+             '<D:supportedlock>' +
+             '<D:lockentry>' +
+             '<D:lockscope><D:exclusive/></D:lockscope>' +
+             '<D:locktype><D:write/></D:locktype>' +
+             '</D:lockentry>' +
+             '<D:lockentry>' +
+             '<D:lockscope><D:shared/></D:lockscope>' +
+             '<D:locktype><D:write/></D:locktype>' +
+             '</D:lockentry>' +
+             '</D:supportedlock>' +
+             '<D:lockdiscovery/>' +
+             '</D:prop>' +
+             '<D:status>HTTP/1.1 200 OK</D:status>' +
+             '</D:propstat>' +
+             '</D:response>' +
+             '</D:multistatus>']);
         server.respondWith ("PUT",
                             "https://ca-davstorage:8080/dav/davsave/jiotests/file",
                             [errnoput, {'Content-Type':'x-www-form-urlencoded'},
                              'content']);
-        server.respondWith ("MKCOL",
-                            "https://ca-davstorage:8080/dav/davsave/jiotests/file",
-                            [200, {'Content-Type':'x-www-form-urlencoded'},
-                             'content']);
-        server.respondWith ("GET",
-                            "https://ca-davstorage:8080/dav/davsave/jiotests/file",
-                            [errnoget, {}, 'content']);
+        server.respondWith (
+            "GET","https://ca-davstorage:8080/dav/davsave/jiotests/file",
+            [errnoprop===207?200:errnoprop,{},'content']);
+        // server.respondWith ("MKCOL","https://ca-davstorage:8080/dav",
+        //                     [200,{},'']);
+        // server.respondWith ("MKCOL","https://ca-davstorage:8080/dav/davsave",
+        //                     [200,{},'']);
+        // server.respondWith ("MKCOL",
+        //                     "https://ca-davstorage:8080/dav/davsave/jiotests",
+        //                     [200,{},'']);
         o.f = function (result) {
             deepEqual (result.isSaved,value,message);};
         t.spy(o,'f');
@@ -272,28 +411,170 @@ test ('Document save', function () {
     //     200 OK
     //     201 Created
     //     204 No Content
+    //     207 Multi Status
     //     403 Forbidden
     //     404 Not Found
-    // the path does not exist, we want to create it, and save the file.
-    mytest('create path if not exists, and create document',
-           true,403,404,999);
+    // // the path does not exist, we want to create it, and save the file.
+    // mytest('create path if not exists, and create document',
+    //        true,201,404,9999);
     // the document does not exist, we want to create it
     mytest('create document',
            true,201,404,10000);
     // the document already exists, we want to overwrite it
     mytest('overwrite document',
-           true,204,200,10100,true);
+           true,204,207,10100,true);
     // the document already exists, we don't want to overwrite it
     mytest('do not overwrite document',
-           false,204,200,10200,false);
+           false,204,207,10200,false);
     // the document is already exists, it is younger than the one we want
     // to save.
     mytest('younger than the one we want to save',
-           false,204,200,900,true,false);
+           false,204,207,0,true,false);
     // the document is already exists, it is the youngest but we want to
     // force overwriting
     mytest('youngest but force overwrite',
-           true,204,200,700,true,true);
+           true,204,207,0,true,true);
     o.jio.stop();
 });
 
+test ('Get Document List', function () {
+    // Test if DavStorage can get a list a document.
+
+    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+    var mytest = function (message,value,errnoprop) {
+        var server = t.sandbox.useFakeServer();
+        server.respondWith (
+            "PROPFIND","https://ca-davstorage:8080/dav/davlist/jiotests/",
+            [errnoprop,{'Content-Type':'text/xml; charset="utf-8"'},
+             '<?xml version="1.0" encoding="utf-8"?>' +
+             '<D:multistatus xmlns:D="DAV:">' +
+             '<D:response xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/">' +
+             '<D:href>/dav/davgetlist/jiotests/</D:href>' +
+             '<D:propstat>' +
+             '<D:prop>' +
+             '<lp1:resourcetype><D:collection/></lp1:resourcetype>' +
+             '<lp1:creationdate>2012-05-02T12:48:33Z</lp1:creationdate>' +
+             '<lp1:getlastmodified>Wed, 02 May 2012 12:48:33 GMT</lp1:getlastmodified>' +
+             '<lp1:getetag>"1000-4bf0d1aeb9e43"</lp1:getetag>' +
+             '<D:supportedlock>' +
+             '<D:lockentry>' +
+             '<D:lockscope><D:exclusive/></D:lockscope>' +
+             '<D:locktype><D:write/></D:locktype>' +
+             '</D:lockentry>' +
+             '<D:lockentry>' +
+             '<D:lockscope><D:shared/></D:lockscope>' +
+             '<D:locktype><D:write/></D:locktype>' +
+             '</D:lockentry>' +
+             '</D:supportedlock>' +
+             '<D:lockdiscovery/>' +
+             '<D:getcontenttype>httpd/unix-directory</D:getcontenttype>' +
+             '</D:prop>' +
+             '<D:status>HTTP/1.1 200 OK</D:status>' +
+             '</D:propstat>' +
+             '</D:response>' +
+             '<D:response xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/">' +
+             '<D:href>/dav/davgetlist/jiotests/file</D:href>' +
+             '<D:propstat>' +
+             '<D:prop>' +
+             '<lp1:resourcetype/>' +
+             '<lp1:creationdate>2012-05-02T12:48:31Z</lp1:creationdate>' +
+             '<lp1:getcontentlength>201</lp1:getcontentlength>' +
+             '<lp1:getlastmodified>Wed, 02 May 2012 12:48:27 GMT</lp1:getlastmodified>' +
+             '<lp1:getetag>"c9-4bf0d1a845df9"</lp1:getetag>' +
+             '<lp2:executable>F</lp2:executable>' +
+             '<D:supportedlock>' +
+             '<D:lockentry>' +
+             '<D:lockscope><D:exclusive/></D:lockscope>' +
+             '<D:locktype><D:write/></D:locktype>' +
+             '</D:lockentry>' +
+             '<D:lockentry>' +
+             '<D:lockscope><D:shared/></D:lockscope>' +
+             '<D:locktype><D:write/></D:locktype>' +
+             '</D:lockentry>' +
+             '</D:supportedlock>' +
+             '<D:lockdiscovery/>' +
+             '</D:prop>' +
+             '<D:status>HTTP/1.1 200 OK</D:status>' +
+             '</D:propstat>' +
+             '</D:response>' +
+             '<D:response xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/">' +
+             '<D:href>/dav/davgetlist/jiotests/memo</D:href>' +
+             '<D:propstat>' +
+             '<D:prop>' +
+             '<lp1:resourcetype/>' +
+             '<lp1:creationdate>2012-05-01T17:41:13Z</lp1:creationdate>' +
+             '<lp1:getcontentlength>223</lp1:getcontentlength>' +
+             '<lp1:getlastmodified>Wed, 02 May 2012 10:48:33 GMT</lp1:getlastmodified>' +
+             '<lp1:getetag>"c9-4bf0d1aeb9e43"</lp1:getetag>' +
+             '<lp2:executable>F</lp2:executable>' +
+             '<D:supportedlock>' +
+             '<D:lockentry>' +
+             '<D:lockscope><D:exclusive/></D:lockscope>' +
+             '<D:locktype><D:write/></D:locktype>' +
+             '</D:lockentry>' +
+             '<D:lockentry>' +
+             '<D:lockscope><D:shared/></D:lockscope>' +
+             '<D:locktype><D:write/></D:locktype>' +
+             '</D:lockentry>' +
+             '</D:supportedlock>' +
+             '<D:lockdiscovery/>' +
+             '</D:prop>' +
+             '<D:status>HTTP/1.1 200 OK</D:status>' +
+             '</D:propstat>' +
+             '</D:response>' +
+             '</D:multistatus>']);
+        o.f = function (result) {
+            var objectifyDocumentArray = function (array) {
+                var obj ={};
+                for (var k in array) {obj[array[k].fileName] = array[k];}
+                return obj;
+            };
+            deepEqual (objectifyDocumentArray(result.list),
+                       objectifyDocumentArray(value),message);
+        };
+        t.spy(o,'f');
+        o.jio.getDocumentList({'callback':o.f});
+        clock.tick(500);
+        server.respond();
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    o.jio = JIO.createNew({'type':'dav','userName':'davlist',
+                           'password':'checkpwd',
+                           'location':'https://ca-davstorage:8080'},
+                          {'ID':'jiotests'});
+    mytest('fail to get list',undefined,404);
+    mytest('getting list',[{'fileName':'file','creationDate':1335962911000,
+                            'lastModified':1335962907000},
+                           {'fileName':'memo','creationDate':1335894073000,
+                            'lastModified':1335955713000}],207);
+    o.jio.stop();
+});
+
+test ('Remove document', function () {
+    // Test if DavStorage can remove documents.
+
+    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+    var mytest = function (message,value,errnodel) {
+        var server = t.sandbox.useFakeServer();
+        server.respondWith (
+            "DELETE","https://ca-davstorage:8080/dav/davremove/jiotests/file",
+            [errnodel,{},'']);
+        o.f = function (result) {
+            deepEqual (result.isRemoved,value,message);};
+        t.spy(o,'f');
+        o.jio.removeDocument({'fileName':'file','callback':o.f});
+        clock.tick(500);
+        server.respond();
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    o.jio = JIO.createNew({'type':'dav','userName':'davremove',
+                           'password':'checkpwd',
+                           'location':'https://ca-davstorage:8080'},
+                          {'ID':'jiotests'});
+    
+    mytest('remove document',true,204)
+    mytest('remove an already removed document',true,404)
+    o.jio.stop();
+});

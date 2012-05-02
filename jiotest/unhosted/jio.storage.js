@@ -113,8 +113,8 @@
                         // date problem!
                         // return
                         res.status = job.status = 'fail';
-                        res.message = 'Modification date is earlier than ' +
-                            'existing modification date.';
+                        res.message = 'Document is older than the'+
+                            ' existing one.';
                         res.isSaved = false;
                         jobendcallback(job);
                         job.callback(res);
@@ -280,30 +280,58 @@
             // options.location : the davstorage locations
             // options.path: if path=/foo/bar then creates location/dav/foo/bar
             // options.success: the function called if success
+            // options.userName: the username
+            // options.password: the password
+            // TODO this method is not working !!!
             
             var settings = $.extend ({'success':function(){},
                                       'error':function(){}},options);
-            $.ajax ( {
-                url: options.location + '/dav/' + options.path,
-                type: 'MKCOL',
-                async: true,
-                // xhrFields: {withCredentials: 'true'}, // cross domain
-                success: function () {
-                    // done
-                    settings.success();
-                },
-                error: function (type) {
-                    switch (type.status) {
-                    case 405: // Method Not Allowed
-                        // already exists
-                        settings.success();
-                        break;
-                    default:
-                        settings.error();
-                        break;
-                    }
+            // if pathstep is not defined, then split the settings.path
+            // and do mkcol recursively
+            if (!settings.pathsteps) {
+                settings.pathsteps = 1;
+                this.mkcol(settings);
+            } else {
+                var splitpath = settings.path.split('/');
+                // // check if the path is terminated by '/'
+                // if (splitpath[splitpath.length-1] == '') {
+                //     splitpath.length --;
+                // }
+                // check if the pathstep is lower than the longer
+                if (settings.pathsteps >= splitpath.length-1) {
+                    return settings.success();
                 }
-            } );
+                splitpath.length = settings.pathsteps + 1;
+                settings.pathsteps++;
+                var tmppath = splitpath.join('/');
+                alert(settings.location + tmppath);
+                var t = this;
+                $.ajax ( {
+                    url: settings.location + tmppath,
+                    type: 'MKCOL',
+                    async: true,
+                    headers: {'Authorization': 'Basic '+Base64.encode(
+                        settings.userName + ':' +
+                            settings.password ), Depth: '1'},
+                    // xhrFields: {withCredentials: 'true'}, // cross domain
+                    success: function () {
+                        // done
+                        t.mkcol(settings);
+                    },
+                    error: function (type) {
+                        alert(JSON.stringify(type));
+                        switch (type.status) {
+                        // case 405: // Method Not Allowed
+                        //     // already exists
+                        //     t.mkcol(settings);
+                        //     break;
+                        default:
+                            settings.error();
+                            break;
+                        }
+                    }
+                } );
+            }
         },
         checkNameAvailability: function ( job, jobendcallback ) {
             // checks the availability of the [job.userName].
@@ -367,7 +395,7 @@
             var settings = $.extend ({'overwrite':true,
                                       'force':false},job.options);
             var res = {};
-            // TODO if path of ../dav/user/applic does not exists, it won't work !!
+            // TODO if path of /dav/user/applic does not exists, it won't work!
             var saveOnDav = function () {
                 //// save on dav
                 $.ajax ( {
@@ -404,57 +432,37 @@
             if (settings.force) {
                 return saveOnDav();
             }
-            var mkcol = this.mkcol;
-            //// start loading document 
-            $.ajax ( {
-                url: job.storage.location + '/dav/' +
-                    job.storage.userName + '/' +
-                    job.applicant.ID + '/' +
-                    job.fileName,
-                type: 'GET',
-                async: true,
-                headers: {'Authorization':'Basic '+Base64.encode(
-                    job.storage.userName + ':' + job.storage.password )},
-                // xhrFields: {withCredentials: 'true'}, // cross domain
-                success: function () {
-                    // TODO merge files
-                    // Document already exists
-                    if (settings.overwrite) { // overwrite
-                        // TODO check date !!!
-                        // response headers contains
-                        // Date:          Mon, 30 Apr 2012 15:17:21 GMT
-                        // Last-Modified: Mon, 30 Apr 2012 15:06:59 GMT
-                        return saveOnDav();
-                    }
-                    // do not overwrite
-                    res.status = job.status = 'fail';
-                    res.message = 'Document already exists.';
-                    res.errno = 302;
-                    res.isSaved = false;
-                    jobendcallback(job);
-                    job.callback(res);
-                },
-                error: function (type) {
-                    switch (type.status) {
+
+            //// start loading document
+            var t = this;
+            var tmpjob = $.extend({},job);
+            tmpjob.callback = function(result) {
+                if(result.status === 'fail') {
+                    switch (result.errno) {
                     case 404:   // Document not found
-                        // we can save on it
-                        mkcol({ // create col if not exist
-                            location:job.storage.location,
-                            path:'/dav/'+job.storage.userName+job.applicant.ID,
-                            success:function(){
-                                // and finaly save document
-                                saveOnDav()
-                            },
-                            error:function(){
-                                res.status = job.status = 'fail';
-                                res.message = 'Cannot create document.';
-                                res.errno = type.status;
-                                res.isSaved = false;
-                                jobendcallback(job);
-                                job.callback(res);
-                            }});
+                        // TODO MKCOL
+                        // // we can save on it
+                        // t.mkcol({ // create col if not exist
+                        //     userName:job.storage.userName,
+                        //     password:job.storage.password,
+                        //     location:job.storage.location,
+                        //     path:'/dav/'+job.storage.userName+'/'+
+                        //         job.applicant.ID,
+                        //     success:function(){
+                        //         // and finaly save document
+                        //         saveOnDav()
+                        //     },
+                        //     error:function(){
+                        //         res.status = job.status = 'fail';
+                        //         res.message = 'Cannot create document.';
+                        //         res.errno = type.status;
+                        //         res.isSaved = false;
+                        //         jobendcallback(job);
+                        //         job.callback(res);
+                        //     }});
+                        saveOnDav();
                         break;
-                    default:    // Unknown error
+                    default:
                         res.status = job.status = 'fail';
                         res.message = 'Unknown error.';
                         res.errno = type.status;
@@ -463,8 +471,32 @@
                         job.callback(res);
                         break;
                     }
+                } else { // done
+                    // TODO merge files
+                    // Document already exists
+                    if (settings.overwrite) { // overwrite
+                        if (result.document.lastModified >= job.lastModified) {
+                            // date ploblem !
+                            res.status = job.status = 'fail';
+                            res.message = 'Document is older than the '+
+                                'existing one.';
+                            res.isSaved = false;
+                            jobendcallback(job);
+                            job.callback(res);
+                            return;
+                        }
+                        return saveOnDav();
+                    }
+                    // do not overwrite
+                    res.status = job.status = 'fail';
+                    res.message = 'Document already exists.';
+                    res.errno = 403;
+                    res.isSaved = false;
+                    jobendcallback(job);
+                    job.callback(res);
                 }
-            } );
+            };
+            this.loadDocument(tmpjob,function(){});
             //// end loading document
         },
         loadDocument: function ( job, jobendcallback ) {
@@ -477,36 +509,71 @@
             // returns {'status':string,'message':string,'document':object}
             // in the jobendcallback arguments.
             // document object is {'fileName':string,'fileContent':string,
-            // 'creationDate':date,'lastModified':date} //TODO!!
+            // 'creationDate':date,'lastModified':date}
 
             // TODO check if job's features are good
+            var res = {};
+            res.document = {};
+            var getContent = function () {
+                $.ajax ( {
+                    url: job.storage.location + '/dav/' +
+                        job.storage.userName + '/' +
+                        job.applicant.ID + '/' +
+                        job.fileName,
+                    type: "GET",
+                    async: true,
+                    dataType: 'text', // TODO is it necessary ?
+                    headers: {'Authorization':'Basic '+Base64.encode(
+                        job.storage.userName + ':' +
+                            job.storage.password )},
+                    // xhrFields: {withCredentials: 'true'}, // cross domain
+                    success: function (content) {
+                        res.status = job.status = 'done';
+                        res.message = 'Document loaded.';
+                        res.document.fileContent = content;
+                        jobendcallback(job);
+                        job.callback(res);
+                    },
+                    error: function (type) {
+                        switch (type.status) {
+                        case 404:
+                            res.message = 'Document not found.'; break;
+                        default:
+                            res.message = 'Cannot load "' + job.fileName + '".';
+                            break;
+                        }
+                        res.status = job.status = 'fail';
+                        res.errno = type.status;
+                        jobendcallback(job);
+                        job.callback(res);
+                    }
+                } );
+            }
+            // Get properties
             $.ajax ( {
                 url: job.storage.location + '/dav/' +
                     job.storage.userName + '/' +
                     job.applicant.ID + '/' +
                     job.fileName,
-                type: "GET",
+                type: "PROPFIND",
                 async: true,
-                dataType: 'text', // TODO is it necessary ?
+                dataType: 'xml',
                 headers: {'Authorization':'Basic '+Base64.encode(
                     job.storage.userName + ':' +
                         job.storage.password )},
-                // xhrFields: {withCredentials: 'true'}, // cross domain
-                success: function (content) {
-                    res.status = job.status = 'done';
-                    res.message = 'Document loaded.';
-                    res.fileContent = content;
-                    jobendcallback(job);
-                    job.callback(res);
+                success: function (xmlData) {
+                    res.document.lastModified = (
+                        new Date($($("lp1\\:getlastmodified",
+                                     xmlData).get(0)).text())).getTime();
+                    res.document.creationDate = (
+                        new Date($($("lp1\\:creationdate",
+                                     xmlData).get(0)).text())).getTime();
+                    res.document.fileName = job.fileName;
+                    getContent();
                 },
                 error: function (type) {
-                    switch (type.status) {
-                    case 404:
-                        res.message = 'Document not found.'; break;
-                    default:
-                        res.message = 'Cannot load "' + job.fileName + '".'; break;
-                    }
                     res.status = job.status = 'fail';
+                    res.message = 'Cannot get document informations.';
                     res.errno = type.status;
                     jobendcallback(job);
                     job.callback(res);
@@ -535,6 +602,7 @@
                     job.storage.userName + ':' +
                         job.storage.password ), Depth: '1'},
                 success: function (xmlData) {
+                    var res = {};
                     var documentArrayList = [];
                     $("D\\:response",xmlData).each(function(i,data) {
                         if(i>0) { // exclude parent folder
@@ -547,10 +615,12 @@
                             if (file.fileName === '.htaccess' ||
                                 file.fileName === '.htpasswd')
                                 return;
-                            file.lastModified = $($("lp1\\:getlastmodified",
-                                                    xmlData).get(i)).text();
-                            file.creationDate = $($("lp1\\:creationdate",
-                                                    xmlData).get(i)).text();
+                            file.lastModified = (
+                                new Date($($("lp1\\:getlastmodified",
+                                             xmlData).get(i)).text())).getTime();
+                            file.creationDate = (
+                                new Date($($("lp1\\:creationdate",
+                                             xmlData).get(i)).text())).getTime();
                             documentArrayList.push (file);
                         }
                     });
@@ -561,6 +631,7 @@
                     job.callback(res);
                 },
                 error: function (type) {
+                    var res = {};
                     res.status = job.status = 'fail';
                     res.message = 'Cannot get list.';
                     res.errno = type.status;
@@ -589,6 +660,7 @@
                         job.storage.password )},
                 // xhrFields: {withCredentials: 'true'}, // cross domain
                 success: function () {
+                    var res = {};
                     res.status = job.status = 'done';
                     res.message = 'Document removed.';
                     res.isRemoved = true;
@@ -596,15 +668,18 @@
                     job.callback(res);
                 },
                 error: function (type) {
+                    var res = {};
                     switch (type.status) {
                     case 404:
                         res.stauts = job.status = 'done';
                         res.message = 'Document already removed.';
                         res.errno = type.status;
+                        res.isRemoved = true;
                         break;
                     default:
                         res.status = job.status = 'fail';
                         res.message = 'Cannot remove "' + job.fileName + '".';
+                        res.isRemoved = false;
                         res.errno = type.status;
                         break;
                     }
