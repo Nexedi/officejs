@@ -1,4 +1,9 @@
 
+// Adds 3 storages for Jio
+// type:
+//     - local
+//     - dav
+//     - replicate
 ;(function ( Jio ) {
     
     // check dependencies
@@ -698,4 +703,52 @@
     // end DAVStorage
     ////////////////////////////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////////////////////////////////
+    // ReplicateStorage
+    var ReplicateStorage = function ( options ) {
+        this.queue = options.queue;
+        this.id = null;
+        this.length = options.storage.list.length;
+        this.returnsValuesArray = [];
+    };
+    ReplicateStorage.prototype = {
+        checkNameAvailability: function ( job, jobendcallback ) {
+            var t = this;
+            for (var i in job.storage.list) {
+                var newjob = $.extend({},job);
+                newjob.storage = job.storage.list[i];
+                newjob.callback = function (result){
+                    t.returnsValuesArray.push(result);
+                };
+                this.queue.addJob( newjob );
+            }
+            //// callback listener
+            this.id = setInterval(function() {
+                if (t.returnsValuesArray.length >= t.length) {
+                    var res = {};
+                    // TODO
+                    jobendcallback(job);
+                    job.callback(res);
+                    clearInterval(t.id);
+                }
+            },100);
+            //// end call back listener
+        },
+        saveDocument: function ( job, jobendcallback ) {
+        },
+        loadDocument: function ( job, jobendcallback ) {
+        },
+        getDocumentList: function ( job, jobendcallback ) {
+        },
+        removeDocument: function ( job, jobendcallback ) {
+        }
+    };
+    
+    // add key to storageObject
+    Jio.addStorageType('replicate', function (options) {
+        return new ReplicateStorage(options);
+    });
+    
+    // end ReplicateStorage
+    ////////////////////////////////////////////////////////////////////////////
 })( JIO );

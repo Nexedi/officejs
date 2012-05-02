@@ -282,7 +282,8 @@
             // Create a storage object and use it to save,load,...!
             var t = this;
             createStorageObject(
-                {'storage':job.storage,
+                {'queue':this,
+                 'storage':job.storage,
                  'applicant':jioGlobalObj.applicant})[job.method](
                      job,function (endedjob){
                          t.ended(endedjob);
