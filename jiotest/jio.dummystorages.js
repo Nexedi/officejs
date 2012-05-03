@@ -110,7 +110,7 @@
                     {'fileName':'memo',
                      'creationDate':20000,
                      'lastModified':25000
-                    }]);
+                    }];
                 res.status = job.status = 'done';
                 res.message = 'List received.';
                 jobendcallback(job);
@@ -224,6 +224,7 @@
             // 'lastModified':date,'creationDate':date}
 
             setTimeout(function () {
+                var res = {};
                 res.status = job.status = 'fail';
                 res.message = 'Cannot get document list.';
                 res.errno = 0;
@@ -337,6 +338,7 @@
             // 'lastModified':date,'creationDate':date}
 
             setTimeout(function () {
+                var res = {};
                 res.status = job.status = 'fail';
                 res.message = 'User collection not found.';
                 res.errno = 404;

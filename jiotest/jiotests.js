@@ -74,6 +74,63 @@ test ( 'Jio Publish/Sububscribe/Unsubscribe methods', function () {
     o.jio.stop();
 });
 
+module ( 'Jio Dummy Storages' );
+
+test ('All tests', function () {
+    // Tests all dummy storages from jio.dummystorages.js
+    // It is simple tests, but they will be used by replicate storage later
+    // for sync operation.
+
+    var o = {}; var clock = this.sandbox.useFakeTimers();
+    var t = this;
+    var mytest = function (message,method,retmethod,value){
+        o.f = function (result) {
+            deepEqual (result[retmethod],value,message);};
+        t.spy(o,'f');
+        o.jio[method]({'userName':'Dummy','fileName':'file',
+                       'fileContent':'content','callback':o.f});
+        clock.tick(510);
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    // All Ok Dummy Storage
+    o.jio = JIO.createNew({'type':'dummyallok','userName':'Dummy'},
+                          {'ID':'jiotests'});
+    mytest('check name availability OK','checkNameAvailability',
+           'isAvailable',true);
+    mytest('save document OK','saveDocument','isSaved',true);
+    mytest('load document OK','loadDocument','document',
+           {'fileName':'file','fileContent':'content',
+            'lastModified':15000,'creationDate':10000});
+    mytest('get document list OK','getDocumentList','list',
+           [{'fileName':'file','creationDate':10000,'lastModified':15000},
+            {'fileName':'memo','creationDate':20000,'lastModified':25000}]);
+    mytest('remove document OK','removeDocument','isRemoved',true);
+    o.jio.stop();
+    
+    // All Fail Dummy Storage
+    o.jio = JIO.createNew({'type':'dummyallfail','userName':'Dummy'},
+                          {'ID':'jiotests'});
+    mytest('check name availability FAIL','checkNameAvailability',
+           'isAvailable',false);
+    mytest('save document FAIL','saveDocument','isSaved',false);
+    mytest('load document FAIL','loadDocument','document',{});
+    mytest('get document list FAIL','getDocumentList','list',undefined);
+    mytest('remove document FAIL','removeDocument','isRemoved',false);
+    o.jio.stop();
+
+    // All Not Found Dummy Storage
+    o.jio = JIO.createNew({'type':'dummyallnotfound','userName':'Dummy'},
+                          {'ID':'jiotests'});
+    mytest('check name availability NOT FOUND','checkNameAvailability',
+           'isAvailable',true);
+    mytest('save document NOT FOUND','saveDocument','isSaved',true);
+    mytest('load document NOT FOUND','loadDocument','document',{});
+    mytest('get document list NOT FOUND','getDocumentList','list',undefined);
+    mytest('remove document NOT FOUND','removeDocument','isRemoved',true);
+    o.jio.stop();
+});
+
 module ( 'Jio LocalStorage' );
 
 test ('Check name availability', function () {
