@@ -81,9 +81,8 @@ test ('All tests', function () {
     // It is simple tests, but they will be used by replicate storage later
     // for sync operation.
 
-    var o = {}; var clock = this.sandbox.useFakeTimers();
-    var t = this;
-    var mytest = function (message,method,retmethod,value){
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (message,method,retmethod,value){
         o.f = function (result) {
             deepEqual (result[retmethod],value,message);};
         t.spy(o,'f');
@@ -131,6 +130,52 @@ test ('All tests', function () {
     o.jio.stop();
 });
 
+module ( 'Jio Job Managing' );
+
+test ('Add 2 same jobs', function () {
+    // Check possibilities when adding 2 same jobs.
+    
+    var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
+
+    // Test if the second job write over the first one
+    o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
+                          {'ID':'jiotests'});
+    id = o.jio.id;
+    o.jio.saveDocument({'fileName':'file','fileContent':'content'});
+    clock.tick(10);
+    o.jio.saveDocument({'fileName':'file','fileContent':'content'});
+    deepEqual(LocalOrCookieStorage.getItem(
+        'jio/jobObject/'+id)['1'].date,10,
+              'The first job date have to be equal to the second job date.');
+    o.jio.stop();
+    clock.tick(-10);
+    
+    // Test if the second job doesn't erase the first ongoing one
+    o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
+                          {'ID':'jiotests'});
+    id = o.jio.id;
+    o.jio.saveDocument({'fileName':'file','fileContent':'content'});
+    clock.tick(200);
+    o.jio.saveDocument({'fileName':'file','fileContent':'content'});
+    ok(LocalOrCookieStorage.getItem(
+        'jio/jobObject/'+id)['2'] &&
+       LocalOrCookieStorage.getItem(
+           'jio/jobObject/'+id)['1'].status === 'ongoing',
+       'The second job must not overwrite the first ongoing one.');
+    ok(LocalOrCookieStorage.getItem(
+        'jio/jobObject/'+id)['2'].status === 'wait' &&
+       LocalOrCookieStorage.getItem(
+           'jio/jobObject/'+id)['2'].waitingFor &&
+       LocalOrCookieStorage.getItem(
+           'jio/jobObject/'+id)['2'].waitingFor.jobID === '1',
+       'The second job must be waiting for the first to end');
+    o.jio.stop();
+});
+
+test ('Restore a previous waiting job', function () {
+    ok(false,'not implemented yet');
+});
+
 module ( 'Jio LocalStorage' );
 
 test ('Check name availability', function () {
@@ -138,10 +183,8 @@ test ('Check name availability', function () {
     // We remove MrCheckName from local storage, and checking must return true.
     // We now add MrCheckName to local storage, and checking must return false.
 
-    var o = {};
-    var clock = this.sandbox.useFakeTimers();
-    var t = this;
-    var mytest = function (value){
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (value){
         o.f = function (result) {
             deepEqual(result.isAvailable,value,'checking name availabality');};
         t.spy(o,'f');
@@ -172,19 +215,21 @@ test ('Document save', function () {
     // We launch a saving to localstorage and we check if the file is
     // realy saved. Then save again and check if 
 
-    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-    var mytest = function (value,lm,cd){
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (message,value,lm,cd,tick){
+        var tmp;
         o.f = function (result) {
-            deepEqual(result.isSaved,value,'saving document');};
+            deepEqual(result.isSaved,value,message);};
         t.spy(o,'f');
         o.jio.saveDocument(
             {'fileName':'file','fileContent':'content','callback': o.f});
-        clock.tick(510);
+        if (tick === undefined) { clock.tick(510); }
+        else { clock.tick(tick); }
         if (!o.f.calledOnce)
             ok(false, 'no response / too much results');
         else {
             // check content
-            var tmp = LocalOrCookieStorage.getItem ('jio/local/MrSaveName/jiotests/file');
+            tmp = LocalOrCookieStorage.getItem ('jio/local/MrSaveName/jiotests/file');
             deepEqual (tmp,{'fileName':'file','fileContent':'content',
                             'lastModified':lm,'creationDate':cd},'check content');
         }
@@ -195,10 +240,16 @@ test ('Document save', function () {
     LocalOrCookieStorage.deleteItem ('jio/local/MrSaveName/jiotests/file');
     // save and check document existence
     clock.tick(200);
-    mytest(true,200,200);       // value, lastmodified, creationdate
+    mytest('saving document',true,200,200);       // value, lastmodified, creationdate
     
     // re-save and check modification date
-    mytest(true,710,200);       // 710 = 200 + 510 ms (clock tick)
+    // 710 = 200 + 510 ms (clock tick)
+    mytest('saving again',true,710,200);
+
+    // re-save and check modification date
+    // 1220 = 710 + 510 ms (clock tick)
+    clock.tick(-1000);
+    mytest('saving a older document',false,710,200,1510);
 
     o.jio.stop();
 });
@@ -208,8 +259,9 @@ test ('Document load', function () {
     // We launch a loading from localstorage and we check if the file is
     // realy loaded.
 
-    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-    var mytest = function (res,value){
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    doc = {},
+    mytest = function (res,value){
         o.f = function (result) {
             deepEqual(result[res],value,'loading document');};
         t.spy(o,'f');
@@ -226,8 +278,8 @@ test ('Document load', function () {
     mytest ('status','fail');
     
     // re-load file after saving it manually
-    var doc = {'fileName':'file','fileContent':'content',
-               'lastModified':1234,'creationDate':1000};
+    doc = {'fileName':'file','fileContent':'content',
+           'lastModified':1234,'creationDate':1000};
     LocalOrCookieStorage.setItem ('jio/local/MrLoadName/jiotests/file',doc);
     mytest ('document',doc);
 
@@ -238,12 +290,13 @@ test ('Get document list', function () {
     // Test if LocalStorage can get a list of documents.
     // We create 2 documents inside localStorage to check them.
 
-    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-    var mytest = function (value){
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    doc1 = {}, doc2 = {},
+    mytest = function (value){
         o.f = function (result) {
             var objectifyDocumentArray = function (array) {
-                var obj ={};
-                for (var k in array) {obj[array[k].fileName] = array[k];}
+                var obj = {}, k;
+                for (k in array) {obj[array[k].fileName] = array[k];}
                 return obj;
             };
             deepEqual (objectifyDocumentArray(result.list),
@@ -257,10 +310,10 @@ test ('Get document list', function () {
     };
     o.jio = JIO.createNew({'type':'local','userName':'MrListName'},
                           {"ID":'jiotests'});
-    var doc1 = {'fileName':'file','fileContent':'content',
-                'lastModified':1,'creationDate':0};
-    var doc2 = {'fileName':'memo','fileContent':'test',
-                'lastModified':5,'creationDate':2};
+    doc1 = {'fileName':'file','fileContent':'content',
+            'lastModified':1,'creationDate':0};
+    doc2 = {'fileName':'memo','fileContent':'test',
+            'lastModified':5,'creationDate':2};
     LocalOrCookieStorage.setItem ('jio/local/MrListName/jiotests/file',doc1);
     LocalOrCookieStorage.setItem ('jio/local/MrListName/jiotests/memo',doc2);
     delete doc1.fileContent;
@@ -275,8 +328,8 @@ test ('Document remove', function () {
     // We launch a remove from localstorage and we check if the file is
     // realy removed.
 
-    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-    var mytest = function (){
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (){
         o.f = function (result) {
             deepEqual(result.isRemoved,true,'removing document');};
         t.spy(o,'f');
@@ -305,8 +358,8 @@ module ('Jio DAVStorage');
 test ('Check name availability', function () {
     // Test if DavStorage can check the availabality of a name.
     
-    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-    var mytest = function (value,errno) {
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (value,errno) {
         var server = t.sandbox.useFakeServer();
         server.respondWith ("PROPFIND",
                             "https://ca-davstorage:8080/dav/davcheck/",
@@ -339,9 +392,9 @@ test ('Check name availability', function () {
 test ('Document load', function () {
     // Test if DavStorage can load documents.
 
-    var davload = getXML('responsexml/davload');
-    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-    var mytest = function (message,doc,errprop,errget) {
+    var davload = getXML('responsexml/davload'),
+    o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (message,doc,errprop,errget) {
         var server = t.sandbox.useFakeServer();
         server.respondWith (
             "PROPFIND","https://ca-davstorage:8080/dav/davload/jiotests/file",
@@ -382,10 +435,10 @@ test ('Document load', function () {
 test ('Document save', function () {
     // Test if DavStorage can save documents.
 
-    var davsave = getXML('responsexml/davsave');
-    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-    var mytest = function (message,value,errnoput,errnoprop,
-                           lastmodified,overwrite,force) {
+    var davsave = getXML('responsexml/davsave'),
+    o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (message,value,errnoput,errnoprop,
+                       overwrite,force,tick) {
         var server = t.sandbox.useFakeServer();
         server.respondWith (
             // lastmodified = 7000, creationdate = 5000
@@ -411,7 +464,6 @@ test ('Document save', function () {
         t.spy(o,'f');
         o.jio.saveDocument({'fileName':'file','fileContent':'content',
                             'options':{'force':force,'overwrite':overwrite},
-                            'lastModified':lastmodified,
                             'callback':o.f});
         clock.tick(500);
         server.respond();
@@ -431,33 +483,33 @@ test ('Document save', function () {
     //     404 Not Found
     // // the path does not exist, we want to create it, and save the file.
     // mytest('create path if not exists, and create document',
-    //        true,201,404,9999);
+    //        true,201,404);
     // the document does not exist, we want to create it
-    mytest('create document',
-           true,201,404,10000);
-    // the document already exists, we want to overwrite it
-    mytest('overwrite document',
-           true,204,207,10100,true);
-    // the document already exists, we don't want to overwrite it
-    mytest('do not overwrite document',
-           false,204,207,10200,false);
+    mytest('create document',true,201,404);
     // the document is already exists, it is younger than the one we want
     // to save.
     mytest('younger than the one we want to save',
-           false,204,207,0,true,false);
+           false,204,207,true,false);
     // the document is already exists, it is the youngest but we want to
     // force overwriting
     mytest('youngest but force overwrite',
-           true,204,207,0,true,true);
+           true,204,207,true,true);
+    clock.tick(8000);
+    // the document already exists, we want to overwrite it
+    mytest('overwrite document',
+           true,204,207,true);
+    // the document already exists, we don't want to overwrite it
+    mytest('do not overwrite document',
+           false,204,207,false);
     o.jio.stop();
 });
 
 test ('Get Document List', function () {
     // Test if DavStorage can get a list a document.
 
-    var davlist = getXML('responsexml/davlist');
-    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-    var mytest = function (message,value,errnoprop) {
+    var davlist = getXML('responsexml/davlist'),
+    o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (message,value,errnoprop) {
         var server = t.sandbox.useFakeServer();
         server.respondWith (
             "PROPFIND",'https://ca-davstorage:8080/dav/davlist/jiotests/',
@@ -494,8 +546,8 @@ test ('Get Document List', function () {
 test ('Remove document', function () {
     // Test if DavStorage can remove documents.
 
-    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-    var mytest = function (message,value,errnodel) {
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (message,value,errnodel) {
         var server = t.sandbox.useFakeServer();
         server.respondWith (
             "DELETE","https://ca-davstorage:8080/dav/davremove/jiotests/file",
@@ -518,3 +570,67 @@ test ('Remove document', function () {
     mytest('remove an already removed document',true,404)
     o.jio.stop();
 });
+
+module ('Jio ReplicateStorage');
+
+test ('Check name availability', function () {
+    // Tests the replicate storage
+    // method : checkNameAvailability
+    // It will test all the possibilities that could cause a server,
+    // like synchronisation problem...
+
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (message,value) {
+        o.f = function (result) {
+            deepEqual (result.isAvailable,value,message)};
+        t.spy(o,'f');
+        o.jio.checkNameAvailability({'userName':'Dummy','callback':o.f});
+        clock.tick(1000);
+        if (!o.f.calledOnce)
+            ok(false,'no respose / too much results');
+    };
+    // DummyStorageAllOK,OK
+    o.jio = JIO.createNew({'type':'replicate','storageArray':[
+        {'type':'dummyallok'},{'type':'dummyallok'}]},
+                          {'ID':'jiotests'});
+    mytest('DummyStoragesAllOK,OK : name available',true);
+    o.jio.stop();
+    // DummyStorageAllOK,Fail
+    o.jio = JIO.createNew({'type':'replicate','storageArray':[
+        {'type':'dummyallok'},{'type':'dummyallfail'}]},
+                          {'ID':'jiotests'});
+    mytest('DummyStoragesAllOK,Fail : name not available',false);
+    o.jio.stop();
+    // DummyStorageAllFail,OK
+    o.jio = JIO.createNew({'type':'replicate','storageArray':[
+        {'type':'dummyallfail'},{'type':'dummyallok'}]},
+                          {'ID':'jiotests'});
+    mytest('DummyStoragesAllFail,OK : name not available',false);
+    o.jio.stop();
+    // DummyStorageAllFail,Fail
+    o.jio = JIO.createNew({'type':'replicate','storageArray':[
+        {'type':'dummyallfail'},{'type':'dummyallfail'}]},
+                          {'ID':'jiotests'});
+    mytest('DummyStoragesAllFail,Fail : name not available',false);
+    o.jio.stop();
+});
+
+// test ('Document load', function () {
+//     // Test if DavStorage can load documents.
+
+//     var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+//     var mytest = function (message,doc) {
+//         o.f = function (result) {
+//             deepEqual (result.document,doc,message);};
+//         t.spy(o,'f');
+//         o.jio.loadDocument({'fileName':'file','callback':o.f});
+//         clock.tick(1000);
+//         server.respond();
+//         if (!o.f.calledOnce)
+//             ok(false, 'no response / too much results');
+//     };
+//     o.jio = JIO.createNew({'type':'replicate','userName':'Dummy'},
+//                           {'ID':'jiotests'});
+    
+//     o.jio.stop();
+// });

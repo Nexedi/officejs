@@ -6,22 +6,39 @@
 //     - replicate
 ;(function ( Jio ) {
     
-    // check dependencies
-    var errorDependencies=function(){$.error('Cannot find Jio or Base64');};
-    try{if (!Jio || !Base64){
-        errorDependencies();return;
-    }} catch (e){
-        errorDependencies();return;}
-
     ////////////////////////////////////////////////////////////////////////////
     // globals
-    var jioGlobalObj = Jio.getGlobalObject();
+    var jioGlobalObj = Jio.getGlobalObject(),
     // end globals
     ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Tools
+    checkJioDependencies = function() {
+        var retval = true,
+        err = function (name) {
+            console.error ('Fail to load ' + name);
+            retval = false;
+        };
+        try { if (!Base64) { err('Base64'); } }
+        catch (e) { err('Base64'); }
+        return retval;
+    },
+    // end Tools
+    ////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Classes
+    LocalStorage,DAVStorage,ReplicateStorage;
+    // end Classes
+    ////////////////////////////////////////////////////////////////////////////
     
+    // check dependencies
+    if (!checkJioDependencies()) { return; }
+
     ////////////////////////////////////////////////////////////////////////////
     // Local Storage
-    var LocalStorage = function ( options ) {
+    LocalStorage = function ( options ) {
         // LocalStorage constructor
         // initializes the local storage for jio and create user if necessary.
 
@@ -38,12 +55,14 @@
             // returns {'status':string,'message':string,'isAvailable':boolean}
             // in the jobendcallback arguments.
 
+            var available = true, localStor = null,
+            k = 'key', splitk = ['splitedkey'];
+            
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                var available = true;
-                var localStor = jioGlobalObj.localStorage.getAll();
-                for (var k in localStor) {
-                    var splitk = k.split('/');
+                localStor = jioGlobalObj.localStorage.getAll();
+                for (k in localStor) {
+                    splitk = k.split('/');
                     if (splitk[0] === 'jio' &&
                         splitk[1] === 'local' &&
                         splitk[2] === job.userName) {
@@ -81,22 +100,21 @@
             // returns {'status':string,'message':string,'isSaved':boolean}
             // in the jobendcallback arguments.
 
-            var settings = $.extend({'overwrite':true,
-                                     'force':false},job.options);
-            var t = this;
+            var settings = $.extend({
+                'overwrite':true,'force':false},job.options),
+            res = {}, doc = null;
             // wait a little in order to simulate asynchronous saving
             setTimeout (function () {
-                var res = {};
                 // reading
-                var doc = jioGlobalObj.localStorage.getItem(
+                doc = jioGlobalObj.localStorage.getItem(
                     'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
                         job.fileName);
                 if (!doc) { // create document
                     doc = {
                         'fileName': job.fileName,
                         'fileContent': job.fileContent,
-                        'creationDate': job.lastModified,
-                        'lastModified': job.lastModified
+                        'creationDate': job.date,
+                        'lastModified': job.date
                     }
                     // writing
                     jioGlobalObj.localStorage.setItem(
@@ -114,7 +132,7 @@
                     // if it doesn't force writing
                     // checking modification date
                     if ( ! settings.force &&
-                         doc.lastModified >= job.lastModified ) {
+                         doc.lastModified >= job.date ) {
                         // date problem!
                         // return
                         res.status = job.status = 'fail';
@@ -126,7 +144,7 @@
                         return;
                     } 
                     // overwriting
-                    doc.lastModified = job.lastModified;
+                    doc.lastModified = job.date;
                     doc.fileContent = job.fileContent;
                     // writing
                     jioGlobalObj.localStorage.setItem(
@@ -163,11 +181,11 @@
             // document object is {'fileName':string,'fileContent':string,
             // 'creationDate':date,'lastModified':date}
 
-            var t = this;
-            // wait a little in order to simulate asynchronous operation
+            var t = this, res = {}, doc = null;
+            
+            // wait a little in order to simulate asynchronous operation 
             setTimeout(function () {
-                var res = {};
-                var doc = jioGlobalObj.localStorage.getItem(
+                doc = jioGlobalObj.localStorage.getItem(
                     'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
                         job.fileName);
                 if (!doc) {
@@ -202,13 +220,14 @@
             // the list is [object,object] -> object = {'fileName':string,
             // 'lastModified':date,'creationDate':date}
 
-            var t = this;
+            var t = this, res = {}, localStor = null, k = 'key',
+            splitk = ['splitedkey'];
+            
             setTimeout(function () {
-                var res = {};
-                var localStor = jioGlobalObj.localStorage.getAll();
+                localStor = jioGlobalObj.localStorage.getAll();
                 res.list = [];
-                for (var k in localStor) {
-                    var splitk = k.split('/');
+                for (k in localStor) {
+                    splitk = k.split('/');
                     if (splitk[0] === 'jio' &&
                         splitk[1] === 'local' &&
                         splitk[2] === job.storage.userName &&
@@ -235,10 +254,10 @@
             // returns {'status':string,'message':string,'isRemoved':boolean}
             // in the jobendcallback arguments.
 
-            var t = this;
+            var t = this, res = {}, doc = null;
+            
             setTimeout (function () {
-                var res = {};
-                var doc = jioGlobalObj.localStorage.getItem(
+                doc = jioGlobalObj.localStorage.getItem(
                     'jio/local/'+job.storage.userName+'/'+job.applicant.ID+'/'+
                         job.fileName);
                 // already deleted
@@ -263,19 +282,14 @@
                 return;
             }, 100);
         }
-    };
-
-    // add key to storageObjectType of global jio
-    Jio.addStorageType('local', function (options) {
-        return new LocalStorage(options);
-    });
+    },
 
     // end Local Storage
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     // DAVStorage
-    var DAVStorage = function ( options ) {
+    DAVStorage = function ( options ) {
 
     };
     DAVStorage.prototype = {
@@ -287,17 +301,20 @@
             // options.success: the function called if success
             // options.userName: the username
             // options.password: the password
+
             // TODO this method is not working !!!
             
-            var settings = $.extend ({'success':function(){},
-                                      'error':function(){}},options);
+            var settings = $.extend ({
+                'success':function(){},'error':function(){}},options),
+            splitpath = ['splitedpath'], tmppath = 'temp/path', t = this;
+
             // if pathstep is not defined, then split the settings.path
             // and do mkcol recursively
             if (!settings.pathsteps) {
                 settings.pathsteps = 1;
                 this.mkcol(settings);
             } else {
-                var splitpath = settings.path.split('/');
+                splitpath = settings.path.split('/');
                 // // check if the path is terminated by '/'
                 // if (splitpath[splitpath.length-1] == '') {
                 //     splitpath.length --;
@@ -308,9 +325,8 @@
                 }
                 splitpath.length = settings.pathsteps + 1;
                 settings.pathsteps++;
-                var tmppath = splitpath.join('/');
+                tmppath = splitpath.join('/');
                 alert(settings.location + tmppath);
-                var t = this;
                 $.ajax ( {
                     url: settings.location + tmppath,
                     type: 'MKCOL',
@@ -347,6 +363,8 @@
 
             // returns {'status':string,'message':string,'isAvailable':boolean}
             // in the jobendcallback arguments.
+            
+            var res = {};
 
             $.ajax ( {
                 url: job.storage.location + '/dav/' + job.storage.userName + '/',
@@ -357,7 +375,6 @@
                     job.storage.userName + ':' +
                         job.storage.password ), Depth: '1'},
                 success: function (xmlData) {
-                    var res = {};
                     res.status = job.status = 'done';
                     res.message = job.userName + ' is not available.';
                     res.isAvailable = false;
@@ -365,7 +382,6 @@
                     job.callback(res);
                 },
                 error: function (type) {
-                    var res = {};
                     switch(type.status){
                     case 404:
                         res.status = job.status = 'done';
@@ -397,11 +413,11 @@
             // returns {'status':string,'message':string,'isSaved':boolean}
             // in the jobendcallback arguments.
 
-            var settings = $.extend ({'overwrite':true,
-                                      'force':false},job.options);
-            var res = {};
+            var settings = $.extend ({
+                'overwrite':true,'force':false},job.options), res = {},
+            t = this, tmpjob = {},
             // TODO if path of /dav/user/applic does not exists, it won't work!
-            var saveOnDav = function () {
+            saveOnDav = function () {
                 //// save on dav
                 $.ajax ( {
                     url: job.storage.location + '/dav/' +
@@ -439,8 +455,7 @@
             }
 
             //// start loading document
-            var t = this;
-            var tmpjob = $.extend({},job);
+            tmpjob = $.extend({},job);
             tmpjob.callback = function(result) {
                 if(result.status === 'fail') {
                     switch (result.errno) {
@@ -480,7 +495,7 @@
                     // TODO merge files
                     // Document already exists
                     if (settings.overwrite) { // overwrite
-                        if (result.document.lastModified >= job.lastModified) {
+                        if (result.document.lastModified >= job.date) {
                             // date ploblem !
                             res.status = job.status = 'fail';
                             res.message = 'Document is older than the '+
@@ -517,9 +532,8 @@
             // 'creationDate':date,'lastModified':date}
 
             // TODO check if job's features are good
-            var res = {};
-            res.document = {};
-            var getContent = function () {
+            var res = {'document':{}},
+            getContent = function () {
                 $.ajax ( {
                     url: job.storage.location + '/dav/' +
                         job.storage.userName + '/' +
@@ -597,6 +611,8 @@
             // the list is [object,object] -> object = {'fileName':string,
             // 'lastModified':date,'creationDate':date}
 
+            var res = {}, documentArrayList = [], file = {}, pathArray = [];
+
             $.ajax ( {
                 url: job.storage.location + '/dav/' + 
                     job.storage.userName + '/' + job.applicant.ID + '/',
@@ -607,19 +623,16 @@
                     job.storage.userName + ':' +
                         job.storage.password ), Depth: '1'},
                 success: function (xmlData) {
-                    var res = {};
-                    var documentArrayList = [];
                     $("D\\:response",xmlData).each(function(i,data) {
                         if(i>0) { // exclude parent folder
-                            var file = {};
-                            var pathArray = ($($("D\\:href",
-                                          xmlData).get(i)).text()).split('/');
+                            file = {};
+                            pathArray = ($($("D\\:href",
+                                             xmlData).get(i)).text()).split('/');
                             file.fileName = (pathArray[pathArray.length-1] ?
                                              pathArray[pathArray.length-1] :
                                              pathArray[pathArray.length-2]+'/');
                             if (file.fileName === '.htaccess' ||
-                                file.fileName === '.htpasswd')
-                                return;
+                                file.fileName === '.htpasswd') { return; }
                             file.lastModified = (
                                 new Date($($("lp1\\:getlastmodified",
                                              xmlData).get(i)).text())).getTime();
@@ -636,7 +649,6 @@
                     job.callback(res);
                 },
                 error: function (type) {
-                    var res = {};
                     res.status = job.status = 'fail';
                     res.message = 'Cannot get list.';
                     res.errno = type.status;
@@ -653,6 +665,8 @@
             // returns {'status':string,'message':string,'isRemoved':boolean}
             // in the jobendcallback arguments.
             
+            var res = {};
+
             $.ajax ( {
                 url: job.storage.location + '/dav/' +
                     job.storage.userName + '/' +
@@ -665,7 +679,6 @@
                         job.storage.password )},
                 // xhrFields: {withCredentials: 'true'}, // cross domain
                 success: function () {
-                    var res = {};
                     res.status = job.status = 'done';
                     res.message = 'Document removed.';
                     res.isRemoved = true;
@@ -673,7 +686,6 @@
                     job.callback(res);
                 },
                 error: function (type) {
-                    var res = {};
                     switch (type.status) {
                     case 404:
                         res.stauts = job.status = 'done';
@@ -693,62 +705,98 @@
                 }
             } );
         }
-    };
-
-    // add key to storageObject
-    Jio.addStorageType('dav', function (options) {
-        return new DAVStorage(options);
-    });
+    },
 
     // end DAVStorage
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     // ReplicateStorage
-    var ReplicateStorage = function ( options ) {
+    ReplicateStorage = function ( options ) {
         this.queue = options.queue;
         this.id = null;
-        this.length = options.storage.list.length;
+        this.length = options.storage.storageArray.length;
         this.returnsValuesArray = [];
     };
     ReplicateStorage.prototype = {
         checkNameAvailability: function ( job, jobendcallback ) {
-            var t = this;
-            for (var i in job.storage.list) {
-                var newjob = $.extend({},job);
-                newjob.storage = job.storage.list[i];
+            // Checks the availability of the [job.userName].
+            // if the name already exists in a storage, it is not available.
+            // job: the job object.
+            // job.userName: the name we want to check.
+            // job.storage.storageArray: An Array of storages.
+            // jobendcallback: the function called at the end of the job.
+
+            // returns {'status':string,'message':string,'isAvailable':boolean,
+            // 'resultArray':Array} in the jobendcallback arguments.
+            var t = this, newjob = {}, isavailable = true,
+            res = {'status':'done'}, i = 'ind';
+            
+            for (i in job.storage.storageArray) {
+                newjob = $.extend({},job);
+                newjob.storage = job.storage.storageArray[i];
                 newjob.callback = function (result){
                     t.returnsValuesArray.push(result);
+                    if (result.status === 'fail') {
+                        res.status = 'fail';
+                    }
+                    if (!result.isAvailable) { isavailable = false; }
+                    if (t.returnsValuesArray.length === t.length) {
+                        // if this is the last callback
+                        job.status = res.status;
+                        res.resultArray = t.returnsValuesArray;
+                        res.isAvailable = isavailable;
+                        jobendcallback(job);
+                        job.callback(res);
+                    }
                 };
-                this.queue.addJob( newjob );
+                this.queue.createJob ( newjob );
             }
-            //// callback listener
-            this.id = setInterval(function() {
-                if (t.returnsValuesArray.length >= t.length) {
-                    var res = {};
-                    // TODO
-                    jobendcallback(job);
-                    job.callback(res);
-                    clearInterval(t.id);
-                }
-            },100);
-            //// end call back listener
         },
         saveDocument: function ( job, jobendcallback ) {
+            // Save a single document in several storages.
+            // If a storage failed to save the document, it modify the job in
+            // in order to invoke it sometime later.
+            // job: the job object
+            // job.options: the save options object
+            // job.options.overwrite: true -> overwrite
+            // job.options.force: true -> save even if jobdate < existingdate
+            //                            or overwrite: false
+            // jobendcallback: the function called at the end of the job.
+
+            // returns {'status':string,'message':string,'isSaved':boolean,
+            // 'resultArray':Array} in the jobendcallback arguments.
+            
+            // TODO
+            
         },
         loadDocument: function ( job, jobendcallback ) {
+            // TODO
         },
         getDocumentList: function ( job, jobendcallback ) {
+            // TODO
         },
         removeDocument: function ( job, jobendcallback ) {
+            // TODO
         }
     };
     
+    // end ReplicateStorage
+    ////////////////////////////////////////////////////////////////////////////
+
+    // add key to storageObjectType of global jio
+    Jio.addStorageType('local', function (options) {
+        return new LocalStorage(options);
+    });
+    // add key to storageObject
+    Jio.addStorageType('dav', function (options) {
+        return new DAVStorage(options);
+    });
     // add key to storageObject
     Jio.addStorageType('replicate', function (options) {
         return new ReplicateStorage(options);
     });
+
+
     
-    // end ReplicateStorage
-    ////////////////////////////////////////////////////////////////////////////
 })( JIO );

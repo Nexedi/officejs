@@ -2,13 +2,6 @@
 ;var JIO = 
 (function () {
     
-    // check dependencies
-    var errorDependencies=function(){console.error('Cannot find jQuery.');};
-    try{if(!(jQuery && LocalOrCookieStorage)){
-        errorDependencies();return null;
-    }}catch(e){
-        errorDependencies();return null;}
-
     ////////////////////////////////////////////////////////////////////////////
     // constants
     var jioConstObj = {
@@ -34,33 +27,46 @@
                 'stop_event':'stop_removing',
                 'retvalue':'isRemoved' } // returns 'boolean'
         }
-    };
+    },
     // end constants
     ////////////////////////////////////////////////////////////////////////////
     // jio globals
-    var jioGlobalObj = {
-        'localStorage': LocalOrCookieStorage,   // where the browser stores data
+    jioGlobalObj = {
+        'localStorage': null,   // where the browser stores data
         'queueID': 1,
         'storageTypeObject': {} // ex: {'type':'local','creator': fun ...}
-    };
+    },
     // end jio globals
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     // Tools
-    var createStorageObject = function ( options ) {
+    checkJioDependencies = function() {
+        var retval = true,
+        err = function (name) {
+            console.error ('Fail to load ' + name);
+            retval = false;
+        };
+        try { if (!jQuery) { err('jQuery'); } }
+        catch (e) { err('jQuery'); }
+        try { if (!LocalOrCookieStorage) { err('LocalOrCookieStorage'); } }
+        catch (e) { err('LocalOrCookieStorage'); }
+        return retval;
+    },
+    createStorageObject = function ( options ) {
         // Create a storage thanks to storages types set with 'addStorageType'.
 
         if (!jioGlobalObj.storageTypeObject[ options.storage.type ])
             return null;       // error!
         return jioGlobalObj.storageTypeObject[
             options.storage.type ](options);
-    };
-    var getNewQueueID = function () {
+    },
+    getNewQueueID = function () {
         // Returns a new queueID
-        var localStor = jioGlobalObj.localStorage.getAll();
-        for (var k in localStor) {
-            var splitk = k.split('/');
+        var localStor = jioGlobalObj.localStorage.getAll(), k = 'key',
+        splitk = ['splitedkey'], id = 0;
+        for (k in localStor) {
+            splitk = k.split('/');
             if (splitk[0] === 'jio' &&
                 splitk[1] === 'id') {
                 if (JSON.parse(localStor[k]) < Date.now() - 10000) { // 10 sec ?
@@ -71,20 +77,28 @@
                 }
             }
         }
-        var id = jioGlobalObj.queueID;
+        id = jioGlobalObj.queueID;
         jioGlobalObj.queueID ++;
         return id;
-    };
+    },
     // end Tools
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
+    // Classes
+    PubSub,Job,JobQueue,JobListener,ActivityUpdater,JioCons,Jio; 
+    // end Classes
+    ////////////////////////////////////////////////////////////////////////////
+
+    // check dependencies
+    if (!checkJioDependencies()) { return; }
+
+    ////////////////////////////////////////////////////////////////////////////
     // Publisher Subcriber
-    var PubSub = function () {
-        var topics = {};
+    PubSub = function () {
+        var topics = {}, callbacks, topic;
         this.eventAction = function (id) {
-            var callbacks;
-            var topic = id && topics[id];
+            topic = id && topics[id];
             if (!topic) {
                 callbacks = $.Callbacks();
                 topic = {
@@ -119,17 +133,17 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Job & JobQueue
-    var Job = function ( options ) {
+    Job = function ( options ) {
         // Job constructor
         
-        console.log ('Job');
         var job = $.extend({},options);
         job['id']=0;
         job['status']='initial';
+        job['date']=Date.now();
         return job;
     };
 
-    var JobQueue = function ( publisher ) {
+    JobQueue = function ( publisher ) {
         // JobQueue is a queue of jobs. It will regulary copy this queue
         // into localStorage to resume undone tasks.
         // pubsub: the publisher to use to send event
@@ -170,10 +184,10 @@
         isThereJobsWhere: function( func ) {
             // Check if there is jobs, in the queue,
             // where [func](job) == true.
-
-            if (!func)
-                return true;
-            for (var id in this.jobObject) {
+            
+            var id = 'id';
+            if (!func) { return true; }
+            for (id in this.jobObject) {
                 if (func(this.jobObject[id]))
                     return true;
             }
@@ -185,11 +199,13 @@
             return jioGlobalObj.localStorage.setItem(
                 this.jobObjectName,this.jobObject);
         },
+        createJob: function ( options ) {
+            this.addJob ( new Job ( options ) );
+        },
         addJob: function ( job ) {
             // Add a job to the queue
             // job : the job object
 
-            console.log ('addJob');
             // set job id
             job.id = this.jobid;
             this.jobid ++;
@@ -207,11 +223,9 @@
             // options.job : the job object containing at least {id:..}.
             // options.where : remove values where options.where(job) === true
             
-            console.log ('removeJob');
             //// set tests functions
             var settings = $.extend ({'where':function (job) {return true;}},
-                                     options);
-            var andwhere ;
+                                     options),k='key',andwhere,found=false;
             if (settings.job) {
                 andwhere = function (job) {return (job.id===settings.job.id);};
             } else {
@@ -220,8 +234,7 @@
             //// end set tests functions
 
             //// modify the job list
-            var found = false;
-            for (var k in this.jobObject) {
+            for (k in this.jobObject) {
                 if (settings.where(this.jobObject[k]) &&
                     andwhere(this.jobObject[k]) ) {
                     delete this.jobObject[k];
@@ -233,14 +246,12 @@
             }
             //// end modifying
             this.copyJobQueueToLocalStorage();
-
-            console.log ('end removeJob');
         },
 
         resetAll: function () {
             // Reset all job to 'initial'.
-            
-            for (var id in this.jobObject) {
+            var id = 'id';
+            for (id in this.jobObject) {
                 this.jobObject[id].status = 'initial';
             }
             this.copyJobQueueToLocalStorage();
@@ -249,9 +260,15 @@
         invokeAll: function () {
             // Do all jobs in the queue.
 
+            var i = 'id';
             //// do All jobs
-            for (var i in this.jobObject) {
+            for (i in this.jobObject) {
                 if (this.jobObject[i].status === 'initial') {
+                    // invoke new job
+                    this.invoke(this.jobObject[i]);
+                } else if (this.jobObject[i].status === 'wait' &&
+                           this.jobObject[i].retryAt >= Date.now()) {
+                    // invoke waiting job
                     this.invoke(this.jobObject[i]);
                 }
             }
@@ -262,7 +279,8 @@
         invoke: function (job) {
             // Do a job invoking the good method in the good storage.
 
-            console.log ('invoke ' + JSON.stringify(job));
+            var t = this;
+
             //// analysing job method
             // if the method does not exist, do nothing
             if (!jioConstObj.jobMethodObject[job.method])
@@ -280,7 +298,6 @@
                 job.status = 'ongoing';
             }
             // Create a storage object and use it to save,load,...!
-            var t = this;
             createStorageObject(
                 {'queue':this,
                  'storage':job.storage,
@@ -295,7 +312,6 @@
             // It is a callback function called just before user callback.
             // It is called to manage jobObject according to the ended job.
 
-            console.log ('ended');
             switch (job.status) {
             case 'done':
                 // This job is supposed done, we can remove it from queue.
@@ -341,7 +357,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // jio job listener
-    var JobListener = function ( queue ) {
+    JobListener = function ( queue ) {
         // A little daemon which will start jobs from the joblist
         
         this.interval = 200;
@@ -358,16 +374,15 @@
         start: function () {
             // Start the listener. It will always check if there are jobs in the
             // queue
+            var queue = this.queue;
             
             if (!this.id) {
-                var queue = this.queue;
                 this.id = setInterval (function () {
                     // if there is jobs
                     if (JSON.stringify(queue.jobObject) !== '{}') {
                         queue.invokeAll();
                     }
                 },this.interval);
-                console.log ('listener started');
                 return true;
             } else {
                 return false;
@@ -375,7 +390,6 @@
         },
         stop: function () {
             if (this.id) {
-                console.log ('listener stopped');
                 clearInterval (this.id);
                 this.id = null;
                 return true;
@@ -388,7 +402,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // ActivityUpdater
-    var ActivityUpdater = function () {
+    ActivityUpdater = function () {
         // The activity updater is a little thread that proves activity of this
         // jio instance.
 
@@ -398,10 +412,11 @@
     ActivityUpdater.prototype = {
         start: function (id) {
             // start the updater
-            console.log ('start touching jio/id/'+id);
+            
+            var t = this;
+            
             if (!this.id) {
                 this.touch(id);
-                var t = this;
                 this.id = setInterval (function () {
                     t.touch(id);
                 },this.interval);
@@ -412,7 +427,6 @@
         },
         stop: function () {
             // stop the updater
-            console.log ('stop touching');
             if (this.id) {
                 clearInterval (this.id);
                 this.id = null;
@@ -430,7 +444,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // JIO Constructor
-    var JioCons = function ( storage , applicant ) {
+    JioCons = function ( storage , applicant ) {
         // JIO Constructor, create a new JIO object.
         // It just initializes values.
         // storage   : the storage that contains {type:..,[storageinfos]}
@@ -468,7 +482,6 @@
             if (this.id !== 0) return false;
             // set a new jio id
             this.id = getNewQueueID();
-            console.log (this.id);
             // initializing objects
             this.queue.init({'jioID':this.id});
             // start touching
@@ -511,7 +524,6 @@
             // obj : is an object containing some parameters for example
             
             if (!this.isReady()) return ;
-            console.log ('publish ' + eventname);
             return this.pubsub.publish(eventname,obj);
         },
         subscribe: function (eventname, callback) {
@@ -521,13 +533,11 @@
             // eventname : the event name.
             // callback : called after receiving event.
 
-            console.log ('subscribe ' +eventname);
             return this.pubsub.subscribe(eventname,callback);
         },
         unsubscribe: function (eventname,callback) {
             // unsubscribe callback from an event
             
-            console.log ('unsubscribe ' +eventname);
             return this.pubsub.unsubscribe(eventname,callback);
         },
 
@@ -545,7 +555,6 @@
             //         function (result) { alert('is available? ' +
             //             result.isAvailable); }});
 
-            if (!this.isReady()) return null;
             var settings = $.extend ({
                 'userName': this.storage.userName,
                 'storage': this.storage,
@@ -554,8 +563,9 @@
                 'callback': function () {}
             },options);
             // check dependencies
-            if (settings.userName && settings.storage && settings.applicant) {
-                return this.queue.addJob ( new Job ( settings ) );
+            if (this.isReady() && settings.userName &&
+                settings.storage && settings.applicant) {
+                return this.queue.createJob ( settings );
             }
             return null;
         },
@@ -572,19 +582,16 @@
             //     'callback': function (result) { alert('saved?' +
             //         result.isSaved); }});
 
-            console.log ('saveDocument');
-            if (!this.isReady()) return null;
             var settings = $.extend({
                 'storage': this.storage,
-                'lastModified': Date.now(),
                 'method':'saveDocument',
                 'applicant': this.applicant,
                 'callback': function () {}
             },options);
             // check dependencies
-            if (settings.fileName && settings.fileContent &&
+            if (this.isReady() && settings.fileName && settings.fileContent &&
                 settings.storage && settings.applicant) {
-                return this.queue.addJob ( new Job ( settings ) );
+                return this.queue.createJob ( settings );
             }
             return null;
         },
@@ -603,8 +610,6 @@
             //         result.doc.fileContent + ' creation date: ' +
             //         result.doc.creationDate); }});
 
-            console.log ('load');
-            if (!this.isReady()) return null;
             var settings = $.extend ({
                 'storage': this.storage,
                 'applicant': this.applicant,
@@ -612,8 +617,9 @@
                 'callback': function(){}
             },options);
             // check dependencies
-            if ( settings.fileName && settings.storage && settings.applicant) {
-                return this.queue.addJob ( new Job ( settings ) );
+            if (this.isReady() && settings.fileName &&
+                settings.storage && settings.applicant) {
+                return this.queue.createJob ( settings );
             }
             return null;
         },
@@ -628,8 +634,6 @@
             // jio.getDocumentList({'callback':
             //     function (result) { alert('list: '+result.list); }});
 
-            console.log ('getList');
-            if (!this.isReady()) return null;
             var settings = $.extend ({
                 'storage': this.storage,
                 'applicant': this.applicant,
@@ -637,8 +641,8 @@
                 'callback':function(){}
             },options);
             // check dependencies
-            if ( settings.storage && settings.applicant ) {
-                return this.queue.addJob ( new Job ( settings ) );
+            if (this.isReady() && settings.storage && settings.applicant ) {
+                return this.queue.createJob( settings );
             }
             return null;
         },
@@ -653,16 +657,15 @@
             // jio.removeDocument({'fileName':'file','callback':
             //     function (result) { alert('removed? '+result.isRemoved); }});
             
-            console.log ('removeDocument');
-            if (!this.isReady()) return null;
             var settings = $.extend ({
                 'storage': this.storage,
                 'applicant': this.applicant,
                 'method':'removeDocument',
                 'callback':function (){}
             },options);
-            if ( settings.fileName && settings.storage && settings.applicant ) {
-                return this.queue.addJob ( new Job( settings ) );
+            if (this.isReady() && settings.fileName &&
+                settings.storage && settings.applicant ) {
+                return this.queue.createJob ( settings );
             }
             return null;
         }
@@ -672,13 +675,17 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Jio creator
-    var Jio = function () {
+    Jio = function () {
         // Jio creator object
         // this object permit to create jio object
     };
     Jio.prototype = {
         createNew: function ( storage, applicant) {
             // return a new instance of JIO
+
+            if (jioGlobalObj.localStorage===null) {
+                jioGlobalObj.localStorage = LocalOrCookieStorage;
+            }
 
             return new JioCons(storage,applicant);
         },
