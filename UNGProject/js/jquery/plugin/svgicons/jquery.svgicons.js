@@ -154,6 +154,7 @@ $(function() {
 				$.ajax({
 					url: file,
 					dataType: 'xml',
+					cache: true,
 					success: function(data) {
 						svgdoc = data;
 						$(function() {

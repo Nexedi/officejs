@@ -128,7 +128,7 @@ TinyEdit = function() {
  * setAsCurrentDocument : set the document as currentDocument in the local storage and display its properties in the current page
  */
 
-JSONDocument.prototype.type = "text";
+JSONDocument.prototype.type = "xinha";
 JSONDocument.prototype.saveEdition = function(content) {
     this.setLastUser(getCurrentUser().getName());
     this.setContent(content);

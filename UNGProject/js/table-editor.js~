@@ -16,7 +16,6 @@ SheetEditor = function() {
     }
 
     this.saveEdition = function() {
-console.log("in table");
 	//instanceLength to save the number of current sheet
 	var instanceLength=jQuery.sheet.instance.length;
 	var sheetNumber = jQuery.sheet.instance[instanceLength-1].exportSheet.html().length;

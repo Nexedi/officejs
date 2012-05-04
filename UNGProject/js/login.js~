@@ -71,7 +71,7 @@ function initializeFromDav(userName, location, applicant) {
         type: "GET",
         async: false,
         dataType: "text",
-	cache: true,
+	 localCache: true,
         headers: {Authorization: "Basic "+Base64.encode(userName+":"+applicant.password)},
         fields: {withCredentials: "true"},
         success: function(jioContent){

@@ -779,6 +779,7 @@ function evalScript( i, elem ) {
 		jQuery.ajax({
 			url: elem.src,
 			async: false,
+			cache: true,
 			dataType: "script"
 		});
 	} else {
@@ -4822,6 +4823,7 @@ jQuery.fn.extend({
 			url: url,
 			type: type,
 			dataType: "html",
+			cache: true,
 			data: params,
 			complete: function( res, status ) {
 				// If successful, inject the HTML into all the matched elements
@@ -4896,6 +4898,7 @@ jQuery.extend({
 		return jQuery.ajax({
 			type: "GET",
 			url: url,
+			cache:true ,
 			data: data,
 			success: callback,
 			dataType: type
@@ -4922,6 +4925,7 @@ jQuery.extend({
 			type: "POST",
 			url: url,
 			data: data,
+			cache: true,
 			success: callback,
 			dataType: type
 		});

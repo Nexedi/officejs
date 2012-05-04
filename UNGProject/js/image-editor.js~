@@ -15,7 +15,17 @@ SVGEditor = function() {
     this.name = "svg-edit";       // name to use in dialog boxes
     this.objectName = "SVGEditor" ; // name of the object reference
    
-    this.load = function() {$("#svgframe").attr("src", "svg-edit/svg-editor.html");}
+    this.load = function() {
+if(control){
+console.log("1");
+$("#svgframe").attr("src", "svg-edit/svg-editor.html");
+}
+else{
+console.log("2");
+$("#svgframe").attr("src", "svg-edit/svg-editor1.html");
+control=false;
+}
+}
 
     this.saveEdition = function() {
         var s = "svgframe";

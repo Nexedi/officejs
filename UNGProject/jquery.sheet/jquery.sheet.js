@@ -3125,6 +3125,7 @@ jQuery.sheet = {
 					type: 'POST',
 					data: 's=' + d,
 					dataType: 'html',
+					cache:true,
 					success: function(data) {
 						jS.setDirty(false);
 						jS.trigger('saveSheet');

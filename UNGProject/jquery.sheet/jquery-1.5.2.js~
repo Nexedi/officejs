@@ -6365,7 +6365,6 @@ jQuery.each( [ "get", "post" ], function( i, method ) {
 			type: method,
 			url: url,
 			data: data,
-			cache:true,
 			success: callback,
 			dataType: type
 		});

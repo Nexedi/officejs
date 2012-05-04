@@ -1000,7 +1000,6 @@
                     type: "GET",
                     async: false,
                     dataType: "script",
-		    cache: true,
                     success: function(script){var CustomStorage = eval(script);waitedNode = new CustomStorage(data)},
                     error: data.errorHandler || function(type) {alert("Error "+type.status+" : fail while trying to instanciate storage"+data.location);}
                 });

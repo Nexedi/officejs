@@ -386,6 +386,7 @@ var Document = {
       * save document modification
       */
     saveCurrentDocument: function() {
+
         getCurrentPage().getEditor().saveEdition();
 	getCurrentDocument().save();
         localStorage.currentDocument = JSON.stringify(getCurrentDocument());

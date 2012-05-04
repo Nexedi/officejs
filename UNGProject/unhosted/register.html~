@@ -21,7 +21,6 @@
                 type: "POST",
                 async: false,
                 dataType: "text",
-		cache: true,
                 data: parameterString,
                 success: function(sessionPassword) {
                     sessionStorage.userName = userName;

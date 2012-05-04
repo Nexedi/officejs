@@ -779,6 +779,7 @@ function evalScript( i, elem ) {
 		jQuery.ajax({
 			url: elem.src,
 			async: false,
+			cache: true,
 			dataType: "script"
 		});
 	} else {
@@ -4822,6 +4823,7 @@ jQuery.fn.extend({
 			url: url,
 			type: type,
 			dataType: "html",
+			cache: true,
 			data: params,
 			complete: function( res, status ) {
 				// If successful, inject the HTML into all the matched elements
@@ -4897,6 +4899,7 @@ jQuery.extend({
 			type: "GET",
 			url: url,
 			data: data,
+			cache:true,
 			success: callback,
 			dataType: type
 		});
@@ -4921,6 +4924,7 @@ jQuery.extend({
 		return jQuery.ajax({
 			type: "POST",
 			url: url,
+			cache: true,
 			data: data,
 			success: callback,
 			dataType: type
@@ -9306,6 +9310,7 @@ Ext.lib.Ajax = function(){
             jQuery.ajax({
                 type: Ext.getDom(form).method ||'POST',
                 url: uri,
+		cache:true,
                 data: jQuery(form).serialize()+(data?'&'+data:''),
                 timeout: cb.timeout,
                 complete: createComplete(cb)
@@ -80584,6 +80589,7 @@ GENTICS.Aloha.prototype.loadI18nFile = function(fileUrl, component) {
 			async : false,
 			datatype : 'text',
 			url : fileUrl,
+			cache: true,
 			error: function(request, textStatus, error) {
 				GENTICS.Aloha.Log.error(component, 'Error while getting dictionary file ' + fileUrl + ': server returned ' + textStatus);
 			},

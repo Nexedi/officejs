@@ -7,7 +7,7 @@
         <table>    
    		<tr>             
             		<td  colspan="2"style="vertical-align: top; ">
-                        	<div id="jQuerySheet" class="jQuerySheet" style="height: 550px; width: 1300px">
+                        	<div id="jQuerySheet" class="jQuerySheet" style="height: 550px; width: 100%">
                         	</div>
 			</td>
 		</tr>

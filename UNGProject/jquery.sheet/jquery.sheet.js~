@@ -3374,10 +3374,10 @@ jQuery.sheet = {
 			},
 			newSheet: function() { /* creates a new shet from size */
 				jS.openSheet(jQuery.sheet.makeTable.fromSize('5x10'));
-			//	var size = prompt(jS.msg.newSheet);
-		//		if (size) {
-	//				jS.openSheet(jQuery.sheet.makeTable.fromSize(size));
-//				}
+			/*	var size = prompt(jS.msg.newSheet);
+				if (size) {
+					jS.openSheet(jQuery.sheet.makeTable.fromSize(size));
+				}*/
 			},
 			importRow: function(rowArray) { /* creates a new row and then applies an array's values to each of it's new values
 												rowArray: array;

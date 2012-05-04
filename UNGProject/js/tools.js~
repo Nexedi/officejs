@@ -138,12 +138,12 @@ waitBeforeSucceed = function(required, func) {
  * @param func : function to execute in a loop until it encounters no exception
  */
 tryUntilSucceed = function(func) {
-    var nb = 2;//avoid to test too much times
+    var nb = 5;//avoid to test too much times
     (function execute() {
         try {func.call();}
         catch(e) {
             if(console) {console.log(e)}
-            if(nb<100) {setTimeout(execute,nb*200);}
+            if(nb<10000) {setTimeout(execute,1000);}
         }
         nb*=nb;
     })()
