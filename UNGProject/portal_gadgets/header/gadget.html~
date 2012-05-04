@@ -1,0 +1,17 @@
+<script type="text/javascript">
+var showUngHeader=function(m) {
+	if(m==false){
+		document.getElementById("ungheader").style.display='none';
+		document.getElementById("themeheader").style.display='block';
+		}
+	else{
+		document.getELementById("ungheader").style.display='block';
+		document.getELementById("themeheader").style.display='none';
+		}
+}
+</script>
+<div id="ungheader"  gadget="portal_gadgets/ungheader/gadget.html"
+                  gadget:property="{}"></div>
+
+<div id="themeheader" style="display:none;"gadget="portal_gadgets/themeheader/gadget.html"
+               gadget:property="{}"></div>

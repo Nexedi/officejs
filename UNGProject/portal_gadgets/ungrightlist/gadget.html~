@@ -1,0 +1,210 @@
+
+                <div class=" main-right">
+
+                    <fieldset class="widget">
+
+                        <legend class="group_title"></legend>
+
+                        <div class="field" title="">
+
+                            <label> favorite_box </label>
+                            <div class="input"><div  >
+                                <div class="favorite">
+                                    <a class="domain_selected"></a>
+
+                                    <a href="ung.html">Refresh</a>
+                                </div>
+                            </div></div>
+
+                        </div>
+
+                        <div class="field" title="">
+                            <label> Toolbar </label>
+
+                            <div class="input"><div  >
+                                <div class="toolbar">
+                                    <button class="delete ung_button"
+                                            onclick="DocumentList.deleteSelectedDocuments()">Delete
+                                    </button>
+                                    <button name="#" class="change_state ung_button">Change State</button>
+
+                                    <div class="listbox-navigation">
+                                        <button class="listbox_first_page your_listbox_first_page ung_button" onclick="DocumentList.changePage(event)">
+                                            <span class="image"> </span>
+                                        </button>
+                                        <button class="listbox_previous_page your_listbox_previous_page ung_button" onclick="DocumentList.changePage(event)">
+                                            <span class="image"> </span>
+                                        </button>
+                                        <input class="listbox_set_page your_listbox_set_page" value="1" size="1" onkeypress="if(event.keyCode==13){DocumentList.changePage(event)}" />
+                                        /<span class="listbox_last_page">1</span>
+                                        <button class="listbox_next_page your_listbox_next_page ung_button" onclick="DocumentList.changePage(event)">
+                                            <span class="image"> </span>
+                                        </button>
+                                        <button class="listbox_last_page your_listbox_last_page ung_button" onclick="DocumentList.changePage(event)">
+                                            <span class="image"> </span>
+                                        </button>
+                                    </div>
+
+                                    <div class="listbox-head">
+                                        <div class="listbox-head-spacer"></div>
+                                        <div class="listbox-head-content">
+
+                                            <!-- Listbox head (in left) -->
+                                            <div class="listbox-head-title">
+
+                                                <!-- List tree mode choice -->
+                                                <!-- Listbox title -->
+                                                <div class="listbox-header-box">
+                                                    <div class="listbox-title">
+                                                        <a href="..." class="your_listbox_title">
+                                                            <span>Document List</span></a>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Listbox nagivation (in right) -->
+                                            <div class="listbox-head-navigation">
+
+                                                <!--Show search result in web mode-->
+                                                <div class="listbox-header-box">
+                                                    <div class="listbox-number-of-records">
+
+                                                        <!-- listbox start - stop number -->
+                                                        <span id="page_start_number" class="listbox-current-page-start-number">1</span> -
+                                                        <span id="page_stop_number" class="listbox-current-page-stop-number">...</span>
+                                                        <span>of</span>
+
+                                                        <!-- listbox total rows number -->
+                                                        <span id="total_row_number" class="listbox-current-page-total-number your_listbox-current-page-total-number">
+                                                            <a>?</a> records
+                                                        </span>
+
+                                                        <!-- listbox selected rows number -->
+                                                        <span id="selected_row_number" class="your_listbox-current-item-number">
+                                                            - <a>0</a> items selected
+                                                        </span>
+
+                                                    </div>
+                                                </div>
+
+                                                <!--Page navigation -->
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div></div>
+
+                        </div>
+
+                        <div class="field" title="">
+
+                            <label> Document List </label>
+
+                            <div class="input">
+
+                                <div class="listbox-container">
+
+                                    <div class="listbox-content listbox-content-fixed-width">
+
+                                        <div class="listbox-body">
+
+                                            <table class="listbox your_listbox your_listbox-table">
+                                                <thead>
+
+                                                    <!--Column title -->
+                                                    <tr class="listbox-label-line">
+
+                                                        <!--Report tree-->
+                                                        <!-- Anchor cell -->
+                                                        <!-- Select cell -->
+                                                        <th class="listbox-table-select-cell">
+                                                            <input class="listbox-check-all" type="image"
+                                                                    name="your_listbox_checkAll:method"
+                                                                    value="1" alt="Check All"
+                                                                    title="Check All"
+                                                                    onclick="DocumentList.checkAll()"
+                                                                    src="images/icons/checkall.png" />
+                                                            &nbsp;
+
+                                                            <input class="listbox-uncheck-all"
+                                                                    type="image"
+                                                                    name="your_listbox_uncheckAll:method"
+                                                                    value="1" alt="Uncheck All"
+                                                                    title="Uncheck All"
+                                                                    onclick="DocumentList.resetSelectionList()"
+                                                                    src="images/icons/decheckall.png" />
+                                                        </th>
+
+                                                        <!-- Label column row -->
+                                                        <th class="listbox-table-header-cell"></th>
+
+                                                        <th class="listbox-table-header-cell">
+                                                            <!-- Button in normal view -->
+                                                            <!-- Button in gadget mode -->
+                                                            <button type="button" class="sort-button"
+                                                                    onclick=""
+                                                                    title="Title">
+
+                                                                <span>Title</span>
+                                                            </button>
+
+                                                            <!-- Icon showing sort order -->
+                                                            <img src="images/ung/transparent-image.gif"
+                                                                    alt="Sort" class="sort-button"
+                                                                    title="Sort" />
+                                                        </th>
+
+                                                        <th class="listbox-table-header-cell">
+                                                            <!-- Button in normal view -->
+                                                            <!-- Button in gadget mode -->
+                                                            <button type="button"
+                                                                    class="sort-button"
+                                                                    onclick=""
+                                                                    title="Sharing">
+                                                                <span>Sharing</span>
+                                                            </button>
+
+                                                            <!-- Icon showing sort order -->
+                                                            <img src="images/ung/transparent-image.gif"
+                                                                    alt="Sort" class="sort-button"
+                                                                    title="Sort" />
+                                                        </th>
+
+                                                        <th class="listbox-table-header-cell">
+                                                            <!-- Button in normal view -->
+                                                            <!-- Button in gadget mode -->
+                                                            <button type="button"
+                                                                    class="sort-button"
+                                                                    onclick=""
+                                                                    title="Date">
+                                                                <span>Date</span>
+                                                            </button>
+
+                                                            <!-- Icon showing sort order -->
+                                                            <img src="images/ung/transparent-image.gif"
+                                                                    alt="Sort" class="sort-button"
+                                                                    title="Sort" />
+                                                        </th>
+
+                                                    </tr>
+
+                                                    <!--Search column input -->
+                                                </thead>
+
+                                                <!-- Stats -->
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </fieldset>
+
+                </div>

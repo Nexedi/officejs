@@ -1,0 +1,268 @@
+
+ <div class=" main-left">
+                    <fieldset class="widget">
+
+                        <legend class="group_title"></legend>
+
+                        <div class="field" title="">
+
+                            <label> user_menu_box </label>
+
+                            <div class="input"><div  >
+                                <div class="gadget-column">
+                                    <div class="gadget-action">
+
+                                        <div class="create_object option_menu">
+                                            <ul><li>
+                                                <div class="fix ung_button">
+                                                    <span>Create New</span>
+                                                    <img src="images/ung/arrow.png"/>
+                                                </div>
+                                                <ul>
+                                                    <li>
+                                                        <div onclick="createNewDocument('illustration')">
+                                                            <img src="images/icons/svg.png" alt=""/>
+                                                            <span>Web Illustration</span>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div onclick="createNewDocument('table')">
+                                                            <img src="images/icons/table.png" alt=""/>
+                                                            <span>Web Table</span>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div onclick="createNewDocument('text')">
+                                                            <img src="images/icons/document.png"/>
+                                                            <span>Web Page</span>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </li></ul>
+                                        </div>
+
+                                        <input type="submit" id="upload" class="ung_button" name="Upload" value="Upload" />
+
+                                        <div class="file-selection">
+                                            <div class="file-quick-search">
+                                                <div class="listbox-tree">
+
+                                                    <!-- Domain Report Tree mode -->
+                                                    <div class="listbox-domain-tree-container">
+
+                                                        <!-- Select domain node -->
+                                                        <select name="domain_root_url" onchange="submitAction(this.form, '/ung/setDomainRoot')">
+                                                            <option value="ung_domain" selected="selected">UNG Documents</option>
+                                                        </select>
+
+                                                        <!-- Domain node contents -->
+                                                        <table cellpadding="0"
+                                                                summary="This table contains the domain tree"
+                                                                class="your_listbox-table-domain-tree">
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/all_documents.0">All Documents</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                        name="unfoldDomain:method"
+                                                                        class="tree-closed"
+                                                                        value="ung_domain/by_subject.0">By Subject</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/hidden.0">Hidden</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/owner.0">Owner</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/recent.0">Recent</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/shared.0">Shared by me</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/starred.0">Starred</button>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr>
+                                                                <td colspan="1" class="listbox-table-domain-tree-cell">
+                                                                    <button type="submit"
+                                                                            name="unfoldDomain:method"
+                                                                            class="tree-closed"
+                                                                            value="ung_domain/trash.0">Trash</button>
+                                                                </td>
+                                                            </tr>
+
+                                                        </table>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="gadget-listbox" id="gadget-listbox" title="Add Gadgets">
+                                        <table id="gadget-table"></table>
+                                    </div>
+
+                                    <div class="front_pad">
+
+                                        <!-- XXX - Use WebSection_viewKnowledgePadColumn to display one column only -->
+                                        <div class="draggable_wrapper">
+
+                                            <div id="gadget_area_wrapper">
+                                                <div id="pad-navigation-wrapper">
+
+                                                    <div class="tab" id="tabs_switcher">
+                                                        <span id="tab_switcher_hidden" style="display:none">Show tabs</span>
+                                                        <span id="tab_switcher_visible">Hide tabs</span>
+                                                    </div>
+
+                                                    <div id="tabs" style="display: block">
+                                                        <ul>
+
+                                                            <li id="knowledge_pad_module_1" class="tab tab_selected">
+
+                                                                <span id="knowledge_pad_module_1_title" onclick="loadPadFromServer('knowledge_pad_module/1', 'knowledge_pad_module_1', 'web_front')">Onglet 1</span>
+
+                                                                <div class="pad-actions" style="display:block">
+                                                                    <span title="Settings"
+                                                                            class="clickable_image rename_tab_dialog_image"
+                                                                            onclick="showRenamePadPopup('knowledge_pad_module/1',
+                                                                                                         'knowledge_pad_module_1_title')"></span>
+                                                                    <span title="Remove"
+                                                                            class="clickable_image remove_tab_dialog_image"
+                                                                            onclick=" removeKnowledgePadFromServer(
+                                                                                         'knowledge_pad_module/1', 'web_front')" />
+                                                                </div>
+
+                                                            </li>
+
+                                                            <li class="tab" onclick="showAddNewPadPopup();"
+                                                                title="Add new tab"
+                                                                id="add_new_tab_dialog_link">Add tab</li>
+
+                                                            </ul>
+                                                        </div>
+
+                                                        <div id="add_new_gadget_link">
+                                                            <div id="mashupToolbarContainer">
+                                                                <div id="mashupToolbar" dojoType="dijit.Toolbar">
+                                                                    <div id="searchResults" dojoType="dijit.form.DropDownButton" showLabel="true" iconClass="nomadToolbarIcon nomadIconSearchResults">
+                                                                        <span>Add gadgets</span>
+                                                                        <div id="searchResultsMenu" dojoType="nomad.widget.PaletteMenu">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!--a title="Add gadgets" id="add-gadgets"><span>Add gadgets</span></a-->
+                                                        </div>
+
+                                                </div>
+
+                                               
+                                                <!-- Render active Knowledge pad -->
+                                                <div id="pad-body-wrapper">
+                                                    <div id="page_wrapper">
+
+                                                        <!-- No gadgets message -->
+                                                        <div id="gadget_container">
+                                                        <div id="__replaceablecontent__">
+                                                        <!-- Here is where the gadgets appear-->
+                                                        </div>
+                                                            <h3> Your tab is empty. </h3>
+                                                            <h4> Please  use link (<b>Add gadgets</b>) to prepare it yourself. </h4>
+                                                        </div>
+
+                                                        <!-- Render pad columns -->
+                                                        <div class="portal-column" id="portal-column-0"></div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Hidden dialogs -->
+                                                <div id="add_new_tab_dialog" class="toggable_dialog">
+
+                                                    <h3> Add new tab </h3>
+                                                    <span>Tab name</span>:
+                                                    <input type="text" value="" name="pad_title"
+                                                            id="new_pad_title"
+                                                            onkeypress=" return addPadOnServerOnEnter(event, 'web_front', 'view')" />
+                                                    <br />
+                                                    <br />
+
+                                                    <button type="button" onclick="$('#add_new_tab_dialog').toggle();">Cancel</button>
+                                                    <button type="button"
+                                                            id="add_new_tab_dialog_add_button"
+                                                            onclick="addPadOnServer('web_front', 'view')">Add</button>
+
+                                                </div>
+
+                                                <div id="rename_tab_dialog" class="toggable_dialog">
+
+                                                    <h3> Rename tab </h3>
+                                                    <span>Tab name</span>:
+                                                    <input type="text" id="new_knowledge_pad_title"
+                                                            name="knowledge_pad_title"
+                                                            onkeypress="return renameKnowledgePadToServerOnEnter(event);"
+                                                            value="Onglet 1" />
+                                                    <br />
+                                                    <br />
+
+                                                    <button type="button" onclick="$('#rename_tab_dialog').toggle();">Cancel</button>
+                                                    <button type="button"
+                                                            id="rename_tab_dialog_rename_button"
+                                                            onclick="renameKnowledgePadToServer();"> Rename </button>
+
+                                                </div>
+
+                                                <!-- Show message that default pad is being prepared. -->
+                                                <!-- Create (asynch) default pad. -->
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div></div>
+                        </div>
+                    </fieldset>
+                </div>

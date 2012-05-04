@@ -1,0 +1,199 @@
+
+
+<html class="no-js" lang="en" >
+<!-- the "no-js" class is for Modernizr. -->
+
+<head id="UNGinitial" data-template-set="html5-reset">
+	
+	<meta charset="utf-8">
+
+	<!-- all our JS is at the bott	om of the page, except for Modernizr. -->
+	<script src="_/js/modernizr-1.7.min.js"></script>
+	
+	<!--[if IE]><link rel="stylesheet" href="_/css/_patches/win-ie-all.css" media="all" /><![endif]-->
+  
+  	<!--[if IE 7]><link rel="stylesheet" href="_/css/_patches/win-ie7.css" media="all" /><![endif]-->
+      
+  	<!--[if lte IE 6]><script src="_/js/ieupgrade/warning.js"></script><script>window.onload=function(){e("_/js/ieupgrade/")}</script><![endif]-->
+
+        <title id="page_title"> UNGDoc </title>
+
+<!--make a user -->
+
+ <script type="text/javascript" src="js/jquery/jquery.js">
+</script>
+  <script type="text/javascript" src="js/tools.js">
+</script>
+  <script type="text/javascript" src="unhosted/jio.js">
+</script>
+  <script type="text/javascript" src="js/theme.js">
+</script>
+  <script type="text/javascript" src="js/ung.js">
+</script>
+  <script type="text/javascript" src="js/login.js">
+</script>
+
+<!--INitial storage-->
+<script type="text/javascript"">
+		var wallet = new Wallet();
+		setWallet(wallet);
+		initStorage(wallet);
+</script>
+<!--java script for choose to show the ung or the theme-->
+    <script type="text/javascript" src="js/ung-theme.js"></script>
+
+
+<!--For the UNG gadget-->
+ <meta name="generator" content="ERP5 - Copyright (C) 2001 - 2008. All rights reserved." />
+    <meta name="description"
+    content="ERP5 Free Open Source ERP and CRM" />
+    <meta name="keywords" content="" />
+    <meta name="robots" content="index, follow" />
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Script-Type" content="text/javascript" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+
+    <link type="text/css" rel="stylesheet" href="css/ung.css" />
+    <link type="text/css" rel="stylesheet" href="css/jquery-ui.css" />
+    <script type="text/javascript" src="openajaxhub/src/OpenAjax-mashup.js"></script>
+    <script type="text/javascript" src="openajaxhub/src/containers/inline/inline.js"></script>
+    <script type="text/javascript" src="openajaxhub/src/containers/iframe/iframe.js"></script>
+    <script type="text/javascript" src="openajaxhub/src/containers/iframe/FIM.js"></script>
+    <script type="text/javascript" src="openajaxhub/src/containers/iframe/json2.js"></script>
+    <script type="text/javascript" src="openajaxhub/src/containers/iframe/crypto.js"></script>
+
+
+    <script type="text/javascript" src="js/tools.js"></script>
+    <script type="text/javascript" src="unhosted/jio.js"></script>
+
+    <script type="text/javascript" src="js/theme.js"></script>
+    <script type="text/javascript" src="js/ung.js"></script>
+    <script type="text/javascript" src="js/loader.js"></script>
+
+
+    <script type="text/javascript" src="js/minimashup.js"></script>
+
+
+    <script>
+	/*        var baseURL = window.location.protocol + "//" + window.location.host + window.location.pathname.substring( 0, 			window.location.pathname.lastIndexOf("/")+1 );
+	        djConfig = { usePlainJson: true, parseOnLoad: false, isDebug: false,
+	                modulePaths: { "nomad": baseURL + "nomad"} };*/
+    </script>
+
+
+
+    <link rel="icon" type="image/x-icon" href="images/ung/favicon.ico" />
+    <link rel="shortcut icon" type="image/x-icon" href="images/ung/favicon.ico" />
+
+    <script type="text/javascript">
+		var initung = function() {
+		    //initialize page and storage, then user, and then document List
+		   Page.initialize("ung");//provide methods on the page
+		   Storage.initialize();//initialize storage
+		}
+		$(document).ready(initung);
+    </script>
+<!--For the theme gadget-->
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="Content-Script-Type" content="text/javascript" />
+        <meta http-equiv="Content-Style-Type" content="text/css" />
+        <meta name="keywords" content="" />
+        <meta name="robots" content="index, follow" />
+
+        <link rel="icon" type="image/x-icon"
+            href="images/ung/favicon.ico" />
+        <link rel="shortcut icon" type="image/x-icon"
+            href="images/ung/favicon.ico" />
+
+        <!-- this is a placeholder for different extensions to head which could be required by web themes -->
+
+        <!-- jquery -->
+      
+        <link type="text/css" rel="stylesheet" href="css/jquery-ui.css" />
+        <link rel="stylesheet" type="text/css" href="css/ung.css" />
+
+        <script type="text/javascript" src="js/tools.js"></script>
+        <script type="text/javascript" src="unhosted/jio.js"></script>
+
+        <script type="text/javascript" src="js/theme.js"></script>
+
+        <script type="text/javascript">
+	
+            
+        </script>
+	<!--Table Required-->
+		<link rel="stylesheet" type="text/css" href="jquery.sheet/jquery.sheet.css" />
+		<link rel="stylesheet" type="text/css" href="jquery.sheet/jquery-ui/theme/jquery-ui.css" />
+		<script type="text/javascript" src="jquery.sheet/jquery-1.5.2.js">
+		</script>
+		<script type="text/javascript" src="jquery.sheet/jquery.sheet.js">
+		</script>
+		<script type="text/javascript" src="jquery.sheet/parser.js">
+		</script>
+        <!--/Required-->
+		
+		
+	<!--Table Optional-->
+		<!--ScrollTo-->
+			<script type="text/javascript" src="jquery.sheet/plugins/jquery.scrollTo-min.js"></script>
+		<!--/ScrollTo-->
+		<!--jQuery UI-->
+			<script type="text/javascript" src="jquery.sheet/jquery-ui/ui/jquery-ui.min.js"></script>
+		<!--/jQuery UI-->
+		<!--Raphaeljs - for charts-->
+			<script type="text/javascript" src="jquery.sheet/plugins/raphael-min.js"></script>
+			<script type="text/javascript" src="jquery.sheet/plugins/g.raphael-min.js"></script>
+		<!--/Raphaeljs-->
+		<!--ColorPicker-->
+			<link rel="stylesheet" type="text/css" href="jquery.sheet/plugins/jquery.colorPicker.css" />
+			<script type="text/javascript" src="jquery.sheet/plugins/jquery.colorPicker.min.js"></script>
+		<!--/ColorPicker-->
+		<!--Theme Switcher Tool-->
+			<!--<script type="text/javascript" src="http://jqueryui.com/themeroller/themeswitchertool/"></script>-->
+		<!--/Theme Switcher Tool-->
+		<!--Elastic-->
+			<script type="text/javascript" src="jquery.sheet/plugins/jquery.elastic.min.js"></script>
+		<!--/Elastic-->
+		<!--Advanced_Math-->
+			<script type="text/javascript" src="jquery.sheet/jquery.sheet.advancedfn.js"></script>
+		<!--/Advanced_Math-->
+		<!--Finance-->
+			<script type="text/javascript" src="jquery.sheet/jquery.sheet.financefn.js"></script>
+		<!--/Finance-->
+
+<body>
+  <!-- Gadget work start here -->
+<div id="application" gadget="portal_gadgets/application/gadget.html"
+                        gadget:property="{}">
+
+    <div id="top_menu" gadget="portal_gadgets/top_menu/gadget.html"
+                          gadget:property="{}"></div>
+
+      <div id="header" gadget="portal_gadgets/header/gadget.html"
+                            gadget:property="{}"></div>
+
+      <div id="content" gadget="portal_gadgets/content/gadget.html"
+                            gadget:property="{}"></div>
+  </div>
+  <!-- EOF: Gadget work start here -->
+
+
+  <!-- here comes the javascript -->
+
+  <!-- Grab Google CDN's jQuery. fall back to local if necessary -->
+
+
+
+
+  <script src="_/js/jquery-ui/js/jquery-ui-1.8.13.custom.min.js"></script>
+
+  <!-- this is where we put our custom functions -->
+  <script src="_/js/functions.js"></script>
+
+  <!-- Gadget library goes here -->
+  <script src="_/js/renderjs/renderjs.js"></script>
+
+
+</body>
+</html>

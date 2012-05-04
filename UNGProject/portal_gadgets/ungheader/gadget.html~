@@ -1,0 +1,35 @@
+
+ <div class="header">
+            <!-- Each aggregate of groups is a div wrapper -->
+            <div class="wrapper" id="wrapper_header">
+
+                <div class=" header-left">
+                    <fieldset class="widget">
+
+                        <legend class="group_title"></legend>
+
+                        <div class="field" title="">
+
+                            <label> search_bar </label>
+
+                            <div class="input"><div  >
+
+                                <a class="ung_docs">
+                                    
+				<input type="image" src="images/ung/ung-logo.gif" alt="logo" onclick="Document.stopDocumentEdition()"/>
+                                </a>
+                                <a id="loading_message">Loading...</a>
+
+                                <form>
+                                    <input type="text" name="field_your_search_text" class="field" onkeyup="submitFormOnEnter(event, this.form, 'WebSection_viewSearchResultList')" />
+                                    <input type="button" value="Search Doc" name="WebSection_viewSearchResultList:method" />
+                                </form>
+
+                            </div></div>
+
+                        </div>
+                    </fieldset>
+                </div>
+
+            </div>
+        </div>
