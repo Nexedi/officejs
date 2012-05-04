@@ -132,31 +132,62 @@ test ('All tests', function () {
 
 module ( 'Jio Job Managing' );
 
-test ('Add 2 same jobs', function () {
-    // Check possibilities when adding 2 same jobs.
-    
+test ('Simple Job Elimination', function () {
     var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
+    o.f1 = this.spy(); o.f2 = this.spy()
 
-    // Test if the second job write over the first one
     o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
                           {'ID':'jiotests'});
     id = o.jio.id;
-    o.jio.saveDocument({'fileName':'file','fileContent':'content'});
+    o.jio.saveDocument({'fileName':'file','fileContent':'content',
+                        'callback':o.f1});
+    ok(LocalOrCookieStorage.getItem('jio/jobObject/'+id)['1'],
+       'job creation');
     clock.tick(10);
-    o.jio.saveDocument({'fileName':'file','fileContent':'content'});
+    o.jio.removeDocument({'fileName':'file','fileContent':'content',
+                          'callback':o.f2});
+    deepEqual(LocalOrCookieStorage.getItem('jio/jobObject/'+id)['1'],
+              undefined,'job elimination');
+});
+
+test ('Simple Job Replacement', function () {
+    // Test if the second job write over the first one
+    
+    var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
+    o.f1 = this.spy(); o.f2 = this.spy()
+
+    o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
+                          {'ID':'jiotests'});
+    id = o.jio.id;
+    o.jio.saveDocument({'fileName':'file','fileContent':'content',
+                        'callback':o.f1});
+    clock.tick(10);
+    o.jio.saveDocument({'fileName':'file','fileContent':'content',
+                        'callback':o.f2});
     deepEqual(LocalOrCookieStorage.getItem(
         'jio/jobObject/'+id)['1'].date,10,
               'The first job date have to be equal to the second job date.');
+    clock.tick(500);
+    ok(!o.f1.calledOnce,'no callback for the first save request');
+    ok(o.f2.calledOnce,'second callback is called once');
     o.jio.stop();
-    clock.tick(-10);
-    
+
+});
+   
+test ('Simple Job Waiting', function () { 
     // Test if the second job doesn't erase the first ongoing one
+
+    var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
+    o.f3 = this.spy(); o.f4 = this.spy();
+
     o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
                           {'ID':'jiotests'});
     id = o.jio.id;
-    o.jio.saveDocument({'fileName':'file','fileContent':'content'});
+    o.jio.saveDocument({'fileName':'file','fileContent':'content',
+                        'callback':o.f3});
     clock.tick(200);
-    o.jio.saveDocument({'fileName':'file','fileContent':'content'});
+    o.jio.saveDocument({'fileName':'file','fileContent':'content',
+                        'callback':o.f4});
     ok(LocalOrCookieStorage.getItem(
         'jio/jobObject/'+id)['2'] &&
        LocalOrCookieStorage.getItem(
@@ -166,14 +197,13 @@ test ('Add 2 same jobs', function () {
         'jio/jobObject/'+id)['2'].status === 'wait' &&
        LocalOrCookieStorage.getItem(
            'jio/jobObject/'+id)['2'].waitingFor &&
-       LocalOrCookieStorage.getItem(
-           'jio/jobObject/'+id)['2'].waitingFor.jobID === '1',
+       JSON.stringify (LocalOrCookieStorage.getItem(
+           'jio/jobObject/'+id)['2'].waitingFor.jobIdArray) === '["1"]',
        'The second job must be waiting for the first to end');
+    clock.tick(500);
+    ok(o.f3.calledOnce,'first request passed');
+    ok(o.f4.calledOnce,'restore waiting job');
     o.jio.stop();
-});
-
-test ('Restore a previous waiting job', function () {
-    ok(false,'not implemented yet');
 });
 
 module ( 'Jio LocalStorage' );
@@ -591,25 +621,29 @@ test ('Check name availability', function () {
     };
     // DummyStorageAllOK,OK
     o.jio = JIO.createNew({'type':'replicate','storageArray':[
-        {'type':'dummyallok'},{'type':'dummyallok'}]},
+        {'type':'dummyallok','userName':'1'},
+        {'type':'dummyallok','userName':'2'}]},
                           {'ID':'jiotests'});
     mytest('DummyStoragesAllOK,OK : name available',true);
     o.jio.stop();
     // DummyStorageAllOK,Fail
     o.jio = JIO.createNew({'type':'replicate','storageArray':[
-        {'type':'dummyallok'},{'type':'dummyallfail'}]},
+        {'type':'dummyallok','userName':'1'},
+        {'type':'dummyallfail','userName':'2'}]},
                           {'ID':'jiotests'});
     mytest('DummyStoragesAllOK,Fail : name not available',false);
     o.jio.stop();
     // DummyStorageAllFail,OK
     o.jio = JIO.createNew({'type':'replicate','storageArray':[
-        {'type':'dummyallfail'},{'type':'dummyallok'}]},
+        {'type':'dummyallfail','userName':'1'},
+        {'type':'dummyallok','userName':'2'}]},
                           {'ID':'jiotests'});
     mytest('DummyStoragesAllFail,OK : name not available',false);
     o.jio.stop();
     // DummyStorageAllFail,Fail
     o.jio = JIO.createNew({'type':'replicate','storageArray':[
-        {'type':'dummyallfail'},{'type':'dummyallfail'}]},
+        {'type':'dummyallfail','userName':'1'},
+        {'type':'dummyallfail','userName':'2'}]},
                           {'ID':'jiotests'});
     mytest('DummyStoragesAllFail,Fail : name not available',false);
     o.jio.stop();

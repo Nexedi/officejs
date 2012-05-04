@@ -713,6 +713,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // ReplicateStorage
     ReplicateStorage = function ( options ) {
+        // TODO Add a tests that check if there is no duplicate storages.
         this.queue = options.queue;
         this.id = null;
         this.length = options.storage.storageArray.length;
@@ -750,7 +751,7 @@
                         job.callback(res);
                     }
                 };
-                this.queue.createJob ( newjob );
+                this.queue.createJob ( newjob ) ;
             }
         },
         saveDocument: function ( job, jobendcallback ) {
@@ -766,9 +767,8 @@
 
             // returns {'status':string,'message':string,'isSaved':boolean,
             // 'resultArray':Array} in the jobendcallback arguments.
-            
+
             // TODO
-            
         },
         loadDocument: function ( job, jobendcallback ) {
             // TODO

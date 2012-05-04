@@ -32,6 +32,74 @@
     ////////////////////////////////////////////////////////////////////////////
     // jio globals
     jioGlobalObj = {
+        // For more information, see documentation
+        'jobManagingMethod':{
+            'canSelect':function (job1,job2) {
+                if (JSON.stringify (job1.storage) ===
+                    JSON.stringify (job2.storage) &&
+                    JSON.stringify (job1.applicant) ===
+                    JSON.stringify (job2.applicant) &&
+                    job1.fileName === job2.fileName) {
+                    return true;
+                }
+                return false;
+            },
+            'canRemoveFailOrDone':function (job1,job2) {
+                if (job1.method === job2.method &&
+                    (job1.status === 'fail' ||
+                     job1.status === 'done')) {
+                    return true;
+                }
+                return false;
+            },
+            'canEliminate':function (job1,job2) {
+                if (job1.status !== 'ongoing' &&
+                    job2.method === 'removeDocument' &&
+                    (job1.method === 'removeDocument' ||
+                     job1.method === 'saveDocument')) {
+                    return true;
+                }
+                return false;
+            },
+            'canReplace':function (job1,job2) {
+                if (job1.status !== 'ongoing' &&
+                    job1.method === job2.method &&
+                    JSON.stringify (job1.options) ===
+                    JSON.stringify (job2.options) &&
+                    job1.fileContent === job2.fileContent) {
+                    return true;
+                }
+                return false;
+            },
+            'cannotAccept':function (job1,job2) {
+                if (job1.status !== 'ongoing' ) {
+                    if (job1.method === 'removeDocument' &&
+                        job2.method === 'loadDocument') {
+                        return true;
+                    }
+                } else {
+                    if (job1.method === 'loadDocument') {
+                        if (job2.method === 'loadDocument') {
+                            return true;
+                        }
+                    } else if (job1.method === 'removeDocument') {
+                        if (job2.method === 'loadDocument' ||
+                            job2.method === 'removeDocument') {
+                            return true;
+                        }
+                    } else if (job1.method === job2.method === 'saveDocument' &&
+                               job1.fileContent === job2.fileContent &&
+                               JSON.stringify (job1.options) ===
+                               JSON.stringify (job2.options)) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            'mustWait':function (job1,job2) {
+                return true;
+            }
+        },
         'localStorage': null,   // where the browser stores data
         'queueID': 1,
         'storageTypeObject': {} // ex: {'type':'local','creator': fun ...}
@@ -47,6 +115,8 @@
             console.error ('Fail to load ' + name);
             retval = false;
         };
+        try { if (!JSON) { err('JSON'); } }
+        catch (e) { err('JSON'); }
         try { if (!jQuery) { err('jQuery'); } }
         catch (e) { err('jQuery'); }
         try { if (!LocalOrCookieStorage) { err('LocalOrCookieStorage'); } }
@@ -200,19 +270,88 @@
                 this.jobObjectName,this.jobObject);
         },
         createJob: function ( options ) {
-            this.addJob ( new Job ( options ) );
+            return this.addJob ( new Job ( options ) );
         },
         addJob: function ( job ) {
-            // Add a job to the queue
+            // Add a job to the queue TODO DocString
             // job : the job object
-
-            // set job id
-            job.id = this.jobid;
-            this.jobid ++;
-            // save the new job into the queue
-            this.jobObject[job.id] = job;
+            
+            var res = {'newone':true,'elimArray':[],'waitArray':[],
+                       'removeArray':[]},
+            id=0;
+            
+            //// browsing current jobs
+            for (id in this.jobObject) {
+                if (jioGlobalObj.jobManagingMethod.canSelect(
+                    this.jobObject[id],job)) {
+                    if (jioGlobalObj.jobManagingMethod.canRemoveFailOrDone(
+                        this.jobObject[id],job)) {
+                        res.removeArray.push(id);
+                    }
+                    if (jioGlobalObj.jobManagingMethod.canEliminate(
+                        this.jobObject[id],job)) {
+                        console.log ('Elimitated: ' +
+                                     JSON.stringify (this.jobObject[id]));
+                        res.elimArray.push(id);
+                        continue;
+                    }
+                    if (jioGlobalObj.jobManagingMethod.canReplace(
+                        this.jobObject[id],job)) {
+                        console.log ('Replaced: ' +
+                                     JSON.stringify (this.jobObject[id]));
+                        this.jobObject[id].date = job.date;
+                        // no need to copy fileContent or userName
+                        this.jobObject[id].callback = job.callback;
+                        res.newone = false;
+                        break;
+                    }
+                    if (jioGlobalObj.jobManagingMethod.cannotAccept(
+                        this.jobObject[id],job)) {
+                        console.log ('Make not accepted: ' +
+                                     JSON.stringify (this.jobObject[id]));
+                        // Job not accepted
+                        return false;
+                    }
+                    if (jioGlobalObj.jobManagingMethod.mustWait(
+                        this.jobObject[id].job)) {
+                        console.log ('Waited: ' +
+                                     JSON.stringify (this.jobObject[id]) +
+                                     '\nby : ' + JSON.stringify (job));
+                        res.waitArray.push(id);
+                        continue;
+                    }
+                    // one of the previous tests must be ok.
+                    // the program must not reach this part of the 'for'.
+                }
+            }
+            //// end browsing current jobs
+            
+            if (res.newone) {
+                // if it is a new job, we can eliminate deprecated jobs and
+                // set this job dependencies.
+                for (id in res.elimArray) {
+                    this.removeJob(this.jobObject[res.elimArray[id]]);
+                }
+                if (res.waitArray.length > 0) {
+                    job.status = 'wait';
+                    job.waitingFor = {'jobIdArray':res.waitArray};
+                    for (id in res.waitArray) {
+                        this.jobObject[res.waitArray[id]].maxtries = 1;
+                    }
+                }
+                for (id in res.removeArray) {
+                    this.removeJob(this.jobObject[res.removeArray[id]]);
+                }
+                // set job id
+                job.id = this.jobid;
+                this.jobid ++;
+                // save the new job into the queue
+                this.jobObject[job.id] = job;
+                console.log ('new one: ' + JSON.stringify (job));
+            }
             // save into localStorage
             this.copyJobQueueToLocalStorage();
+            return true;
         }, // end addJob
         
         removeJob: function ( options ) {
@@ -223,22 +362,22 @@
             // options.job : the job object containing at least {id:..}.
             // options.where : remove values where options.where(job) === true
             
-            //// set tests functions
             var settings = $.extend ({'where':function (job) {return true;}},
                                      options),k='key',andwhere,found=false;
-            if (settings.job) {
-                andwhere = function (job) {return (job.id===settings.job.id);};
-            } else {
-                andwhere = function (job) {return true;};
-            }
-            //// end set tests functions
 
             //// modify the job list
-            for (k in this.jobObject) {
-                if (settings.where(this.jobObject[k]) &&
-                    andwhere(this.jobObject[k]) ) {
-                    delete this.jobObject[k];
+            if (settings.job) {
+                if (this.jobObject[settings.job.id] && settings.where(
+                    this.jobObject[settings.job.id]) ) {
+                    delete this.jobObject[settings.job.id];
                     found = true;
+                }
+            }else {
+                for (k in this.jobObject) {
+                    if (settings.where(this.jobObject[k])) {
+                        delete this.jobObject[k];
+                        found = true;
+                    }
                 }
             }
             if (!found) {
@@ -260,16 +399,41 @@
         invokeAll: function () {
             // Do all jobs in the queue.
 
-            var i = 'id';
+            var i = 'id', j = 'ind', ok = false;
             //// do All jobs
             for (i in this.jobObject) {
                 if (this.jobObject[i].status === 'initial') {
+                    // if status initial
                     // invoke new job
                     this.invoke(this.jobObject[i]);
-                } else if (this.jobObject[i].status === 'wait' &&
-                           this.jobObject[i].retryAt >= Date.now()) {
-                    // invoke waiting job
-                    this.invoke(this.jobObject[i]);
+                } else if (this.jobObject[i].status === 'wait') {
+                    // if status wait
+                    if (this.jobObject[i].waitingFor.jobIdArray) {
+                        // wait job
+                        ok = true;
+                        // browsing job id array
+                        for (j in this.jobObject[i].waitingFor.jobIdArray) {
+                            if (this.jobObject[this.jobObject[i].
+                                               waitingFor.jobIdArray[j]]) {
+                                // if a job is still exist, don't invoke
+                                ok = false;
+                                break;
+                            }
+                        }
+                        if (ok) {
+                            // invoke waiting job
+                            this.invoke(this.jobObject[i]);
+                        }
+                    } else if (this.jobObject[i].waitingFor.time) {
+                        // wait time
+                        if (this.jobObject[i].waitingFor.time > Date.now()) {
+                            // it is time to restore the job!
+                            this.invoke(this.jobObject[i]);
+                        }
+                    } else {
+                        // wait nothing
+                        this.invoke(this.jobObject[i]);
+                    }
                 }
             }
             this.copyJobQueueToLocalStorage();
@@ -550,6 +714,10 @@
             // options.applicant : the applicant (optional)
             // options.callback(result) : called to get the result.
 
+            // returns: - null if dependencies are missing
+            //          - false if the job was not added
+            //          - true if the job was added or replaced
+
             // example :
             //     jio.checkNameAvailability({'userName':'myName','callback':
             //         function (result) { alert('is available? ' +
@@ -578,6 +746,10 @@
             // options.applicant : the applicant (optional)
             // options.callback(result) : called to get the result.
 
+            // returns: - null if dependencies are missing
+            //          - false if the job was not added
+            //          - true if the job was added or replaced
+
             // jio.saveDocument({'fileName':'file','fileContent':'content',
             //     'callback': function (result) { alert('saved?' +
             //         result.isSaved); }});
@@ -605,6 +777,10 @@
             // options.applicant : the applicant (optional)
             // options.callback(result) : called to get the result.
 
+            // returns: - null if dependencies are missing
+            //          - false if the job was not added
+            //          - true if the job was added or replaced
+
             // jio.loadDocument({'fileName':'file','callback':
             //     function (result) { alert('content: '+
             //         result.doc.fileContent + ' creation date: ' +
@@ -631,6 +807,10 @@
             // options.applicant : the applicant (optional)
             // options.callback(result) : called to get the result.
 
+            // returns: - null if dependencies are missing
+            //          - false if the job was not added
+            //          - true if the job was added or replaced
+
             // jio.getDocumentList({'callback':
             //     function (result) { alert('list: '+result.list); }});
 
@@ -653,6 +833,10 @@
             // options.storage : the storage where to remove (optional)
             // options.applicant : the applicant (optional)
             // options.callback(result) : called to get the result.
+
+            // returns: - null if dependencies are missing
+            //          - false if the job was not added
+            //          - true if the job was added or replaced
 
             // jio.removeDocument({'fileName':'file','callback':
             //     function (result) { alert('removed? '+result.isRemoved); }});
