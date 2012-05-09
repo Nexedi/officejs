@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<ZopeData>
+  <record id="1" aka="AAAAAAAAAAE=">
+    <pickle>
+      <global name="ZopePageTemplate" module="Products.PageTemplates.ZopePageTemplate"/>
+    </pickle>
+    <pickle>
+      <dictionary>
+        <item>
+            <key> <string>_bind_names</string> </key>
+            <value>
+              <object>
+                <klass>
+                  <global name="NameAssignments" module="Shared.DC.Scripts.Bindings"/>
+                </klass>
+                <tuple/>
+                <state>
+                  <dictionary>
+                    <item>
+                        <key> <string>_asgns</string> </key>
+                        <value>
+                          <dictionary>
+                            <item>
+                                <key> <string>name_subpath</string> </key>
+                                <value> <string>traverse_subpath</string> </value>
+                            </item>
+                          </dictionary>
+                        </value>
+                    </item>
+                  </dictionary>
+                </state>
+              </object>
+            </value>
+        </item>
+        <item>
+            <key> <string>_text</string> </key>
+            <value> <unicode>\074div\076\n
+  B (gadget)\n
+  \074button onclick="GadgetIndex.getGadgetById(\'B\').jsCall1()"\076B.jsCall1 -\076 C.jsCall1\074/button\076\n
+  \074button onclick="$(\'#B\').trigger(\'htmlEvent1\')"\076HTML event 1\074/button\076\n
+  \074button onclick="$(\'#B\').trigger(\'htmlEvent2\')"\076HTML event 2\074/button\076\n
+\074/div\076\n
+\n
+\074script type="text/javascript" language="javascript"\076\n
+  //\074![CDATA[\n
+    $(document).ready(function() {\n
+        gadget = GadgetIndex.getGadgetById("B");\n
+        gadget.jsCall1 = function (){alert("B.jscall1");};\n
+        gadget.jsCall2 = function (){alert("B.jscall2");};\n
+    });\n
+  //]]\076\n
+\074/script\076</unicode> </value>
+        </item>
+        <item>
+            <key> <string>content_type</string> </key>
+            <value> <string>text/html</string> </value>
+        </item>
+        <item>
+            <key> <string>expand</string> </key>
+            <value> <int>0</int> </value>
+        </item>
+        <item>
+            <key> <string>id</string> </key>
+            <value> <string>B</string> </value>
+        </item>
+        <item>
+            <key> <string>output_encoding</string> </key>
+            <value> <string>iso-8859-15</string> </value>
+        </item>
+        <item>
+            <key> <string>title</string> </key>
+            <value> <unicode></unicode> </value>
+        </item>
+      </dictionary>
+    </pickle>
+  </record>
+</ZopeData>
