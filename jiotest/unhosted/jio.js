@@ -121,9 +121,10 @@
             },
             'canEliminate':function (job1,job2) {
                 if (job1.status !== 'ongoing' &&
-                    job2.method === 'removeDocument' &&
-                    (job1.method === 'removeDocument' ||
-                     job1.method === 'saveDocument')) {
+                    (job1.method === 'removeDocument' &&
+                     job2.method === 'saveDocument' ||
+                     job1.method === 'saveDocument' &&
+                     job2.method === 'removeDocument')) {
                     return true;
                 }
                 return false;
@@ -364,15 +365,11 @@
                     }
                     if (jioGlobalObj.jobManagingMethod.canEliminate(
                         this.jobObject[id],job)) {
-                        console.log ('Elimitated: ' +
-                                     JSON.stringify (this.jobObject[id]));
                         res.elimArray.push(id);
                         continue;
                     }
                     if (jioGlobalObj.jobManagingMethod.canReplace(
                         this.jobObject[id],job)) {
-                        console.log ('Replaced: ' +
-                                     JSON.stringify (this.jobObject[id]));
                         basestorage = new BaseStorage(
                             {'queue':this,'job':this.jobObject[id]});
                         basestorage.replace(job);
@@ -381,16 +378,11 @@
                     }
                     if (jioGlobalObj.jobManagingMethod.cannotAccept(
                         this.jobObject[id],job)) {
-                        console.log ('Not accepted: ' + JSON.stringify (job) + '\nby: ' +
-                                     JSON.stringify (this.jobObject[id]));
                         // Job not accepted
                         return false;
                     }
                     if (jioGlobalObj.jobManagingMethod.mustWait(
                         this.jobObject[id],job)) {
-                        console.log ('Waited: ' +
-                                     JSON.stringify (this.jobObject[id]) +
-                                     '\nby : ' + JSON.stringify (job));
                         res.waitArray.push(id);
                         continue;
                     }
@@ -422,10 +414,10 @@
                 }
                 // set job id
                 job.id = this.jobid;
+                job.tries = 0;
                 this.jobid ++;
                 // save the new job into the queue
                 this.jobObject[job.id] = job;
-                console.log ('new one: ' + JSON.stringify (job));
             }
             // save into localStorage
             this.copyJobQueueToLocalStorage();
@@ -506,7 +498,7 @@
                         if (this.jobObject[i].waitingFor.time > Date.now()) {
                             // it is not time to restore the job!
                             ok = false;
-                        } 
+                        }
                     }
                     // else wait nothing
                     if (ok) {
@@ -691,127 +683,188 @@
     BaseStorage = function ( options ) {
         // The base storage, will call the good method from the good storage,
         // and will check and return the associated value.
+        
+        var that = {}, priv = {};
 
-        this.job = options.job;
-        this.callback = options.job.callback;
-        this.queue = options.queue;
-        this.res = {'status':'done','message':''};
-    };
-    BaseStorage.prototype = {
-        createStorageObject: function ( options ) {
-            // Create a storage thanks to storages types set
-            // with 'addStorageType'.
-            
-            if (!jioGlobalObj.storageTypeObject[ options.job.storage.type ])
-                return null;       // error!
-            return jioGlobalObj.storageTypeObject[
-                options.job.storage.type ](options);
+        //// Private attributes
+        priv.job = options.job;
+        priv.callback = options.job.callback;
+        priv.queue = options.queue;
+        priv.res = {'status':'done','message':''};
+        //// end Private attributes
+
+        //// Private Methods
+        priv.fail_checkNameAvailability = function () {
+            priv.res.isAvailable = false;
         },
-        retryLater: function () {
+        priv.done_checkNameAvailability = function ( isavailable ) {
+            priv.res.message = priv.job.userName + ' is ' +
+                (isavailable?'':'not ') + 'available.';
+            priv.res.isAvailable = isavailable;
+        },
+        priv.fail_loadDocument = function () {
+            priv.res.document = {};
+        },
+        priv.done_loadDocument = function ( returneddocument ) {
+            priv.res.message = 'Document loaded.';
+            priv.res.document = returneddocument;
+        },
+        priv.fail_saveDocument = function () {
+            priv.res.isSaved = false;
+        },
+        priv.done_saveDocument = function () {
+            priv.res.message = 'Document saved.';
+            priv.res.isSaved = true;
+        },
+        priv.fail_getDocumentList = function () {
+            priv.res.list = [];
+        },
+        priv.done_getDocumentList = function ( documentlist ) {
+            priv.res.message = 'Document list received.';
+            priv.res.list = documentlist;
+        },
+        priv.fail_removeDocument = function () {
+            priv.res.isRemoved = false;
+        },
+        priv.done_removeDocument = function () {
+            priv.res.message = 'Document removed.';
+            priv.res.isRemoved = true;
+        };
+
+        priv.retryLater = function () {
             // Change the job status to wait for time.
             // The listener will invoke this job later.
             
-            this.job.status = 'wait';
-            this.job.waitingFor = {'time':Date.now() +
-                                   (this.job.tries*this.job.tries*1000)};
-        },
-        eliminate: function () {
-            this.job.maxtries = 0;
-            this.fail('Job Stopped!',0);
-        },
-        replace: function ( newjob ) {
+            priv.job.status = 'wait';
+            priv.job.waitingFor = {'time':Date.now() +
+                                   (priv.job.tries*priv.job.tries*1000)};
+        };
+        //// end Private Methods
+
+        //// Getters Setters
+        that.cloneJob = function () {
+            return $.extend({},priv.job);
+        };
+        that.getUserName = function () {
+            return priv.job.userName || '';
+        };
+        that.getApplicantID = function () {
+            return priv.job.applicant.ID || '';
+        };
+        that.getStorageUserName = function () {
+            return priv.job.storage.userName || '';
+        };
+        that.getStoragePassword = function () {
+            return priv.job.storage.password || '';
+        };
+        that.getStorageLocation = function () {
+            return priv.job.storage.location || '';
+        };
+        that.getStorageArray = function () {
+            return priv.job.storage.storageArray || [];
+        };
+        that.getFileName = function () {
+            return priv.job.fileName || '';
+        };
+        that.getFileContent = function () {
+            return priv.job.fileContent || '';
+        };
+        that.cloneOptionObject = function () {
+            return $.extend({},priv.job.options);
+        };
+        that.getMaxTries = function () {
+            return priv.job.maxtries;
+        };
+        that.getTries = function () {
+            return priv.job.tries || 0;
+        };
+        that.setMaxTries = function (maxtries) {
+            priv.job.maxtries = maxtries;
+        };
+        //// end Getters Setters
+
+        //// Public Methods
+        that.addJob = function ( newjob ) {
+            return priv.queue.createJob ( newjob );
+        };
+        that.eliminate = function () {
+            // Stop and remove a job !
+
+            priv.job.maxtries = 1;
+            priv.job.tries = 1;
+            that.fail('Job Stopped!',0);
+        };
+        that.replace = function ( newjob ) {
             // It replace the current job by the new one.
             // Replacing only the date
 
-            this.job.tries = 0;
-            this.job.date = newjob.date;
-            this.job.callback = newjob.callback;
+            priv.job.tries = 0;
+            priv.job.date = newjob.date;
+            priv.job.callback = newjob.callback;
 
-            this.res.status = 'fail';
-            this.res.message = 'Job Stopped!';
-            this.res.errno = 0;
-            this['fail_'+this.job.method]();
-            this.callback(this.res);
-        },
-        fail: function ( message, errno ) {
+            priv.res.status = 'fail';
+            priv.res.message = 'Job Stopped!';
+            priv.res.errno = 0;
+            priv['fail_'+priv.job.method]();
+            priv.callback(priv.res);
+        };
+        that.fail = function ( message, errno ) {
             // Called when a job has failed.
             // It will retry the job from a certain moment or it will return
             // a failure.
 
-            this.res.status = 'fail';
-            this.res.message = message;
-            this.res.errno = errno;
-            if (this.job.maxtries && this.job.tries < this.job.maxtries) {
-                this.retryLater();
+            priv.res.status = 'fail';
+            priv.res.message = message;
+            priv.res.errno = errno;
+            if (!priv.job.maxtries ||
+                priv.job.tries < priv.job.maxtries) {
+                priv.retryLater();
             } else {
-                this.job.status = 'fail';
-                this['fail_'+this.job.method]();
-                this.queue.ended(this.job);
-                this.callback(this.res);
+                priv.job.status = 'fail';
+                priv['fail_'+priv.job.method]();
+                priv.queue.ended(priv.job);
+                priv.callback(priv.res);
             }
-        },
-        done: function ( retvalue ) {
+        };
+        that.done = function ( retvalue ) {
             // Called when a job has terminated successfully.
             // It will return the return value by the calling the callback
             // function.
 
-            this.job.status = 'done';
-            this['done_'+this.job.method]( retvalue );
-            this.queue.ended(this.job);
-            this.callback(this.res);
-        },
-        execute: function () {
+            priv.job.status = 'done';
+            priv['done_'+priv.job.method]( retvalue );
+            priv.queue.ended(priv.job);
+            priv.callback(priv.res);
+        };
+        that.execute = function () {
             // Execute the good function from the good storage.
-            
-            var t = this, stor = null;
 
-            if (!this.job.tries) {
-                this.job.tries = 0;
+            priv.job.tries = that.getTries() + 1;
+            
+            if ( !jioGlobalObj.storageTypeObject[ priv.job.storage.type ] ) {
+                return null;
             }
-            this.job.tries ++;            
-            stor = this.createStorageObject (
-                {'job':this.job,'queue':this.queue}
-            );
-            stor.done = function (retval) { t.done(retval); };
-            stor.fail = function (mess,errno) { t.fail(mess,errno); };
-            stor[this.job.method]();
-        },
-        fail_checkNameAvailability: function () {
-            this.res.isAvailable = false;
-        },
-        done_checkNameAvailability: function ( isavailable ) {
-            this.res.message = this.job.userName + ' is ' +
-                (isavailable?'':'not ') + 'available.';
-            this.res.isAvailable = isavailable;
-        },
-        fail_saveDocument: function () {
-            this.res.isSaved = false;
-        },
-        done_saveDocument: function () {
-            this.res.message = 'Document saved.';
-            this.res.isSaved = true;
-        },
-        fail_loadDocument: function () {
-            this.res.document = {};
-        },
-        done_loadDocument: function ( returneddocument ) {
-            this.res.message = 'Document loaded.';
-            this.res.document = returneddocument;
-        },
-        fail_getDocumentList: function () {
-            this.res.list = [];
-        },
-        done_getDocumentList: function ( documentlist ) {
-            this.res.message = 'Document list received.';
-            this.res.list = documentlist;
-        },
-        fail_removeDocument: function () {
-            this.res.isRemoved = false;
-        },
-        done_removeDocument: function () {
-            this.res.message = 'Document removed.';
-            this.res.isRemoved = true;
-        }
+            return jioGlobalObj.storageTypeObject[ priv.job.storage.type ]({
+                'job':priv.job,'queue':priv.queue})[priv.job.method]();
+        };
+        // These methods must be redefined!
+        that.checkNameAvailability = function () {
+            that.fail('This method must be redefined!',0);
+        };
+        that.loadDocument = function () {
+            that.fail('This method must be redefined!',0);
+        };
+        that.saveDocument = function () {
+            that.fail('This method must be redefined!',0);
+        };
+        that.getDocumentList = function () {
+            that.fail('This method must be redefined!',0);
+        };
+        that.removeDocument = function () {
+            that.fail('This method must be redefined!',0);
+        };
+        //// end Public Methods
+        return that;
     };
     // end BaseStorage
     ////////////////////////////////////////////////////////////////////////////
@@ -848,9 +901,9 @@
         }
 
         // check storage type
-        if (this.storage)
-            if (!jioGlobalObj.storageTypeObject[this.storage.type])
-                $.error('Unknown storage type "' + this.storage.type +'"');
+        if (this.storage && !jioGlobalObj.storageTypeObject[this.storage.type]){
+            $.error('Unknown storage type "' + this.storage.type +'"');
+        }
 
         // start jio process
         this.start();
@@ -1091,6 +1144,7 @@
             // storage: the storage object or json string
             // applicant: the applicant object or json string
             // options.useLocalStorage: if true, save job queue on localStorage.
+
             var settings = $.extend({'useLocalStorage':true},options);
 
             if (jioGlobalObj.localStorage===null) {
@@ -1099,8 +1153,10 @@
 
             return new JioCons(storage,applicant,settings);
         },
-        getStoragePrototype: function () {
-            return new BaseStorage();
+        newBaseStorage: function ( options ) {
+            // Create a Jio Storage which can be used to design new storage.
+            
+            return BaseStorage( options );
         },
         addStorageType: function ( type, constructor ) {
             // Add a storage type to jio. Jio must have keys/types which are

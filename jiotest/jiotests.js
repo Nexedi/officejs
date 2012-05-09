@@ -142,12 +142,16 @@ test ('Simple Job Elimination', function () {
     id = o.jio.id;
     o.jio.saveDocument({'fileName':'file','fileContent':'content',
                         'callback':o.f1,'maxtries':1});
+    console.log (localStorage.getItem('jio/jobObject/'+id));
     ok(LocalOrCookieStorage.getItem('jio/jobObject/'+id)['1'],
        'job creation');
+    console.log (localStorage.getItem('jio/jobObject/'+id));
     clock.tick(10);
+    console.log (localStorage.getItem('jio/jobObject/'+id));
     o.jio.removeDocument({'fileName':'file','fileContent':'content',
                           'callback':o.f2,'maxtries':1});
     o.tmp = LocalOrCookieStorage.getItem('jio/jobObject/'+id)['1'];
+    console.log (localStorage.getItem('jio/jobObject/'+id));
     ok(!o.tmp || o.tmp.status === 'fail','job elimination');
 });
 
@@ -214,22 +218,20 @@ test ('Simple Job Waiting', function () {
 
 test ('Simple Time Waiting' , function () {
     // Test if the job that have fail wait until a certain moment to restart.
+    // It will use the dummyall3tries, which will work after the 3rd try.
     
     var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
-    o.f1 = this.spy();
-    o.jio = JIO.createNew({'type':'dummyallfail','userName':'dummy'},
+    o.f = function (result) {
+        o.res = (result.status === 'done');
+    };
+    this.spy(o,'f');
+    o.jio = JIO.createNew({'type':'dummyall3tries','userName':'dummy'},
                           {'ID':'jiotests'});
-    id = o.jio.id;
     o.jio.saveDocument({'fileName':'file','fileContent':'content',
-                        'callback':o.f1,'maxtries':2});
-    clock.tick(400);
-    o.tmp = LocalOrCookieStorage.getItem('jio/jobObject/'+id)['1'];
-    ok(o.tmp.status === 'wait' && o.tmp.waitingFor && o.tmp.waitingFor.time,
-       'is waiting for time');
-    clock.tick(1500);
-    o.tmp = LocalOrCookieStorage.getItem('jio/jobObject/'+id)['1'];
-    ok(o.tmp.status === 'fail','it restores itself after time');
-    console.log (localStorage);
+                        'callback':o.f,'maxtries':3});
+    clock.tick(100000);
+    ok(o.f.calledOnce,'callback called once.');
+    ok(o.res,'job done.');
     o.jio.stop();
 });
 
@@ -631,11 +633,12 @@ test ('Check name availability', function () {
             deepEqual (result.isAvailable,value,message)};
         t.spy(o,'f');
         o.jio.checkNameAvailability({'userName':'Dummy','callback':o.f,
-                                     'maxtries':1});
-        clock.tick(1000);
+                                     'maxtries':o.maxtries});
+        clock.tick(300000);
         if (!o.f.calledOnce)
             ok(false,'no respose / too much results');
     };
+    o.maxtries = 1;
     // DummyStorageAllOK,OK
     o.jio = JIO.createNew({'type':'replicate','storageArray':[
         {'type':'dummyallok','userName':'1'},
@@ -664,24 +667,112 @@ test ('Check name availability', function () {
                           {'ID':'jiotests'});
     mytest('DummyStoragesAllFail,Fail : name not available',false);
     o.jio.stop();
+    // DummyStorageAllOK,3Tries
+    o.maxtries = 3 ;
+    o.jio = JIO.createNew({'type':'replicate','storageArray':[
+        {'type':'dummyallok','userName':'1'},
+        {'type':'dummyall3tries','userName':'2'}]},
+                          {'ID':'jiotests'});
+    mytest('DummyStoragesAllOK,3Tries : name available',true);
+    o.jio.stop();
+    // DummyStorageAll{3tries,{3tries,3tries},3tries}
+    o.maxtries = 3 ;
+    o.jio = JIO.createNew({'type':'replicate','storageArray':[
+        {'type':'dummyall3tries','userName':'1'},
+        {'type':'replicate','storageArray':[
+            {'type':'dummyall3tries','userName':'2'},
+            {'type':'dummyall3tries','userName':'3'}]},
+        {'type':'dummyall3tries','userName':'4'}]},
+                          {'ID':'jiotests'});
+    mytest('DummyStorageAll{3tries,{3tries,3tries},3tries} : name available',true);
+    o.jio.stop();
 });
 
-// test ('Document load', function () {
-//     // Test if DavStorage can load documents.
+test ('Document load', function () {
+    // Test if ReplicateStorage can load several documents.
 
-//     var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
-//     var mytest = function (message,doc) {
-//         o.f = function (result) {
-//             deepEqual (result.document,doc,message);};
-//         t.spy(o,'f');
-//         o.jio.loadDocument({'fileName':'file','callback':o.f});
-//         clock.tick(1000);
-//         server.respond();
-//         if (!o.f.calledOnce)
-//             ok(false, 'no response / too much results');
-//     };
-//     o.jio = JIO.createNew({'type':'replicate','userName':'Dummy'},
-//                           {'ID':'jiotests'});
+    var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
+    var mytest = function (message,doc) {
+        o.f = function (result) {
+            deepEqual (result.document,doc,message);};
+        t.spy(o,'f');
+        o.jio.loadDocument({'fileName':'file','callback':o.f});
+        clock.tick(100000);
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    o.jio=JIO.createNew({'type':'replicate','userName':'Dummy','storageArray':[
+        {'type':'dummyallok','userName':'1'},
+        {'type':'dummyallok','userName':'2'}]},
+                        {'ID':'jiotests'});
+    mytest('DummyStorageAllOK,OK: load same file',{
+        'fileName':'file','fileContent':'content',
+        'lastModified':15000,
+        'creationDate':10000});
+    o.jio.stop();
+    o.jio=JIO.createNew({'type':'replicate','userName':'Dummy','storageArray':[
+        {'type':'dummyallok','userName':'1'},
+        {'type':'dummyall3tries','userName':'2'}]},
+                        {'ID':'jiotests'});
+    mytest('DummyStorageAllOK,3tries: load 2 different files',{
+        'fileName':'file','fileContent':'content2',
+        'lastModified':17000,
+        'creationDate':10000});
     
-//     o.jio.stop();
-// });
+    o.jio.stop();
+});
+
+test ('Document save', function () {
+    // Test if ReplicateStorage can save several documents.
+
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (message,value) {
+        o.f = function (result) {
+            deepEqual (result.isSaved,value,message);};
+        t.spy(o,'f');
+        o.jio.saveDocument({'fileName':'file','fileContent':'content',
+                            'callback':o.f,'maxtries':3});
+        clock.tick(500);
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    o.jio=JIO.createNew({'type':'replicate','userName':'Dummy','storageArray':[
+        {'type':'dummyallok','userName':'1'},
+        {'type':'dummyallok','userName':'2'}]},
+        {'ID':'jiotests'});
+    mytest('DummyStorageAllOK,OK: save a file.',true);
+    o.jio.stop();
+});
+
+test ('Get Document List', function () {
+    // Test if ReplicateStorage can save several documents.
+
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (message,value) {
+        o.f = function (result) {
+            var objectifyDocumentArray = function (array) {
+                var obj = {}, k;
+                for (k in array) {obj[array[k].fileName] = array[k];}
+                return obj;
+            };
+            deepEqual (objectifyDocumentArray(result.list),
+                       objectifyDocumentArray(value),'getting list');
+        };
+        t.spy(o,'f');
+        o.jio.saveDocument({'fileName':'file','fileContent':'content',
+                            'callback':o.f,'maxtries':3});
+        clock.tick(100000);
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    o.jio=JIO.createNew({'type':'replicate','userName':'Dummy','storageArray':[
+        {'type':'dummyallok','userName':'1'},
+        {'type':'dummyall3tries','userName':'2'}]},
+        {'ID':'jiotests'});
+    o.doc1 = {'fileName':'memo','fileContent':'test',
+              'lastModified':15000,'creationDate':10000};
+    o.doc1 = {'fileName':'memo','fileContent':'test',
+              'lastModified':25000,'creationDate':20000};
+    mytest('DummyStorageAllOK,3tries: get document list .',[o.doc1,o.doc2]);
+    o.jio.stop();
+});
