@@ -49,11 +49,11 @@
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                var localStorageObject = null, k = 'key', splitk = ['splitedkey'];
+                var localStorageObject = null;
                 
                 localStorageObject = jioGlobalObj.localStorage.getAll();
-                for (k in localStorageObject) {
-                    splitk = k.split('/');
+                for (var k in localStorageObject) {
+                    var splitk = k.split('/');
                     if (splitk[0] === 'jio' &&
                         splitk[1] === 'local' &&
                         splitk[2] === that.getUserName()) {
@@ -141,8 +141,8 @@
             // 'lastModified':date,'creationDate':date}
 
             setTimeout(function () {
-                var list = [], localStor = null, k = 'key',
-                splitk = ['splitedkey'];
+                var list = [], localStorageObject = null, k = 'key',
+                splitk = ['splitedkey'], fileObject = {};
             
                 localStorageObject = jioGlobalObj.localStorage.getAll();
                 for (k in localStorageObject) {
@@ -511,8 +511,8 @@
             // this.job.storage.storageArray: An Array of storages.
             // TODO
 
-            var newjob = {}, isavailable = true,
-            res = {'status':'done'}, i = 'ind';
+            var newjob = {}, isavailable = true, i = 'id',
+            res = {'status':'done'};
             
             for (i in priv.storageArray) {
                 newjob = that.cloneJob();
@@ -543,9 +543,8 @@
             // this.job.fileContent: the document content.
             // TODO
 
-            var newjob = {},
-            res = {'status':'done'}, i = 'ind';
-            
+            var newjob = {}, res = {'status':'done'}, i = 'id';
+
             for (i in priv.storageArray) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
@@ -584,10 +583,9 @@
             // 'creationDate':date,'lastModified':date}
             // TODO
 
-            var newjob = {}, aredifferent = false, doc = {},
-            res = {'status':'done'}, i = 'ind';
+            var newjob = {}, aredifferent = false, doc = {}, i = 'id',
+            res = {'status':'done'};
             
-            doc.fileName = that.getFileName();
             for (i in priv.storageArray) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
@@ -655,8 +653,7 @@
             // 'lastModified':date,'creationDate':date}
             // TODO
 
-            var newjob = {},
-            res = {'status':'done'}, i = 'ind';
+            var newjob = {}, res = {'status':'done'}, i = 'id';
             
             for (i in priv.storageArray) {
                 newjob = that.cloneJob();
@@ -690,9 +687,8 @@
             // this.job.applicant.ID: the applicant id.
             // TODO
             
-            var newjob = {},
-            res = {'status':'done'}, i = 'ind';
-            
+            var newjob = {}, res = {'status':'done'}, i = 'key';
+
             for (i in priv.storageArray) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
@@ -712,7 +708,8 @@
                     }
                 };
                 that.addJob ( newjob ) ;
-            }        };
+            }
+        };
         return that;
     };
     // end ReplicateStorage

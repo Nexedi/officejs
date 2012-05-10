@@ -1,4 +1,5 @@
 
+(function(){
 //// clear jio localstorage
 for (var k in LocalOrCookieStorage.getAll()) {
     var splitk = k.split('/');
@@ -355,8 +356,8 @@ test ('Get document list', function () {
     mytest = function (value){
         o.f = function (result) {
             var objectifyDocumentArray = function (array) {
-                var obj = {}, k;
-                for (k in array) {obj[array[k].fileName] = array[k];}
+                var obj = {};
+                for (var k in array) {obj[array[k].fileName] = array[k];}
                 return obj;
             };
             deepEqual (objectifyDocumentArray(result.list),
@@ -690,6 +691,7 @@ test ('Check name availability', function () {
 
 test ('Document load', function () {
     // Test if ReplicateStorage can load several documents.
+    // TODO finish it
 
     var o = {}; var clock = this.sandbox.useFakeTimers(); var t = this;
     var mytest = function (message,doc) {
@@ -724,6 +726,7 @@ test ('Document load', function () {
 
 test ('Document save', function () {
     // Test if ReplicateStorage can save several documents.
+    // TODO finish it
 
     var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
     mytest = function (message,value) {
@@ -745,7 +748,8 @@ test ('Document save', function () {
 });
 
 test ('Get Document List', function () {
-    // Test if ReplicateStorage can save several documents.
+    // Test if ReplicateStorage can get several list.
+    // TODO finish it
 
     var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
     mytest = function (message,value) {
@@ -759,8 +763,7 @@ test ('Get Document List', function () {
                        objectifyDocumentArray(value),'getting list');
         };
         t.spy(o,'f');
-        o.jio.saveDocument({'fileName':'file','fileContent':'content',
-                            'callback':o.f,'maxtries':3});
+        o.jio.getDocumentList({'callback':o.f,'maxtries':3});
         clock.tick(100000);
         if (!o.f.calledOnce)
             ok(false, 'no response / too much results');
@@ -769,10 +772,41 @@ test ('Get Document List', function () {
         {'type':'dummyallok','userName':'1'},
         {'type':'dummyall3tries','userName':'2'}]},
         {'ID':'jiotests'});
-    o.doc1 = {'fileName':'memo','fileContent':'test',
+    o.doc1 = {'fileName':'file',
               'lastModified':15000,'creationDate':10000};
-    o.doc1 = {'fileName':'memo','fileContent':'test',
+    o.doc2 = {'fileName':'memo',
               'lastModified':25000,'creationDate':20000};
     mytest('DummyStorageAllOK,3tries: get document list .',[o.doc1,o.doc2]);
     o.jio.stop();
 });
+
+test ('Remove document', function () {
+    // Test if ReplicateStorage can remove several documents.
+    // TODO finish it
+
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    mytest = function (message,value) {
+        o.f = function (result) {
+            var objectifyDocumentArray = function (array) {
+                var obj = {}, k;
+                for (k in array) {obj[array[k].fileName] = array[k];}
+                return obj;
+            };
+            deepEqual (objectifyDocumentArray(result.list),
+                       objectifyDocumentArray(value),'getting list');
+        };
+        t.spy(o,'f');
+        o.jio.removeDocument({'fileName':'file','callback':o.f,'maxtries':3});
+        clock.tick(100000);
+        if (!o.f.calledOnce)
+            ok(false, 'no response / too much results');
+    };
+    o.jio=JIO.createNew({'type':'replicate','userName':'Dummy','storageArray':[
+        {'type':'dummyallok','userName':'1'},
+        {'type':'dummyall3tries','userName':'2'}]},
+        {'ID':'jiotests'});
+    mytest('DummyStorageAllOK,3tries: remove document .',true);
+    o.jio.stop();
+});
+
+})();

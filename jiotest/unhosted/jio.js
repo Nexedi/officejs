@@ -197,8 +197,8 @@
     },
     getNewQueueID = function () {
         // Returns a new queueID
-        var localStor = jioGlobalObj.localStorage.getAll(), k = 'key',
-        splitk = ['splitedkey'], id = 0;
+        var localStor = jioGlobalObj.localStorage.getAll(), id = 0, k = 'key',
+        splitk = ['splitedkey'];
         for (k in localStor) {
             splitk = k.split('/');
             if (splitk[0] === 'jio' &&
@@ -352,7 +352,7 @@
             // job : the job object
             
             var res = {'newone':true,'elimArray':[],'waitArray':[],
-                       'removeArray':[]}, basestorage = null, id=0;
+                       'removeArray':[]}, basestorage = null, id = 'id';
             
             //// browsing current jobs
             for (id in this.jobObject) {
@@ -433,7 +433,7 @@
             // options.where : remove values where options.where(job) === true
             
             var settings = $.extend ({'where':function (job) {return true;}},
-                                     options),k='key',andwhere,found=false;
+                                     options),andwhere,found=false,k='key';
 
             //// modify the job list
             if (settings.job) {
@@ -460,7 +460,7 @@
         resetAll: function () {
             // Reset all job to 'initial'.
             // TODO manage jobs ! All jobs are not 'initial'.
-            
+
             var id = 'id';
             for (id in this.jobObject) {
                 this.jobObject[id].status = 'initial';
@@ -471,9 +471,10 @@
         invokeAll: function () {
             // Do all jobs in the queue.
 
-            var i = 'id', j = 'ind', ok = false;
+            var i = 'id', ok;
             //// do All jobs
             for (i in this.jobObject) {
+                ok = false;
                 if (this.jobObject[i].status === 'initial') {
                     // if status initial
                     // invoke new job
@@ -484,7 +485,7 @@
                     if (this.jobObject[i].waitingFor.jobIdArray) {
                         // wait job
                         // browsing job id array
-                        for (j in this.jobObject[i].waitingFor.jobIdArray) {
+                        for (var j in this.jobObject[i].waitingFor.jobIdArray) {
                             if (this.jobObject[this.jobObject[i].
                                                waitingFor.jobIdArray[j]]) {
                                 // if a job is still exist, don't invoke
