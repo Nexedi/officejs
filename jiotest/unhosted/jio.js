@@ -713,6 +713,11 @@
         priv.done_loadDocument = function ( returneddocument ) {
             priv.res.message = 'Document loaded.';
             priv.res.document = returneddocument;
+            // transform date into ms
+            priv.res.document.lastModified =
+                new Date(priv.res.document.lastModified).getTime();
+            priv.res.document.creationDate =
+                new Date(priv.res.document.creationDate).getTime();
         },
         priv.fail_saveDocument = function () {
             priv.res.isSaved = false;

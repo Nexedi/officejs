@@ -380,11 +380,11 @@
                         that.getStoragePassword() )},
                 success: function (xmlData) {
                     doc.lastModified = (
-                        new Date($($("lp1\\:getlastmodified",
-                                     xmlData).get(0)).text())).getTime();
+                        $($("lp1\\:getlastmodified",
+                            xmlData).get(0)).text());
                     doc.creationDate = (
-                        new Date($($("lp1\\:creationdate",
-                                     xmlData).get(0)).text())).getTime();
+                        $($("lp1\\:creationdate",
+                            xmlData).get(0)).text());
                     doc.fileName = that.getFileName();
                     if (settings.getContent) {
                         getContent();
