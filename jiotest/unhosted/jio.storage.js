@@ -5,7 +5,7 @@
 //     - dav
 //     - replicate
 ;(function ( Jio ) {
-    
+
     ////////////////////////////////////////////////////////////////////////////
     // globals
     var jioGlobalObj = Jio.getGlobalObject(),
@@ -32,7 +32,7 @@
     LocalStorage,DAVStorage,ReplicateStorage;
     // end Classes
     ////////////////////////////////////////////////////////////////////////////
-    
+
     // check dependencies
     if (!checkJioDependencies()) { return; }
     ////////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
                 var localStorageObject = null;
-                
+
                 localStorageObject = jioGlobalObj.localStorage.getAll();
                 for (var k in localStorageObject) {
                     var splitk = k.split('/');
@@ -62,7 +62,7 @@
                 }
                 return that.done(true);
             }, 100);
-        }; // end userNameAvailable
+        }; // end checkNameAvailability
 
         that.saveDocument = function () {
             // Save a document in the local storage
@@ -75,7 +75,7 @@
             // wait a little in order to simulate asynchronous saving
             setTimeout (function () {
                 var doc = null;
-                
+
                 // reading
                 doc = jioGlobalObj.localStorage.getItem(
                     'jio/local/'+that.getStorageUserName()+'/'+
@@ -101,21 +101,21 @@
                 return that.done();
             }, 100);
         }; // end saveDocument
-        
+
         that.loadDocument = function () {
             // Load a document from the storage. It returns a document object
             // containing all information of the document and its content.
             // this.job.fileName : the document name we want to load.
             // this.job.options.getContent: if true, also get the file content.
-            
+
             // document object is {'fileName':string,'fileContent':string,
             // 'creationDate':date,'lastModified':date}
 
-            // wait a little in order to simulate asynchronous operation 
+            // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
                 var doc = null, settings = $.extend(
                     {'getContent':true},that.cloneOptionObject());
-            
+
                 doc = jioGlobalObj.localStorage.getItem(
                     'jio/local/'+that.getStorageUserName()+'/'+
                         that.getApplicantID()+'/'+that.getFileName());
@@ -143,7 +143,7 @@
             setTimeout(function () {
                 var list = [], localStorageObject = null, k = 'key',
                 splitk = ['splitedkey'], fileObject = {};
-            
+
                 localStorageObject = jioGlobalObj.localStorage.getAll();
                 for (k in localStorageObject) {
                     splitk = k.split('/');
@@ -199,7 +199,7 @@
             // options.password: the password
 
             // TODO this method is not working !!!
-            
+
             var settings = $.extend ({
                 'success':function(){},'error':function(){}},options),
             splitpath = ['splitedpath'], tmppath = 'temp/path';
@@ -285,7 +285,7 @@
                 }
             } );
         };
-        
+
         that.saveDocument = function () {
             // Save a document in a DAVStorage
             // this.job.storage: the storage informations.
@@ -294,12 +294,12 @@
             // this.job.applicant.ID: the applicant ID.
             // this.job.fileName: the document name.
             // this.job.fileContent: the document content.
-            
+
             // TODO if path of /dav/user/applic does not exists, it won't work!
             //// save on dav
             $.ajax ( {
                 url: that.getStorageLocation() + '/dav/' +
-                    that.getStorageUserName() + '/' + 
+                    that.getStorageUserName() + '/' +
                     that.getApplicantID() + '/' +
                     that.getFileName(),
                 type: 'PUT',
@@ -307,7 +307,7 @@
                 async: true,
                 dataType: 'text', // TODO is it necessary ?
                 headers: {'Authorization':'Basic '+Base64.encode(
-                    that.getStorageUserName() + ':' + that.getStoragePassword())},
+                    that.getStorageUserName()+':'+that.getStoragePassword())},
                 // xhrFields: {withCredentials: 'true'}, // cross domain
                 success: function () {
                     that.done();
@@ -328,7 +328,7 @@
             // this.job.storage.userName: the user name.
             // this.job.storage.password: the user password.
             // this.job.options.getContent: if true, also get the file content.
-            
+
             // document object is {'fileName':string,'fileContent':string,
             // 'creationDate':date,'lastModified':date}
 
@@ -359,7 +359,7 @@
                         case 404:
                             message = 'Document not found.'; break;
                         default:
-                            message = 'Cannot load "' + that.getFileName() + '".';
+                            message = 'Cannot load "'+that.getFileName()+'".';
                             break;
                         }
                         that.fail(message,type.status);
@@ -406,14 +406,14 @@
             // this.job.storage.userName: the user name.
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
-            
+
             // the list is [object,object] -> object = {'fileName':string,
             // 'lastModified':date,'creationDate':date}
 
             var documentArrayList = [], file = {}, pathArray = [];
 
             $.ajax ( {
-                url: that.getStorageLocation() + '/dav/' + 
+                url: that.getStorageLocation() + '/dav/' +
                     that.getStorageUserName() + '/' +
                     that.getApplicantID() + '/',
                 async: true,
@@ -426,19 +426,22 @@
                     $("D\\:response",xmlData).each(function(i,data) {
                         if(i>0) { // exclude parent folder
                             file = {};
-                            pathArray = ($($("D\\:href",
-                                             xmlData).get(i)).text()).split('/');
+                            pathArray = (
+                                $($("D\\:href",
+                                    xmlData).get(i)).text()).split('/');
                             file.fileName = (pathArray[pathArray.length-1] ?
                                              pathArray[pathArray.length-1] :
                                              pathArray[pathArray.length-2]+'/');
                             if (file.fileName === '.htaccess' ||
                                 file.fileName === '.htpasswd') { return; }
                             file.lastModified = (
-                                new Date($($("lp1\\:getlastmodified",
-                                             xmlData).get(i)).text())).getTime();
+                                new Date(
+                                    $($("lp1\\:getlastmodified",
+                                        xmlData).get(i)).text())).getTime();
                             file.creationDate = (
-                                new Date($($("lp1\\:creationdate",
-                                             xmlData).get(i)).text())).getTime();
+                                new Date(
+                                    $($("lp1\\:creationdate",
+                                        xmlData).get(i)).text())).getTime();
                             documentArrayList.push (file);
                         }
                     });
@@ -449,7 +452,7 @@
                 }
             } );
         };
-        
+
         that.removeDocument = function () {
             // Remove a document from a DAVStorage.
             // this.job.fileName: the document name we want to remove.
@@ -495,7 +498,7 @@
     // ReplicateStorage
     ReplicateStorage = function ( args ) {
         var that = Jio.newBaseStorage( args ), priv = {};
-        
+
         priv.storageArray = that.getStorageArray();
         // TODO Add a tests that check if there is no duplicate storages.
         priv.length = priv.storageArray.length;
@@ -513,7 +516,7 @@
 
             var newjob = {}, isavailable = true, i = 'id',
             res = {'status':'done'};
-            
+
             for (i in priv.storageArray) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
@@ -578,14 +581,14 @@
             // this.job.storage.userName: the user name.
             // this.job.storage.password: the user password.
             // this.job.options.getContent: if true, also get the file content.
-            
+
             // document object is {'fileName':string,'fileContent':string,
             // 'creationDate':date,'lastModified':date}
             // TODO
 
             var newjob = {}, aredifferent = false, doc = {}, i = 'id',
             res = {'status':'done'};
-            
+
             for (i in priv.storageArray) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
@@ -607,7 +610,7 @@
                                 // previous one
                                 aredifferent = true;
                             }
-                            if (doc.creationDate > 
+                            if (doc.creationDate >
                                 result.document.creationDate) {
                                 // get older creation date
                                 doc.creationDate = result.document.creationDate;
@@ -648,13 +651,13 @@
             // this.job.storage.userName: the user name.
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
-            
+
             // the list is [object,object] -> object = {'fileName':string,
             // 'lastModified':date,'creationDate':date}
             // TODO
 
             var newjob = {}, res = {'status':'done'}, i = 'id';
-            
+
             for (i in priv.storageArray) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
@@ -686,7 +689,7 @@
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
             // TODO
-            
+
             var newjob = {}, res = {'status':'done'}, i = 'key';
 
             for (i in priv.storageArray) {

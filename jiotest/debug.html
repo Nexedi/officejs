@@ -7,38 +7,46 @@
 </head>
 <body>
   <script type="text/javascript" src="js/jquery/jquery.js"></script>
-  <script type="text/javascript" src="unhosted/localorcookiestorage.js"></script>
+  <script type="text/javascript" src="unhosted/localorcookiestorage.js">
+  </script>
   <script type="text/javascript" src="unhosted/jio.js"></script>
   <script type="text/javascript" src="unhosted/base64.js"></script>
   <script type="text/javascript" src="unhosted/jio.storage.js"></script>
   <script type="text/javascript">
     <!--
-var mammal = function (description) {
-    this.caracteristics = description;
+var maClassPasProtegee = function () {
+    this.monAttributPasProtegee = 0;
 };
-mammal.prototype = {
-    createMammal: function () {
-        // c'est un chat alors
-        var mycat = new cat(this.caracteristics);
-        var t = this;
-        mycat.say = function () { return t.caracteristics.say; };
-        mycat.name = function () { return t.caracteristics.name; };
-        return mycat;
+maClassPasProtegee.prototype = {
+    getMonAttribut: function () {
+        return this.monAttributPasProtegee;
+    },
+    logMonAttribut: function () {
+        console.log (this.monAttributPasProtegee);
     }
 };
-var cat = function (detaileddescription) {
-    // (...)
-};
-cat.prototype = {
-    talk: function () {
-        alert('My name is ' + this.name() + ', ' + this.say());
-    }
-};
+var maclass1 = new maClassPasProtegee();
+maclass1.logMonAttribut();
+maclass1.monAttributPasProtegee ++;
+maclass1.logMonAttribut();
 
-var mam = new mammal({'say':'meow','name':'nyancat'});
-var mycat = mam.createMammal();
-mycat.talk();
-        //-->
+
+var maClassProtegee = function () {
+    var publ = {}, priv = {};
+    priv.monAttributProtegee = 0;
+    publ.getMonAttribut = function () {
+        return priv.monAttributProtegee;
+    };
+    publ.logMonAttribut = function () {
+        console.log (priv.monAttributProtegee);
+    };
+    return publ;
+};
+var maclass2 = new maClassProtegee();
+maclass2.logMonAttribut();
+maclass2.monAttributProtegee ++;
+maclass2.logMonAttribut();
+//-->
   </script>
 </body>
 </html>

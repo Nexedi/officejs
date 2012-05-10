@@ -40,7 +40,7 @@ test ( "Jio simple methods", function () {
 
     deepEqual ( o.jio.isReady(), true, '1 must be not ready');
 
-    ok ( o.jio2.id !== o.jio.id, '1 and 2 must be different');
+    ok ( o.jio2.getID() !== o.jio.getID(), '1 and 2 must be different');
 
     deepEqual ( o.jio.stop(), true, '1 must be stopped');
 
@@ -67,11 +67,11 @@ test ( 'Jio Publish/Sububscribe/Unsubscribe methods', function () {
     // And publish the event.
     o.jio.publish('pubsub_test');
     ok (spy1.calledOnce, 'subscribing & publishing, event called once');
-    
+
     o.jio.unsubscribe('pubsub_test',spy1);
     o.jio.publish('pubsub_test');
     ok (spy1.calledOnce, 'unsubscribing, same event not called twice');
-    
+
     o.jio.stop();
 });
 
@@ -108,7 +108,7 @@ test ('All tests', function () {
             {'fileName':'memo','creationDate':20000,'lastModified':25000}]);
     mytest('remove document OK','removeDocument','isRemoved',true);
     o.jio.stop();
-    
+
     // All Fail Dummy Storage
     o.jio = JIO.createNew({'type':'dummyallfail','userName':'Dummy'},
                           {'ID':'jiotests'});
@@ -140,25 +140,21 @@ test ('Simple Job Elimination', function () {
 
     o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
                           {'ID':'jiotests'});
-    id = o.jio.id;
+    id = o.jio.getID();
     o.jio.saveDocument({'fileName':'file','fileContent':'content',
                         'callback':o.f1,'maxtries':1});
-    console.log (localStorage.getItem('jio/jobObject/'+id));
     ok(LocalOrCookieStorage.getItem('jio/jobObject/'+id)['1'],
        'job creation');
-    console.log (localStorage.getItem('jio/jobObject/'+id));
     clock.tick(10);
-    console.log (localStorage.getItem('jio/jobObject/'+id));
     o.jio.removeDocument({'fileName':'file','fileContent':'content',
                           'callback':o.f2,'maxtries':1});
     o.tmp = LocalOrCookieStorage.getItem('jio/jobObject/'+id)['1'];
-    console.log (localStorage.getItem('jio/jobObject/'+id));
     ok(!o.tmp || o.tmp.status === 'fail','job elimination');
 });
 
 test ('Simple Job Replacement', function () {
     // Test if the second job write over the first one
-    
+
     var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
     o.f1 = function (result) {
         o.status = result.status;
@@ -168,7 +164,7 @@ test ('Simple Job Replacement', function () {
 
     o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
                           {'ID':'jiotests'});
-    id = o.jio.id;
+    id = o.jio.getID();
     o.jio.saveDocument({'fileName':'file','fileContent':'content',
                         'callback':o.f1,'maxtries':1});
     clock.tick(10);
@@ -184,8 +180,8 @@ test ('Simple Job Replacement', function () {
     o.jio.stop();
 
 });
-   
-test ('Simple Job Waiting', function () { 
+
+test ('Simple Job Waiting', function () {
     // Test if the second job doesn't erase the first ongoing one
 
     var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
@@ -193,7 +189,7 @@ test ('Simple Job Waiting', function () {
 
     o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
                           {'ID':'jiotests'});
-    id = o.jio.id;
+    id = o.jio.getID();
     o.jio.saveDocument({'fileName':'file','fileContent':'content',
                         'callback':o.f3,'maxtries':1});
     clock.tick(200);
@@ -220,7 +216,7 @@ test ('Simple Job Waiting', function () {
 test ('Simple Time Waiting' , function () {
     // Test if the job that have fail wait until a certain moment to restart.
     // It will use the dummyall3tries, which will work after the 3rd try.
-    
+
     var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
     o.f = function (result) {
         o.res = (result.status === 'done');
@@ -273,7 +269,7 @@ test ('Check name availability', function () {
 test ('Document save', function () {
     // Test if LocalStorage can save documents.
     // We launch a saving to localstorage and we check if the file is
-    // realy saved. Then save again and check if 
+    // realy saved. Then save again and check if
 
     var o = {}, clock = this.sandbox.useFakeTimers(), t = this, tmp,
     mytest = function (message,value,lmcd){
@@ -306,7 +302,7 @@ test ('Document save', function () {
     mytest('saving document',true,function(cd,lm){
         return (cd === lm);
     });
-    
+
     // re-save and check modification date
     mytest('saving again',true,function(cd,lm){
         return (cd < lm);
@@ -337,7 +333,7 @@ test ('Document load', function () {
     // load a non existing file
     LocalOrCookieStorage.deleteItem ('jio/local/MrLoadName/jiotests/file');
     mytest ('status','fail');
-    
+
     // re-load file after saving it manually
     doc = {'fileName':'file','fileContent':'content',
            'lastModified':1234,'creationDate':1000};
@@ -418,7 +414,7 @@ module ('Jio DAVStorage');
 
 test ('Check name availability', function () {
     // Test if DavStorage can check the availabality of a name.
-    
+
     var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
     mytest = function (value,errno) {
         var server = t.sandbox.useFakeServer();
@@ -436,7 +432,7 @@ test ('Check name availability', function () {
         if (!o.f.calledOnce)
             ok(false, 'no response / too much results');
     };
-    
+
     o.jio = JIO.createNew({'type':'dav','userName':'davcheck',
                            'password':'checkpwd',
                            'location':'https://ca-davstorage:8080'},
@@ -479,8 +475,8 @@ test ('Document load', function () {
                            'location':'https://ca-davstorage:8080'},
                           {'ID':'jiotests'});
     // note: http errno:
-    //     200 OK       
-    //     201 Created  
+    //     200 OK
+    //     201 Created
     //     204 No Content
     //     207 Multi Status
     //     403 Forbidden
@@ -614,7 +610,7 @@ test ('Remove document', function () {
                            'password':'checkpwd',
                            'location':'https://ca-davstorage:8080'},
                           {'ID':'jiotests'});
-    
+
     mytest('remove document',true,204)
     mytest('remove an already removed document',true,404)
     o.jio.stop();
@@ -720,7 +716,7 @@ test ('Document load', function () {
         'fileName':'file','fileContent':'content2',
         'lastModified':17000,
         'creationDate':10000});
-    
+
     o.jio.stop();
 });
 

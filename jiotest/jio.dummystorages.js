@@ -6,7 +6,7 @@
 //     - dummyallnotfound
 //     - dummyall3tries
 ;(function ( Jio ) {
-    
+
     // check dependencies
     var errorDependencies=function(){$.error('Cannot find Jio');};
     try{if (!Jio){
@@ -19,7 +19,7 @@
     var jioGlobalObj = Jio.getGlobalObject(),
     // end globals
     ////////////////////////////////////////////////////////////////////////////
-    
+
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 1 : all ok
     DummyStorageAllOk = function ( args ) {
@@ -45,7 +45,7 @@
         that.loadDocument = function () {
             // Returns a document object containing all information of the
             // document and its content.
-            
+
             // document object is {'fileName':string,'fileContent':string,
             // 'creationDate':date,'lastModified':date}
 
@@ -96,7 +96,7 @@
     // Dummy Storage 2 : all fail
     DummyStorageAllFail = function ( args ) {
         var that = Jio.newBaseStorage( args );
-        
+
         that.checkNameAvailability = function () {
             // Fails to check [job.userName].
 
@@ -117,7 +117,7 @@
 
         that.loadDocument = function () {
             // Returns a document object containing nothing.
-            
+
             // document object is {'fileName':string,'fileContent':string,
             // 'creationDate':date,'lastModified':date}
 
@@ -157,7 +157,7 @@
     // Dummy Storage 3 : all not found
     DummyStorageAllNotFound = function ( args ) {
         var that = Jio.newBaseStorage( args );
-        
+
         that.checkNameAvailability = function () {
             // [job.userName] not found, so the name is available.
 
@@ -178,7 +178,7 @@
 
         that.loadDocument = function () {
             // Returns a document object containing nothing.
-            
+
             // document object is {'fileName':string,'fileContent':string,
             // 'creationDate':date,'lastModified':date}
 
@@ -218,7 +218,7 @@
     // Dummy Storage 4 : all 3 tries
     DummyStorageAll3Tries = function ( args ) {
         var that = Jio.newBaseStorage( args ), priv = {};
-        
+
         priv.doJob = function (ifokreturn) {
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
@@ -236,7 +236,7 @@
                 return that.fail('Too much tries.');
             }
         };
-        
+
         that.checkNameAvailability = function () {
             priv.doJob (true);
         }; // end userNameAvailable
