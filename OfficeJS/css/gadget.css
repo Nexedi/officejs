@@ -1,0 +1,275 @@
+
+div.gadget-action div.front_pad {
+    font-size: 10px;
+}
+div.draggable_wrapper {
+    background-color: #FFFFFF;
+}
+#gadget_area_wrapper {
+    margin-top: 0.5em;
+}
+div#pad-navigation-wrapper {
+    border: 0 none !important;
+}
+#pad-navigation-wrapper {
+    border-bottom: 1px solid #3D6474;
+    height: 38px;
+    margin-top: 10px;
+    width: 96%;
+}
+            /* tabs */
+#tabs_switcher {
+    background: none repeat scroll 0 0 transparent;
+    border-style: none;
+    cursor: pointer;
+    float: left;
+    font-weight: bold;
+    margin: 0;
+    padding-top: 5px;
+    width: 10%;
+}
+div#tabs, div#pad-navigation-wrapper div#tabs_switcher.tab {
+    display: none !important;
+}
+#tabs {
+    float: left;
+    padding-left: 0;
+    width: 78%;
+}
+#tabs ul {
+    list-style: none outside none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+li.tab_selected {
+    background-color: #DAE6F6;
+    border-bottom: 1px solid #DAE6F6;
+    font-weight: bold;
+}
+li.tab {
+    background-color: #BDD0F0;
+    border: 1px solid #3D6474;
+    cursor: pointer;
+    display: block;
+    float: left;
+    font-size: 12px;
+    height: 24px;
+    margin-right: 1px;
+    padding-right: 5px;
+}
+#tabs li span {
+    display: block;
+    float: left;
+    height: 19px;
+    padding: 5px 10px 0;
+}
+div.pad-actions {
+    float: left;
+}
+#tabs li span.rename_tab_dialog_image {
+    background: url("../images/officejs/icon_edit.gif") no-repeat scroll 0 0 transparent;
+    padding-right: 6px;
+}
+#tabs li span.remove_tab_dialog_image {
+    background: url("../images/officejs/icon_remove.gif") no-repeat scroll 0 0 transparent;
+    padding-right: 6px;
+}
+#add_new_tab_dialog_link {
+    background: none repeat scroll 0 0 transparent;
+    border-style: none;
+    cursor: pointer;
+    display: block;
+    float: left;
+    font-weight: bold;
+    height: 19px;
+    margin-left: 5px;
+    padding-left: 5px;
+    padding-top: 5px;
+}
+span.clickable_image {
+    cursor: pointer;
+    display: block;
+    float: left;
+    margin-top: 5px;
+}
+div#add_new_gadget_link {
+    border-bottom: 0 none;
+    padding-top: 5px;
+    width: 50% !important;
+    float: right;
+    font-weight: bold;
+    height: 20px;
+    padding-top: 5px;
+    text-align: right;
+}
+#add-gadgets {
+    cursor: pointer;
+    font-size: 11px;
+}
+#loading-wrapper {
+    background-color: #FFFFFF;
+    left: 50%;
+    margin-left: -150px;
+    padding: 7px 0 0;
+    position: absolute;
+    text-align: center;
+    top: 80px;
+    width: 250px;
+    z-index: 1000;
+}
+#loading-wrapper p {
+    font-size: 90%;
+    font-weight: bold;
+}
+div.front_pad div#page_wrapper {
+    margin: -0.5em 0 0 !important;
+}
+#page_wrapper {
+    background-color: inherit;
+    float: left;
+    margin: 0.5em 0 0;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+}
+div.portal-column {
+    float: left;
+    margin-right: 3px;
+    width: 100% !important;
+}
+div.block {
+    margin: 1px 1px 3px;
+    padding: 0;
+    width: 100%;
+}
+span.handle, h3.handle {
+    cursor: move;
+}
+h3.handle {
+    background: url("../images/officejs/tab_left_selected.png") no-repeat scroll left top transparent;
+    border-bottom: 1px solid #3D6474;
+    color: #FFFFFF;
+    font-size: 14px;
+    margin: 0;
+    padding: 0 0 0 10px;
+}
+/*h3.handle {
+    background: none repeat scroll 0 0 white !important;
+    border-bottom: 0 none !important;
+    color: #222222 !important;
+    font-size: 13px !important;
+}*/
+h3.handle span.handle {
+    background: url("../images/officejs/tab_right_selected.png") no-repeat scroll right top transparent;
+    display: block;
+    min-height: 20px;
+    padding: 5px 5px 0 0;
+}
+/*h3.handle span.handle {
+    background: none repeat scroll 0 0 white !important;
+}*/
+a.block-remove {
+    background-image: url("../images/officejs/icon_remove.gif");
+}
+a.block-edit-form {
+    background-image: url("../images/officejs/icon_edit.png") !important;
+}
+a.block-minimize {
+    background-image: url("../images/officejs/icon_minimize.png") !important;
+}
+a.clickable-block {
+    background-position: center center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    display: block;
+    float: right;
+    height: 15px;
+    margin: 0;
+    padding: 0;
+    width: 15px;
+}
+div.block h3 span.gadget_title {
+    min-width: 100px;
+}
+div.edit-form {
+    -moz-border-bottom-colors: none;
+    -moz-border-image: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #BDD0F0;
+    border-color: black;
+    border-style: solid;
+    border-width: 0 1px 1px;
+    overflow: auto;
+    padding-bottom: 0.5em;
+    padding-left: 1em;
+    padding-top: 0.5em;
+    width: auto;
+    height: 176px !important;
+    background-color: #FFFFFF !important;
+    border: 0 none !important;
+    padding-left: 0 !important;
+}
+div#page_wrapper div.minimize_wrapper div.edit-form fieldset.left, div#page_wrapper div.minimize_wrapper div.edit-form fieldset.left label {
+    display: inline !important;
+}
+div.edit-form fieldset {
+    border: 0 solid black;
+}
+div.block div.input {
+    margin-left: 0;
+}
+div.edit-form button {
+    margin-top: 0.5em;
+    margin-top: -0.3em !important;
+}
+div.block div.content {
+    padding: 0;
+    border-bottom: 1px solid #DDDDDD !important;
+    border-top: 0 none !important;
+    background: none repeat scroll 0 0 #DAE6F6;
+    border-bottom: 4px solid #BBCCFF;
+    border-top: 4px solid #BBCCFF;
+    background-color: #FFFFFF;
+    clear: left;
+    overflow: visible;
+    padding: 0.1em;
+}
+div.block table, div.block table tr, div.block table tr td {
+    border: medium none;
+}
+.ig_tbl_img table, .ig_tbl_img tr, .ig_tbl_img td, .ig_tbl_img a, .ig_tbl_img span, .ig_tbl_line table, .ig_tbl_line tr, .ig_tbl_line td, .ig_tbl_line a, .ig_tbl_line span, ig_reset {
+    background: none repeat scroll 0 50% transparent;
+    border: 0 none;
+    border-collapse: collapse;
+    bottom: auto;
+    clear: none;
+    float: none;
+    font-family: arial,sans-serif;
+    font-style: normal;
+    font-variant: normal;
+    height: auto;
+    letter-spacing: normal;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
+    text-indent: 0;
+    text-transform: none;
+    top: auto;
+    vertical-align: middle;
+    white-space: normal;
+    width: auto;
+    word-spacing: normal;
+}
+div.toggable_dialog {
+    background-color: #97B0D1;
+    border: 5px solid #BDD0F0;
+    display: none;
+    left: 400px;
+    padding: 0 1em 0.5em;
+    position: absolute;
+    top: 75px;
+    z-index: 10000;
+}
