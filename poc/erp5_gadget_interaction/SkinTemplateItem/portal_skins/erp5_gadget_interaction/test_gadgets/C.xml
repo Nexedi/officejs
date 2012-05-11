@@ -34,7 +34,7 @@
         </item>
         <item>
             <key> <string>_text</string> </key>
-            <value> <unicode>\074div\076\n
+            <value> <unicode>\074div style="border:1px solid yellow;"\076\n
   C (gadget)\n
   \074button onclick="GadgetIndex.getGadgetById(\'C\').jsCall2();"\076C.jsCall2 -\076 B.jsCall2\074/button\076\n
 \074/div\076\n

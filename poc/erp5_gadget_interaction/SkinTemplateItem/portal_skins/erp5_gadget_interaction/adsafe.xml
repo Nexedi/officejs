@@ -34,24 +34,52 @@
         </item>
         <item>
             <key> <string>_text</string> </key>
-            <value> <unicode>\074div gadget="" id="main-interactor"\076\n
-  \074connect source="B.jsCall1" destination="C.jsCall1"\076\074/connect\076\n
-  \074connect source="B.htmlEvent1" destination="C.htmlEvent1"\076\074/connect\076\n
-  \074connect source="B.htmlEvent1" destination="B.myOwnHtmlEvent1"\076\074/connect\076\n
-  \074connect source="B.htmlEvent2" destination="C.htmlEvent2"\076\074/connect\076\n
-  \074connect source="C.jsCall2" destination="B.jsCall2"\076\074/connect\076\n
-\074/div\076\n
+            <value> <unicode>\074!DOCTYPE html\076\n
+\074html\076\n
 \n
-\074div gadget="test_gadgets/B" id="B"\076\074/div\076\n
-\074div gadget="test_gadgets/C" id="C"\076\074/div\076\n
+\074head\076\n
+  \074script src="adsafe.js"\076\074/script\076\n
+  \074script src="jquery/core/jquery.js"\076\074/script\076\n
+  \074script src="jquery/plugin/renderjs/renderjs.js"\076\074/script\076\n
+  \074script src="interactor.js"\076\074/script\076\n
 \n
-\074script type="text/javascript" language="javascript"\076\n
-  //\074![CDATA[\n
+\074/head\076\n
+\n
+\074body\076\n
+\n
+  \074h1\076test\074/h1\076\n
+\n
+  \074div id="content" gadget="test_gadgets/A"\076\074/div\076\n
+\n
+  \074script type="text/javascript" language="javascript"\076\n
+    //\074![CDATA[\n
+    // init all when DOM is ready\n
     $(document).ready(function() {\n
-     window.setTimeout(\'InteractionGadget.bind($("#main-interactor"));\', 1000);\n
+      RenderJs.bootstrap($("#content"));\n
+      // XXX: we use timeouts as we do not know if gadget structure is yet ready, how to do that in a generic way?\n
+      window.setTimeout(\'RenderJs.update($("#content"));\', DEFAULT_GADGET_DOM_READY_TIMEOUT);\n
     });\n
-  //]]\076\n
-\074/script\076</unicode> </value>
+    //]]\076\n
+  \074/script\076\n
+\n
+  \074!-- Adsafe test --\076\n
+  \074div id="WIDGETNAME_"\076\n
+    Adsafe\n
+    \074script type="text/javascript" language="javascript"\076\n
+    ADSAFE.go("WIDGETNAME_", function (dom) {\n
+        "use strict";\n
+    eval("alert(\'1\');");\n
+    // This is where the code for the widget is placed. It can access\n
+    // the document through the dom parameter, allowing it indirect\n
+    // access to html elements, allowing it to change content, styling,\n
+    // and behavior.\n
+\n
+    });\n
+    \074/script\076\n
+  \074/div\076\n
+\n
+\074/body\076\n
+\074/html\076</unicode> </value>
         </item>
         <item>
             <key> <string>content_type</string> </key>
@@ -63,7 +91,7 @@
         </item>
         <item>
             <key> <string>id</string> </key>
-            <value> <string>A</string> </value>
+            <value> <string>adsafe</string> </value>
         </item>
         <item>
             <key> <string>output_encoding</string> </key>

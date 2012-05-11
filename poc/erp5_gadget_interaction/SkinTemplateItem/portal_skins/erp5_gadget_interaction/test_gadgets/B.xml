@@ -34,11 +34,12 @@
         </item>
         <item>
             <key> <string>_text</string> </key>
-            <value> <unicode>\074div\076\n
+            <value> <unicode>\074div style="border:1px solid red;"\076\n
   B (gadget)\n
   \074button onclick="GadgetIndex.getGadgetById(\'B\').jsCall1()"\076B.jsCall1 -\076 C.jsCall1\074/button\076\n
   \074button onclick="$(\'#B\').trigger(\'htmlEvent1\')"\076HTML event 1\074/button\076\n
   \074button onclick="$(\'#B\').trigger(\'htmlEvent2\')"\076HTML event 2\074/button\076\n
+  \074p id="hide" style="display:none;"\076 hidden text on myownHTMlEvent1\074/p\076\n
 \074/div\076\n
 \n
 \074script type="text/javascript" language="javascript"\076\n
@@ -47,6 +48,10 @@
         gadget = GadgetIndex.getGadgetById("B");\n
         gadget.jsCall1 = function (){alert("B.jscall1");};\n
         gadget.jsCall2 = function (){alert("B.jscall2");};\n
+        gadget.myOwnHtmlEvent1 = function (){\n
+          $("#hide").toggle();\n
+          alert("B.myOwnHtmlEvent1");\n
+        };\n
     });\n
   //]]\076\n
 \074/script\076</unicode> </value>
