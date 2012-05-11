@@ -1,24 +1,11 @@
 
-// Adds 3 dummy storages for Jio
+// Adds 3 dummy storages to JIO
 // type:
 //     - dummyallok
 //     - dummyallfail
 //     - dummyallnotfound
 //     - dummyall3tries
-;(function ( Jio ) {
-
-    // check dependencies
-    var errorDependencies=function(){$.error('Cannot find Jio');};
-    try{if (!Jio){
-        errorDependencies();return;
-    }} catch (e){
-        errorDependencies();return;}
-
-    ////////////////////////////////////////////////////////////////////////////
-    // globals
-    var jioGlobalObj = Jio.getGlobalObject(),
-    // end globals
-    ////////////////////////////////////////////////////////////////////////////
+(function () { var jio_dummy_storage_loader = function ( Jio ) {
 
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 1 : all ok
@@ -287,4 +274,12 @@
         return DummyStorageAll3Tries(options);
     });
 
-})( JIO );
+};
+
+if (window.requirejs) {
+    define ('JIODummyStorages',['JIO'], jio_dummy_storage_loader);
+} else {
+    jio_dummy_storage_loader ( JIO );
+}
+
+})();

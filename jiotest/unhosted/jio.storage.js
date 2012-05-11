@@ -1,20 +1,14 @@
 
-// Adds 3 storages for Jio
+// Adds 3 storages to JIO
 // type:
 //     - local
 //     - dav
 //     - replicate
-;(function ( Jio ) {
-
-    ////////////////////////////////////////////////////////////////////////////
-    // globals
-    var jioGlobalObj = Jio.getGlobalObject(),
-    // end globals
-    ////////////////////////////////////////////////////////////////////////////
+(function () { var jio_storage_loader = function ( LocalOrCookieStorage, Jio ) {
 
     ////////////////////////////////////////////////////////////////////////////
     // Tools
-    checkJioDependencies = function() {
+    var checkJioDependencies = function() {
         var retval = true,
         err = function (name) {
             console.error ('Fail to load ' + name);
@@ -51,7 +45,7 @@
             setTimeout(function () {
                 var localStorageObject = null;
 
-                localStorageObject = jioGlobalObj.localStorage.getAll();
+                localStorageObject = LocalOrCookieStorage.getAll();
                 for (var k in localStorageObject) {
                     var splitk = k.split('/');
                     if (splitk[0] === 'jio' &&
@@ -77,7 +71,7 @@
                 var doc = null;
 
                 // reading
-                doc = jioGlobalObj.localStorage.getItem(
+                doc = LocalOrCookieStorage.getItem(
                     'jio/local/'+that.getStorageUserName()+'/'+
                         that.getApplicantID()+'/'+
                         that.getFileName());
@@ -94,7 +88,7 @@
                     doc.lastModified = Date.now();
                     doc.fileContent = that.getFileContent();
                 }
-                jioGlobalObj.localStorage.setItem(
+                LocalOrCookieStorage.setItem(
                     'jio/local/'+that.getStorageUserName()+'/'+
                         that.getApplicantID()+'/'+
                         that.getFileName(), doc);
@@ -116,7 +110,7 @@
                 var doc = null, settings = $.extend(
                     {'getContent':true},that.cloneOptionObject());
 
-                doc = jioGlobalObj.localStorage.getItem(
+                doc = LocalOrCookieStorage.getItem(
                     'jio/local/'+that.getStorageUserName()+'/'+
                         that.getApplicantID()+'/'+that.getFileName());
                 if (!doc) {
@@ -144,7 +138,7 @@
                 var list = [], localStorageObject = null, k = 'key',
                 splitk = ['splitedkey'], fileObject = {};
 
-                localStorageObject = jioGlobalObj.localStorage.getAll();
+                localStorageObject = LocalOrCookieStorage.getAll();
                 for (k in localStorageObject) {
                     splitk = k.split('/');
                     if (splitk[0] === 'jio' &&
@@ -170,7 +164,7 @@
 
             setTimeout (function () {
                 // deleting
-                jioGlobalObj.localStorage.deleteItem(
+                LocalOrCookieStorage.deleteItem(
                     'jio/local/'+
                         that.getStorageUserName()+'/'+
                         that.getApplicantID()+'/'+
@@ -729,4 +723,14 @@
         return new ReplicateStorage(options);
     });
 
-})( JIO );
+};
+
+if (window.requirejs) {
+    define ('JIOStorages',
+            ['LocalOrCookieStorage','JIO','jQuery'],
+            jio_storage_loader);
+} else {
+    jio_storage_loader ( LocalOrCookieStorage, JIO, jQuery );
+}
+
+})();

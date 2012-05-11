@@ -1,5 +1,8 @@
+(function () { var thisfun = function(loader) {
+    var JIO = loader.JIO,
+    LocalOrCookieStorage = loader.LocalOrCookieStorage,
+    Base64 = loader.Base64;
 
-(function(){
 //// clear jio localstorage
 for (var k in LocalOrCookieStorage.getAll()) {
     var splitk = k.split('/');
@@ -271,7 +274,7 @@ test ('Document save', function () {
     // We launch a saving to localstorage and we check if the file is
     // realy saved. Then save again and check if
 
-    var o = {}, clock = this.sandbox.useFakeTimers(), t = this, tmp,
+    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
     mytest = function (message,value,lmcd){
         o.f = function (result) {
             deepEqual(result.isSaved,value,message);};
@@ -284,12 +287,13 @@ test ('Document save', function () {
             ok(false, 'no response / too much results');
         else {
             // check content
-            tmp = LocalOrCookieStorage.getItem ('jio/local/MrSaveName/jiotests/file');
-            tmp.lmcd = lmcd(tmp.creationDate,tmp.lastModified);
-            delete tmp.lastModified;
-            delete tmp.creationDate;
-            deepEqual (tmp,{'fileName':'file','fileContent':'content',
-                            'lmcd':true},'check content');
+            o.tmp = LocalOrCookieStorage.getItem (
+                'jio/local/MrSaveName/jiotests/file');
+            o.tmp.lmcd = lmcd(o.tmp.creationDate,o.tmp.lastModified);
+            delete o.tmp.lastModified;
+            delete o.tmp.creationDate;
+            deepEqual (o.tmp,{'fileName':'file','fileContent':'content',
+                              'lmcd':true},'check content');
         }
     };
 
@@ -397,8 +401,9 @@ test ('Document remove', function () {
             ok(false, 'no response / too much results');
         else {
             // check if the file is still there
-            var tmp = LocalOrCookieStorage.getItem ('jio/local/MrRemoveName/jiotests/file');
-            ok (!tmp, 'check no content');
+            o.tmp = LocalOrCookieStorage.getItem (
+                'jio/local/MrRemoveName/jiotests/file');
+            ok (!o.tmp, 'check no content');
         }
     };
     o.jio = JIO.createNew({'type':'local','userName':'MrRemoveName'},
@@ -502,10 +507,11 @@ test ('Document save', function () {
             "PROPFIND","https://ca-davstorage:8080/dav/davsave/jiotests/file",
             [errnoprop,{'Content-Type':'text/xml; charset="utf-8"'},
              davsave]);
-        server.respondWith ("PUT",
-                            "https://ca-davstorage:8080/dav/davsave/jiotests/file",
-                            [errnoput, {'Content-Type':'x-www-form-urlencoded'},
-                             'content']);
+        server.respondWith (
+            "PUT",
+            "https://ca-davstorage:8080/dav/davsave/jiotests/file",
+            [errnoput, {'Content-Type':'x-www-form-urlencoded'},
+             'content']);
         server.respondWith (
             "GET","https://ca-davstorage:8080/dav/davsave/jiotests/file",
             [errnoprop===207?200:errnoprop,{},'content']);
@@ -514,7 +520,7 @@ test ('Document save', function () {
         // server.respondWith ("MKCOL","https://ca-davstorage:8080/dav/davsave",
         //                     [200,{},'']);
         // server.respondWith ("MKCOL",
-        //                     "https://ca-davstorage:8080/dav/davsave/jiotests",
+        //                    "https://ca-davstorage:8080/dav/davsave/jiotests",
         //                     [200,{},'']);
         o.f = function (result) {
             deepEqual (result.isSaved,value,message);};
@@ -681,7 +687,8 @@ test ('Check name availability', function () {
             {'type':'dummyall3tries','userName':'3'}]},
         {'type':'dummyall3tries','userName':'4'}]},
                           {'ID':'jiotests'});
-    mytest('DummyStorageAll{3tries,{3tries,3tries},3tries} : name available',true);
+    mytest('DummyStorageAll{3tries,{3tries,3tries},3tries} : name available'
+           ,true);
     o.jio.stop();
 });
 
@@ -804,5 +811,31 @@ test ('Remove document', function () {
     mytest('DummyStorageAllOK,3tries: remove document .',true);
     o.jio.stop();
 });
+// end require
+};                              // end thisfun
+
+if (window.requirejs) {
+    require.config ({
+        paths: {
+            jiotestsloader: 'jiotests.loader',
+
+            LocalOrCookieStorage: 'unhosted/localorcookiestorage',
+            jQuery: 'js/jquery/jquery',
+            JIO: 'unhosted/jio',
+            Base64: 'unhosted/base64',
+            JIODummyStorages: 'jio.dummystorages',
+            JIOStorages: 'unhosted/jio.storage',
+
+            QUnit: 'qunit/qunit-1.5.0',
+            Sinon: 'sinon/sinon-1.3.4',
+            SinonQUnit: 'sinon/sinon-qunit-1.0.0'
+        }
+    });
+    require(['jiotestsloader'],thisfun);
+} else {
+    thisfun ({LocalOrCookieStorage:LocalOrCookieStorage,
+              JIO:JIO,
+              Base64:Base64});
+}
 
 })();

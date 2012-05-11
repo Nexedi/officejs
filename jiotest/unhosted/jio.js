@@ -1,6 +1,6 @@
 
 ;var JIO =
-(function () {
+(function () { var jio_loader_function = function ( LocalOrCookieStorage ) {
 
     ////////////////////////////////////////////////////////////////////////////
     // constants
@@ -181,20 +181,7 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Tools
-    checkJioDependencies = function() {
-        var retval = true,
-        err = function (name) {
-            console.error ('Fail to load ' + name);
-            retval = false;
-        };
-        try { if (!JSON) { err('JSON'); } }
-        catch (e) { err('JSON'); }
-        try { if (!jQuery) { err('jQuery'); } }
-        catch (e) { err('jQuery'); }
-        try { if (!LocalOrCookieStorage) { err('LocalOrCookieStorage'); } }
-        catch (e) { err('LocalOrCookieStorage'); }
-        return retval;
-    },
+
     // end Tools
     ////////////////////////////////////////////////////////////////////////////
 
@@ -203,9 +190,6 @@
     PubSub,Job,JobQueue,JobListener,ActivityUpdater,BaseStorage,JioCons,Jio;
     // end Classes
     ////////////////////////////////////////////////////////////////////////////
-
-    // check dependencies
-    if (!checkJioDependencies()) { return; }
 
     ////////////////////////////////////////////////////////////////////////////
     // Publisher Subcriber
@@ -1206,4 +1190,13 @@
     return new JioCreator();
     // end Jio Creator
     ////////////////////////////////////////////////////////////////////////////
+};
+
+if (window.requirejs) {
+    define ('JIO',['LocalOrCookieStorage','jQuery'],jio_loader_function);
+    return undefined;
+} else {
+    return jio_loader_function ( LocalOrCookieStorage, jQuery );
+}
+
 })();

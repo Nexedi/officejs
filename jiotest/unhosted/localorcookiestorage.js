@@ -1,6 +1,5 @@
-
 ;var LocalOrCookieStorage =
-(function () {
+(function () { var local_cookie_loader_function = function () {
     // localorcookiestorage.js
     // Creates an object that can store persistent information in localStorage.
     // If it is not supported by the browser, it will store in cookies.
@@ -88,5 +87,14 @@
     }
     // end cookies & localStorages
     ////////////////////////////////////////////////////////////////////////////
-    
+
+};
+
+if (window.requirejs) {
+    define ('LocalOrCookieStorage',[], local_cookie_loader_function);
+    return undefined;
+} else {
+    return local_cookie_loader_function ();
+}
+
 })();
