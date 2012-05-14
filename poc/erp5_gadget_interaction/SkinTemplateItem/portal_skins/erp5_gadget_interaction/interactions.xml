@@ -40,7 +40,6 @@
 \074head\076\n
   \074script src="jquery/core/jquery.js"\076\074/script\076\n
   \074script src="jquery/plugin/renderjs/renderjs.js"\076\074/script\076\n
-  \074script src="interactor.js"\076\074/script\076\n
 \n
 \074/head\076\n
 \n
