@@ -44,15 +44,16 @@
 \n
 \074script type="text/javascript" language="javascript"\076\n
   //\074![CDATA[\n
-    $(document).ready(function() {\n
-        gadget = GadgetIndex.getGadgetById("B");\n
-        gadget.jsCall1 = function (){alert("B.jscall1");};\n
-        gadget.jsCall2 = function (){alert("B.jscall2");};\n
-        gadget.myOwnHtmlEvent1 = function (){\n
-          $("#hide").toggle();\n
-          alert("B.myOwnHtmlEvent1");\n
-        };\n
-    });\n
+     $(document).ready(function() {\n
+         gadget = GadgetIndex.getGadgetById("B");\n
+         gadget.jsCall1 = function (){alert("B.jscall1");};\n
+         gadget.jsCall2 = function (){alert("B.jscall2");};\n
+         gadget.myOwnHtmlEvent1 = function (){\n
+           $("#hide").toggle();\n
+           alert("B.myOwnHtmlEvent1");\n
+         };\n
+     });\n
+\n
   //]]\076\n
 \074/script\076</unicode> </value>
         </item>

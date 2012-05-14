@@ -34,35 +34,27 @@
         </item>
         <item>
             <key> <string>_text</string> </key>
-            <value> <unicode>\074!DOCTYPE html\076\n
-\074html\076\n
+            <value> <unicode encoding="cdata"><![CDATA[
+
+<!DOCTYPE html>\n
+<html>\n
 \n
-\074head\076\n
-  \074script src="jquery/core/jquery.js"\076\074/script\076\n
-  \074script src="jquery/plugin/renderjs/renderjs.js"\076\074/script\076\n
+<head>\n
+  <script data-main="main" src="require.js"></script>\n
 \n
-\074/head\076\n
+</head>\n
 \n
-\074body\076\n
+<body>\n
 \n
-  \074h1\076test\074/h1\076\n
+  <h1>test</h1>\n
 \n
-  \074div id="content" gadget="test_gadgets/A"\076\074/div\076\n
+  <div id="content"\n
+       gadget="test_gadgets/A"></div>\n
 \n
-  \074script type="text/javascript" language="javascript"\076\n
-    //\074![CDATA[\n
-    $(document).ready(function() {\n
-      RenderJs.bootstrap($("#content"));\n
-      GadgetIndex.getRootGadget().getDom().one("ready", function (){\n
-          RenderJs.update($("#content"));\n
-      });\n
-    });\n
-    //]]\076\n
-  \074/script\076\n
-\n
-\n
-\074/body\076\n
-\074/html\076</unicode> </value>
+</body>\n
+</html>
+
+]]></unicode> </value>
         </item>
         <item>
             <key> <string>content_type</string> </key>
