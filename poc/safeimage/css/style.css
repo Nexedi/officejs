@@ -77,7 +77,7 @@ h6 {
  * Map Examples Specific
  */
 .smallmap {
-    width: 1024px;
+    width: 800px;
     height: 512px;
     border: 1px solid #ccc;
 }
