@@ -5,7 +5,6 @@ var zoomify_url = "image/hs-2007-16-a-full_jpg/";
 var map, zoomify;
 
 function loadOpenLayerZoomedImage(){
-  console.log('iniside init of custom', zoomify_url)
   /* First we initialize the zoomify pyramid (to get number of tiers) */
   var zoomify = new OpenLayers.Layer.Zoomify( "Zoomify", zoomify_url, 
   new OpenLayers.Size( zoomify_width, zoomify_height ) );
@@ -24,5 +23,3 @@ function loadOpenLayerZoomedImage(){
     map.setBaseLayer(zoomify);
   map.zoomToMaxExtent();
 };
-
-console.log('foo');

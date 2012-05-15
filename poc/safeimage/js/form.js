@@ -3,8 +3,6 @@
  */
 (function($) {
   var routes = {
-    "/service" : "displayForm",
-    "/service/:id" : "displayData",
     "/image/:id" : "displayData",
     "image/:id" : "displayData",
   }
@@ -24,28 +22,17 @@
 
   var methods = {
     init: function() {
-      // Initialize slapos in this context
+      // Initialize in this context
       var $this = $(this);
       // Bind to urlChange event
       return this.each(function(){
         $.subscribe("urlChange", function(e, d){
           router.call($this, e, d);
         });
-        $.subscribe("auth", function(e, d){
-          $(this).form("authenticate", d);
-        });
       });
     },
 
-    authenticate: function(data) {
-      for (var d in data) {
-        if (data.hasOwnProperty(d)) {
-        }
-      }
-    },
-
     displayData: function(id){
-      console.log('displayData, id', id);
       if (map !== undefined){
         map.destroy();
       }
@@ -60,51 +47,6 @@
       }
       $(this).form('render', 'image', {'image_id': id});
       $(loadOpenLayerZoomedImage);
-    },
-
-    displayForm: function() {
-      console.log('form.displayForm');
-      $(this).form('render', 'form.new.instance');
-      var data = {};
-      $(this).find("form").submit(function(){
-        $(this).find('input').serializeArray().map(function(elem){
-          data[elem["name"]] = elem["value"];
-        });
-        $(this).form('displayAsking', data);
-        return false;
-      });
-    },
-
-    displayAsking: function(data){
-      var request = {
-        software_type: "type_provided_by_the_software",
-        slave: false,
-        status: "started",
-        parameter: {
-        Custom1: "one string",
-        Custom2: "one float",
-        Custom3: ["abc", "def"],
-        },
-        sla: {
-        computer_id: "COMP-0",
-        }
-      };
-      var redirect = function(){
-        $(this).form('render', 'auth', {
-          'host':'t139:12002/erp5/web_site_module/hosting/request-access-token',
-          'client_id': 'client',
-          'redirect':escape(window.location.href)
-        })
-      };
-      var statusCode = {
-        401: redirect
-      };
-      $.extend(request, data);
-      $(this).html("<p>Requesting a new instance "+request["title"]+" ...</p>")
-        .slapos('newInstance', request, function(data){
-          $(this).html(data);},
-          statusCode
-        );
     },
 
     render: function(template, data){
