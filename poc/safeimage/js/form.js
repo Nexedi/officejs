@@ -38,12 +38,12 @@
       }
       zoomify_url = "image/" + id + "/";
       //XXX look at the xml definition inside image folder
-      if (id == 'hs-2007-16-a-full_jpg') {
-        zoomify_width = 29566;
-        zoomify_height = 14321;
-      } else {
-        zoomify_width = 1277;
-        zoomify_height = 754;
+      if (id == 'openphotonet_imgp0034-1') {
+        zoomify_width = 4672;
+        zoomify_height = 3104;
+      } else if (id == 'openphotonet_s5000563') {
+        zoomify_width = 2592;
+        zoomify_height = 1944;
       }
       $(this).form('render', 'image', {'image_id': id});
       $(loadOpenLayerZoomedImage);
