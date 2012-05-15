@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for node in `ls -1` ; do
+    if [ -d "$node" ] ; then
+        cd "$node"
+
+        grunt --force
+
+        cd ..
+    fi
+done
