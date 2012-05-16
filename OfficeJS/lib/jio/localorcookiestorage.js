@@ -1,4 +1,4 @@
-/*! Local Or Cookie Storage - v0.1.0 - 2012-05-15
+/*! Local Or Cookie Storage - v0.1.0 - 2012-05-16
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var LocalOrCookieStorage =
