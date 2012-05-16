@@ -33,9 +33,7 @@
     },
 
     displayData: function(id){
-      if (map !== undefined){
-        map.destroy();
-      }
+      var zoomify_url, zoomify_width, zoomify_height;
       zoomify_url = "image/" + id + "/";
       //XXX look at the xml definition inside image folder
       if (id == 'openphotonet_imgp0034-1') {
@@ -46,7 +44,10 @@
         zoomify_height = 1944;
       }
       $(this).form('render', 'image', {'image_id': id});
-      $(loadOpenLayerZoomedImage);
+      $(function() {
+          SafeImage.loadOpenLayerZoomedImage(zoomify_width,
+            zoomify_height, zoomify_url);
+      })
     },
 
     render: function(template, data){

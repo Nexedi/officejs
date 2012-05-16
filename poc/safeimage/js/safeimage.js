@@ -1,25 +1,29 @@
-var zoomify_width = 29566;
-var zoomify_height = 14321;
-var zoomify_url = "image/hs-2007-16-a-full_jpg/";
+var SafeImage = (function() {
 
-var map, zoomify;
+  var that = {};
 
-function loadOpenLayerZoomedImage(){
-  /* First we initialize the zoomify pyramid (to get number of tiers) */
-  var zoomify = new OpenLayers.Layer.Zoomify( "Zoomify", zoomify_url, 
-  new OpenLayers.Size( zoomify_width, zoomify_height ) );
+  that.loadOpenLayerZoomedImage= function(zoomify_width,
+                                    zoomify_height, zoomify_url){
+    if (that.map !== undefined){
+        that.map.destroy();
+    }
+    /* First we initialize the zoomify pyramid (to get number of tiers) */
+    that.zoomify = new OpenLayers.Layer.Zoomify( "Zoomify", zoomify_url,
+      new OpenLayers.Size( zoomify_width, zoomify_height ) );
 
-  /* Map with raster coordinates (pixels) from Zoomify image */
-  var options = {
-      maxExtent: new OpenLayers.Bounds(0, 0, zoomify_width, zoomify_height),
-      maxResolution: Math.pow(2, zoomify.numberOfTiers-1 ),
-      numZoomLevels: zoomify.numberOfTiers,
-      units: 'pixels'
+    /* Map with raster coordinates (pixels) from Zoomify image */
+    var options = {
+        maxExtent: new OpenLayers.Bounds(0, 0, zoomify_width, zoomify_height),
+        maxResolution: Math.pow(2, that.zoomify.numberOfTiers-1 ),
+        numZoomLevels: that.zoomify.numberOfTiers,
+        units: 'pixels'
+    };
+
+    that.map = new OpenLayers.Map("map", options);
+    that.map.addLayer(that.zoomify);
+
+      that.map.setBaseLayer(that.zoomify);
+    that.map.zoomToMaxExtent();
   };
-
-  map = new OpenLayers.Map("map", options);
-  map.addLayer(zoomify);
-
-    map.setBaseLayer(zoomify);
-  map.zoomToMaxExtent();
-};
+  return that
+}());
