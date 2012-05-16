@@ -12,7 +12,7 @@ body {
 
 /* buttons aspect */
 .officejs_button {
-    background-image: url('../images/officejs/button_background.png');
+    background-image: url('../img/officejs/button_background.png');
     border: 1px solid #BBBBBB;
     border-radius: 4px 4px 4px 4px;
     color: #333333;
@@ -203,7 +203,7 @@ div.header-right div.input a {
     list-style: none inside none;
 }
 .action_menu a#change_state {
-    background-image: url("../images/officejs/button_background.png");
+    background-image: url("../img/officejs/button_background.png");
     border: 1px solid #D1D1D1;
     color: #333333;
     padding: 2px;
@@ -423,16 +423,16 @@ div.listbox-navigation input {
     width: 20px;
 }
 div.listbox-navigation button.listbox_first_page {
-    background-image: url("../images/officejs/first_page.png");
+    background-image: url("../img/officejs/first_page.png");
 }
 div.listbox-navigation button.listbox_previous_page {
-    background-image: url("../images/officejs/previous_page.png");
+    background-image: url("../img/officejs/previous_page.png");
 }
 div.listbox-navigation button.listbox_next_page {
-    background-image: url("../images/officejs/next_page.png");
+    background-image: url("../img/officejs/next_page.png");
 }
 div.listbox-navigation button.listbox_last_page {
-    background-image: url("../images/officejs/last_page.png");
+    background-image: url("../img/officejs/last_page.png");
 }
 div.listbox-navigation button.listbox_previous_page, div.listbox-navigation button.listbox_next_page {
     margin: 0;
@@ -489,7 +489,7 @@ table.listbox {
     border-collapse: collapse;
 }
 thead {
-    background: url("../images/officejs/href_background.gif") repeat scroll 0 0 transparent;
+    background: url("../img/officejs/href_background.gif") repeat scroll 0 0 transparent;
     font-family: serif;
     font-size: medium;
     font-style: normal;
@@ -516,7 +516,7 @@ div.listbox-content tr {
     text-align: left;
 }
 .sort-button {
-    background: url("../images/officejs/href_background.gif") repeat scroll 0 0 transparent;
+    background: url("../img/officejs/href_background.gif") repeat scroll 0 0 transparent;
     border: 0 none;
 }
 .sort-button span {

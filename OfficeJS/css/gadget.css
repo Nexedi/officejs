@@ -68,11 +68,11 @@ div.pad-actions {
     float: left;
 }
 #tabs li span.rename_tab_dialog_image {
-    background: url("../images/officejs/icon_edit.gif") no-repeat scroll 0 0 transparent;
+    background: url("../img/officejs/icon_edit.gif") no-repeat scroll 0 0 transparent;
     padding-right: 6px;
 }
 #tabs li span.remove_tab_dialog_image {
-    background: url("../images/officejs/icon_remove.gif") no-repeat scroll 0 0 transparent;
+    background: url("../img/officejs/icon_remove.gif") no-repeat scroll 0 0 transparent;
     padding-right: 6px;
 }
 #add_new_tab_dialog_link {
@@ -147,7 +147,7 @@ span.handle, h3.handle {
     cursor: move;
 }
 h3.handle {
-    background: url("../images/officejs/tab_left_selected.png") no-repeat scroll left top transparent;
+    background: url("../img/officejs/tab_left_selected.png") no-repeat scroll left top transparent;
     border-bottom: 1px solid #3D6474;
     color: #FFFFFF;
     font-size: 14px;
@@ -161,7 +161,7 @@ h3.handle {
     font-size: 13px !important;
 }*/
 h3.handle span.handle {
-    background: url("../images/officejs/tab_right_selected.png") no-repeat scroll right top transparent;
+    background: url("../img/officejs/tab_right_selected.png") no-repeat scroll right top transparent;
     display: block;
     min-height: 20px;
     padding: 5px 5px 0 0;
@@ -170,13 +170,13 @@ h3.handle span.handle {
     background: none repeat scroll 0 0 white !important;
 }*/
 a.block-remove {
-    background-image: url("../images/officejs/icon_remove.gif");
+    background-image: url("../img/officejs/icon_remove.gif");
 }
 a.block-edit-form {
-    background-image: url("../images/officejs/icon_edit.png") !important;
+    background-image: url("../img/officejs/icon_edit.png") !important;
 }
 a.block-minimize {
-    background-image: url("../images/officejs/icon_minimize.png") !important;
+    background-image: url("../img/officejs/icon_minimize.png") !important;
 }
 a.clickable-block {
     background-position: center center;
