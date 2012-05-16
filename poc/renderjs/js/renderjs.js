@@ -110,20 +110,27 @@ var TabbularGadget = {
     visible_dom.removeClass("not_selected");
   },
   
-  addNewTabGadget: function(form_id, dom_id, gadget_data_handler) {
+  addNewTabGadget: function(gadget_url, dom_id, gadget_data_handler) {
     // add new gadget and render it
     var html_string;
+    var html_string_array;
     tab_container=$('#'+dom_id);
     tab_container.empty();
     // XXX: allow add any gadget,gadget:source items within API
-    html_string =['<div class="gadget" ',
-                  'gadget="' + form_id + '/Form_asRenderJSGadget" ',
-                  'gadget:data-handler="' + gadget_data_handler + '" ',
-                  'gadget:data-source="Form_asJSON?form_id=' + form_id + '"></div>'].join('\n');
+    html_string_array = ['<div class="gadget" ',
+                  'gadget="' + gadget_url + '"']
+    if (gadget_data_handler !== undefined) {
+      html_string_array.push('gadget:data-handler="' + gadget_data_handler + '" ');
+      html_string_array.push('gadget:data-source="Form_asJSON?form_id=' + form_id + '">');
+    }
+    html_string_array.push('</div>')
+    html_string = html_string_array.join('\n');
                   
     tab_container.append(html_string);
     tab_gadget = tab_container.find(".gadget");
-    Form.setCurrentFormId(form_id);
+
+    //The above line sounds not generic enough
+    //Form.setCurrentFormId(form_id);
                 
     // render new gadget
     is_ready = false;
