@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <litk rel="icon" href="img/officejs/favicon.png" />
   <link rel="shortcut icon" href="img/officejs/favicon.png" />
-  <link rel="stylesheet" href="css/officejs.css" />
+  <link rel="stylesheet" href="css/bootstrap.min.css" />
   <title>OfficeJS</title>
   <!-- js scripts -->
   <script type="text/javascript" src="lib/icanhaz/ICanHaz.min.js"></script>
@@ -12,39 +12,112 @@
           type="text/javascript"
           src="lib/require/require.js"></script>
   <!-- html scripts -->
-  <script id="test" type="text/html">
+  <script id="home" type="text/html">
     <article>
       <p>
-        test
+        home
       </p>
+    </article>
+  </script>
+  <script id="about" type="text/html">
+    <article>
+      <p>
+        about
+      </p>
+    </article>
+  </script>
+  <script id="login" type="text/html">
+    <article>
+      <div class="control-group">
+        <label class="control-label" for="input_json_storage">JSON Storage</label>
+        <div class="controls docs-input-sizes">
+          <input class="input-xlarge"
+                 type="text" name="JSONstorage" id="input_json_storage"
+                 value="{&quot;type&quot;:&quot;local&quot;,&quot;userName&quot;:&quot;tristan&quot;}"
+                 placeholder="storage" />
+        </div>
+        <label class="control-label" for="JSONapplicantID">JSON Applicant</label>
+        <div class="controls docs-input-sizes">
+          <input class="input-xlarge"
+                 type="text" name="JSONapplicant" id="input_json_applicant"
+                 value="{&quot;ID&quot;:&quot;jiotests&quot;}"
+                 placeholder="applicant" />
+        </div>
+      </div>
+      <button type="submit" class="btn" onclick="OfficeJS.setJio()">Create New JIO</button>
+    </article>
+  </script>
+  <script id="text_editor" type="text/html">
+    <article>
+      <div class="control-group">
+        <label class="control-label" for="fileName">File Name</label>
+        <div class="controls docs-input-sizes">
+          <input type="text" name="fileName" id="input_fileName"
+                 value="" placeholder="file name" />
+        </div>
+        <label class="control-label" for="fileContent">File Content</label>
+        <div class="controls docs-input-sizes">
+          <input type="text" name="fileContent" id="input_content"
+                 value="" placeholder="content" />
+        </div>
+        <button type="submit" class="btn btn-primary" onclick="OfficeJS.save()"><i class="icon-download-alt icon-white"></i> Save</button>&nbsp;
+        <button type="submit" class="btn" onclick="OfficeJS.load()"><i class="icon-upload"></i> Load</button>&nbsp;
+        <button type="submit" class="btn btn-danger" onclick="OfficeJS.remove()"><i class="icon-remove icon-white"></i> Remove</button>&nbsp;
+        <button type="submit" class="btn" onclick="OfficeJS.getlist()"><i class="icon-refresh"></i> Get List</button>&nbsp;
+      </div>
+      <div id="document_list" class="span4">
+        <ul>
+          {{#DocumentList}}
+          <li>{{fileName}}</li>
+          {{/DocumentList}}
+        </ul>
+      </div>
     </article>
   </script>
 </head>
 <body>
-  <header>
-    <aside>
-      <nav id="header_navbar">
-        <ul class="nav">
-          <li><a href="#">Nav</a></li>
-          <li><a href="#about">About</a></li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-      </nav>
-    </aside>
-    <h1>OfficeJS</h1>
-  </header>
 
-  <nav id="left_navbar">
-    <ul class="nav">
-      <li class="nav-header">Documents</li>
-      <li class="create_document"><a href="#/create_document">Create Document</a></li>
-      <li><a href="#/test">Test</a></li>
-      <li class="other">Other</li>
-    </ul>
-  </nav>
+  <div id="loading" style="position: absolute; right: 20px; top: 20px;"></div>
+  <div class="navbar">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        <div class="row-fluid">
+          <div class="span2">
+            <h1>OfficeJS</h1>
+          </div>
+          <div class="span10">
+            <ul class="nav">
+              <li><a href="#">Nav</a></li>
+              <li><a href="#/about">About</a></li>
+              <li><a href="#/contact">Contact</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <section id="main">
-    <!-- Body content -->
-  </section>
+  <div class="container-fluid">
+    <div class="row-fluid">
+      <div class="span2">
+        <div class="well">
+          <ul class="nav nav-list">
+            <li class="nav-header">Nav</li>
+            <li><a href="#/login"><i class="icon-ok"></i>Login</a></li>
+            <li class="nav-header">Documents</li>
+            <li class="texteditor"><a href="#/texteditor"><i class="icon-font"></i>Text Editor</a></li>
+          </ul>
+        </div>
+      </div>
+      <section class="span10" id="main">
+        <!-- Body content -->
+        <article>
+          <p>
+            Loading...
+          </p>
+        </article>
+      </section>
+    </div>
+  </div>
 </body>
 </html>

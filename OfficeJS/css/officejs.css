@@ -22,6 +22,12 @@ nav#left_navbar {
     display: inline-block;
     width: 15%;
 }
+.nav_header
+{
+    font-style: italic;
+    list-style: none outside none;
+}
+
 section {
     display: inline-block;
     margin: 0;
