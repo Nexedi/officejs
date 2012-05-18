@@ -55,6 +55,7 @@ module.exports = function(grunt) {
                 JIO: true,
                 console: true,
                 unescape: true,
+                alert: true,
                 // Needed to avoid "not defined error" with requireJs
                 define: true,
                 require: true,

@@ -1,4 +1,4 @@
-/*! JIO - v0.1.0 - 2012-05-16
+/*! JIO - v0.1.0 - 2012-05-18
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 
@@ -259,6 +259,7 @@ var JIO =
             // options.publisher : is the publisher to use to send events
             // options.jioID : the jio ID
 
+            var k, emptyfun = function (){};
             if (options.publisher) {
                 priv.publisher = publisher;
             }
@@ -266,6 +267,10 @@ var JIO =
             priv.jobObjectName = 'jio/jobObject/'+options.jioID;
             priv.jobObject = {};
             that.copyJobQueueToLocalStorage();
+            for (k in priv.recoveredJobObject) {
+                priv.recoveredJobObject[k].callback = emptyfun;
+                that.addJob (priv.recoveredJobObject[k]);
+            }
         };
         that.close = function () {
             // close the job queue.
@@ -284,10 +289,6 @@ var JIO =
                 splitk = k.split('/');
                 if (splitk[0] === 'jio' &&
                     splitk[1] === 'id') {
-                    if (JSON.parse(localStorageObject[k]) < Date.now() - 10000){
-                        // 10 sec ?
-                        jioGlobalObj.localStorage.deleteItem(k);
-                    }
                     if (JSON.parse(splitk[2]) >= jioGlobalObj.queueID) {
                         jioGlobalObj.queueID = JSON.parse(splitk[2]) + 1;
                     }
@@ -296,6 +297,28 @@ var JIO =
             id = jioGlobalObj.queueID;
             jioGlobalObj.queueID ++;
             return id;
+        };
+        that.recoverOlderJobObject = function () {
+            // recover job object from older inactive jio
+
+            var localStorageObject = jioGlobalObj.localStorage.getAll(),
+            k = 'key', splitk = ['splitedkey'];
+            for (k in localStorageObject) {
+                splitk = k.split('/');
+                if (splitk[0] === 'jio' &&
+                    splitk[1] === 'id' ) {
+                    if (localStorageObject[k] < Date.now() - 10000){
+                        // 10 sec ? delete item
+                        jioGlobalObj.localStorage.deleteItem(k);
+                        // job recovery
+                        priv.recoveredJobObject = jioGlobalObj.
+                            localStorage.getItem('jio/jioObject/'+splitk[2]);
+                        // remove ex job object
+                        jioGlobalObj.localStorage.deleteItem(
+                            'jio/jobObject/'+splitk[2]);
+                    }
+                }
+            }
         };
         that.isThereJobsWhere = function( func ) {
             // Check if there is jobs, in the queue,
@@ -578,6 +601,7 @@ var JIO =
         priv.jioID = 0;
         priv.jobObjectName = '';
         priv.jobObject = {};
+        priv.recoveredJobObject = {};
         //// end Initialize
 
         return that;
@@ -606,10 +630,9 @@ var JIO =
 
             if (!priv.id) {
                 priv.id = setInterval (function () {
-                    // if there is jobs
-                    if (JSON.stringify(queue.jobObject) !== '{}') {
-                        priv.queue.invokeAll();
-                    }
+                    // recover older jobs
+                    priv.queue.recoverOlderJobObject();
+                    priv.queue.invokeAll();
                 },priv.interval);
                 return true;
             } else {
