@@ -4,6 +4,7 @@ for node in `ls -1` ; do
     if [ -d "$node" ] ; then
         cd "$node"
 
+        printf "\n\033[1m\033[36mgrunt --force -> %s\033[0m\n" "$node"
         grunt --force
 
         cd ..
