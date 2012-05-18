@@ -29,14 +29,20 @@
   <script id="login" type="text/html">
     <article>
       <div class="control-group">
-        <label class="control-label" for="input_json_storage">JSON Storage</label>
+        <label class="control-label"
+               for="input_json_storage">
+          JSON Storage
+        </label>
         <div class="controls docs-input-sizes">
           <input class="input-xlarge"
                  type="text" name="JSONstorage" id="input_json_storage"
                  value="{&quot;type&quot;:&quot;local&quot;,&quot;userName&quot;:&quot;tristan&quot;}"
                  placeholder="storage" />
         </div>
-        <label class="control-label" for="JSONapplicantID">JSON Applicant</label>
+        <label class="control-label"
+               for="JSONapplicantID">
+          JSON Applicant
+        </label>
         <div class="controls docs-input-sizes">
           <input class="input-xlarge"
                  type="text" name="JSONapplicant" id="input_json_applicant"
@@ -44,7 +50,9 @@
                  placeholder="applicant" />
         </div>
       </div>
-      <button type="submit" class="btn" onclick="OfficeJS.setJio()">Create New JIO</button>
+      <button type="submit"
+              class="btn"
+              onclick="OfficeJS.setJio()">Create New JIO</button>
     </article>
   </script>
   <script id="text_editor" type="text/html">
@@ -60,10 +68,30 @@
           <input type="text" name="fileContent" id="input_content"
                  value="" placeholder="content" />
         </div>
-        <button type="submit" class="btn btn-primary" onclick="OfficeJS.save()"><i class="icon-download-alt icon-white"></i> Save</button>&nbsp;
-        <button type="submit" class="btn" onclick="OfficeJS.load()"><i class="icon-upload"></i> Load</button>&nbsp;
-        <button type="submit" class="btn btn-danger" onclick="OfficeJS.remove()"><i class="icon-remove icon-white"></i> Remove</button>&nbsp;
-        <button type="submit" class="btn" onclick="OfficeJS.getlist()"><i class="icon-refresh"></i> Get List</button>&nbsp;
+        <button type="submit"
+                class="btn btn-primary"
+                onclick="OfficeJS.save()">
+          <i class="icon-download-alt icon-white"></i>
+          Save
+        </button>&nbsp;
+        <button type="submit"
+                class="btn"
+                onclick="OfficeJS.load()">
+          <i class="icon-upload"></i>
+          Load
+        </button>&nbsp;
+        <button type="submit"
+                class="btn btn-danger"
+                onclick="OfficeJS.remove()">
+          <i class="icon-remove icon-white"></i>
+          Remove
+        </button>&nbsp;
+        <button type="submit"
+                class="btn"
+                onclick="OfficeJS.getlist()">
+          <i class="icon-refresh"></i>
+          Get List
+        </button>&nbsp;
       </div>
       <div id="document_list" class="span4">
         <ul>
@@ -105,7 +133,9 @@
             <li class="nav-header">Nav</li>
             <li><a href="#/login"><i class="icon-ok"></i>Login</a></li>
             <li class="nav-header">Documents</li>
-            <li class="texteditor"><a href="#/texteditor"><i class="icon-font"></i>Text Editor</a></li>
+            <li class="texteditor">
+              <a href="#/texteditor"><i class="icon-font"></i>Text Editor</a>
+            </li>
           </ul>
         </div>
       </div>
