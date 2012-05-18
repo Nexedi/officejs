@@ -359,13 +359,13 @@ var JIO =
 
             //// browsing current jobs
             for (id in priv.jobObject) {
+                if (jioGlobalObj.jobManagingMethod.canRemoveFailOrDone(
+                    priv.jobObject[id],job)) {
+                    res.removeArray.push(id);
+                    continue;
+                }
                 if (jioGlobalObj.jobManagingMethod.canSelect(
                     priv.jobObject[id],job)) {
-                    if (jioGlobalObj.jobManagingMethod.canRemoveFailOrDone(
-                        priv.jobObject[id],job)) {
-                        res.removeArray.push(id);
-                        continue;
-                    }
                     if (jioGlobalObj.jobManagingMethod.canEliminate(
                         priv.jobObject[id],job)) {
                         res.elimArray.push(id);
@@ -543,25 +543,13 @@ var JIO =
             //// end method analyse
         };
 
-        that.ended = function (job) {
+        that.ended = function (endedjob) {
             // It is a callback function called just before user callback.
             // It is called to manage jobObject according to the ended job.
 
-            switch (job.status) {
-            case 'done':
-                // This job is supposed done, we can remove it from queue.
-                that.removeJob ({'job':job});
-                break;
-            case 'fail':
-                // This job cannot be done.
-                // save to local storage
-                that.copyJobQueueToLocalStorage ();
-                break;
-            case 'wait':
-                break;
-            default:
-                break;
-            }
+            var job = $.extend({},endedjob); // copy
+            // This job is supposed terminated, we can remove it from queue.
+            that.removeJob ({'job':job});
 
             //// ended job analyse
             // if the job method does not exists, return false
