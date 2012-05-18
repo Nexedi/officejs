@@ -838,11 +838,11 @@ if (window.requirejs) {
 
             LocalOrCookieStorage: '../lib/jio/localorcookiestorage.min',
             jQueryAPI: '../lib/jquery/jquery',
-            jQuery: '../lib/jio/jquery.requirejs_module',
+            jQuery: '../js/jquery.requirejs_module',
             JIO: '../src/jio',
             Base64API: '../lib/base64/base64',
-            Base64: '../lib/jio/base64.requirejs_module',
-            JIODummyStorages: '../lib/jio/jio.dummystorages',
+            Base64: '../js/base64.requirejs_module',
+            JIODummyStorages: '../src/jio.dummystorages',
             JIOStorages: '../lib/jio/jio.storage.min'
         }
     });

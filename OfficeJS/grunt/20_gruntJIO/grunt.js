@@ -31,9 +31,9 @@ module.exports = function(grunt) {
         lint: {
             files: ['grunt.js',
                     '../../src/<%= pkg.name %>.js',
-                    '../../lib/jio/base64.requirejs_module.js',
-                    '../../lib/jio/jio.dummystorages.js',
-                    '../../lib/jio/jquery.requirejs_module.js',
+                    '../../js/base64.requirejs_module.js',
+                    '../../src/jio.dummystorages.js',
+                    '../../js/jquery.requirejs_module.js',
                     '../../test/jiotests.js',
                     '../../test/jiotests.loader.js']
         },

@@ -252,20 +252,27 @@ var JIO =
         // options.useLocalStorage: if true, save jobs into localStorage,
         //                          else only save on memory.
 
-        var that = {}, priv = {};
+        var that = {}, priv = {},
+        jioIdArrayName = 'jio/idArray';
 
         that.init = function ( options ) {
             // initialize the JobQueue
             // options.publisher : is the publisher to use to send events
             // options.jioID : the jio ID
 
-            var k, emptyfun = function (){};
+            var k, emptyfun = function (){},
+            jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName);
+            if (jioIdArray === null) {
+                jioIdArray = [];
+            }
             if (options.publisher) {
                 priv.publisher = publisher;
             }
             priv.jioID = options.jioID;
             priv.jobObjectName = 'jio/jobObject/'+options.jioID;
             priv.jobObject = {};
+            jioIdArray.push (priv.jioID);
+            jioGlobalObj.localStorage.setItem (jioIdArrayName,jioIdArray);
             that.copyJobQueueToLocalStorage();
             for (k in priv.recoveredJobObject) {
                 priv.recoveredJobObject[k].callback = emptyfun;
@@ -283,15 +290,12 @@ var JIO =
         };
         that.getNewQueueID = function () {
             // Returns a new queueID
-            var localStorageObject = jioGlobalObj.localStorage.getAll(),
-            id = 0, k = 'key', splitk = ['splitedkey'];
-            for (k in localStorageObject) {
-                splitk = k.split('/');
-                if (splitk[0] === 'jio' &&
-                    splitk[1] === 'id') {
-                    if (JSON.parse(splitk[2]) >= jioGlobalObj.queueID) {
-                        jioGlobalObj.queueID = JSON.parse(splitk[2]) + 1;
-                    }
+
+            var k = null, id = 0,
+            jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName);
+            for (k in jioIdArray) {
+                if (jioIdArray[k] >= jioGlobalObj.queueID) {
+                    jioGlobalObj.queueID = jioIdArray[k] + 1;
                 }
             }
             id = jioGlobalObj.queueID;
@@ -301,23 +305,29 @@ var JIO =
         that.recoverOlderJobObject = function () {
             // recover job object from older inactive jio
 
-            var localStorageObject = jioGlobalObj.localStorage.getAll(),
-            k = 'key', splitk = ['splitedkey'];
-            for (k in localStorageObject) {
-                splitk = k.split('/');
-                if (splitk[0] === 'jio' &&
-                    splitk[1] === 'id' ) {
-                    if (localStorageObject[k] < Date.now() - 10000){
-                        // 10 sec ? delete item
-                        jioGlobalObj.localStorage.deleteItem(k);
-                        // job recovery
-                        priv.recoveredJobObject = jioGlobalObj.
-                            localStorage.getItem('jio/jioObject/'+splitk[2]);
-                        // remove ex job object
-                        jioGlobalObj.localStorage.deleteItem(
-                            'jio/jobObject/'+splitk[2]);
-                    }
+            var k = null, newJioIdArray = [], jioIdArrayChanged = false,
+            jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName);
+            for (k in jioIdArray) {
+                if (jioGlobalObj.localStorage.getItem (
+                    'jio/id/'+jioIdArray[k]) < Date.now () - 10000) {
+                    // remove id from jioIdArray
+
+                    // 10000 sec ? delete item
+                    jioGlobalObj.localStorage.deleteItem('jio/id/'+
+                                                         jioIdArray[k]);
+                    // job recovery
+                    priv.recoveredJobObject = jioGlobalObj.
+                        localStorage.getItem('jio/jioObject/'+ jioIdArray[k]);
+                    // remove ex job object
+                    jioGlobalObj.localStorage.deleteItem(
+                        'jio/jobObject/'+ jioIdArray[k]);
+                    jioIdArrayChanged = true;
+                } else {
+                    newJioIdArray.push (jioIdArray[k]);
                 }
+            }
+            if (jioIdArrayChanged) {
+                jioGlobalObj.localStorage.setItem(jioIdArrayName,newJioIdArray);
             }
         };
         that.isThereJobsWhere = function( func ) {
