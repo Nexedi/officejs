@@ -10,21 +10,21 @@
  * loadContentFromDocument : display the content of the specified document in the editor
  */
 
-
 SVGEditor = function() {
     this.name = "svg-edit";       // name to use in dialog boxes
     this.objectName = "SVGEditor" ; // name of the object reference
    
-    this.load = function() {$("#svgframe").attr("src", "svg-edit/svg-editor.html");}
+    this.load = function() {
+		$("#svgframe").attr("src", "svg-edit/svg-editor.html");
+}
 
     this.saveEdition = function() {
-        var s = "svgframe";
-        getCurrentDocument().saveEdition(window.frames[s].svgCanvas.getSvgString());
+        getCurrentDocument().saveEdition(document.getElementById("svgframe").contentWindow.svgCanvas.getSvgString());
     }
     this.loadContentFromDocument = function(doc) {
-        tryUntilSucceed(function() {window.frames["svgframe"].svgEditor.loadFromString(doc.getContent());});
+	tryUntilSucceed(function() {document.getElementById("svgframe").contentWindow.svgEditor.loadFromString(doc.getContent());});
     }
-    this.load();
+	this.load();
 }
 
 /**
