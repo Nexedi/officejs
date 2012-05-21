@@ -21,17 +21,34 @@ require(['OfficeJS'],function (OJS) {
     $ = OJS.jQuery,
     Base64 = OJS.Base64,
     ich = OJS.ich,
+    // some vars
+    text_editor_loaded_once = false,
+    current_hash = 'default',
+    ich_object = {DocumentList:[]},
+    current_editor = null,
     // conf vars
     routes = {
-        'default' : 'home',
-        '/home' : 'home',
-        '/about' : 'about',
-        '/login' : 'login',
-        '/texteditor' : 'text_editor'
+        'default' : {template:'home'},
+        '/home' : {template:'home'},
+        '/about' : {template:'about'},
+        '/login' : {template:'login'},
+        '/texteditor' : {
+            template:'text_editor',
+            onload:function(){
+                // todo
+                if (!text_editor_loaded_once) {
+                    xinha_init();
+                    text_editor_loaded_once = true;
+                }
+                document.querySelector('#text_editor').style.display = 'block';
+                current_editor = 'xinha';
+            },
+            onunload:function(){
+                document.querySelector('#text_editor').style.display = 'none';
+                current_editor = null;
+            },
+        }
     },
-    // some vars
-    current_page = 'home',
-    ich_object = {DocumentList:[]},
     ////////////////////////////////////////////////////////////////////////////
     // load current page
     loadcurrentpage = function () {
@@ -42,36 +59,58 @@ require(['OfficeJS'],function (OJS) {
             // new direction
             new_hash = new_hash[1];
             if (typeof routes[new_hash] === "undefined") {
-                return current_page;
+                return current_hash;
             }
         } else {
             // default home
             new_hash = 'default';
         }
-        return routes[new_hash];
+        return new_hash;
     },
     // end load current page
     ////////////////////////////////////////////////////////////////////////////
     // Repaint main page
     repaint = function () {
-        $('#main').html(ich[current_page](ich_object,true));
+        $('#main').html(ich[routes[current_hash].template](ich_object,true));
     },
     // end repaint main page
     ////////////////////////////////////////////////////////////////////////////
     // change page according to the event
     hrefClicked = function () {
-        var new_page = loadcurrentpage();
-        if (current_page !== new_page) {
+        var new_hash = loadcurrentpage(), prev_hash = 'default';
+        if (routes[current_hash].template !== routes[new_hash].template) {
             // check if it is necessary to repaint the page.
-            current_page = new_page;
+            prev_hash = current_hash;
+            current_hash = new_hash;
+            if (typeof routes[prev_hash].onunload === 'function') {
+                routes[prev_hash].onunload();
+            }
             repaint();
+            if (typeof routes[current_hash].onload === 'function') {
+                routes[current_hash].onload();
+            }
         }
-    };
+    },
     // end change page according to the event
     ////////////////////////////////////////////////////////////////////////////
+    // get the currrent editor
+    getCurrentEditor = function () {
+        switch (current_editor) {
+        case 'xinha':
+            return xinha_editors['textEditor'];
+        case 'svg':
+            return null;
+        case 'calc':
+            return null;
+        default:
+            return null;
+        }
+    };
+    // end get the current editor
+    ////////////////////////////////////////////////////////////////////////////
 
-    current_page = loadcurrentpage();
-    repaint();
+    // repaint the page
+    hrefClicked();
 
     window.OfficeJS = (function () {
         var publ = {}, priv = {};
@@ -98,7 +137,7 @@ require(['OfficeJS'],function (OJS) {
                 return;
             }
             filename = $('#input_fileName').attr('value');
-            filecontent = $('#input_content').attr('value');
+            filecontent = getCurrentEditor().getHTML();
             priv.jio.saveDocument({
                 'fileName':filename,
                 'fileContent':filecontent,
@@ -106,6 +145,7 @@ require(['OfficeJS'],function (OJS) {
                 'callback':function (result){
                     alert (result.isSaved ? 'Document Saved.' :
                            'Error: ' + result.message);
+                    publ.getlist();
                 }
             });
         };
@@ -121,12 +161,12 @@ require(['OfficeJS'],function (OJS) {
                 'maxtries':3,
                 'callback':function (result){
                     if (result.document.fileName) {
-                        $('#input_content').attr(
-                            'value',result.document.fileContent);
+                        getCurrentEditor().setHTML(
+                            result.document.fileContent);
                         alert ('Document loaded');
-                     } else {
-                         alert ('Error: ' + result.message);
-                     }
+                    } else {
+                        alert ('Error: ' + result.message);
+                    }
                 }
             });
         };
@@ -143,6 +183,7 @@ require(['OfficeJS'],function (OJS) {
                 'callback':function (result) {
                     alert (result.isRemoved?'Document Removed.':
                            'Error: '+result.message);
+                    publ.getlist();
                 }
             });
         };
@@ -155,7 +196,7 @@ require(['OfficeJS'],function (OJS) {
                 'maxtries':3,
                 'callback':function (result) {
                     var htmlString = '', i;
-                    for (i in result.list) {
+                    for (i = 0; i < result.list.length; i += 1) {
                         htmlString += '<li>\n';
                         htmlString += result.list[i].fileName;
                         htmlString += '</li>\n';

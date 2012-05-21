@@ -62,40 +62,44 @@
   <script id="text_editor" type="text/html">
     <article>
       <div class="control-group">
-        <label class="control-label" for="fileName">File Name</label>
-        <div class="controls docs-input-sizes">
-          <input type="text" name="fileName" id="input_fileName"
-                 value="" placeholder="file name" />
+        <div class="span5">
+          <label class="control-label" for="fileName">File Name</label>
+          <div class="controls docs-input-sizes">
+            <input type="text" name="fileName" id="input_fileName"
+                   value="" placeholder="file name" />
+          </div>
+      <!--   <label class="control-label" for="fileContent">File Content</label> -->
+      <!--   <div class="controls docs-input-sizes"> -->
+      <!--     <input type="text" name="fileContent" id="input_content" -->
+      <!--            value="" placeholder="content" /> -->
+      <!--   </div> -->
         </div>
-        <label class="control-label" for="fileContent">File Content</label>
-        <div class="controls docs-input-sizes">
-          <input type="text" name="fileContent" id="input_content"
-                 value="" placeholder="content" />
+        <div class="span5">
+          <button type="submit"
+                  class="btn btn-primary"
+                  onclick="OfficeJS.save()">
+            <i class="icon-download-alt icon-white"></i>
+            Save
+          </button>&nbsp;
+          <button type="submit"
+                  class="btn"
+                  onclick="OfficeJS.load()">
+            <i class="icon-upload"></i>
+            Load
+          </button>&nbsp;
+          <button type="submit"
+                  class="btn btn-danger"
+                  onclick="OfficeJS.remove()">
+            <i class="icon-remove icon-white"></i>
+            Remove
+          </button>&nbsp;
+          <!-- <button type="submit" -->
+          <!--         class="btn" -->
+          <!--         onclick="OfficeJS.getlist()"> -->
+          <!--   <i class="icon-refresh"></i> -->
+          <!--   Get List -->
+          <!-- </button>&nbsp; -->
         </div>
-        <button type="submit"
-                class="btn btn-primary"
-                onclick="OfficeJS.save()">
-          <i class="icon-download-alt icon-white"></i>
-          Save
-        </button>&nbsp;
-        <button type="submit"
-                class="btn"
-                onclick="OfficeJS.load()">
-          <i class="icon-upload"></i>
-          Load
-        </button>&nbsp;
-        <button type="submit"
-                class="btn btn-danger"
-                onclick="OfficeJS.remove()">
-          <i class="icon-remove icon-white"></i>
-          Remove
-        </button>&nbsp;
-        <button type="submit"
-                class="btn"
-                onclick="OfficeJS.getlist()">
-          <i class="icon-refresh"></i>
-          Get List
-        </button>&nbsp;
       </div>
       <!-- <div id="document_list" class="span4"> -->
       <!--   <ul> -->
@@ -152,6 +156,11 @@
             Loading...
           </p>
         </article>
+      </section>
+      <section class="span10" id="text_editor" style="display: none">
+        <textarea name="textEditor" id="textEditor" rows="25" cols="50"
+                  style="width: 100%">
+        </textarea>
       </section>
     </div>
   </div>
