@@ -258,10 +258,7 @@ var JIO =
             // options.jioID : the jio ID
 
             var k, emptyfun = function (){},
-            jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName);
-            if (jioIdArray === null) {
-                jioIdArray = [];
-            }
+            jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName)||[];
             if (options.publisher) {
                 priv.publisher = publisher;
             }
@@ -289,7 +286,7 @@ var JIO =
             // Returns a new queueID
 
             var k = null, id = 0,
-            jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName);
+            jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName)||[];
             for (k = 0; k < jioIdArray.length; k += 1) {
                 if (jioIdArray[k] >= jioGlobalObj.queueID) {
                     jioGlobalObj.queueID = jioIdArray[k] + 1;
@@ -303,7 +300,7 @@ var JIO =
             // recover job object from older inactive jio
 
             var k = null, newJioIdArray = [], jioIdArrayChanged = false,
-            jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName);
+            jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName)||[];
             for (k = 0; k < jioIdArray.length; k += 1) {
                 if (jioGlobalObj.localStorage.getItem (
                     'jio/id/'+jioIdArray[k]) < Date.now () - 10000) {
