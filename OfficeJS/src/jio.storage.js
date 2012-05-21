@@ -42,11 +42,11 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                var localStorageObject = null;
+                var localStorageObject = null, k, splitk;
 
                 localStorageObject = LocalOrCookieStorage.getAll();
-                for (var k in localStorageObject) {
-                    var splitk = k.split('/');
+                for (k in localStorageObject) {
+                    splitk = k.split('/');
                     if (splitk[0] === 'jio' &&
                         splitk[1] === 'local' &&
                         splitk[2] === that.getUserName()) {
@@ -522,7 +522,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                 }
             };
 
-            for (i in priv.storageArray) {
+            for (i = 0; i < priv.storageArray.length; i += 1) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
                 newjob.storage = priv.storageArray[i];
@@ -557,7 +557,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                 }
             };
 
-            for (i in priv.storageArray) {
+            for (i = 0; i < priv.storageArray.length; i += 1) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
                 newjob.storage = priv.storageArray[i];
@@ -630,7 +630,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                 }
             };
 
-            for (i in priv.storageArray) {
+            for (i = 0; i < priv.storageArray.length; i += 1) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
                 newjob.storage = priv.storageArray[i];
@@ -668,7 +668,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                 }
             };
 
-            for (i in priv.storageArray) {
+            for (i = 0; i < priv.storageArray.length; i += 1) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
                 newjob.storage = priv.storageArray[i];
@@ -703,7 +703,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                 }
             };
 
-            for (i in priv.storageArray) {
+            for (i = 0; i < priv.storageArray.length; i += 1) {
                 newjob = that.cloneJob();
                 newjob.maxtries = priv.maxtries;
                 newjob.storage = priv.storageArray[i];

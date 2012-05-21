@@ -290,7 +290,7 @@ var JIO =
 
             var k = null, id = 0,
             jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName);
-            for (k in jioIdArray) {
+            for (k = 0; k < jioIdArray.length; k += 1) {
                 if (jioIdArray[k] >= jioGlobalObj.queueID) {
                     jioGlobalObj.queueID = jioIdArray[k] + 1;
                 }
@@ -304,7 +304,7 @@ var JIO =
 
             var k = null, newJioIdArray = [], jioIdArrayChanged = false,
             jioIdArray = jioGlobalObj.localStorage.getItem (jioIdArrayName);
-            for (k in jioIdArray) {
+            for (k = 0; k < jioIdArray.length; k += 1) {
                 if (jioGlobalObj.localStorage.getItem (
                     'jio/id/'+jioIdArray[k]) < Date.now () - 10000) {
                     // remove id from jioIdArray
@@ -405,7 +405,7 @@ var JIO =
             if (res.newone) {
                 // if it is a new job, we can eliminate deprecated jobs and
                 // set this job dependencies.
-                for (id in res.elimArray) {
+                for (id = 0; id < res.elimArray.length; id += 1) {
                     basestorage = new BaseStorage(
                         {'queue':that,'job':priv.jobObject[res.elimArray[id]]});
                     basestorage.eliminate();
@@ -413,13 +413,13 @@ var JIO =
                 if (res.waitArray.length > 0) {
                     job.status = 'wait';
                     job.waitingFor = {'jobIdArray':res.waitArray};
-                    for (id in res.waitArray) {
+                    for (id = 0; id < res.waitArray.length; id += 1) {
                         if (priv.jobObject[res.waitArray[id]]) {
                             priv.jobObject[res.waitArray[id]].maxtries = 1;
                         }
                     }
                 }
-                for (id in res.removeArray) {
+                for (id = 0; id < res.removeArray.length; id += 1) {
                     that.removeJob(priv.jobObject[res.removeArray[id]]);
                 }
                 // set job id
@@ -481,7 +481,7 @@ var JIO =
         that.invokeAll = function () {
             // Do all jobs in the queue.
 
-            var i = 'id', ok;
+            var i = 'id', j, ok;
             //// do All jobs
             for (i in priv.jobObject) {
                 ok = false;
@@ -495,7 +495,9 @@ var JIO =
                     if (priv.jobObject[i].waitingFor.jobIdArray) {
                         // wait job
                         // browsing job id array
-                        for (var j in priv.jobObject[i].waitingFor.jobIdArray) {
+                        for (j = 0;
+                             j < priv.jobObject[i].waitingFor.jobIdArray.length;
+                             j += 1) {
                             if (priv.jobObject[priv.jobObject[i].
                                                waitingFor.jobIdArray[j]]) {
                                 // if a job is still exist, don't invoke
@@ -743,7 +745,7 @@ var JIO =
             var i;
             priv.res.message = 'Document list received.';
             priv.res.list = documentlist;
-            for (i in priv.res.list) {
+            for (i = 0; i < priv.res.list.length; i += 1) {
                 priv.res.list[i].lastModified =
                     new Date(priv.res.list[i].lastModified).getTime();
                 priv.res.list[i].creationDate =
