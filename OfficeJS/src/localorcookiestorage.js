@@ -61,7 +61,7 @@ var LocalOrCookieStorage =
         },
         getAll: function() {
             var retObject = {}, i,
-            var cookies = document.cookie.split(':');
+            cookies = document.cookie.split(':');
             for (i = 0; i < cookies.length; i += 1) {
                 var x = cookies[i].substr(0, cookies[i].indexOf('=')),
                 y = cookies[i].substr(cookies[i].indexOf('=')+1);

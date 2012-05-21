@@ -1,4 +1,4 @@
-/*! Local Or Cookie Storage - v0.1.0 - 2012-05-18
+/*! Local Or Cookie Storage - v0.1.0 - 2012-05-21
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var LocalOrCookieStorage =
@@ -43,10 +43,10 @@ var LocalOrCookieStorage =
     };
     CookieStorage.prototype = {
         getItem: function (name) {
-            var cookies = document.cookie.split(';');
-            for (var i in cookies) {
-                var x = cookies[i].substr(0, cookies[i].indexOf('='));
-                var y = cookies[i].substr(cookies[i].indexOf('=')+1);
+            var cookies = document.cookie.split(';'), i;
+            for (i = 0; i < cookies.length; i += 1) {
+                var x = cookies[i].substr(0, cookies[i].indexOf('=')),
+                y = cookies[i].substr(cookies[i].indexOf('=')+1);
                 x = x.replace(/^\s+|\s+$/g,"");
                 if( x === name ) { return unescape(y); }
             }
@@ -63,11 +63,11 @@ var LocalOrCookieStorage =
             return false;
         },
         getAll: function() {
-            var retObject = {};
-            var cookies = document.cookie.split(':');
-            for (var i in cookies) {
-                var x = cookies[i].substr(0, cookies[i].indexOf('='));
-                var y = cookies[i].substr(cookies[i].indexOf('=')+1);
+            var retObject = {}, i,
+            cookies = document.cookie.split(':');
+            for (i = 0; i < cookies.length; i += 1) {
+                var x = cookies[i].substr(0, cookies[i].indexOf('=')),
+                y = cookies[i].substr(cookies[i].indexOf('=')+1);
                 x = x.replace(/^\s+|\s+$/g,"");
                 retObject[x] = unescape(y);
             }

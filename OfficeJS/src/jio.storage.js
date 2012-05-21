@@ -652,18 +652,18 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // 'lastModified':date,'creationDate':date}
             // TODO
 
-            var newjob = {}, res = {'status':'done'}, i = 'id',
+            var newjob = {}, res = {'status':'done'}, i = 'id', done = false,
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
-                if (result.status === 'fail') {
-                    res.status = 'fail';
-                }
-                if (priv.returnsValuesArray.length === priv.length) {
-                    // if this is the last callback
-                    if (res.status === 'fail') {
-                        that.fail('Unable retrieve all lists.',0);
+                if (!done) {
+                    if (result.status !== 'fail') {
+                        that.done (result.list);
+                        done = true;
                     } else {
-                        that.done(result.list);
+                        if (priv.returnsValuesArray.length ===
+                            priv.length) {
+                            that.fail ('Unable to retrieve list.',0);
+                        }
                     }
                 }
             };

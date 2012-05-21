@@ -5,12 +5,15 @@
     $ = loader.jQuery;
 
 //// clear jio localstorage
-for (var k in LocalOrCookieStorage.getAll()) {
-    var splitk = k.split('/');
-    if ( splitk[0] === 'jio' ) {
-        LocalOrCookieStorage.deleteItem(k);
-    }
-}
+    (function () {
+        var k, storageObject = LocalOrCookieStorage.getAll();
+        for (k in storageObject) {
+            var splitk = k.split('/');
+            if ( splitk[0] === 'jio' ) {
+                LocalOrCookieStorage.deleteItem(k);
+            }
+        }
+    }());
 //// end clear jio localstorage
 
 //// Tools

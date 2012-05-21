@@ -10,7 +10,7 @@ require.config ({
         JIO: '../src/jio',
         Base64API: '../lib/base64/base64',
         Base64: '../js/base64.requirejs_module',
-        JIOStorages: '../lib/jio/jio.storage.min',
+        JIOStorages: '../src/jio.storage',
 
         OfficeJS: 'moduleloader'
     }
