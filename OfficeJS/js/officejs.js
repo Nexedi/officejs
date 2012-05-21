@@ -89,6 +89,7 @@ require(['OfficeJS'],function (OJS) {
                 JSON.parse ( $('#input_json_storage').attr('value') ),
                 JSON.parse ( $('#input_json_applicant').attr('value') )
             );
+            publ.getlist();
         };
         publ.save = function () {
             var filename, filecontent;
@@ -153,18 +154,17 @@ require(['OfficeJS'],function (OJS) {
             priv.jio.getDocumentList({
                 'maxtries':3,
                 'callback':function (result) {
-                    var htmlList, i;
-                    htmlList = '<ul>\n';
+                    var htmlString = '', i;
                     for (i in result.list) {
-                        htmlList += '<li>\n';
-                        htmlList += result.list[i].fileName;
-                        htmlList += '</li>\n';
+                        htmlString += '<li>\n';
+                        htmlString += result.list[i].fileName;
+                        htmlString += '</li>\n';
                     }
-                    htmlList += '</ul>\n';
-                    $('#document_list').html(htmlList);
-                    ich_object.DocumentList = result.list;
-                    console.log (result.list);
-                    alert (result.message);
+                    if (htmlString === '') {
+                        htmlString = 'No document';
+                    }
+                    document.querySelector ('#document_list').
+                        innerHTML = htmlString;
                 }
             });
         };

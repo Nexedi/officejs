@@ -2,11 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <litk rel="icon" href="img/officejs/favicon.png" />
+  <link rel="icon" href="img/officejs/favicon.png" />
   <link rel="shortcut icon" href="img/icons/favicon.png" />
   <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" />
   <title>OfficeJS</title>
   <!-- js scripts -->
+  <script type="text/javascript" src="lib/xinha/XinhaLoader.js?lang=en">
+  </script>
+  <script type="text/javascript" src="js/XinhaConfig.js">
+  </script>
   <script type="text/javascript" src="lib/icanhaz/ICanHaz.min.js"></script>
   <script data-main="js/officejs"
           type="text/javascript"
@@ -93,13 +97,13 @@
           Get List
         </button>&nbsp;
       </div>
-      <div id="document_list" class="span4">
-        <ul>
-          {{#DocumentList}}
-          <li>{{fileName}}</li>
-          {{/DocumentList}}
-        </ul>
-      </div>
+      <!-- <div id="document_list" class="span4"> -->
+      <!--   <ul> -->
+      <!--     {{#DocumentList}} -->
+      <!--     <li>{{fileName}}</li> -->
+      <!--     {{/DocumentList}} -->
+      <!--   </ul> -->
+      <!-- </div> -->
     </article>
   </script>
 </head>
@@ -132,10 +136,12 @@
           <ul class="nav nav-list">
             <li class="nav-header">Nav</li>
             <li><a href="#/login"><i class="icon-ok"></i>Login</a></li>
-            <li class="nav-header">Documents</li>
+            <li class="nav-header">Tools</li>
             <li class="texteditor">
               <a href="#/texteditor"><i class="icon-font"></i>Text Editor</a>
             </li>
+            <li class="nav-header">Document List</li>
+            <div id="document_list"></div>
           </ul>
         </div>
       </div>
