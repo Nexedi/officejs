@@ -136,8 +136,40 @@ require(['OfficeJS'],function (OJS) {
         default:
             return null;
         }
-    };
+    },
     // end get the current editor
+    ////////////////////////////////////////////////////////////////////////////
+    // loading function
+    loading_object = {
+        spinstate: 0,savestate: 0,loadstate: 0,getliststate: 0,removestate: 0,
+        main: function (string){
+            if (this[string+'state'] === 0){
+                document.querySelector ('#loading_'+string).
+                    style.display = 'block';
+            }
+            this[string+'state'] ++;
+        },
+        end_main: function (string){
+            if (this[string+'state']>0) {
+                this[string+'state']--;
+            }
+            if (this[string+'state']===0){
+                document.querySelector ('#loading_'+string).
+                    style.display = 'none';
+            }
+        },
+        spin:function(){this.main('spin');},
+        save:function(){this.main('save');this.spin();},
+        load:function(){this.main('load');this.spin();},
+        getlist:function(){this.main('getlist');this.spin();},
+        remove:function(){this.main('remove');this.spin();},
+        end_spin:function(){this.end_main('spin');},
+        end_save:function(){this.end_main('save');this.end_spin();},
+        end_load:function(){this.end_main('load');this.end_spin();},
+        end_getlist:function(){this.end_main('getlist');this.end_spin();},
+        end_remove:function(){this.end_main('remove');this.end_spin();}
+    }
+    // end loading function
     ////////////////////////////////////////////////////////////////////////////
 
     // repaint the page
@@ -167,14 +199,17 @@ require(['OfficeJS'],function (OJS) {
                 alert ('No Jio set yet.');
                 return;
             }
+            loading_object.save();
             filename = $('#input_fileName').attr('value');
             filecontent = getCurrentEditor().getHTML();
             priv.jio.saveDocument({
                 'fileName':filename,
                 'fileContent':filecontent,
                 'callback':function (result){
-                    alert (result.isSaved ? 'Document Saved.' :
-                           'Error: ' + result.message);
+                    if (result.status === 'fail') {
+                        console.error ('Error: ' + result.message);
+                    }
+                    loading_object.end_save();
                     publ.getlist();
                 }
             });
@@ -193,9 +228,8 @@ require(['OfficeJS'],function (OJS) {
                     if (result.document.fileName) {
                         getCurrentEditor().setHTML(
                             result.document.fileContent);
-                        alert ('Document loaded');
                     } else {
-                        alert ('Error: ' + result.message);
+                        console.error ('Error: ' + result.message);
                     }
                     loading_object.end_load();
                 }
@@ -207,12 +241,15 @@ require(['OfficeJS'],function (OJS) {
                 alert ('No Jio set yet.');
                 return;
             }
+            loading_object.remove();
             filename = $('#input_fileName').attr('value');
             priv.jio.removeDocument({
                 'fileName':filename,
                 'callback':function (result) {
-                    alert (result.isRemoved?'Document Removed.':
-                           'Error: '+result.message);
+                    if (result.status === 'fail') {
+                        console.error ('Error: ' + result.message);
+                    }
+                    loading_object.end_remove();
                     publ.getlist();
                 }
             });
@@ -222,6 +259,7 @@ require(['OfficeJS'],function (OJS) {
                 alert ('No Jio set yet.');
                 return;
             }
+            loading_object.getlist();
             priv.jio.getDocumentList({
                 'maxtries':3,
                 'callback':function (result) {
@@ -245,6 +283,7 @@ require(['OfficeJS'],function (OJS) {
                     ich_object.DocumentList = document_array;
                     document.querySelector ('#document_list').
                         innerHTML = htmlString;
+                    loading_object.end_getlist();
                 }
             });
         };
