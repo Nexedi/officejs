@@ -639,7 +639,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.applicant.ID: the applicant id.
             // TODO
 
-            var newjob = {}, res = {'status':'done'}, i = 'key',
+            var newjob = {}, res = {'status':'done'}, i = 'key', done = false,
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
                 if (!done) {
