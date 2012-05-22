@@ -111,6 +111,15 @@
       <!-- </div> -->
     </article>
   </script>
+  <script id="document_list" type="text/html">
+    <article>
+      <ul>
+        {{#DocumentList}}
+        <li><a href="#/texteditor:fileName={{fileName}}">{{fileName}}</a>, created: {{creationDate}}, last modified: {{lastModified}}</li>
+        {{/DocumentList}}
+      </ul>
+    </article>
+  </script>
 </head>
 <body>
 
@@ -145,7 +154,7 @@
             <li class="texteditor">
               <a href="#/texteditor"><i class="icon-font"></i>Text Editor</a>
             </li>
-            <li class="nav-header">Document List</li>
+            <li class="nav-header"><a href="#/doclist">Document List</a></li>
             <div id="document_list"></div>
           </ul>
         </div>

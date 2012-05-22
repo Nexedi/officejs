@@ -26,41 +26,67 @@ require(['OfficeJS'],function (OJS) {
     current_hash = 'default',
     ich_object = {DocumentList:[],CurrentFileName:''},
     current_editor = null,
+    route_param = {},
     // conf vars
     routes = {
         'default' : {template:'home'},
         '/home' : {template:'home'},
         '/about' : {template:'about'},
         '/login' : {template:'login'},
+        '/doclist' : {template:'document_list'},
         '/texteditor' : {
             template:'text_editor',
             onload:function(){
-                // todo
+                var intervalid;
                 if (!text_editor_loaded_once) {
                     xinha_init();
                     text_editor_loaded_once = true;
                 }
                 document.querySelector('#text_editor').style.display = 'block';
                 current_editor = 'xinha';
+                if (typeof route_param.fileName !== 'undefined') {
+                    intervalid = setInterval(function(){
+                        try {
+                            getCurrentEditor().getHTML();
+                        } catch (e) {
+                            return;
+                        }
+                        $('#input_fileName').attr(
+                            'value',route_param.fileName);
+                        OfficeJS.load();
+                        clearInterval(intervalid);
+                    },50);
+                }
             },
             onunload:function(){
                 document.querySelector('#text_editor').style.display = 'none';
                 ich_object.CurrentFileName = $('#input_fileName').attr('value');
                 current_editor = null;
             },
+            onrestart: function(){
+                this.onload();
+            }
         }
     },
     ////////////////////////////////////////////////////////////////////////////
     // load current page
     loadcurrentpage = function () {
-        var new_hash;
+        var new_hash, params, i;
         // get new hash
         new_hash = location.hash.split('#');
         if (typeof new_hash[1] !== "undefined") {
             // new direction
             new_hash = new_hash[1];
+            params = new_hash.split(':');
+            new_hash = params[0];
             if (typeof routes[new_hash] === "undefined") {
                 return current_hash;
+            }
+            // set route_parameters
+            route_param = {};
+            for (i = 1; i < params.length; i += 1) {
+                var tmp = params[i].split('=');
+                route_param[tmp[0]] = tmp[1];
             }
         } else {
             // default home
@@ -89,6 +115,10 @@ require(['OfficeJS'],function (OJS) {
             repaint();
             if (typeof routes[current_hash].onload === 'function') {
                 routes[current_hash].onload();
+            }
+        } else {
+            if (typeof routes[current_hash].onrestart === 'function') {
+                routes[current_hash].onrestart();
             }
         }
     },
@@ -155,6 +185,7 @@ require(['OfficeJS'],function (OJS) {
                 alert ('No Jio set yet.');
                 return;
             }
+            loading_object.load();
             filename = $('#input_fileName').attr('value');
             priv.jio.loadDocument({
                 'fileName':filename,
@@ -166,6 +197,7 @@ require(['OfficeJS'],function (OJS) {
                     } else {
                         alert ('Error: ' + result.message);
                     }
+                    loading_object.end_load();
                 }
             });
         };
@@ -193,15 +225,24 @@ require(['OfficeJS'],function (OJS) {
             priv.jio.getDocumentList({
                 'maxtries':3,
                 'callback':function (result) {
-                    var htmlString = '', i;
+                    var htmlString = '', i, document_array = [];
                     for (i = 0; i < result.list.length; i += 1) {
-                        htmlString += '<li>\n';
-                        htmlString += result.list[i].fileName;
-                        htmlString += '</li>\n';
+                        htmlString += '<li><a href="#/texteditor:fileName='+
+                            result.list[i].fileName + '">\n' +
+                            result.list[i].fileName;
+                        result.list[i].creationDate =
+                            (new Date(result.list[i].creationDate)).
+                            toLocaleString();
+                        result.list[i].lastModified =
+                            (new Date(result.list[i].lastModified)).
+                            toLocaleString();
+                        document_array.push (result.list[i]);
+                        htmlString += '</a></li>\n';
                     }
                     if (htmlString === '') {
                         htmlString = 'No document';
                     }
+                    ich_object.DocumentList = document_array;
                     document.querySelector ('#document_list').
                         innerHTML = htmlString;
                 }
