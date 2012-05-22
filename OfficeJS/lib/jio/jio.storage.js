@@ -1,4 +1,4 @@
-/*! JIO Storage - v0.1.0 - 2012-05-21
+/*! JIO Storage - v0.1.0 - 2012-05-22
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 
@@ -505,6 +505,17 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
         that.setMaxTries (1);
 
+        priv.execJobsFromStorageArray = function (callback) {
+            var newjob = {}, i;
+            for (i = 0; i < priv.storageArray.length; i += 1) {
+                newjob = that.cloneJob();
+                newjob.maxtries = priv.maxtries;
+                newjob.storage = priv.storageArray[i];
+                newjob.callback = callback;
+                that.addJob ( newjob ) ;
+            }
+        };
+
         that.checkNameAvailability = function () {
             // Checks the availability of the [job.userName].
             // if the name already exists in a storage, it is not available.
@@ -524,14 +535,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     that.done(isavailable);
                 }
             };
-
-            for (i = 0; i < priv.storageArray.length; i += 1) {
-                newjob = that.cloneJob();
-                newjob.maxtries = priv.maxtries;
-                newjob.storage = priv.storageArray[i];
-                newjob.callback = callback;
-                that.addJob ( newjob ) ;
-            }
+            priv.execJobsFromStorageArray(callback);
         };
         that.saveDocument = function () {
             // Save a single document in several storages.
@@ -544,29 +548,22 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.fileContent: the document content.
             // TODO
 
-            var newjob = {}, res = {'status':'done'}, i = 'id',
+            var newjob = {}, res = {'status':'done'}, i = 'id', done = false,
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
-                if (result.status === 'fail') {
-                    res.status = 'fail';
-                }
-                if (priv.returnsValuesArray.length === priv.length) {
-                    // if this is the last callback
-                    if (res.status === 'fail') {
-                        that.fail('Unable to save all files.',0);
+                if (!done) {
+                    if (result.status !== 'fail') {
+                        that.done ();
+                        done = true;
                     } else {
-                        that.done();
+                        if (priv.returnsValuesArray.length ===
+                            priv.length) {
+                            that.fail ('Unable to save any file.',0);
+                        }
                     }
                 }
             };
-
-            for (i = 0; i < priv.storageArray.length; i += 1) {
-                newjob = that.cloneJob();
-                newjob.maxtries = priv.maxtries;
-                newjob.storage = priv.storageArray[i];
-                newjob.callback = callback;
-                that.addJob ( newjob ) ;
-            }
+            priv.execJobsFromStorageArray(callback);
         };
 
         that.loadDocument = function () {
@@ -586,60 +583,22 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // TODO
 
             var newjob = {}, aredifferent = false, doc = {}, i = 'id',
+            done = false,
             res = {'status':'done'}, callback = function (result) {
                 priv.returnsValuesArray.push(result);
-                if (result.status === 'fail') {
-                    res.status = 'fail';
-                } else {
-                    // check if the file are different
-                    if (!doc.fileContent && !doc.creationDate &&
-                        !doc.lastModified) {
-                        // if it is the first document loaded
-                        doc = $.extend({},result.document);
+                if (!done) {
+                    if (result.status !== 'fail') {
+                        that.done (result.document);
+                        done = true;
                     } else {
-                        if (doc.fileContent !==
-                            result.document.fileContent) {
-                            // if the document is different from the
-                            // previous one
-                            aredifferent = true;
-                        }
-                        if (doc.creationDate >
-                            result.document.creationDate) {
-                            // get older creation date
-                            doc.creationDate = result.document.creationDate;
-                        }
-                        if (doc.lastModified <
-                            result.document.lastModified) {
-                            // get newer last modified
-                            doc.fileContent = result.document.fileContent;
-                            doc.lastModified = result.document.lastModified;
-                        }
-                    }
-                }
-                if (priv.returnsValuesArray.length === priv.length) {
-                    // if this is the last callback
-                    if (res.status === 'fail') {
-                        that.fail('Unable to load all files.',0);
-                    } else {
-                        if (!aredifferent) {
-                            that.done(doc);
-                        } else {
-                            // TODO the files are different! Give options
-                            // to know what do we do now!
-                            // console.warn ('The files are different.');
-                            that.done(doc);
+                        if (priv.returnsValuesArray.length ===
+                            priv.length) {
+                            that.fail ('Unable to load any file.',0);
                         }
                     }
                 }
             };
-
-            for (i = 0; i < priv.storageArray.length; i += 1) {
-                newjob = that.cloneJob();
-                newjob.maxtries = priv.maxtries;
-                newjob.storage = priv.storageArray[i];
-                newjob.callback = callback;
-                that.addJob ( newjob ) ;
-            }
+            priv.execJobsFromStorageArray(callback);
         };
 
         that.getDocumentList = function () {
@@ -670,14 +629,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     }
                 }
             };
-
-            for (i = 0; i < priv.storageArray.length; i += 1) {
-                newjob = that.cloneJob();
-                newjob.maxtries = priv.maxtries;
-                newjob.storage = priv.storageArray[i];
-                newjob.callback = callback;
-                that.addJob ( newjob ) ;
-            }
+            priv.execJobsFromStorageArray(callback);
         };
 
         that.removeDocument = function () {
@@ -690,29 +642,22 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.applicant.ID: the applicant id.
             // TODO
 
-            var newjob = {}, res = {'status':'done'}, i = 'key',
+            var newjob = {}, res = {'status':'done'}, i = 'key', done = false,
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
-                if (result.status === 'fail') {
-                    res.status = 'fail';
-                }
-                if (priv.returnsValuesArray.length === priv.length) {
-                    // if this is the last callback
-                    if (res.status === 'fail') {
-                        that.fail('Unable remove all files.',0);
+                if (!done) {
+                    if (result.status !== 'fail') {
+                        that.done ();
+                        done = true;
                     } else {
-                        that.done();
+                        if (priv.returnsValuesArray.length ===
+                            priv.length) {
+                            that.fail ('Unable to remove any file.',0);
+                        }
                     }
                 }
             };
-
-            for (i = 0; i < priv.storageArray.length; i += 1) {
-                newjob = that.cloneJob();
-                newjob.maxtries = priv.maxtries;
-                newjob.storage = priv.storageArray[i];
-                newjob.callback = callback;
-                that.addJob ( newjob ) ;
-            }
+            priv.execJobsFromStorageArray(callback);
         };
         return that;
     };

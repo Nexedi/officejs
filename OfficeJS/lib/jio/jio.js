@@ -1,4 +1,4 @@
-/*! JIO - v0.1.0 - 2012-05-21
+/*! JIO - v0.1.0 - 2012-05-22
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 
@@ -177,7 +177,8 @@ var JIO =
         },
         'localStorage': null,   // where the browser stores data
         'queueID': 1,
-        'storageTypeObject': {} // ex: {'type':'local','creator': fun ...}
+        'storageTypeObject': {}, // ex: {'type':'local','creator': fun ...}
+        'max_wait_time': 10000
     },
     // end jio globals
     ////////////////////////////////////////////////////////////////////////////
@@ -764,9 +765,12 @@ var JIO =
             // Change the job status to wait for time.
             // The listener will invoke this job later.
 
+            var time = (priv.job.tries*priv.job.tries*1000);
+            if (time > jioGlobalObj.max_wait_time) {
+                time = jioGlobalObj.max_wait_time;
+            }
             priv.job.status = 'wait';
-            priv.job.waitingFor = {'time':Date.now() +
-                                   (priv.job.tries*priv.job.tries*1000)};
+            priv.job.waitingFor = {'time':Date.now() + time};
         };
         //// end Private Methods
 

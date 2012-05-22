@@ -737,8 +737,8 @@ test ('Document load', function () {
         {'type':'dummyall3tries','userName':'2'}]},
                         {'ID':'jiotests'});
     mytest('DummyStorageAllOK,3tries: load 2 different files',{
-        'fileName':'file','fileContent':'content2',
-        'lastModified':17000,
+        'fileName':'file','fileContent':'content',
+        'lastModified':15000,
         'creationDate':10000});
 
     o.jio.stop();
