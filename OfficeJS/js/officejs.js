@@ -24,7 +24,7 @@ require(['OfficeJS'],function (OJS) {
     // some vars
     text_editor_loaded_once = false,
     current_hash = 'default',
-    ich_object = {DocumentList:[]},
+    ich_object = {DocumentList:[],CurrentFileName:''},
     current_editor = null,
     // conf vars
     routes = {
@@ -45,6 +45,7 @@ require(['OfficeJS'],function (OJS) {
             },
             onunload:function(){
                 document.querySelector('#text_editor').style.display = 'none';
+                ich_object.CurrentFileName = $('#input_fileName').attr('value');
                 current_editor = null;
             },
         }
@@ -141,7 +142,6 @@ require(['OfficeJS'],function (OJS) {
             priv.jio.saveDocument({
                 'fileName':filename,
                 'fileContent':filecontent,
-                'maxtries':3,
                 'callback':function (result){
                     alert (result.isSaved ? 'Document Saved.' :
                            'Error: ' + result.message);
@@ -158,7 +158,6 @@ require(['OfficeJS'],function (OJS) {
             filename = $('#input_fileName').attr('value');
             priv.jio.loadDocument({
                 'fileName':filename,
-                'maxtries':3,
                 'callback':function (result){
                     if (result.document.fileName) {
                         getCurrentEditor().setHTML(
@@ -179,7 +178,6 @@ require(['OfficeJS'],function (OJS) {
             filename = $('#input_fileName').attr('value');
             priv.jio.removeDocument({
                 'fileName':filename,
-                'maxtries':3,
                 'callback':function (result) {
                     alert (result.isRemoved?'Document Removed.':
                            'Error: '+result.message);
