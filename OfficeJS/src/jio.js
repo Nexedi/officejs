@@ -832,18 +832,27 @@ var JIO =
 
             priv.res.status = 'fail';
             priv.res.message = 'Job Stopped!';
-            priv.res.errno = 0;
+            priv.res.error = {};
+            priv.res.error.status = 0;
+            priv.res.error.statusText = 'Replaced';
+            priv.res.error.message = 'The job was replaced by a newer one.';
             priv['fail_'+priv.job.method]();
             priv.callback(priv.res);
         };
-        that.fail = function ( message, errno ) {
+        that.fail = function ( errorobject ) {
             // Called when a job has failed.
             // It will retry the job from a certain moment or it will return
             // a failure.
 
             priv.res.status = 'fail';
-            priv.res.message = message;
-            priv.res.errno = errno;
+            priv.res.error = errorobject;
+            // init error object with default values
+            priv.res.error.status = priv.res.error.status || 0;
+            priv.res.error.statusText =
+                priv.res.error.statusText || 'Unknown Error';
+            priv.res.error.array = priv.res.error.array || [];
+            priv.res.error.message = priv.res.error.message || '';
+            // retry ?
             if (!priv.job.maxtries ||
                 priv.job.tries < priv.job.maxtries) {
                 priv.retryLater();

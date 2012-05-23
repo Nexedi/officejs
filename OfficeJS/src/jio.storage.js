@@ -113,7 +113,9 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     'jio/local/'+that.getStorageUserName()+'/'+
                         that.getApplicantID()+'/'+that.getFileName());
                 if (!doc) {
-                    that.fail('Document not found.',404);
+                    that.fail({status:404,statusText:'Not Found.',
+                               message:'Document "'+ that.getFileName() +
+                               '" not found in localStorage.'});
                 } else {
                     if (!settings.getContent) {
                         delete doc.fileContent;
@@ -269,8 +271,9 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     if (type.status === 404) {
                         that.done(true);
                     } else {
-                        that.fail('Cannot check if ' + that.getUserName() +
-                                  ' is available.',type.status);
+                        type.message = 'Cannot check availability of "' +
+                            that.getUserName() + '" into DAVStorage.';
+                        that.fail(type);
                     }
                 }
             } );
@@ -303,7 +306,9 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     that.done();
                 },
                 error: function (type) {
-                    that.fail('Cannot save document.',type.status);
+                    type.message = 'Cannot save "' + that.getFileName() +
+                        '" into DAVStorage.';
+                    that.fail(type);
                 }
             } );
             //// end saving on dav
@@ -344,13 +349,16 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                         that.done(doc);
                     },
                     error: function (type) {
-                        var message;
                         if (type.status === 404) {
-                            message = 'Document not found.';
+                            type.message = 'Document "' +
+                                that.getFileName() +
+                                '" not found in localStorage.';
                         } else {
-                            message = 'Cannot load "'+that.getFileName()+'".';
+                            type.message =
+                                'Cannot load "' + that.getFileName() +
+                                '" from DAVStorage.';
                         }
-                        that.fail(message,type.status);
+                        that.fail(type);
                     }
                 } );
             };
@@ -386,7 +394,9 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     }
                 },
                 error: function (type) {
-                    that.fail('Cannot get document informations.',type.status);
+                    type.message = 'Cannot load "' + that.getFileName() +
+                        '" informations from DAVStorage.';
+                    that.fail(type);
                 }
             } );
         };
@@ -446,7 +456,9 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     that.done(documentArrayList);
                 },
                 error: function (type) {
-                    that.fail('Cannot get list.',type.status);
+                    type.message =
+                        'Cannot get a document list from DAVStorage.';
+                    that.fail(type);
                 }
             } );
         };
@@ -478,8 +490,9 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     if (type.status === 404) {
                         that.done();
                     } else {
-                        that.fail('Cannot remove "' + that.getFileName() +
-                                  '".',type.status);
+                        type.message = 'Cannot remove "' + that.getFileName() +
+                            '" from DAVStorage.';
+                        that.fail(type);
                     }
                 }
             } );
@@ -519,12 +532,13 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.userName: the name we want to check.
             // this.job.storage.storageArray: An Array of storages.
 
-            var newjob = {}, i = 'id', done = false,
+            var newjob = {}, i = 'id', done = false, errorArray = [],
             res = {'status':'done'}, callback = function (result) {
                 priv.returnsValuesArray.push(result);
                 if (!done) {
                     if (result.status === 'fail') {
                         res.status = 'fail';
+                        errorArray.push(result.error);
                     } else {
                         if (result.return_value === false) {
                             that.done (false);
@@ -535,7 +549,12 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     if (priv.returnsValuesArray.length ===
                         priv.length) {
                         if (res.status === 'fail') {
-                            that.fail ('Unable to check name availability.',0);
+                            that.fail (
+                                {status:207,
+                                 statusText:'Multi-Status',
+                                 message:'Some check availability of "' +
+                                 that.getUserName() + '" requests have failed.',
+                                 array:errorArray});
                         } else {
                             that.done (true);
                         }
@@ -556,7 +575,8 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.fileName: the document name.
             // this.job.fileContent: the document content.
 
-            var newjob = {}, res = {'status':'done'}, i = 'id', done = false,
+            var newjob = {}, res = {'status':'done'}, i = 'id',
+            done = false, errorArray = [],
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
                 if (!done) {
@@ -564,9 +584,15 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                         that.done ();
                         done = true;
                     } else {
+                        errorArray.push(result.error);
                         if (priv.returnsValuesArray.length ===
                             priv.length) {
-                            that.fail ('Unable to save any file.',0);
+                            that.fail (
+                                {status:207,
+                                 statusText:'Multi-Status',
+                                 message:'All save "' + that.getFileName() +
+                                 '" requests have failed.',
+                                 array:errorArray});
                         }
                     }
                 }
@@ -586,11 +612,8 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.storage.password: the user password.
             // this.job.options.getContent: if true, also get the file content.
 
-            // document object is {'fileName':string,'fileContent':string,
-            // 'creationDate':date,'lastModified':date}
-
             var newjob = {}, aredifferent = false, doc = {}, i = 'id',
-            done = false,
+            done = false, errorArray = [],
             res = {'status':'done'}, callback = function (result) {
                 priv.returnsValuesArray.push(result);
                 if (!done) {
@@ -598,9 +621,15 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                         that.done (result.return_value);
                         done = true;
                     } else {
+                        errorArray.push(result.error);
                         if (priv.returnsValuesArray.length ===
                             priv.length) {
-                            that.fail ('Unable to load any file.',0);
+                            that.fail (
+                                {status:207,
+                                 statusText:'Multi-Status',
+                                 message:'All load "' + that.getFileName() +
+                                 '" requests have failed.',
+                                 array:errorArray});
                         }
                     }
                 }
@@ -617,10 +646,8 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
 
-            // the list is [object,object,...] -> object = {'fileName':string,
-            // 'lastModified':date,'creationDate':date}
-
-            var newjob = {}, res = {'status':'done'}, i = 'id', done = false,
+            var newjob = {}, res = {'status':'done'}, i = 'id',
+            done = false, errorArray = [],
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
                 if (!done) {
@@ -628,9 +655,15 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                         that.done (result.return_value);
                         done = true;
                     } else {
+                        errorArray.push(result.error);
                         if (priv.returnsValuesArray.length ===
                             priv.length) {
-                            that.fail ('Unable to retrieve list.',0);
+                            that.fail (
+                                {status:207,
+                                 statusText:'Multi-Status',
+                                 message:'All get document list requests'+
+                                 ' have failed',
+                                 array:errorArray});
                         }
                     }
                 }
@@ -647,7 +680,8 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
 
-            var newjob = {}, res = {'status':'done'}, i = 'key', done = false,
+            var newjob = {}, res = {'status':'done'}, i = 'key',
+            done = false, errorArray = [],
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
                 if (!done) {
@@ -655,9 +689,15 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                         that.done ();
                         done = true;
                     } else {
+                        errorArray.push(result.error);
                         if (priv.returnsValuesArray.length ===
                             priv.length) {
-                            that.fail ('Unable to remove any file.',0);
+                            that.fail (
+                                {status:207,
+                                 statusText:'Multi-Status',
+                                 message:'All remove "' + that.getFileName() +
+                                 '" requests have failed.',
+                                 array:errorArray});
                         }
                     }
                 }

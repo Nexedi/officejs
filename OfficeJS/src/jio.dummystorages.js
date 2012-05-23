@@ -89,7 +89,8 @@
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                that.fail('Cannot check name availability.',0);
+                that.fail({status:0,statusText:'Unknown Error',
+                           message:'Unknown error.'});
             }, 100);
         }; // end userNameAvailable
 
@@ -98,7 +99,8 @@
 
             // wait a little in order to simulate asynchronous saving
             setTimeout (function () {
-                that.fail('Unable to save document.',0);
+                that.fail({status:0,statusText:'Unknown Error',
+                           message:'Unknown error.'});
             }, 100);
         }; // end saveDocument
 
@@ -110,7 +112,8 @@
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                that.fail('Unable to load document.',0);
+                that.fail({status:0,statusText:'Unknown Error',
+                           message:'Unknown error.'});
             }, 100);
         }; // end loadDocument
 
@@ -121,7 +124,8 @@
             // 'lastModified':date,'creationDate':date}
 
             setTimeout(function () {
-                that.fail('Cannot get document list.',0);
+                that.fail({status:0,statusText:'Unknown Error',
+                           message:'Unknown error.'});
             }, 100);
         }; // end getDocumentList
 
@@ -132,7 +136,8 @@
             // in the jobendcallback arguments.
 
             setTimeout (function () {
-                that.fail('Unable to remove anything.',0);
+                that.fail({status:0,statusText:'Unknown Error',
+                           message:'Unknown error.'});
             }, 100);
         };
         return that;
@@ -171,7 +176,9 @@
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                that.fail('Document not found.',404);
+                that.fail({status:404,statusText:'Not Found',
+                           message:'Document "'+ that.getFileName() +
+                           '" not found.'});
             }, 100);
         }; // end loadDocument
 
@@ -182,7 +189,8 @@
             // 'lastModified':date,'creationDate':date}
 
             setTimeout(function () {
-                that.fail('User collection not found.',404);
+                that.fail({status:404,statusText:'Not Found',
+                           message:'User list not found.'});
             }, 100);
         }; // end getDocumentList
 
@@ -217,10 +225,10 @@
                 return that.done(ifokreturn);
             }
             if ( tries < 3 ) {
-                return that.fail('' + (3 - tries) + ' tries left.');
+                return that.fail({message:'' + (3 - tries) + ' tries left.'});
             }
             if ( tries > 3 ) {
-                return that.fail('Too much tries.');
+                return that.fail({message:'Too much tries.'});
             }
         };
 
