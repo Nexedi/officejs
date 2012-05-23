@@ -23,7 +23,7 @@ require(['OfficeJS'],function (OJS) {
     ich = OJS.ich,
     // some vars
     text_editor_loaded_once = false,
-    current_hash = 'default',
+    current_hash = '',
     ich_object = {DocumentList:[],CurrentFileName:''},
     current_editor = null,
     route_param = {},
@@ -104,10 +104,13 @@ require(['OfficeJS'],function (OJS) {
     ////////////////////////////////////////////////////////////////////////////
     // change page according to the event
     hrefClicked = function () {
-        var new_hash = loadcurrentpage(), prev_hash = 'default';
+        var new_hash = loadcurrentpage(), prev_hash = current_hash;
+        if (current_hash === '') {
+            current_hash = new_hash;
+            repaint();
+        }
         if (routes[current_hash].template !== routes[new_hash].template) {
             // check if it is necessary to repaint the page.
-            prev_hash = current_hash;
             current_hash = new_hash;
             if (typeof routes[prev_hash].onunload === 'function') {
                 routes[prev_hash].onunload();
@@ -207,7 +210,7 @@ require(['OfficeJS'],function (OJS) {
                 'fileContent':filecontent,
                 'callback':function (result){
                     if (result.status === 'fail') {
-                        console.error ('Error: ' + result.message);
+                        console.error (result.error);
                     }
                     loading_object.end_save();
                     publ.getlist();
@@ -224,12 +227,13 @@ require(['OfficeJS'],function (OJS) {
             filename = $('#input_fileName').attr('value');
             priv.jio.loadDocument({
                 'fileName':filename,
+                'maxtries':3,
                 'callback':function (result){
                     if (result.return_value.fileName) {
                         getCurrentEditor().setHTML(
                             result.return_value.fileContent);
                     } else {
-                        console.error ('Error: ' + result.message);
+                        console.error (result.error);
                     }
                     loading_object.end_load();
                 }
@@ -247,7 +251,7 @@ require(['OfficeJS'],function (OJS) {
                 'fileName':filename,
                 'callback':function (result) {
                     if (result.status === 'fail') {
-                        console.error ('Error: ' + result.message);
+                        console.error (result.error);
                     }
                     loading_object.end_remove();
                     publ.getlist();
@@ -263,27 +267,29 @@ require(['OfficeJS'],function (OJS) {
             priv.jio.getDocumentList({
                 'maxtries':3,
                 'callback':function (result) {
-                    var htmlString = '', i, document_array = [];
-                    for (i = 0; i < result.return_value.length; i += 1) {
-                        htmlString += '<li><a href="#/texteditor:fileName='+
-                            result.return_value[i].fileName + '">\n' +
-                            result.return_value[i].fileName;
-                        result.return_value[i].creationDate =
-                            (new Date(result.return_value[i].creationDate)).
-                            toLocaleString();
-                        result.return_value[i].lastModified =
-                            (new Date(result.return_value[i].lastModified)).
-                            toLocaleString();
-                        document_array.push (result.return_value[i]);
-                        htmlString += '</a></li>\n';
+                    if (result.status === 'done') {
+                        var htmlString = '', i, document_array = [];
+                        for (i = 0; i < result.return_value.length; i += 1) {
+                            htmlString += '<li><a href="#/texteditor:fileName='+
+                                result.return_value[i].fileName + '">\n' +
+                                result.return_value[i].fileName;
+                            result.return_value[i].creationDate =
+                                (new Date(result.return_value[i].creationDate)).
+                                toLocaleString();
+                            result.return_value[i].lastModified =
+                                (new Date(result.return_value[i].lastModified)).
+                                toLocaleString();
+                            document_array.push (result.return_value[i]);
+                            htmlString += '</a></li>\n';
+                        }
+                        if (htmlString === '') {
+                            htmlString = 'No document';
+                        }
+                        ich_object.DocumentList = document_array;
+                        document.querySelector ('#document_list').
+                            innerHTML = htmlString;
+                        loading_object.end_getlist();
                     }
-                    if (htmlString === '') {
-                        htmlString = 'No document';
-                    }
-                    ich_object.DocumentList = document_array;
-                    document.querySelector ('#document_list').
-                        innerHTML = htmlString;
-                    loading_object.end_getlist();
                 }
             });
         };
