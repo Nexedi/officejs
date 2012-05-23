@@ -9,22 +9,12 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
     ////////////////////////////////////////////////////////////////////////////
     // Tools
-    var checkJioDependencies = function() {
-        var retval = true,
-        err = function (name) {
-            console.error ('Fail to load ' + name);
-            retval = false;
-        };
-        try { if (!Base64) { err('Base64'); } }
-        catch (e) { err('Base64'); }
-        return retval;
-    },
     // end Tools
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     // Classes
-    LocalStorage,DAVStorage,ReplicateStorage;
+    var LocalStorage,DAVStorage,ReplicateStorage;
     // end Classes
     ////////////////////////////////////////////////////////////////////////////
 
