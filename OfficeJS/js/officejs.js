@@ -225,9 +225,9 @@ require(['OfficeJS'],function (OJS) {
             priv.jio.loadDocument({
                 'fileName':filename,
                 'callback':function (result){
-                    if (result.document.fileName) {
+                    if (result.return_value.fileName) {
                         getCurrentEditor().setHTML(
-                            result.document.fileContent);
+                            result.return_value.fileContent);
                     } else {
                         console.error ('Error: ' + result.message);
                     }
@@ -264,17 +264,17 @@ require(['OfficeJS'],function (OJS) {
                 'maxtries':3,
                 'callback':function (result) {
                     var htmlString = '', i, document_array = [];
-                    for (i = 0; i < result.list.length; i += 1) {
+                    for (i = 0; i < result.return_value.length; i += 1) {
                         htmlString += '<li><a href="#/texteditor:fileName='+
-                            result.list[i].fileName + '">\n' +
-                            result.list[i].fileName;
-                        result.list[i].creationDate =
-                            (new Date(result.list[i].creationDate)).
+                            result.return_value[i].fileName + '">\n' +
+                            result.return_value[i].fileName;
+                        result.return_value[i].creationDate =
+                            (new Date(result.return_value[i].creationDate)).
                             toLocaleString();
-                        result.list[i].lastModified =
-                            (new Date(result.list[i].lastModified)).
+                        result.return_value[i].lastModified =
+                            (new Date(result.return_value[i].lastModified)).
                             toLocaleString();
-                        document_array.push (result.list[i]);
+                        document_array.push (result.return_value[i]);
                         htmlString += '</a></li>\n';
                     }
                     if (htmlString === '') {

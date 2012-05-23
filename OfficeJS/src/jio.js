@@ -710,52 +710,50 @@ var JIO =
 
         //// Private Methods
         priv.fail_checkNameAvailability = function () {
-            priv.res.isAvailable = false;
+            priv.res.message = 'Unable to check name availability.';
         };
         priv.done_checkNameAvailability = function ( isavailable ) {
             priv.res.message = priv.job.userName + ' is ' +
                 (isavailable?'':'not ') + 'available.';
-            priv.res.isAvailable = isavailable;
+            priv.res.return_value = isavailable;
         };
         priv.fail_loadDocument = function () {
-            priv.res.document = {};
+            priv.res.message = 'Unable to load document.';
         };
         priv.done_loadDocument = function ( returneddocument ) {
             priv.res.message = 'Document loaded.';
-            priv.res.document = returneddocument;
+            priv.res.return_value = returneddocument;
             // transform date into ms
-            priv.res.document.lastModified =
-                new Date(priv.res.document.lastModified).getTime();
-            priv.res.document.creationDate =
-                new Date(priv.res.document.creationDate).getTime();
+            priv.res.return_value.lastModified =
+                new Date(priv.res.return_value.lastModified).getTime();
+            priv.res.return_value.creationDate =
+                new Date(priv.res.return_value.creationDate).getTime();
         };
         priv.fail_saveDocument = function () {
-            priv.res.isSaved = false;
+            priv.res.message = 'Unable to save document.';
         };
         priv.done_saveDocument = function () {
             priv.res.message = 'Document saved.';
-            priv.res.isSaved = true;
         };
         priv.fail_getDocumentList = function () {
-            priv.res.list = [];
+            priv.res.message = 'Unable to retrieve document list.';
         };
         priv.done_getDocumentList = function ( documentlist ) {
             var i;
             priv.res.message = 'Document list received.';
-            priv.res.list = documentlist;
-            for (i = 0; i < priv.res.list.length; i += 1) {
-                priv.res.list[i].lastModified =
-                    new Date(priv.res.list[i].lastModified).getTime();
-                priv.res.list[i].creationDate =
-                    new Date(priv.res.list[i].creationDate).getTime();
+            priv.res.return_value = documentlist;
+            for (i = 0; i < priv.res.return_value.length; i += 1) {
+                priv.res.return_value[i].lastModified =
+                    new Date(priv.res.return_value[i].lastModified).getTime();
+                priv.res.return_value[i].creationDate =
+                    new Date(priv.res.return_value[i].creationDate).getTime();
             }
         };
         priv.fail_removeDocument = function () {
-            priv.res.isRemoved = false;
+            priv.res.message = 'Unable to removed document.';
         };
         priv.done_removeDocument = function () {
             priv.res.message = 'Document removed.';
-            priv.res.isRemoved = true;
         };
 
         priv.retryLater = function () {
@@ -1001,9 +999,13 @@ var JIO =
             //          - true if the job was added or replaced
 
             // example :
-            //     jio.checkNameAvailability({'userName':'myName','callback':
-            //         function (result) { alert('is available? ' +
-            //             result.isAvailable); }});
+            // jio.checkNameAvailability({'userName':'myName','callback':
+            //     function (result) {
+            //         if (result.status === 'done') {
+            //             if (result.return_value === true) { // available
+            //             } else { } // not available
+            //         } else { } // Error
+            //     }});
 
             var settings = $.extend ({
                 'userName': priv.storage.userName,
@@ -1033,8 +1035,10 @@ var JIO =
             //          - true if the job was added or replaced
 
             // jio.saveDocument({'fileName':'file','fileContent':'content',
-            //     'callback': function (result) { alert('saved?' +
-            //         result.isSaved); }});
+            //     'callback': function (result) {
+            //         if (result.status === 'done') { // Saved
+            //         } else { } // Error
+            //     }});
 
             var settings = $.extend({
                 'storage': priv.storage,
@@ -1064,9 +1068,14 @@ var JIO =
             //          - true if the job was added or replaced
 
             // jio.loadDocument({'fileName':'file','callback':
-            //     function (result) { alert('content: '+
-            //         result.doc.fileContent + ' creation date: ' +
-            //         result.doc.creationDate); }});
+            //     function (result) {
+            //         if (result.status === 'done') { // Loaded
+            //         } else { } // Error
+            //     }});
+
+            // result.return_value is a document object that looks like {
+            //     fileName:'string',fileContent:'string',
+            //     creationDate:123,lastModified:456 }
 
             var settings = $.extend ({
                 'storage': priv.storage,
@@ -1094,7 +1103,13 @@ var JIO =
             //          - true if the job was added or replaced
 
             // jio.getDocumentList({'callback':
-            //     function (result) { alert('list: '+result.list); }});
+            //     function (result) {
+            //         if (result.status === 'done') { // OK
+            //             console.log(result.return_value);
+            //         } else { } // Error
+            //     }});
+
+            // result.return_value is an Array that contains documents objects.
 
             var settings = $.extend ({
                 'storage': priv.storage,
@@ -1121,7 +1136,10 @@ var JIO =
             //          - true if the job was added or replaced
 
             // jio.removeDocument({'fileName':'file','callback':
-            //     function (result) { alert('removed? '+result.isRemoved); }});
+            //     function (result) {
+            //         if(result.status === 'done') { // Removed
+            //         } else { } // Not Removed
+            //     }});
 
             var settings = $.extend ({
                 'storage': priv.storage,

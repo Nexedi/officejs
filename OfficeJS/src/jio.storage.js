@@ -518,18 +518,30 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // if the name already exists in a storage, it is not available.
             // this.job.userName: the name we want to check.
             // this.job.storage.storageArray: An Array of storages.
-            // TODO
 
-            var newjob = {}, isavailable = true, i = 'id',
+            var newjob = {}, i = 'id', done = false,
             res = {'status':'done'}, callback = function (result) {
                 priv.returnsValuesArray.push(result);
-                if (result.status === 'fail') {
-                    res.status = 'fail';
-                }
-                if (!result.isAvailable) { isavailable = false; }
-                if (priv.returnsValuesArray.length === priv.length) {
-                    // if this is the last callback
-                    that.done(isavailable);
+                if (!done) {
+                    if (result.status === 'fail') {
+                        res.status = 'fail';
+                    } else {
+                        if (result.return_value === false) {
+                            that.done (false);
+                            done = true;
+                            return;
+                        }
+                    }
+                    if (priv.returnsValuesArray.length ===
+                        priv.length) {
+                        if (res.status === 'fail') {
+                            that.fail ('Unable to check name availability.',0);
+                        } else {
+                            that.done (true);
+                        }
+                        done = true;
+                        return;
+                    }
                 }
             };
             priv.execJobsFromStorageArray(callback);
@@ -543,7 +555,6 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.applicant.ID: the applicant ID.
             // this.job.fileName: the document name.
             // this.job.fileContent: the document content.
-            // TODO
 
             var newjob = {}, res = {'status':'done'}, i = 'id', done = false,
             callback = function (result) {
@@ -577,7 +588,6 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
             // document object is {'fileName':string,'fileContent':string,
             // 'creationDate':date,'lastModified':date}
-            // TODO
 
             var newjob = {}, aredifferent = false, doc = {}, i = 'id',
             done = false,
@@ -585,7 +595,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                 priv.returnsValuesArray.push(result);
                 if (!done) {
                     if (result.status !== 'fail') {
-                        that.done (result.document);
+                        that.done (result.return_value);
                         done = true;
                     } else {
                         if (priv.returnsValuesArray.length ===
@@ -607,16 +617,15 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
 
-            // the list is [object,object] -> object = {'fileName':string,
+            // the list is [object,object,...] -> object = {'fileName':string,
             // 'lastModified':date,'creationDate':date}
-            // TODO
 
             var newjob = {}, res = {'status':'done'}, i = 'id', done = false,
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
                 if (!done) {
                     if (result.status !== 'fail') {
-                        that.done (result.list);
+                        that.done (result.return_value);
                         done = true;
                     } else {
                         if (priv.returnsValuesArray.length ===
@@ -637,7 +646,6 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.storage.userName: the user name.
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
-            // TODO
 
             var newjob = {}, res = {'status':'done'}, i = 'key', done = false,
             callback = function (result) {
