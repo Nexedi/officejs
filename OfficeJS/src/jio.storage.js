@@ -9,21 +9,28 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
     ////////////////////////////////////////////////////////////////////////////
     // Tools
+    var extend = function (o1,o2) {
+        var key;
+        for (key in o2) {
+            o1[key] = o2[key];
+        }
+        return o1;
+    },
     // end Tools
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     // Classes
-    var LocalStorage,DAVStorage,ReplicateStorage;
+    newLocalStorage,newDAVStorage,newReplicateStorage;
     // end Classes
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     // Local Storage
-    LocalStorage = function ( args ) {
+    newLocalStorage = function ( spec, my ) {
         // LocalStorage constructor
 
-        var that = Jio.newBaseStorage( args ), priv = {};
+        var that = Jio.newBaseStorage( spec, my ), priv = {};
 
         that.checkNameAvailability = function () {
             // checks the availability of the [job.userName].
@@ -96,7 +103,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                var doc = null, settings = $.extend(
+                var doc = null, settings = extend(
                     {'getContent':true},that.cloneOptionObject());
 
                 doc = LocalOrCookieStorage.getItem(
@@ -171,8 +178,8 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
     ////////////////////////////////////////////////////////////////////////////
     // DAVStorage
-    DAVStorage = function ( args ) {
-        var that = Jio.newBaseStorage( args );
+    newDAVStorage = function ( spec, my ) {
+        var that = Jio.newBaseStorage( spec, my );
 
         that.mkcol = function ( options ) {
             // create folders in dav storage, synchronously
@@ -185,7 +192,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
             // TODO this method is not working !!!
 
-            var settings = $.extend ({
+            var settings = extend ({
                 'success':function(){},'error':function(){}},options),
             splitpath = ['splitedpath'], tmppath = 'temp/path';
 
@@ -318,7 +325,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // 'creationDate':date,'lastModified':date}
 
             var doc = {},
-            settings = $.extend({'getContent':true},that.cloneOptionObject()),
+            settings = extend({'getContent':true},that.cloneOptionObject()),
 
             // TODO check if job's features are good
             getContent = function () {
@@ -494,8 +501,8 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
     ////////////////////////////////////////////////////////////////////////////
     // ReplicateStorage
-    ReplicateStorage = function ( args ) {
-        var that = Jio.newBaseStorage( args ), priv = {};
+    newReplicateStorage = function ( spec, my ) {
+        var that = Jio.newBaseStorage( spec, my ), priv = {};
 
         priv.storageArray = that.getStorageArray();
         // TODO Add a tests that check if there is no duplicate storages.
@@ -701,13 +708,13 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
     // add key to storageObjectType of global jio
     Jio.addStorageType('local', function (options) {
-        return new LocalStorage(options);
+        return newLocalStorage(options);
     });
     Jio.addStorageType('dav', function (options) {
-        return new DAVStorage(options);
+        return newDAVStorage(options);
     });
     Jio.addStorageType('replicate', function (options) {
-        return new ReplicateStorage(options);
+        return newReplicateStorage(options);
     });
 
 };

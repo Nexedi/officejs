@@ -5,15 +5,15 @@
     $ = loader.jQuery;
 
 //// clear jio localstorage
-    (function () {
-        var k, storageObject = LocalOrCookieStorage.getAll();
-        for (k in storageObject) {
-            var splitk = k.split('/');
-            if ( splitk[0] === 'jio' ) {
-                LocalOrCookieStorage.deleteItem(k);
-            }
+(function () {
+    var k, storageObject = LocalOrCookieStorage.getAll();
+    for (k in storageObject) {
+        var splitk = k.split('/');
+        if ( splitk[0] === 'jio' ) {
+            LocalOrCookieStorage.deleteItem(k);
         }
-    }());
+    }
+}());
 //// end clear jio localstorage
 
 //// Tools
@@ -152,12 +152,12 @@ test ('Simple Job Elimination', function () {
     id = o.jio.getID();
     o.jio.saveDocument({'fileName':'file','fileContent':'content',
                         'callback':o.f1,'maxtries':1});
-    ok(LocalOrCookieStorage.getItem('jio/jobObject/'+id)['1'],
+    ok(LocalOrCookieStorage.getItem('jio/jobobject/'+id)['1'],
        'job creation');
     clock.tick(10);
     o.jio.removeDocument({'fileName':'file','fileContent':'content',
                           'callback':o.f2,'maxtries':1});
-    o.tmp = LocalOrCookieStorage.getItem('jio/jobObject/'+id)['1'];
+    o.tmp = LocalOrCookieStorage.getItem('jio/jobobject/'+id)['1'];
     ok(!o.tmp || o.tmp.status === 'fail','job elimination');
 });
 
@@ -180,7 +180,7 @@ test ('Simple Job Replacement', function () {
     o.jio.saveDocument({'fileName':'file','fileContent':'content',
                         'callback':o.f2,'maxtries':1});
     deepEqual(LocalOrCookieStorage.getItem(
-        'jio/jobObject/'+id)['1'].date,10,
+        'jio/jobobject/'+id)['1'].date,10,
               'The first job date have to be equal to the second job date.');
     clock.tick(500);
     deepEqual([o.f1.calledOnce,o.status],[true,'fail'],
@@ -205,16 +205,16 @@ test ('Simple Job Waiting', function () {
     o.jio.saveDocument({'fileName':'file','fileContent':'content',
                         'callback':o.f4,'maxtries':1});
     ok(LocalOrCookieStorage.getItem(
-        'jio/jobObject/'+id)['2'] &&
+        'jio/jobobject/'+id)['2'] &&
        LocalOrCookieStorage.getItem(
-           'jio/jobObject/'+id)['1'].status === 'ongoing',
+           'jio/jobobject/'+id)['1'].status === 'ongoing',
        'The second job must not overwrite the first ongoing one.');
     ok(LocalOrCookieStorage.getItem(
-        'jio/jobObject/'+id)['2'].status === 'wait' &&
+        'jio/jobobject/'+id)['2'].status === 'wait' &&
        LocalOrCookieStorage.getItem(
-           'jio/jobObject/'+id)['2'].waitingFor &&
+           'jio/jobobject/'+id)['2'].waitingFor &&
        JSON.stringify (LocalOrCookieStorage.getItem(
-           'jio/jobObject/'+id)['2'].waitingFor.jobIdArray) === '["1"]',
+           'jio/jobobject/'+id)['2'].waitingFor.jobIdArray) === '["1"]',
        'The second job must be waiting for the first to end');
     clock.tick(500);
     ok(o.f3.calledOnce,'first request passed');

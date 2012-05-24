@@ -9,8 +9,8 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 1 : all ok
-    var DummyStorageAllOk = function ( args ) {
-        var that = Jio.newBaseStorage( args );
+    var newDummyStorageAllOk = function ( spec, my ) {
+        var that = Jio.newBaseStorage( spec, my );
         that.checkNameAvailability = function () {
             // The [job.userName] IS available.
 
@@ -81,8 +81,8 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 2 : all fail
-    DummyStorageAllFail = function ( args ) {
-        var that = Jio.newBaseStorage( args );
+    newDummyStorageAllFail = function ( spec, my ) {
+        var that = Jio.newBaseStorage( spec, my );
 
         that.checkNameAvailability = function () {
             // Fails to check [job.userName].
@@ -147,8 +147,8 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 3 : all not found
-    DummyStorageAllNotFound = function ( args ) {
-        var that = Jio.newBaseStorage( args );
+    newDummyStorageAllNotFound = function ( spec, my ) {
+        var that = Jio.newBaseStorage( spec, my );
 
         that.checkNameAvailability = function () {
             // [job.userName] not found, so the name is available.
@@ -211,8 +211,8 @@
 
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 4 : all 3 tries
-    DummyStorageAll3Tries = function ( args ) {
-        var that = Jio.newBaseStorage( args ), priv = {};
+    newDummyStorageAll3Tries = function ( spec, my ) {
+        var that = Jio.newBaseStorage( spec, my ), priv = {};
 
         priv.doJob = function (ifokreturn) {
             // wait a little in order to simulate asynchronous operation
@@ -270,16 +270,16 @@
 
     // add key to storageObjectType of global jio
     Jio.addStorageType('dummyallok', function (options) {
-        return new DummyStorageAllOk(options);
+        return newDummyStorageAllOk(options);
     });
     Jio.addStorageType('dummyallfail', function (options) {
-        return new DummyStorageAllFail(options);
+        return newDummyStorageAllFail(options);
     });
     Jio.addStorageType('dummyallnotfound', function (options) {
-        return new DummyStorageAllNotFound(options);
+        return newDummyStorageAllNotFound(options);
     });
     Jio.addStorageType('dummyall3tries', function (options) {
-        return new DummyStorageAll3Tries(options);
+        return newDummyStorageAll3Tries(options);
     });
 
 };
