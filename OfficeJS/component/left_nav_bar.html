@@ -1,0 +1,34 @@
+<div class="container-fluid">
+  <div class="row-fluid">
+    <div class="well">
+      <ul class="nav nav-list">
+        <li class="nav-header">Nav</li>
+        <li>
+          <a href="#/login"
+             onclick="javascript:
+                      TabbularGadget.addNewTabGadget(
+                      'component/login.html','page-content');
+                      return false;">
+            <i class="icon-ok">
+            </i>
+            Login
+          </a>
+        </li>
+        <li class="nav-header">Tools</li>
+        <li class="texteditor">
+          <a href="#/texteditor"
+             onclick="javascript:
+                      TabbularGadget.addNewTabGadget(
+                      OfficeJS.getPathOf(OfficeJS.getPreference('textEditor')),
+                      'page-content');
+                      return false;">
+            <i class="icon-font"></i>
+            Text Editor
+          </a>
+        </li>
+        <li class="nav-header"><a href="#/doclist">Document List</a></li>
+        <div id="document_list"></div>
+      </ul>
+    </div>
+  </div>
+</div>

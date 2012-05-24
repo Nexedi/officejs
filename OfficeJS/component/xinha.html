@@ -1,0 +1,51 @@
+<!-- js scripts -->
+<script type="text/javascript">
+  <!--
+      _editor_url = window.location + '';
+      _editor_url = _editor_url.split('#')[0].split('/');
+      _editor_url.pop();
+      _editor_url = _editor_url.join('/') + '/lib/xinha';
+      _editor_lang = "en";
+      //-->
+</script>
+<script type="text/javascript" src="lib/xinha/XinhaCore.js">
+</script>
+<script type="text/javascript" src="js/XinhaConfig.js">
+</script>
+<article>
+  <div class="control-group">
+    <div class="controls docs-input-sizes" style="float: left">
+      <input type="text" name="fileName" id="input_fileName"
+             value="{{CurrentFileName}}" placeholder="file name" />
+    </div>
+    <div style="float: right;">
+      <button type="submit"
+              class="btn btn-primary"
+              onclick="OfficeJS.save()">
+        <i class="icon-download-alt icon-white"></i>
+        Save
+      </button>&nbsp;
+      <button type="submit"
+              class="btn"
+              onclick="OfficeJS.load()">
+        <i class="icon-upload"></i>
+        Load
+      </button>&nbsp;
+      <button type="submit"
+              class="btn btn-danger"
+              onclick="OfficeJS.remove()">
+        <i class="icon-remove icon-white"></i>
+        Remove
+      </button>&nbsp;
+    </div>
+  </div><br />
+  <textarea name="textEditor" id="textEditor"
+            rows="25" cols="50"
+            style="width:100%">
+  </textarea>
+  <script type="text/javascript">
+    <!--
+        xinha_init();
+        //-->
+  </script>
+</article>

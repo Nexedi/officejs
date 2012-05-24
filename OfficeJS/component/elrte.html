@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>elRTE</title>
+
+    <!-- jQuery and jQuery UI -->
+    <script src="lib/elrte/js/jquery-1.6.1.min.js"
+            type="text/javascript" charset="utf-8">
+    </script>
+    <script src="lib/elrte/js/jquery-ui-1.8.13.custom.min.js"
+            type="text/javascript" charset="utf-8">
+    </script>
+    <link rel="stylesheet"
+          href="lib/elrte/css/smoothness/jquery-ui-1.8.13.custom.css"
+          type="text/css"
+          media="screen"
+          charset="utf-8" />
+    <!-- elRTE -->
+    <script src="lib/elrte/js/elrte.min.js"
+            type="text/javascript" charset="utf-8">
+    </script>
+    <link rel="stylesheet"
+          href="lib/elrte/css/elrte.min.css"
+          type="text/css"
+          media="screen"
+          charset="utf-8" />
+    <!-- elRTE translation messages -->
+    <script src="lib/elrte/js/i18n/elrte.en.js"
+            type="text/javascript"
+            charset="utf-8">
+    </script>
+    <script type="text/javascript" charset="utf-8">
+      <!--
+$().ready(function() {
+    var opts = {
+        cssClass : 'el-rte',
+        lang     : 'en',
+        height   : 450,
+        toolbar  : 'complete',
+        cssfiles : ['lib/elrte/css/elrte-inner.css']
+    }
+    $('#elrte_editor').elrte(opts);
+})
+//-->
+    </script>
+  </head>
+  <body>
+    <div>
+      <input type="text"
+             name="fileName"
+             id="input_fileName"
+             value="{{CurrentFileName}}"
+             placeholder="File name here" />&nbsp;
+      <button type="submit"
+              class="btn btn-primary"
+              onclick="OfficeJS.save($('#input_fileName').attr('value'),OfficeJS.getContentOf('elrte'));">
+        <i class="icon-download-alt icon-white"></i>
+        Save
+      </button>&nbsp;
+      <button type="submit"
+              class="btn"
+              onclick="OfficeJS.load($('#input_fileName'));">
+        <i class="icon-upload"></i>
+        Load
+      </button>&nbsp;
+      <button type="submit"
+              class="btn btn-danger"
+              onclick="OfficeJS.remove($('#input_fileName'));">
+        <i class="icon-remove icon-white"></i>
+        Remove
+      </button>
+    </div>
+    <div id="elrte_editor">
+      <h1>OfficeJS elRTE texteditor</h1><p>This is a new document.<br></p>
+    </div>
+  </body>
+</html>

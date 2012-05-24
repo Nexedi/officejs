@@ -6,181 +6,36 @@
   <link rel="shortcut icon" href="img/icons/favicon.png" />
   <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" />
   <title>OfficeJS</title>
-  <!-- js scripts -->
-  <script type="text/javascript" src="lib/xinha/XinhaLoader.js?lang=en">
-  </script>
-  <script type="text/javascript" src="js/XinhaConfig.js">
-  </script>
-  <script type="text/javascript" src="lib/icanhaz/ICanHaz.min.js"></script>
-  <script data-main="js/officejs"
-          type="text/javascript"
-          src="lib/require/require.js"></script>
-  <!-- html scripts -->
-  <script id="home" type="text/html">
-    <article>
-      <p>
-        home
-      </p>
-    </article>
-  </script>
-  <script id="about" type="text/html">
-    <article>
-      <p>
-        about
-      </p>
-    </article>
-  </script>
-  <script id="login" type="text/html">
-    <article>
-      <div class="control-group">
-        <label class="control-label"
-               for="input_json_storage">
-          JSON Storage
-        </label>
-        <div class="controls docs-input-sizes">
-          <input class="input-xlarge"
-                 type="text" name="JSONstorage" id="input_json_storage"
-                 value="{&quot;type&quot;:&quot;replicate&quot;,&quot;storageArray&quot;:[{&quot;type&quot;:&quot;local&quot;,&quot;userName&quot;:&quot;tristan&quot;},{&quot;type&quot;:&quot;dav&quot;,&quot;userName&quot;:&quot;tristan&quot;,&quot;password&quot;:&quot;mdp&quot;,&quot;location&quot;:&quot;http://localhost:80&quot;}]}"
-                 placeholder="storage" />
-                 <!-- value="{&quot;type&quot;:&quot;dav&quot;,&quot;userName&quot;:&quot;tristan&quot;,&quot;password&quot;:&quot;mdp&quot;,&quot;location&quot;:&quot;http://localhost:80&quot;}" -->
-                 <!-- value="{&quot;type&quot;:&quot;local&quot;,&quot;userName&quot;:&quot;tristan&quot;}" -->
-        </div>
-        <label class="control-label"
-               for="JSONapplicantID">
-          JSON Applicant
-        </label>
-        <div class="controls docs-input-sizes">
-          <input class="input-xlarge"
-                 type="text" name="JSONapplicant" id="input_json_applicant"
-                 value="{&quot;ID&quot;:&quot;jiotests&quot;}"
-                 placeholder="applicant" />
-        </div>
-      </div>
-      <button type="submit"
-              class="btn"
-              onclick="OfficeJS.setJio()">Create New JIO</button>
-    </article>
-  </script>
-  <script id="text_editor" type="text/html">
-    <article>
-      <div class="control-group">
-        <div class="span5">
-          <!-- <label class="control-label" for="fileName">File Name</label> -->
-          <div class="controls docs-input-sizes">
-            <input type="text" name="fileName" id="input_fileName"
-                   value="{{CurrentFileName}}" placeholder="file name" />
-          </div>
-      <!--   <label class="control-label" for="fileContent">File Content</label> -->
-      <!--   <div class="controls docs-input-sizes"> -->
-      <!--     <input type="text" name="fileContent" id="input_content" -->
-      <!--            value="" placeholder="content" /> -->
-      <!--   </div> -->
-        </div>
-        <div class="span5">
-          <button type="submit"
-                  class="btn btn-primary"
-                  onclick="OfficeJS.save()">
-            <i class="icon-download-alt icon-white"></i>
-            Save
-          </button>&nbsp;
-          <button type="submit"
-                  class="btn"
-                  onclick="OfficeJS.load()">
-            <i class="icon-upload"></i>
-            Load
-          </button>&nbsp;
-          <button type="submit"
-                  class="btn btn-danger"
-                  onclick="OfficeJS.remove()">
-            <i class="icon-remove icon-white"></i>
-            Remove
-          </button>&nbsp;
-          <!-- <button type="submit" -->
-          <!--         class="btn" -->
-          <!--         onclick="OfficeJS.getlist()"> -->
-          <!--   <i class="icon-refresh"></i> -->
-          <!--   Get List -->
-          <!-- </button>&nbsp; -->
-        </div>
-      </div>
-      <!-- <div id="document_list" class="span4"> -->
-      <!--   <ul> -->
-      <!--     {{#DocumentList}} -->
-      <!--     <li>{{fileName}}</li> -->
-      <!--     {{/DocumentList}} -->
-      <!--   </ul> -->
-      <!-- </div> -->
-    </article>
-  </script>
-  <script id="document_list" type="text/html">
-    <article>
-      <ul>
-        {{#DocumentList}}
-        <li><a href="#/texteditor:fileName={{fileName}}">{{fileName}}</a>, created: {{creationDate}}, last modified: {{lastModified}}</li>
-        {{/DocumentList}}
-      </ul>
-    </article>
-  </script>
+  <script type="text/javascript" src="lib/jquery/jquery.js"></script>
+  <script type="text/javascript" src="lib/jstorage/jstorage.js"></script>
+  <script type="text/javascript" src="lib/renderjs/renderjs.js"></script>
+
+  <script type="text/javascript" src="src/localorcookiestorage.js"></script>
+  <script type="text/javascript" src="src/jio.js"></script>
+  <script type="text/javascript" src="lib/base64/base64.js"></script>
+  <script type="text/javascript" src="src/jio.storage.js"></script>
 </head>
 <body>
 
-  <div id="loading" style="position:absolute;right:10px;top:10px;width:100px;height:40px;">
-    <div id="loading_spin" style="background-image:url('img/icons/loading_spin_16.gif');width:16px;height:16px;float:right;display:none;"></div>
-    <div id="loading_spin" style="width:16px;height:16px;float:right;"></div>
-    <div id="loading_getlist" style="float:right;display:none;"><i class="icon-refresh icon-white"></i></div>
-    <div id="loading_save" style="float:right;display:none;"><i class="icon-download-alt icon-white"></i></div>
-    <div id="loading_load" style="float:right;display:none;"><i class="icon-upload icon-white"></i></div>
-    <div id="loading_remove" style="float:right;display:none;"><i class="icon-remove icon-white"></i></div>
-  </div>
-  <div class="navbar">
-    <div class="navbar-inner">
-      <div class="container-fluid">
-        <div class="row-fluid">
-          <div class="span2">
-            <h1>OfficeJS</h1>
-          </div>
-          <div class="span10">
-            <ul class="nav">
-              <li><a href="#">Nav</a></li>
-              <li><a href="#/about">About</a></li>
-              <li><a href="#/contact">Contact</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
+  <header>
+    <div id="page-top_nav_bar"
+         gadget:property="{&quot;cacheable&quot;:&quot;1&quot;,
+                          &quot;cache_id&quot;:&quot;top_nav_bar&quot;}" >
     </div>
-  </div>
+  </header>
 
-  <div class="container-fluid">
-    <div class="row-fluid">
-      <div class="span2">
-        <div class="well">
-          <ul class="nav nav-list">
-            <li class="nav-header">Nav</li>
-            <li><a href="#/login"><i class="icon-ok"></i>Login</a></li>
-            <li class="nav-header">Tools</li>
-            <li class="texteditor">
-              <a href="#/texteditor"><i class="icon-font"></i>Text Editor</a>
-            </li>
-            <li class="nav-header"><a href="#/doclist">Document List</a></li>
-            <div id="document_list"></div>
-          </ul>
-        </div>
-      </div>
-      <section class="span10" id="main">
-        <!-- Body content -->
-        <article>
-          <p>
-            Loading...
-          </p>
-        </article>
-      </section>
-      <section class="span10" id="text_editor" style="display: none">
-        <textarea name="textEditor" id="textEditor" rows="25" cols="50"
-                  style="width: 100%">
-        </textarea>
-      </section>
+  <nav class="span4">
+    <div id="page-left_nav_bar"
+         gadget:property="{&quot;cacheable&quot;:&quot;1&quot;,
+                          &quot;cache_id&quot;:&quot;left_nav_bar&quot;}" >
     </div>
-  </div>
+  </nav>
+
+  <section class="span12">
+    <div id="page-content">
+    </div>
+  </section>
+
+  <script type="text/javascript" src="js/officejs.js"></script>
 </body>
 </html>
