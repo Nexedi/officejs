@@ -1071,11 +1071,12 @@ var JIO =
             var settings = extend({
                 'storage': priv.storage,
                 'applicant': priv.applicant,
+                'fileContent': '',
                 'method':'saveDocument',
                 'callback': function () {}
             },options);
             // check dependencies
-            if (that.isReady() && settings.fileName && settings.fileContent &&
+            if (that.isReady() && settings.fileName &&
                 settings.storage && settings.applicant) {
                 return priv.queue.createJob ( settings );
             }
