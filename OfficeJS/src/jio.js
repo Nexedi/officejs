@@ -925,6 +925,17 @@ var JIO =
 
         var that = {}, priv = {};
 
+        priv.wrongParametersError = function (settings) {
+            var m = 'Method: '+ settings.method +
+                ', One or some parameters are undefined.';
+            console.error (m);
+            settings.callback({status:'fail',
+                               error: {status:0,
+                                       statusText:'Undefined Parameter',
+                                       message: m}});
+            return null;
+        };
+
         //// Getters Setters
         that.getID = function () {
             return priv.id;
@@ -1036,7 +1047,7 @@ var JIO =
                 settings.storage && settings.applicant) {
                 return priv.queue.createJob ( settings );
             }
-            return null;
+            return priv.wrongParametersError(settings);
         };
 
         that.saveDocument = function ( options ) {
@@ -1068,7 +1079,7 @@ var JIO =
                 settings.storage && settings.applicant) {
                 return priv.queue.createJob ( settings );
             }
-            return null;
+            return priv.wrongParametersError(settings);
         };
 
         that.loadDocument = function ( options ) {
@@ -1105,7 +1116,7 @@ var JIO =
                 settings.storage && settings.applicant) {
                 return priv.queue.createJob ( settings );
             }
-            return null;
+            return priv.wrongParametersError(settings);
         };
 
         that.getDocumentList = function ( options ) {
@@ -1138,7 +1149,7 @@ var JIO =
             if (that.isReady() && settings.storage && settings.applicant ) {
                 return priv.queue.createJob( settings );
             }
-            return null;
+            return priv.wrongParametersError(settings);
         };
 
         that.removeDocument = function ( options ) {
@@ -1168,7 +1179,7 @@ var JIO =
                 settings.storage && settings.applicant ) {
                 return priv.queue.createJob ( settings );
             }
-            return null;
+            return priv.wrongParametersError(settings);
         };
         //// end Methods
 
