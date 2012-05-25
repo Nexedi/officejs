@@ -6,8 +6,7 @@
         <li>
           <a href="#/login"
              onclick="javascript:
-                      TabbularGadget.addNewTabGadget(
-                      'component/login.html','page-content');
+                      OfficeJS.open({app:'login'});
                       return false;">
             <i class="icon-ok">
             </i>
@@ -18,16 +17,43 @@
         <li class="texteditor">
           <a href="#/texteditor"
              onclick="javascript:
-                      TabbularGadget.addNewTabGadget(
-                      OfficeJS.getPathOf(OfficeJS.getPreference('textEditor')),
-                      'page-content');
+                      OfficeJS.open({app:'textEditor'});
                       return false;">
             <i class="icon-font"></i>
-            Text Editor
+            Writer
           </a>
         </li>
-        <li class="nav-header"><a href="#/doclist">Document List</a></li>
-        <div id="document_list"></div>
+        <li class="imgeditor">
+          <a href="#/imgeditor"
+             onclick="javascript:
+                      OfficeJS.open({app:'imgEditor'});
+                      'page-content');
+                      return false;">
+            <i class="icon-pencil"></i>
+            Image Editor
+          </a>
+        </li>
+        <li class="spreadsheet">
+          <a href="#/spreadsheet"
+             onclick="javascript:
+                      OfficeJS.open({app:'speadsheet'});
+                      return false;">
+            <i class="icon-signal"></i>
+            Spreadsheet
+          </a>
+        </li>
+        <li id="nav_document_list_header"
+            style="display:none">
+          <a href="#/doclist"
+             onclick="javascript:
+                      OfficeJS.open({app:'documentLister'});
+                      return false;">
+            <!-- <i class="icon-list"></i> -->
+            Document List
+          </a>
+          <div id="nav_document_list">
+          </div>
+        </li>
       </ul>
     </div>
   </div>

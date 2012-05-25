@@ -15,9 +15,18 @@
             login:'login',
             topnavbar:'topnavbar',
             leftnavbar:'leftnavbar',
+            documentLister:'slickgrid',
             textEditor:'elrte'
         };
         priv.app_object = {
+            topnavbar: {
+                path:'component/top_nav_bar.html',
+                gadgetid:'page-top_nav_bar'
+            },
+            leftnavbar: {
+                path:'component/left_nav_bar.html',
+                gadgetid:'page-left_nav_bar'
+            },
             login: {
                 path:'component/login.html',
                 gadgetid:'page-content',
@@ -32,17 +41,23 @@
             },
             elrte: {
                 path:'component/elrte.html',
+                gadgetid:'page-content',
                 element:'#elrte_editor',
                 getContent: function () {
                     $(this.element).elrte('updateSource');
                     return $(this.element).elrte('val');
                 },
-                onload: function () {},
-                onunload: function () {}
+            },
+            slickgrid: {
+                path:'component/slickgrid_document_lister.html',
+                gadgetid:'page-content',
+                onload: function () {}
             }
         };
         priv.data_object = {
-            documentList:[]
+            documentList:[],
+            gadget_object:{}, // contains current gadgets id with their location
+            currentFile:null
         };
         priv.loading_object = {
             spinstate: 0,
@@ -84,20 +99,91 @@
 
         // Methods //
         /**
-         * @method getPreference
-         * @param  {string} key The preference
-         * @return {object} a clone of the preference object
+         * Shows a list of document inside the left nav bar
+         * @method showDocumentListInsideLeftNavBar
          */
-        that.getPreference = function (key) {
-            return priv.preference_object[key];
+        priv.showDocumentListInsideLeftNavBar = function () {
+            var i, html_string = '<ul>';
+            for (i = 0; i < priv.data_object.length; i += 1) {
+                html_string += '<li>' +
+                    '<a href="#/texteditor:' +
+                    priv.data_object[i].fileName + '">' +
+                    priv.data_object[i].fileName +
+                    '</a>' +
+                    '</li>';
+            }
+            html_string += '</ul>';
+            if (html_string === '<ul></ul>') {
+                // if there's no document
+                html_string = '<ul><li>No document</li></ul>';
+            }
+            // show list in the left nav bar
+            $('#nav_document_list').html(html_string);
+            $('#nav_document_list_header').show();
         };
 
         /**
-         * @method jioIsSet
+         * @method getRealApplication
+         * @param  {string} appname The app name set in preference.
+         * @return {object} The real application object.
+         */
+        priv.getRealApplication = function (appname) {
+            var realappname = that.getPreference (appname);
+            if (!realappname) { return; } // undefined
+            return priv.app_object[realappname];
+        };
+
+        /**
+         * @method isJioSet
          * @return {boolean} true if jio is set else false.
          */
-        priv.jioIsSet = function () {
+        priv.isJioSet = function () {
             return (typeof priv.jio === 'object');
+        };
+
+        /**
+         * Opens an application
+         * @method open
+         * @param  {object} option Contains some settings:
+         *     - app {string} The app name we want to open, set in preferences
+         *     - ... and some other parameters
+         */
+        that.open = function (option) {
+            var realapp, realgadgetid, realpath, acientapp;
+            realapp = priv.getRealApplication (option.app);
+            realgadgetid = realapp.gadgetid;
+            realpath = realapp.path;
+            if (!realapp) {
+                // cannot get real app
+                console.error ('Unknown application: ' +
+                               that.getPreference(option.app));
+                return null;
+            }
+            ancientapp = priv.data_object.gadget_object[realgadgetid];
+            if (ancientapp) {
+                // if there is already a gadget there, unload it
+                if (typeof ancientapp.onunload !== 'undefined' &&
+                    !ancientapp.onunload()) {
+                    // if onunload return false, it means that we must not
+                    // load a new gadget because this one is not ready to
+                    // exit.
+                    return null;
+                }
+            }
+            priv.data_object.gadget_object[realgadgetid] = realapp;
+            TabbularGadget.addNewTabGadget(realpath,realgadgetid);
+            if (typeof realapp.onload !== 'undefined') {
+                return realapp.onload(option);
+            }
+        };
+
+        /**
+         * @method getPreference
+         * @param  {string} key The preference
+         * @return {string} The content of the preference.
+         */
+        that.getPreference = function (key) {
+            return priv.preference_object[key];
         };
 
         /**
@@ -106,9 +192,15 @@
          * @return {string} The content of the application, or null.
          */
         that.getContentOf = function (app) {
-            if (priv.app_object[app] &&
-                typeof priv.app_object[app].getContent !== 'undefined') {
-                return priv.app_object[app].getContent();
+            var realapp = that.getPreference (app);
+            if (!realapp) {
+                console.error ('Unknown application: ' +
+                               that.getPreference(app));
+                return null;
+            }
+            if (priv.app_object[realapp] &&
+                typeof priv.app_object[realapp].getContent !== 'undefined') {
+                return priv.app_object[realapp].getContent();
             }
             return null;
         };
@@ -119,8 +211,14 @@
          * @return {string} The path of the application component, or null.
          */
         that.getPathOf = function (app) {
-            if (priv.app_object[app]) {
-                return priv.app_object[app].path;
+            var realapp = that.getPreference(app);
+            if (!realapp) {
+                console.error ('Unknown application: ' +
+                               that.getPreference(app));
+                return null;
+            }
+            if (priv.app_object[realapp]) {
+                return priv.app_object[realapp].path;
             }
             return null;
         };
@@ -131,7 +229,7 @@
          * @param {object} applicant The applicant informations
          */
         that.setJio = function (storage,applicant) {
-            if (priv.jioIsSet()) {
+            if (priv.isJioSet()) {
                 alert ('Jio already set.');
                 return;
             }
@@ -145,7 +243,7 @@
          * @method getList
          */
         that.getList = function () {
-            if (!priv.jioIsSet()) {
+            if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
             }
@@ -155,11 +253,11 @@
                 'callback':function (result) {
                     if (result.status === 'done') {
                         priv.data_object = result.return_value;
+                        priv.showDocumentListInsideLeftNavBar();
                     } else {
                         console.error (result.message);
                     }
                     priv.loading_object.end_getlist();
-                    // TODO : show list somewhere
                 }
             });
         };
@@ -171,7 +269,7 @@
          * @param  {string} content The content of the document.
          */
         that.save = function (name, content) {
-            if (!priv.jioIsSet()) {
+            if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
             }
@@ -195,7 +293,7 @@
          * @param  {string} name The document name.
          */
         that.load = function (name) {
-            if (!priv.jioIsSet()) {
+            if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
             }
@@ -219,7 +317,7 @@
          * @param  {string} name The document name.
          */
         that.remove = function (name) {
-            if (!priv.jioIsSet()) {
+            if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
             }
@@ -242,16 +340,7 @@
     }());                       // end OfficeJS
 
     // show gadgets
-    TabbularGadget.addNewTabGadget(
-        'component/top_nav_bar.html',
-        'page-top_nav_bar',
-        undefined);
-    TabbularGadget.addNewTabGadget(
-        'component/left_nav_bar.html',
-        'page-left_nav_bar',
-        undefined);
-    TabbularGadget.addNewTabGadget(
-        'component/login.html',
-        'page-content',
-        undefined);
+    OfficeJS.open({app:'topnavbar'});
+    OfficeJS.open({app:'leftnavbar'});
+    OfficeJS.open({app:'login'});
 }());
