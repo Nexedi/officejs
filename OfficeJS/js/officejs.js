@@ -16,18 +16,22 @@
             topnavbar:'topnavbar',
             leftnavbar:'leftnavbar',
             documentLister:'slickgrid',
+            editpreferences:'simplepreferenceeditor',
             textEditor:'elrte'
         };
         priv.app_object = {
             topnavbar: {
+                type:'nav',
                 path:'component/top_nav_bar.html',
                 gadgetid:'page-top_nav_bar'
             },
             leftnavbar: {
+                type:'nav',
                 path:'component/left_nav_bar.html',
                 gadgetid:'page-left_nav_bar'
             },
             login: {
+                type:'loader',
                 path:'component/login.html',
                 gadgetid:'page-content',
                 getContent: function () {
@@ -39,7 +43,14 @@
                     return JSON.stringify (tmp);
                 }
             },
+            simplepreferenceeditor: {
+                // NOTE
+                type:'editor',
+                path:'',
+                // ...
+            },
             elrte: {
+                type:'editor',  // means it can edit a content
                 path:'component/elrte.html',
                 gadgetid:'page-content',
                 element:'#elrte_editor',
@@ -47,17 +58,30 @@
                     $(this.element).elrte('updateSource');
                     return $(this.element).elrte('val');
                 },
+                setContent: function (content) {
+                    $(this.element).elrte('val', content);
+                },
+                onload: function (param) {
+                    if (typeof param.fileName !== 'undefined') {
+                        setTimeout(function () {
+                            $('#input_fileName').attr('value',param.fileName);
+                            that.load(param.fileName);
+                        },50);
+                    }
+                }
+                // TODO : onunload, are you sure? leave without saving?
             },
             slickgrid: {
+                type:'editor',
                 path:'component/slickgrid_document_lister.html',
-                gadgetid:'page-content',
-                onload: function () {}
+                gadgetid:'page-content'
             }
         };
         priv.data_object = {
             documentList:[],
             gadget_object:{}, // contains current gadgets id with their location
-            currentFile:null
+            currentFile:null,
+            currentEditor:null
         };
         priv.loading_object = {
             spinstate: 0,
@@ -104,11 +128,15 @@
          */
         priv.showDocumentListInsideLeftNavBar = function () {
             var i, html_string = '<ul>';
-            for (i = 0; i < priv.data_object.length; i += 1) {
+            for (i = 0; i < priv.data_object.documentList.length; i += 1) {
                 html_string += '<li>' +
                     '<a href="#/texteditor:' +
-                    priv.data_object[i].fileName + '">' +
-                    priv.data_object[i].fileName +
+                    priv.data_object.documentList[i].fileName + '"'+
+                    ' onclick="javascript:'+
+                    'OfficeJS.open({app:\'textEditor\',fileName:\''+
+                    priv.data_object.documentList[i].fileName + '\'});'+
+                    'return false;">'+
+                    priv.data_object.documentList[i].fileName +
                     '</a>' +
                     '</li>';
             }
@@ -159,19 +187,31 @@
                                that.getPreference(option.app));
                 return null;
             }
-            ancientapp = priv.data_object.gadget_object[realgadgetid];
-            if (ancientapp) {
-                // if there is already a gadget there, unload it
-                if (typeof ancientapp.onunload !== 'undefined' &&
-                    !ancientapp.onunload()) {
-                    // if onunload return false, it means that we must not
-                    // load a new gadget because this one is not ready to
-                    // exit.
-                    return null;
+            if (priv.data_object.currentEditor !== realapp) {
+                ancientapp = priv.data_object.gadget_object[realgadgetid];
+                if (ancientapp) {
+                    // if there is already a gadget there, unload it
+                    if (typeof ancientapp.onunload !== 'undefined' &&
+                        !ancientapp.onunload()) {
+                        // if onunload return false, it means that we must not
+                        // load a new gadget because this one is not ready to
+                        // exit.
+                        return null;
+                    }
+                }
+                priv.data_object.gadget_object[realgadgetid] = realapp;
+                TabbularGadget.addNewTabGadget(realpath,realgadgetid);
+                // set current editor
+                switch (realapp.type) {
+                case 'editor':
+                    priv.data_object.currentEditor = realapp;
+                    break;
+                default:
+                    priv.data_object.currentEditor = null;
+                    break;
                 }
             }
-            priv.data_object.gadget_object[realgadgetid] = realapp;
-            TabbularGadget.addNewTabGadget(realpath,realgadgetid);
+            // onload call
             if (typeof realapp.onload !== 'undefined') {
                 return realapp.onload(option);
             }
@@ -252,7 +292,7 @@
                 'maxtries':3,
                 'callback':function (result) {
                     if (result.status === 'done') {
-                        priv.data_object = result.return_value;
+                        priv.data_object.documentList = result.return_value;
                         priv.showDocumentListInsideLeftNavBar();
                     } else {
                         console.error (result.message);
@@ -262,13 +302,26 @@
             });
         };
 
+        that.getCurrentDocumentList = function () {
+            // clone document list
+            var array = $.extend(true,[],priv.data_object.documentList), i;
+            for (i = 0; i < array.length; i += 1) {
+                array[i].lastModified = (new Date(array[i].lastModified)).
+                    toLocaleString();
+                array[i].creationDate = (new Date(array[i].creationDate)).
+                    toLocaleString();
+            }
+            return array;
+        };
+
         /**
          * Saves the document.
          * @method save
          * @param  {string} name The document name.
          * @param  {string} content The content of the document.
          */
-        that.save = function (name, content) {
+        that.save = function (name) {
+            var current_editor = priv.data_object.currentEditor;
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
@@ -276,7 +329,7 @@
             priv.loading_object.save();
             priv.jio.saveDocument({
                 'fileName':name,
-                'fileContent':content,
+                'fileContent':current_editor.getContent(),
                 'callback':function (result) {
                     if (result.status === 'fail') {
                         console.error (result.message);
@@ -293,6 +346,7 @@
          * @param  {string} name The document name.
          */
         that.load = function (name) {
+            var current_editor = priv.data_object.currentEditor;
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
@@ -304,9 +358,11 @@
                 'callback':function (result) {
                     if (result.status === 'fail') {
                         console.error (result.message);
+                    } else {
+                        current_editor.setContent(
+                            result.return_value.fileContent);
                     }
                     priv.loading_object.end_load();
-                    // TODO : show content somewhere
                 }
             });
         };

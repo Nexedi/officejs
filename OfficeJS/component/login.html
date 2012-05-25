@@ -1,33 +1,31 @@
-<article>
-  <div class="control-group">
-    <label class="control-label"
-           for="input_json_storage">
-      JSON Storage
-    </label>
-    <div class="controls docs-input-sizes">
-      <input class="input-xlarge"
-             value="{&quot;type&quot;:&quot;local&quot;,&quot;userName&quot;:&quot;tristan&quot;}"
-             type="text" name="JSONstorage" id="input_json_storage"
-             placeholder="storage" />
-             <!-- value="{&quot;type&quot;:&quot;replicate&quot;,&quot;storageArray&quot;:[{&quot;type&quot;:&quot;local&quot;,&quot;userName&quot;:&quot;tristan&quot;},{&quot;type&quot;:&quot;dav&quot;,&quot;userName&quot;:&quot;tristan&quot;,&quot;password&quot;:&quot;mdp&quot;,&quot;location&quot;:&quot;http://localhost:80&quot;}]}" -->
-             <!-- value="{&quot;type&quot;:&quot;dav&quot;,&quot;userName&quot;:&quot;tristan&quot;,&quot;password&quot;:&quot;mdp&quot;,&quot;location&quot;:&quot;http://localhost:80&quot;}" -->
-    </div>
-    <label class="control-label"
-           for="JSONapplicantID">
-      JSON Applicant
-    </label>
-    <div class="controls docs-input-sizes">
-      <input class="input-xlarge"
-             type="text" name="JSONapplicant" id="input_json_applicant"
-             value="{&quot;ID&quot;:&quot;jiotests&quot;}"
-             placeholder="applicant" />
-    </div>
+<div class="control-group">
+  <label class="control-label"
+         for="input_json_storage">
+    JSON Storage
+  </label>
+  <div class="controls docs-input-sizes">
+    <input class="input-xlarge"
+           value="{&quot;type&quot;:&quot;local&quot;,&quot;userName&quot;:&quot;tristan&quot;}"
+           type="text" name="JSONstorage" id="input_json_storage"
+           placeholder="storage" />
+    <!-- value="{&quot;type&quot;:&quot;replicate&quot;,&quot;storageArray&quot;:[{&quot;type&quot;:&quot;local&quot;,&quot;userName&quot;:&quot;tristan&quot;},{&quot;type&quot;:&quot;dav&quot;,&quot;userName&quot;:&quot;tristan&quot;,&quot;password&quot;:&quot;mdp&quot;,&quot;location&quot;:&quot;http://localhost:80&quot;}]}" -->
+    <!-- value="{&quot;type&quot;:&quot;dav&quot;,&quot;userName&quot;:&quot;tristan&quot;,&quot;password&quot;:&quot;mdp&quot;,&quot;location&quot;:&quot;http://localhost:80&quot;}" -->
   </div>
-  <button type="submit"
-          class="btn"
-          onclick="OfficeJS.setJio(
-                   $('#input_json_storage').attr('value'),
-                   $('#input_json_applicant').attr('value'));">
-    Create New JIO
-  </button>
-</article>
+  <label class="control-label"
+         for="JSONapplicantID">
+    JSON Applicant
+  </label>
+  <div class="controls docs-input-sizes">
+    <input class="input-xlarge"
+           type="text" name="JSONapplicant" id="input_json_applicant"
+           value="{&quot;ID&quot;:&quot;jiotests&quot;}"
+           placeholder="applicant" />
+  </div>
+</div>
+<button type="submit"
+        class="btn"
+        onclick="OfficeJS.setJio(
+                 $('#input_json_storage').attr('value'),
+                 $('#input_json_applicant').attr('value'));">
+  Create New JIO
+</button>

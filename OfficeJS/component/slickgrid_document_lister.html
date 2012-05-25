@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <link rel="stylesheet"
+        href="lib/slickgrid/css/slick.grid.css"
+        type="text/css"/>
+  <link rel="stylesheet"
+        href="lib/slickgrid/css/examples.css"
+        type="text/css"/>
+</head>
+<body>
+<div id="myDocumentList" style="width:100%;height:300px"></div>
+<script type="text/javascript"
+        src="lib/jquery/jquery.js"></script>
+<script type="text/javascript"
+        src="lib/jquery/jquery.event.drag-2.0.min.js"></script>
+
+<script type="text/javascript" src="lib/slickgrid/js/slick.core.js"></script>
+<script type="text/javascript" src="lib/slickgrid/js/slick.grid.js"></script>
+
+<script type="text/javascript">
+    <!--
+(function () {
+    var grid,
+    columns = [
+        {id:"fileName",name:"Document",field:"fileName",sortable:true},
+        {id:"lastModified",name:"Modified",field:"lastModified",sortable:true},
+        {id:"creationDate",name:"Created",field:"creationDate",sortable:true}
+    ],
+
+    options = {
+        enableCellNavigation: true,
+        enableColumnReorder: false,
+        multiColumnSort: true,
+        forceFitColumns: true
+    };
+
+    $(function () {
+
+        grid = new Slick.Grid("#myDocumentList",
+                              OfficeJS.getCurrentDocumentList(),
+                              columns,
+                              options);
+
+        grid.onSort.subscribe(function (e, args) {
+            var cols = args.sortCols;
+
+            OfficeJS.getCurrentDocumentList().
+                sort(function (dataRow1, dataRow2) {
+                    var i, field, sign, value1, value2, result;
+                    for (i = 0, l = cols.length; i < l; i++) {
+                        field = cols[i].sortCol.field;
+                        sign = cols[i].sortAsc ? 1 : -1;
+                        value1 = dataRow1[field];
+                        value2 = dataRow2[field];
+                        result = (value1==value2?0:(value1>value2?1:-1))*sign;
+                        if (result != 0) {
+                            return result;
+                        }
+                    }
+                    return 0;
+                });
+            grid.invalidate();
+            grid.render();
+        });
+    });
+}());
+//-->
+</script>
+</body>
+</html>
