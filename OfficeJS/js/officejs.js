@@ -17,7 +17,9 @@
             leftnavbar:'leftnavbar',
             documentLister:'slickgrid',
             editpreferences:'simplepreferenceeditor',
-            textEditor:'elrte'
+            textEditor:'elrte',
+            imgEditor:'svg-edit',
+            speadsheet:'jquery-sheet'
         };
         priv.app_object = {
             topnavbar: {
@@ -70,6 +72,16 @@
                     }
                 }
                 // TODO : onunload, are you sure? leave without saving?
+            },
+            'jquery-sheet': {
+                type:'editor',
+                path:'component/jquery-sheet.html',
+                gadgetid:'page-content'
+            },
+            'svg-edit': {
+                type:'editor',
+                path:'component/svg-edit.html',
+                gadgetid:'page-content'
             },
             slickgrid: {
                 type:'editor',
