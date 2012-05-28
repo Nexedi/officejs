@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
@@ -22,7 +22,8 @@
 <script type="text/javascript">
     <!--
 (function () {
-    var grid,
+    var grid, onSortFunction, onClickFunction,
+    documentlist = OfficeJS.cloneCurrentDocumentList(),
     columns = [
         {id:"fileName",name:"Document",field:"fileName",sortable:true},
         {id:"lastModified",name:"Modified",field:"lastModified",sortable:true},
@@ -39,16 +40,16 @@
     $(function () {
 
         grid = new Slick.Grid("#myDocumentList",
-                              OfficeJS.getCurrentDocumentList(),
+                              documentlist,
                               columns,
                               options);
 
-        grid.onSort.subscribe(function (e, args) {
+        onSortFunction = function (e, args) {
             var cols = args.sortCols;
 
-            OfficeJS.getCurrentDocumentList().
+                documentlist.
                 sort(function (dataRow1, dataRow2) {
-                    var i, field, sign, value1, value2, result;
+                    var i, l, field, sign, value1, value2, result;
                     for (i = 0, l = cols.length; i < l; i++) {
                         field = cols[i].sortCol.field;
                         sign = cols[i].sortAsc ? 1 : -1;
@@ -63,7 +64,14 @@
                 });
             grid.invalidate();
             grid.render();
-        });
+        };
+        onClickFunction = function (e) {
+            var cell = grid.getCellFromEvent(e);
+            OfficeJS.open({app:'textEditor',
+                           fileName:documentlist[cell.row].fileName});
+        };
+        grid.onClick.subscribe(onClickFunction);
+        grid.onSort.subscribe(onSortFunction);
     });
 }());
 //-->

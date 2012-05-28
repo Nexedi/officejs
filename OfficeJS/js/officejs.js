@@ -302,14 +302,19 @@
             });
         };
 
-        that.getCurrentDocumentList = function () {
+        that.cloneCurrentDocumentList = function () {
             // clone document list
-            var array = $.extend(true,[],priv.data_object.documentList), i;
+            var array = $.extend(true,[],priv.data_object.documentList), i,
+            lm, cd;
             for (i = 0; i < array.length; i += 1) {
-                array[i].lastModified = (new Date(array[i].lastModified)).
-                    toLocaleString();
-                array[i].creationDate = (new Date(array[i].creationDate)).
-                    toLocaleString();
+                lm = (new Date(array[i].lastModified));
+                cd = (new Date(array[i].creationDate));
+                array[i].lastModified = lm.getFullYear()+'/'+
+                    (lm.getMonth()+1)+'/'+lm.getDate()+' '+
+                    lm.getHours()+':'+lm.getMinutes();
+                array[i].creationDate = cd.getFullYear()+'/'+
+                    (cd.getMonth()+1)+'/'+cd.getDate()+' '+
+                    cd.getHours()+':'+cd.getMinutes();
             }
             return array;
         };
