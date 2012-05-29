@@ -30,7 +30,18 @@
             leftnavbar: {
                 type:'nav',
                 path:'component/left_nav_bar.html',
-                gadgetid:'page-left_nav_bar'
+                gadgetid:'page-left_nav_bar',
+                bar_tools: false,
+                update: function () {
+                    var elmt;
+                    if (priv.isJioSet() && !this.bar_tools) {
+                        // add tools to nav bar
+                        elmt = document.querySelector ('script#left-nav-tools');
+                        document.querySelector ('#left-nav-bar').innerHTML +=
+                        elmt.innerHTML;
+                        this.bar_tools = true;
+                    }
+                }
             },
             login: {
                 type:'loader',
@@ -163,26 +174,6 @@
          * @method showDocumentListInsideLeftNavBar
          */
         priv.showDocumentListInsideLeftNavBar = function () {
-            var i, html_string = '<ul>';
-            for (i = 0; i < priv.data_object.documentList.length; i += 1) {
-                html_string += '<li>' +
-                    '<a href="#/texteditor:' +
-                    priv.data_object.documentList[i].fileName + '"'+
-                    ' onclick="javascript:'+
-                    'OfficeJS.open({app:\'textEditor\',fileName:\''+
-                    priv.data_object.documentList[i].fileName + '\'});'+
-                    'return false;">'+
-                    priv.data_object.documentList[i].fileName +
-                    '</a>' +
-                    '</li>';
-            }
-            html_string += '</ul>';
-            if (html_string === '<ul></ul>') {
-                // if there's no document
-                html_string = '<ul><li>No document</li></ul>';
-            }
-            // show list in the left nav bar
-            $('#nav_document_list').html(html_string);
             $('#nav_document_list_header').show();
         };
 
@@ -305,12 +296,18 @@
          * @param {object} applicant The applicant informations
          */
         that.setJio = function (storage,applicant) {
+            var leftnavbar;
             if (priv.isJioSet()) {
                 alert ('Jio already set.');
                 return;
             }
             // if there is not any jio created
             priv.jio = JIO.createNew (storage,applicant);
+            // update left nav bar
+            leftnavbar = priv.getRealApplication ('leftnavbar');
+            if (typeof leftnavbar.update !== 'undefined') {
+                leftnavbar.update();
+            }
             that.getList();
         };
 
