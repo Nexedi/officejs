@@ -316,6 +316,8 @@
             }
             priv.loading_object.getlist();
             priv.jio.getDocumentList({
+                'sort':{'lastModified':'descending',
+                        'fileName':'ascending'},
                 'maxtries':3,
                 'callback':function (result) {
                     if (result.status === 'done') {
@@ -333,6 +335,8 @@
             // clone document list
             var array = $.extend(true,[],priv.data_object.documentList), i,
             lm, cd;
+            // FIXME : we can have 2012/1/1 12:5
+            // we should have 2012/01/01 12:05
             for (i = 0; i < array.length; i += 1) {
                 lm = (new Date(array[i].lastModified));
                 cd = (new Date(array[i].creationDate));

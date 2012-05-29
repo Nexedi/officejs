@@ -704,6 +704,7 @@ var JIO =
         priv.callback = options.job.callback;
         priv.queue = options.queue;
         priv.res = {'status':'done','message':''};
+        priv.sorted = false;
         //// end Private attributes
 
         //// Private Methods
@@ -741,10 +742,22 @@ var JIO =
             priv.res.message = 'Document list received.';
             priv.res.return_value = documentlist;
             for (i = 0; i < priv.res.return_value.length; i += 1) {
-                priv.res.return_value[i].lastModified =
-                    new Date(priv.res.return_value[i].lastModified).getTime();
-                priv.res.return_value[i].creationDate =
-                    new Date(priv.res.return_value[i].creationDate).getTime();
+                // transform current date format into ms since 1/1/1970
+                // useful for easy comparison
+                if (typeof priv.res.return_value[i].lastModified !== 'number') {
+                    priv.res.return_value[i].lastModified =
+                        new Date(priv.res.return_value[i].lastModified).
+                        getTime();
+                }
+                if (typeof priv.res.return_value[i].creationDate !== 'number') {
+                    priv.res.return_value[i].creationDate =
+                        new Date(priv.res.return_value[i].creationDate).
+                        getTime();
+                }
+            }
+            // check for sorting
+            if (!priv.sorted && typeof priv.job.sort !== 'undefined') {
+                that.sortDocumentArray({documentarray:priv.res.return_value});
             }
         };
         priv.fail_removeDocument = function () {
@@ -908,6 +921,34 @@ var JIO =
                        statusText:'Undefined Method',
                        message:'This method must be redefined!'});
         };
+
+        /**
+         * Sorts a document list using sort parameters set in the job.
+         * @method sortDocumentArray
+         * @param  {object} o
+         * - o.documentarray {array} the array we want to sort.
+         */
+        that.sortDocumentArray = function (o) {
+            o.documentarray.sort(function (row1,row2) {
+                var k, res;
+                for (k in priv.job.sort) {
+                    var sign = (priv.job.sort[k] === 'descending' ? -1 : 1);
+                    if (row1[k] === row2[k]) { continue; }
+                    return (row1[k] > row2[k] ? sign : -sign);
+                }
+                return 0;
+            });
+            that.sortDone();
+        };
+
+        /**
+         * Tells to this storage that the sorting process is already done.
+         * @method sortDone
+         */
+        that.sortDone = function () {
+            priv.sorted = true;
+        };
+
         //// end Public Methods
         return that;
     };
