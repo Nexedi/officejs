@@ -121,7 +121,10 @@
             slickgrid: {
                 type:'editor',
                 path:'component/slickgrid_document_lister.html',
-                gadgetid:'page-content'
+                gadgetid:'page-content',
+                update: function () {
+                    OfficeJS.open({app:'documentLister',force:true});
+                }
             }
         };
         priv.data_object = {
@@ -200,7 +203,9 @@
          * Opens an application
          * @method open
          * @param  {object} option Contains some settings:
-         *     - app {string} The app name we want to open, set in preferences
+         *     - app   {string} The app name we want to open, set in preferences
+         *     - force {boolean} To reload applications even if it is the same.
+         *             (optional)
          *     - ... and some other parameters
          */
         that.open = function (option) {
@@ -214,7 +219,7 @@
                                that.getPreference(option.app));
                 return null;
             }
-            if (priv.data_object.currentEditor !== realapp) {
+            if (option.force || priv.data_object.currentEditor !== realapp) {
                 ancientapp = priv.data_object.gadget_object[realgadgetid];
                 if (ancientapp) {
                     // if there is already a gadget there, unload it
@@ -314,8 +319,10 @@
         /**
          * Returns the array list in priv.data_object
          * @method getList
+         * @param  {function} callback Another callback called after retrieving
+         *         the list. (optional)
          */
-        that.getList = function () {
+        that.getList = function (callback) {
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
@@ -335,27 +342,16 @@
                         console.error (result.message);
                     }
                     priv.loading_object.end_getlist();
+                    if (typeof callback !== 'undefined') {
+                        callback();
+                    }
                 }
             });
         };
 
         that.cloneCurrentDocumentList = function () {
             // clone document list
-            var array = $.extend(true,[],priv.data_object.documentList), i,
-            lm, cd;
-            // FIXME : we can have 2012/1/1 12:5
-            // we should have 2012/01/01 12:05
-            for (i = 0; i < array.length; i += 1) {
-                lm = (new Date(array[i].lastModified));
-                cd = (new Date(array[i].creationDate));
-                array[i].lastModified = lm.getFullYear()+'/'+
-                    (lm.getMonth()+1)+'/'+lm.getDate()+' '+
-                    lm.getHours()+':'+lm.getMinutes();
-                array[i].creationDate = cd.getFullYear()+'/'+
-                    (cd.getMonth()+1)+'/'+cd.getDate()+' '+
-                    cd.getHours()+':'+cd.getMinutes();
-            }
-            return array;
+            return $.extend(true,[],priv.data_object.documentList);
         };
 
         /**
@@ -432,6 +428,34 @@
                     that.getList();
                 }
             });
+        };
+
+        /**
+         * Removes several files.
+         * @method removeSeveralFromArray
+         * @param  {array} documentarray Contains all file names ({string}).
+         */
+        that.removeSeveralFromArray = function (documentarray) {
+            var i, l, cpt = 0, current_editor = priv.data_object.currentEditor;
+            if (!priv.isJioSet()) {
+                console.error ('No Jio set yet.');
+                return;
+            }
+            for (i = 0, l = documentarray.length; i < l; i+= 1) {
+                priv.loading_object.remove();
+                priv.jio.removeDocument({
+                    fileName:documentarray[i],
+                    callback:function (result) {
+                        cpt += 1;
+                        console.log (result);
+                        if (cpt === l) {
+                            if (typeof current_editor.update !== 'undefined') {
+                                that.getList(current_editor.update);
+                            }
+                        }
+                        priv.loading_object.end_remove();
+                    }});
+            }
         };
 
         // End of class //

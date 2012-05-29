@@ -8,8 +8,23 @@
   <link rel="stylesheet"
         href="lib/slickgrid/css/examples.css"
         type="text/css"/>
+  <style>
+    .slick-cell-checkboxsel {
+      background: #f0f0f0;
+      border-right-color: silver;
+      border-right-style: solid;
+    }
+  </style>
 </head>
 <body>
+  <div>
+    <button type="submit"
+            id="slickgrid_document_lister_remove_selected"
+            class="btn btn-danger">
+      <i class="icon-remove icon-white"></i>
+      Remove Selected
+    </button>
+  </div>
 <div id="myDocumentList" style="width:100%;height:300px"></div>
 <script type="text/javascript"
         src="lib/jquery/jquery.js"></script>
@@ -17,19 +32,21 @@
         src="lib/jquery/jquery.event.drag-2.0.min.js"></script>
 
 <script type="text/javascript" src="lib/slickgrid/js/slick.core.js"></script>
+<script type="text/javascript"
+        src="lib/slickgrid/js/slick.checkboxselectcolumn.js"></script>
+<script type="text/javascript"
+        src="lib/slickgrid/js/slick.rowselectionmodel.js"></script>
+<script type="text/javascript"
+        src="lib/slickgrid/js/slick.formatters.js"></script>
 <script type="text/javascript" src="lib/slickgrid/js/slick.grid.js"></script>
 
 <script type="text/javascript">
     <!--
 (function () {
-    var grid, onSortFunction, onClickFunction,
+    var grid, onSortFunction, onClickFunction, checkboxselector,
+    onRemoveSeveral,
     documentlist = OfficeJS.cloneCurrentDocumentList(),
-    columns = [
-        {id:"fileName",name:"Document",field:"fileName",sortable:true},
-        {id:"lastModified",name:"Modified",field:"lastModified",sortable:true},
-        {id:"creationDate",name:"Created",field:"creationDate",sortable:true}
-    ],
-
+    columns = [],
     options = {
         enableCellNavigation: true,
         enableColumnReorder: false,
@@ -37,18 +54,52 @@
         forceFitColumns: true
     };
 
+    (function (array) {
+        var i, lm, cd;
+        // FIXME : we can have 2012/1/1 12:5
+        // we should have 2012/01/01 12:05
+        for (i = 0; i < array.length; i += 1) {
+            // TODO : create fileNameWithoutExt and fileApplication
+            // according to the file extension.
+            lm = (new Date(array[i].lastModified));
+            cd = (new Date(array[i].creationDate));
+            array[i].lastModified = lm.getFullYear()+'/'+
+                (lm.getMonth()+1)+'/'+lm.getDate()+' '+
+                lm.getHours()+':'+lm.getMinutes();
+            array[i].creationDate = cd.getFullYear()+'/'+
+                (cd.getMonth()+1)+'/'+cd.getDate()+' '+
+                cd.getHours()+':'+cd.getMinutes();
+        }
+    }(documentlist));
+
+
     $(function () {
+
+        checkboxselector = new Slick.CheckboxSelectColumn({
+            cssClass: "slick-cell-checkboxsel"
+        });
+        columns.push(checkboxselector.getColumnDefinition());
+        columns.push({id:"icon",name:"",field:"icon",
+                      sortable:true,resizable:false,width:24});
+        columns.push({id:"fileName",name:"Document",
+                      field:"fileName",sortable:true});
+        columns.push({id:"lastModified",name:"Modified",
+                      field:"lastModified",sortable:true});
+        columns.push({id:"creationDate",name:"Created",
+                      field:"creationDate",sortable:true});
 
         grid = new Slick.Grid("#myDocumentList",
                               documentlist,
                               columns,
                               options);
+        grid.setSelectionModel(new Slick.RowSelectionModel(
+            {selectActiveRow: false}));
+        grid.registerPlugin(checkboxselector);
 
         onSortFunction = function (e, args) {
             var cols = args.sortCols;
 
-                documentlist.
-                sort(function (dataRow1, dataRow2) {
+                documentlist.sort(function (dataRow1, dataRow2) {
                     var i, l, field, sign, value1, value2, result;
                     for (i = 0, l = cols.length; i < l; i++) {
                         field = cols[i].sortCol.field;
@@ -67,9 +118,21 @@
         };
         onClickFunction = function (e) {
             var cell = grid.getCellFromEvent(e);
-            OfficeJS.open({app:'textEditor',
-                           fileName:documentlist[cell.row].fileName});
+            if (cell.cell === grid.getColumnIndex('fileName')) {
+                OfficeJS.open({app:'textEditor',
+                               fileName:documentlist[cell.row].fileName});
+            }
         };
+        onRemoveSeveral = function () {
+            var documentnamesarray = [], selected, i, l;
+            selected = grid.getSelectedRows();
+            for (i = 0, l = selected.length; i < l; i+= 1) {
+                documentnamesarray.push(documentlist[selected[i]].fileName);
+            }
+            OfficeJS.removeSeveralFromArray (documentnamesarray);
+        };
+        document.querySelector ('#slickgrid_document_lister_remove_selected').
+            onclick = onRemoveSeveral;
         grid.onClick.subscribe(onClickFunction);
         grid.onSort.subscribe(onSortFunction);
     });
