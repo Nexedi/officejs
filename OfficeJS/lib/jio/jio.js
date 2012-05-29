@@ -708,6 +708,7 @@ var JIO =
         priv.queue = options.queue;
         priv.res = {'status':'done','message':''};
         priv.sorted = false;
+        priv.limited = false;
         //// end Private attributes
 
         //// Private Methods
@@ -759,8 +760,15 @@ var JIO =
                 }
             }
             // check for sorting
-            if (typeof priv.job.sort !== 'undefined' && !priv.sorted) {
-                that.sortDocumentArray(priv.res.return_value);
+            if (!priv.sorted && typeof priv.job.sort !== 'undefined') {
+                that.sortDocumentArray({documentarray:priv.res.return_value});
+            }
+            // check for limiting
+            if (!priv.limited &&
+                typeof priv.job.limit !== 'undefined' &&
+                typeof priv.job.limit.begin !== 'undefined' &&
+                typeof priv.job.limit.end !== 'undefined') {
+                that.limitDocumentArray({documentarray:priv.res.return_value});
             }
         };
         priv.fail_removeDocument = function () {
@@ -925,8 +933,14 @@ var JIO =
                        message:'This method must be redefined!'});
         };
 
-        that.sortDocumentArray = function (documentarray) {
-            documentarray.sort(function (row1,row2) {
+        /**
+         * Sorts a document list using sort parameters set in the job.
+         * @method sortDocumentArray
+         * @param  {object} o
+         * - o.documentarray {array} the array we want to sort.
+         */
+        that.sortDocumentArray = function (o) {
+            o.documentarray.sort(function (row1,row2) {
                 var k, res;
                 for (k in priv.job.sort) {
                     var sign = (priv.job.sort[k] === 'descending' ? -1 : 1);
@@ -937,8 +951,35 @@ var JIO =
             });
             that.sortDone();
         };
+
+        /**
+         * Tells to this storage that the sorting process is already done.
+         * @method sortDone
+         */
         that.sortDone = function () {
             priv.sorted = true;
+        };
+
+        /**
+         * Limits the document list. Get only the document between
+         * @method limitDocumentArray
+         * @param  {object} o
+         * - o.documentarray {array} the array we wont to limit
+         * @return {array} The new document list
+         */
+        that.limitDocumentArray = function (o) {
+            o.documentarray = o.documentarray.slice(priv.job.limit.begin,
+                                                    priv.job.limit.end);
+            that.limitDone();
+            return o.documentarray;
+        };
+
+        /**
+         * Tells to this storage that the limiting process is already done.
+         * @method limitDone
+         */
+        that.limitDone = function () {
+            priv.limited = true;
         };
 
         //// end Public Methods

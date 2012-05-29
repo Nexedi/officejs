@@ -705,6 +705,7 @@ var JIO =
         priv.queue = options.queue;
         priv.res = {'status':'done','message':''};
         priv.sorted = false;
+        priv.limited = false;
         //// end Private attributes
 
         //// Private Methods
@@ -758,6 +759,13 @@ var JIO =
             // check for sorting
             if (!priv.sorted && typeof priv.job.sort !== 'undefined') {
                 that.sortDocumentArray({documentarray:priv.res.return_value});
+            }
+            // check for limiting
+            if (!priv.limited &&
+                typeof priv.job.limit !== 'undefined' &&
+                typeof priv.job.limit.begin !== 'undefined' &&
+                typeof priv.job.limit.end !== 'undefined') {
+                that.limitDocumentArray({documentarray:priv.res.return_value});
             }
         };
         priv.fail_removeDocument = function () {
@@ -947,6 +955,28 @@ var JIO =
          */
         that.sortDone = function () {
             priv.sorted = true;
+        };
+
+        /**
+         * Limits the document list. Get only the document between
+         * @method limitDocumentArray
+         * @param  {object} o
+         * - o.documentarray {array} the array we wont to limit
+         * @return {array} The new document list
+         */
+        that.limitDocumentArray = function (o) {
+            o.documentarray = o.documentarray.slice(priv.job.limit.begin,
+                                                    priv.job.limit.end);
+            that.limitDone();
+            return o.documentarray;
+        };
+
+        /**
+         * Tells to this storage that the limiting process is already done.
+         * @method limitDone
+         */
+        that.limitDone = function () {
+            priv.limited = true;
         };
 
         //// end Public Methods
