@@ -76,7 +76,22 @@
             'jquery-sheet': {
                 type:'editor',
                 path:'component/jquery-sheet.html',
-                gadgetid:'page-content'
+                gadgetid:'page-content',
+                getContent: function () {
+                    return JSON.stringify (
+                        $.sheet.instance[0].exportSheet.json()
+                    );
+                },
+                setContent: function (content) {
+                    $('#jQuerySheet').sheet({
+                        title: '',
+                        inlineMenu: inlineMenu($.sheet.instance),
+                        buildSheet: $.sheet.makeTable.json(
+                            JSON.parse(content)
+                        ),
+                        autoFiller: true
+                    });
+                }
             },
             'svg-edit': {
                 type:'editor',

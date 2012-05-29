@@ -61,11 +61,14 @@
       <!--
 $(function(){
     //Here is where we initiate the sheets
-    //every time sheet is created it creates a new jQuery.sheet.instance (array), to manipulate each sheet, the jQuery object is returned
-    $('#jQuerySheet0').sheet({
+    //every time sheet is created it creates a new jQuery.sheet.instance
+    //(array), to manipulate each sheet, the jQuery object is returned
+    $('#jQuerySheet').sheet({
         title: '',
         inlineMenu: inlineMenu($.sheet.instance),
         urlGet: 'component/newspreadsheet.html',
+        // buildSheet: true,
+        editable: true,
         autoFiller: true
     });
 
@@ -202,14 +205,40 @@ function goToObj(s){
     </style>
   </head>
   <body>
-    <div id="jQuerySheet0" class="jQuerySheet" style="height: 450px;">
+    <div>
+      <input type="text"
+             name="fileName"
+             id="input_fileName"
+             value=""
+             placeholder="File name here" />&nbsp;
+      <button type="submit"
+              class="btn btn-primary"
+              onclick="OfficeJS.save($('#input_fileName').attr('value'));">
+        <i class="icon-download-alt icon-white"></i>
+        Save
+      </button>&nbsp;
+      <button type="submit"
+              class="btn"
+              onclick="OfficeJS.load($('#input_fileName').attr('value'));">
+        <i class="icon-upload"></i>
+        Load
+      </button>&nbsp;
+      <button type="submit"
+              class="btn btn-danger"
+              onclick="OfficeJS.remove($('#input_fileName').attr('value'));">
+        <i class="icon-remove icon-white"></i>
+        Remove
+      </button>
+    </div>
+    <div id="jQuerySheet" class="jQuerySheet" style="height: 450px;">
     </div>
     <span id="inlineMenu" style="display: none;">
       <span>
         <a href="#"
            onclick="sheetInstance.controlFactory.addRow(); return false;"
            title="Insert Row After Selected">
-          <img alt="Insert Row After Selected" src="lib/jquery.sheet/images/sheet_row_add.png"/>
+          <img alt="Insert Row After Selected"
+               src="lib/jquery.sheet/images/sheet_row_add.png"/>
         </a>
         <a href="#"
            onclick="sheetInstance.controlFactory.addRow(null, true);
@@ -234,7 +263,8 @@ function goToObj(s){
         <a href="#"
            onclick="sheetInstance.deleteRow(); return false;"
            title="Delete Row">
-          <img alt="Delete Row" src="lib/jquery.sheet/images/sheet_row_delete.png"/>
+          <img alt="Delete Row"
+               src="lib/jquery.sheet/images/sheet_row_delete.png"/>
         </a>
         <a href="#"
            onclick="sheetInstance.controlFactory.addColumn(); return false;"
@@ -276,11 +306,12 @@ function goToObj(s){
            title="Get Cell Range">
           <img alt="Get Cell Range" src="lib/jquery.sheet/images/sheet_get_range.png"/>
         </a>
-        <a href="#"
-           onclick="sheetInstance.s.fnSave();
-                    return false;"
-           title="Save Sheets">
-          <img alt="Save Sheet" src="lib/jquery.sheet/images/disk.png"/></a>
+        <!-- <a href="#" -->
+        <!--    onclick="sheetInstance.s.fnSave(); -->
+        <!--             return false;" -->
+        <!--    title="Save Sheets"> -->
+        <!--   <img alt="Save Sheet" src="lib/jquery.sheet/images/disk.png"/> -->
+        <!-- </a> -->
         <a href="#"
            onclick="sheetInstance.deleteSheet(); return false;"
            title="Delete Current Sheet">
