@@ -96,7 +96,16 @@
             'svg-edit': {
                 type:'editor',
                 path:'component/svg-edit.html',
-                gadgetid:'page-content'
+                frameid:'svg_edit_frame',
+                gadgetid:'page-content',
+                getContent: function () {
+                    return document.getElementById (this.frameid).
+                        contentWindow.svgCanvas.getSvgString();
+                },
+                setContent: function (content) {
+                    document.getElementById (this.frameid).
+                        contentWindow.svgCanvas.setSvgString(content);
+                }
             },
             slickgrid: {
                 type:'editor',
