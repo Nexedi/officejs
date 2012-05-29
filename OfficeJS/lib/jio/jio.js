@@ -761,14 +761,15 @@ var JIO =
             }
             // check for sorting
             if (!priv.sorted && typeof priv.job.sort !== 'undefined') {
-                that.sortDocumentArray({documentarray:priv.res.return_value});
+                that.sortDocumentArray(priv.res.return_value);
             }
             // check for limiting
             if (!priv.limited &&
                 typeof priv.job.limit !== 'undefined' &&
                 typeof priv.job.limit.begin !== 'undefined' &&
                 typeof priv.job.limit.end !== 'undefined') {
-                that.limitDocumentArray({documentarray:priv.res.return_value});
+                priv.res.return_value =
+                    that.limitDocumentArray(priv.res.return_value);
             }
         };
         priv.fail_removeDocument = function () {
@@ -936,11 +937,10 @@ var JIO =
         /**
          * Sorts a document list using sort parameters set in the job.
          * @method sortDocumentArray
-         * @param  {object} o
-         * - o.documentarray {array} the array we want to sort.
+         * @param  {array} documentarray The array we want to sort.
          */
-        that.sortDocumentArray = function (o) {
-            o.documentarray.sort(function (row1,row2) {
+        that.sortDocumentArray = function (documentarray) {
+            documentarray.sort(function (row1,row2) {
                 var k, res;
                 for (k in priv.job.sort) {
                     var sign = (priv.job.sort[k] === 'descending' ? -1 : 1);
@@ -961,17 +961,16 @@ var JIO =
         };
 
         /**
-         * Limits the document list. Get only the document between
+         * Limits the document list. Clones only the document list between
+         * begin and end set in limit object in the job.
          * @method limitDocumentArray
-         * @param  {object} o
-         * - o.documentarray {array} the array we wont to limit
+         * @param  {array} documentarray The array we wont to limit
          * @return {array} The new document list
          */
-        that.limitDocumentArray = function (o) {
-            o.documentarray = o.documentarray.slice(priv.job.limit.begin,
-                                                    priv.job.limit.end);
+        that.limitDocumentArray = function (documentarray) {
             that.limitDone();
-            return o.documentarray;
+            return documentarray.slice(priv.job.limit.begin,
+                                       priv.job.limit.end);
         };
 
         /**
