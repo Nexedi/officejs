@@ -709,6 +709,7 @@ var JIO =
         priv.res = {'status':'done','message':''};
         priv.sorted = false;
         priv.limited = false;
+        priv.research_done = false;
         //// end Private attributes
 
         //// Private Methods
@@ -770,6 +771,11 @@ var JIO =
                 typeof priv.job.limit.end !== 'undefined') {
                 priv.res.return_value =
                     that.limitDocumentArray(priv.res.return_value);
+            }
+            // check for research
+            if (!priv.research_done && typeof priv.job.search !== 'undefined') {
+                priv.res.return_value =
+                    that.searchDocumentArray(priv.res.return_value);
             }
         };
         priv.fail_removeDocument = function () {
@@ -964,7 +970,7 @@ var JIO =
          * Limits the document list. Clones only the document list between
          * begin and end set in limit object in the job.
          * @method limitDocumentArray
-         * @param  {array} documentarray The array we wont to limit
+         * @param  {array} documentarray The array we want to limit
          * @return {array} The new document list
          */
         that.limitDocumentArray = function (documentarray) {
@@ -979,6 +985,38 @@ var JIO =
          */
         that.limitDone = function () {
             priv.limited = true;
+        };
+
+        /**
+         * Search the strings inside the document list. Clones the document list
+         * containing only the matched strings.
+         * @method searchDocumentArray
+         * @param  {array} documentarray The array we want to search into.
+         * @return {array} The new document list.
+         */
+        that.searchDocumentArray = function (documentarray) {
+            var i, k, newdocumentarray = [];
+            for (i = 0; i < documentarray.length; i += 1) {
+                for (k in priv.job.search) {
+                    if (typeof documentarray[i][k] === 'undefined') {
+                        continue;
+                    }
+                    if (documentarray[i][k].search(priv.job.search[k]) > -1) {
+                        newdocumentarray.push(documentarray[i]);
+                        break;
+                    }
+                }
+            }
+            that.researchDone();
+            return newdocumentarray;
+        };
+
+        /**
+         * Tells to this storage that the research is already done.
+         * @method researchDone
+         */
+        that.researchDone = function () {
+            priv.research_done = true;
         };
 
         //// end Public Methods

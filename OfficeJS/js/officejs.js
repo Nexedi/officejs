@@ -318,6 +318,8 @@
             priv.jio.getDocumentList({
                 'sort':{'lastModified':'descending',
                         'fileName':'ascending'},
+                'limit':{begin:0,end:50},
+                // 'search':{fileName:'a'},
                 'maxtries':3,
                 'callback':function (result) {
                     if (result.status === 'done') {
