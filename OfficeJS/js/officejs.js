@@ -20,10 +20,6 @@
         var that = {}, priv = {};
         // Attributes //
         priv.preference_object = {
-            default_app:'login',
-            login:'login',
-            topnavbar:'topnavbar',
-            leftnavbar:'leftnavbar',
             documentLister:'slickgrid',
             editpreferences:'simplepreferenceeditor',
             textEditor:'elrte',
@@ -64,6 +60,16 @@
                     // NOTE : stringify or not ?
                     return JSON.stringify (tmp);
                 }
+            },
+            about: {
+                type:'viewer',
+                path:'component/about.html',
+                gadgetid:'page-content'
+            },
+            contact: {
+                type:'viewer',
+                path:'component/contact.html',
+                gadgetid:'page-content'
             },
             simplepreferenceeditor: {
                 // NOTE

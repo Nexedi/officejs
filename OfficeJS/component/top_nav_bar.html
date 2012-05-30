@@ -42,9 +42,14 @@
     <div class="container-fluid">
       <ul class="nav">
         <li><h1>OfficeJS</h1></li>
-        <li><a href="#">Nav</a></li>
-        <li><a href="#/about">About</a></li>
-        <li><a href="#/contact">Contact</a></li>
+        <li><a href="#/about"
+               onclick="javascript:
+                        OfficeJS.open({app:'about'});
+                        return false;">About</a></li>
+        <li><a href="#/contact"
+               onclick="javascript:
+                        OfficeJS.open({app:'contact'});
+                        return false;">Contact</a></li>
       </ul>
     </div>
   </div>
