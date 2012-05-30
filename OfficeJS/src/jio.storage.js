@@ -32,6 +32,34 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
         var that = Jio.newBaseStorage( spec, my ), priv = {};
 
+        priv.storage_file_array_name = 'jio/local/filearray';
+
+        priv.getPathArray = function () {
+            var storage_file_array =
+                LocalOrCookieStorage.getItem(priv.storage_file_array_name);
+            if (storage_file_array === null) {
+                LocalOrCookieStorage.setItem(priv.storage_file_array_name,[]);
+                return [];
+            }
+            return storage_file_array;
+        };
+        priv.addPath = function (path) {
+            var patharray = priv.getPathArray();
+            patharray.push(path);
+            LocalOrCookieStorage.setItem(priv.storage_file_array_name,
+                                         patharray);
+        };
+        priv.removePath = function (path) {
+            var i, patharray = priv.getPathArray(), newpatharray = [];
+            for (i = 0; i < patharray.length; i+= 1) {
+                if (patharray[i] !== path) {
+                    newpatharray.push(patharray[i]);
+                }
+            }
+            LocalOrCookieStorage.setItem(priv.storage_file_array_name,
+                                         newpatharray);
+        };
+
         that.checkNameAvailability = function () {
             // checks the availability of the [job.userName].
             // if the name already exists, it is not available.
@@ -39,14 +67,14 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                var localStorageObject = null, k, splitk;
+                var allpatharray, i, split;
 
-                localStorageObject = LocalOrCookieStorage.getAll();
-                for (k in localStorageObject) {
-                    splitk = k.split('/');
-                    if (splitk[0] === 'jio' &&
-                        splitk[1] === 'local' &&
-                        splitk[2] === that.getUserName()) {
+                allpatharray = priv.getPathArray();
+                for (i = 0; i < allpatharray.length; i += 1) {
+                    split = allpatharray.split('/');
+                    if (split[0] === 'jio' &&
+                        split[1] === 'local' &&
+                        split[2] === that.getUserName()) {
                         return that.done(false);
                     }
                 }
@@ -64,13 +92,13 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
             // wait a little in order to simulate asynchronous saving
             setTimeout (function () {
-                var doc = null;
+                var doc = null, path =
+                    'jio/local/'+that.getStorageUserName()+'/'+
+                    that.getApplicantID()+'/'+
+                    that.getFileName();
 
                 // reading
-                doc = LocalOrCookieStorage.getItem(
-                    'jio/local/'+that.getStorageUserName()+'/'+
-                        that.getApplicantID()+'/'+
-                        that.getFileName());
+                doc = LocalOrCookieStorage.getItem(path);
                 if (!doc) {
                     // create document
                     doc = {
@@ -79,6 +107,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                         'creationDate': Date.now(),
                         'lastModified': Date.now()
                     };
+                    priv.addPath(path);
                 } else {
                     // overwriting
                     doc.lastModified = Date.now();
@@ -133,17 +162,18 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // 'lastModified':date,'creationDate':date}
 
             setTimeout(function () {
-                var list = [], localStorageObject = null, k = 'key',
+                var list = [], patharray = [], i, k = 'key',
                 splitk = ['splitedkey'], fileObject = {};
 
-                localStorageObject = LocalOrCookieStorage.getAll();
-                for (k in localStorageObject) {
+                patharray = priv.getPathArray();
+                for (i = 0; i < patharray.length; i += 1) {
+                    k = patharray[i];
                     splitk = k.split('/');
                     if (splitk[0] === 'jio' &&
                         splitk[1] === 'local' &&
                         splitk[2] === that.getStorageUserName() &&
                         splitk[3] === that.getApplicantID()) {
-                        fileObject = JSON.parse(localStorageObject[k]);
+                        fileObject = LocalOrCookieStorage.getItem(k);
                         list.push ({
                             'fileName':fileObject.fileName,
                             'creationDate':fileObject.creationDate,
@@ -161,12 +191,13 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.fileName: the document name.
 
             setTimeout (function () {
+                var path = 'jio/local/'+
+                    that.getStorageUserName()+'/'+
+                    that.getApplicantID()+'/'+
+                    that.getFileName()
                 // deleting
-                LocalOrCookieStorage.deleteItem(
-                    'jio/local/'+
-                        that.getStorageUserName()+'/'+
-                        that.getApplicantID()+'/'+
-                        that.getFileName());
+                LocalOrCookieStorage.deleteItem(path);
+                priv.removePath(path);
                 return that.done();
             }, 100);
         };
