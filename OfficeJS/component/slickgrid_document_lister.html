@@ -44,7 +44,7 @@
     <!--
 (function () {
     var grid, onSortFunction, onClickFunction, checkboxselector,
-    onRemoveSeveral,
+    onRemoveSeveral, showIconFormatter,
     documentlist = OfficeJS.cloneCurrentDocumentList(),
     columns = [],
     options = {
@@ -54,13 +54,33 @@
         forceFitColumns: true
     };
 
+    showIconFormatter = function (row,cell,value,columnDef,dataContext) {
+        return dataContext.icon;
+    };
+
     (function (array) {
-        var i, lm, cd;
-        // FIXME : we can have 2012/1/1 12:5
-        // we should have 2012/01/01 12:05
+        var i, lm, cd, split, mime;
         for (i = 0; i < array.length; i += 1) {
-            // TODO : create fileNameWithoutExt and fileApplication
-            // according to the file extension.
+            // file names
+            split = array[i].fileName.split('.');
+            array[i].fileExt = '';
+            if (split.length > 1) {
+                array[i].fileExt = split[split.length-1];
+                split.length -= 1;
+            }
+            array[i].fileBaseName = split.join('.');
+            // app & icon
+            mime = OfficeJS.getMimeOfExt (array[i].fileExt);
+            if (!mime) {
+                array[i].icon = '?';
+                array[i].app = 'textEditor';
+            } else {
+                array[i].icon = mime.icon;
+                array[i].app = mime.pref || mime.app;
+            }
+            // dates
+            // FIXME : we can have 2012/1/1 12:5
+            // we should have 2012/01/01 12:05
             lm = (new Date(array[i].lastModified));
             cd = (new Date(array[i].creationDate));
             array[i].lastModified = lm.getFullYear()+'/'+
@@ -72,7 +92,6 @@
         }
     }(documentlist));
 
-
     $(function () {
 
         checkboxselector = new Slick.CheckboxSelectColumn({
@@ -80,9 +99,10 @@
         });
         columns.push(checkboxselector.getColumnDefinition());
         columns.push({id:"icon",name:"",field:"icon",
-                      sortable:true,resizable:false,width:24});
+                      sortable:true,resizable:false,width:24,
+                      formatter:showIconFormatter});
         columns.push({id:"fileName",name:"Document",
-                      field:"fileName",sortable:true});
+                      field:"fileBaseName",sortable:true});
         columns.push({id:"lastModified",name:"Modified",
                       field:"lastModified",sortable:true});
         columns.push({id:"creationDate",name:"Created",
@@ -119,7 +139,7 @@
         onClickFunction = function (e) {
             var cell = grid.getCellFromEvent(e);
             if (cell.cell === grid.getColumnIndex('fileName')) {
-                OfficeJS.open({app:'textEditor',
+                OfficeJS.open({app:documentlist[cell.row].app,
                                fileName:documentlist[cell.row].fileName});
             }
         };

@@ -2,6 +2,15 @@
     // Tools
     var extend = function (o1,o2) {
         var key; for (key in o2) { o1[key] = o2[key]; } return o1;
+    },
+    baseName = function (filename) {
+        var split = filename.split('.');
+        if (split.length > 1) {
+            split.length -= 1;
+            return split.join('.');
+        } else {
+            return filename;
+        }
     };
 
     /**
@@ -66,6 +75,7 @@
                 type:'editor',  // means it can edit a content
                 path:'component/elrte.html',
                 gadgetid:'page-content',
+                ext:'html',
                 element:'#elrte_editor',
                 getContent: function () {
                     $(this.element).elrte('updateSource');
@@ -75,12 +85,17 @@
                     $(this.element).elrte('val', content);
                 },
                 onload: function (param) {
-                    if (typeof param.fileName !== 'undefined') {
-                        setTimeout(function () {
-                            $('#input_fileName').attr('value',param.fileName);
-                            that.load(param.fileName);
-                        },50);
-                    }
+                    // FIXME : wait for initialization end
+                    setTimeout(function () {
+                        if (typeof param.fileName !== 'undefined') {
+                            $('#input_fileName').attr('value',
+                                                      baseName(param.fileName));
+                            that.load(baseName(param.fileName));
+                        } else {
+                            $('#input_fileName').attr(
+                                'value','untitled');
+                        }
+                    },1000);
                 }
                 // TODO : onunload, are you sure? leave without saving?
             },
@@ -88,6 +103,7 @@
                 type:'editor',
                 path:'component/jquery-sheet.html',
                 gadgetid:'page-content',
+                ext:'jqs',
                 getContent: function () {
                     return JSON.stringify (
                         $.sheet.instance[0].exportSheet.json()
@@ -102,13 +118,27 @@
                         ),
                         autoFiller: true
                     });
+                },
+                onload: function (param) {
+                    // FIXME : wait for initialization end
+                    setTimeout(function () {
+                        if (typeof param.fileName !== 'undefined') {
+                            $('#input_fileName').attr('value',
+                                                      baseName(param.fileName));
+                            that.load(baseName(param.fileName));
+                        } else {
+                            $('#input_fileName').attr(
+                                'value','untitled');
+                        }
+                    },1000);
                 }
             },
             'svg-edit': {
                 type:'editor',
                 path:'component/svg-edit.html',
-                frameid:'svg_edit_frame',
                 gadgetid:'page-content',
+                ext:'svg',
+                frameid:'svg_edit_frame',
                 getContent: function () {
                     return document.getElementById (this.frameid).
                         contentWindow.svgCanvas.getSvgString();
@@ -116,6 +146,22 @@
                 setContent: function (content) {
                     document.getElementById (this.frameid).
                         contentWindow.svgCanvas.setSvgString(content);
+                },
+                onload: function (param) {
+                    var waitForInit = function (fun) {
+                        // FIXME : wait for init end
+                        setTimeout(fun,1000);
+                    }
+                    waitForInit(function () {
+                        if (typeof param.fileName !== 'undefined') {
+                            $('#input_fileName').attr('value',
+                                                      baseName(param.fileName));
+                            that.load(baseName(param.fileName));
+                        } else {
+                            $('#input_fileName').attr(
+                                'value','untitled');
+                        }
+                    });
                 }
             },
             slickgrid: {
@@ -126,6 +172,18 @@
                     OfficeJS.open({app:'documentLister',force:true});
                 }
             }
+        };
+        priv.mime_object = {
+            // <pref> if the name of the app set in preferences.
+            // If pref does not exist it means that the extension is very
+            // specific, so <app> is called instead of the default editor.
+            // NOTE : the icon may be set in the app in app_object.
+            html:{pref:'imgEditor',app:'elrte',
+                  icon:'<i class="icon-font"></i>'},
+            svg:{pref:'imgEditor',app:'svg-edit',
+                 icon:'<i class="icon-pencil"></i>'},
+            jqs:{app:'jquery-sheet',
+                 icon:'<i class="icon-signal"></i>'}
         };
         priv.data_object = {
             documentList:[],
@@ -187,7 +245,9 @@
          */
         priv.getRealApplication = function (appname) {
             var realappname = that.getPreference (appname);
-            if (!realappname) { return; } // undefined
+            if (!realappname) {
+                return priv.app_object[appname];
+            }
             return priv.app_object[realappname];
         };
 
@@ -211,14 +271,13 @@
         that.open = function (option) {
             var realapp, realgadgetid, realpath, acientapp;
             realapp = priv.getRealApplication (option.app);
-            realgadgetid = realapp.gadgetid;
-            realpath = realapp.path;
             if (!realapp) {
                 // cannot get real app
-                console.error ('Unknown application: ' +
-                               that.getPreference(option.app));
+                console.error ('Unknown application: ' + option.app);
                 return null;
             }
+            realgadgetid = realapp.gadgetid;
+            realpath = realapp.path;
             if (option.force || priv.data_object.currentEditor !== realapp) {
                 ancientapp = priv.data_object.gadget_object[realgadgetid];
                 if (ancientapp) {
@@ -264,15 +323,13 @@
          * @return {string} The content of the application, or null.
          */
         that.getContentOf = function (app) {
-            var realapp = that.getPreference (app);
+            var realapp = priv.getRealApplication (app);
             if (!realapp) {
-                console.error ('Unknown application: ' +
-                               that.getPreference(app));
+                console.error ('Unknown application: ' + app);
                 return null;
             }
-            if (priv.app_object[realapp] &&
-                typeof priv.app_object[realapp].getContent !== 'undefined') {
-                return priv.app_object[realapp].getContent();
+            if (typeof realapp.getContent !== 'undefined') {
+                return realapp.getContent();
             }
             return null;
         };
@@ -283,16 +340,33 @@
          * @return {string} The path of the application component, or null.
          */
         that.getPathOf = function (app) {
-            var realapp = that.getPreference(app);
+            var realapp = priv.getRealApplication (app);
             if (!realapp) {
-                console.error ('Unknown application: ' +
-                               that.getPreference(app));
+                console.error ('Unknown application: ' + app);
                 return null;
             }
-            if (priv.app_object[realapp]) {
-                return priv.app_object[realapp].path;
+            return realapp.path;
+        };
+
+        /**
+         * Returns the current editor file extension.
+         * @return {string} The current editor file extension.
+         */
+        that.getExt = function () {
+            return priv.data_object.currentEditor.ext;
+        };
+
+        /**
+         * Returns a clone of the mime object having this file [extension].
+         * @method getMimeOfExt
+         * @param  {string} extension The extension without '.'.
+         * @return {object} A clone of the mime object
+         */
+        that.getMimeOfExt = function (extension) {
+            if (typeof priv.mime_object[extension] === 'undefined') {
+                return null;
             }
-            return null;
+            return $.extend (true,{},priv.mime_object[extension]);
         };
 
         /**
@@ -357,10 +431,9 @@
         /**
          * Saves the document.
          * @method save
-         * @param  {string} name The document name.
-         * @param  {string} content The content of the document.
+         * @param  {string} basename The document name without ext.
          */
-        that.save = function (name) {
+        that.save = function (basename) {
             var current_editor = priv.data_object.currentEditor;
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
@@ -368,7 +441,7 @@
             }
             priv.loading_object.save();
             priv.jio.saveDocument({
-                'fileName':name,
+                'fileName':basename+'.'+current_editor.ext,
                 'fileContent':current_editor.getContent(),
                 'callback':function (result) {
                     if (result.status === 'fail') {
@@ -383,9 +456,9 @@
         /**
          * Loads a document.
          * @method load
-         * @param  {string} name The document name.
+         * @param  {string} basename The document name without ext.
          */
-        that.load = function (name) {
+        that.load = function (basename) {
             var current_editor = priv.data_object.currentEditor;
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
@@ -393,7 +466,7 @@
             }
             priv.loading_object.load();
             priv.jio.loadDocument({
-                'fileName':name,
+                'fileName':basename+'.'+current_editor.ext,
                 'maxtries':3,
                 'callback':function (result) {
                     if (result.status === 'fail') {
