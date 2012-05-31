@@ -23,20 +23,47 @@ var getXML = function (url) {
             dataType:'text',success:function(xml){tmp=xml;}});
     return tmp;
 },
-addPath = function (path) {
-    var array = LocalOrCookieStorage.getItem ('jio/localfilearray') || [];
-    array.push(path);
-    LocalOrCookieStorage.setItem ('jio/localfilearray',array);
+addFile = function (user,appid,file) {
+    var i, l, found = false, filenamearray,
+    userarray = LocalOrCookieStorage.getItem('jio/localuserarray') || [];
+    for (i = 0, l = userarray.length; i < l; i+= 1) {
+        if (userarray[i] === user) { found = true; }
+    }
+    if (!found) {
+        userarray.push(user);
+        LocalOrCookieStorage.setItem('jio/localuserarray',userarray);
+        LocalOrCookieStorage.setItem('jio/localfilenamearray/'+user+'/'+appid,
+                                     [file.fileName]);
+    } else {
+        filenamearray =
+            LocalOrCookieStorage.getItem(
+                'jio/localfilenamearray/'+user+'/'+appid) || [];
+        filenamearray.push(file.fileName);
+        LocalOrCookieStorage.setItem(
+            'jio/localfilenamearray/'+user+'/'+appid,
+            filenamearray);
+        LocalOrCookieStorage.setItem(
+            'jio/local/'+user+'/'+appid+'/'+file.fileName,
+            file);
+    }
+    LocalOrCookieStorage.setItem(
+        'jio/local/'+user+'/'+appid+'/'+file.fileName,
+        file);
 },
-removePath = function (path) {
-    var array = LocalOrCookieStorage.getItem ('jio/localfilearray') || [],
-    newarray = [], i;
-    for (i = 0; i < array.length; i+= 1) {
-        if (array[i] !== path) {
-            newarray.push (array[i]);
+removeFile = function (user,appid,file) {
+    var i, l, newarray = [],
+    filenamearray =
+        LocalOrCookieStorage.getItem(
+            'jio/localfilenamearray/'+user+'/'+appid) || [];
+    for (i = 0, l = filenamearray.length; i < l; i+= 1) {
+        if (filenamearray[i] !== file.fileName) {
+            newarray.push(filenamearray[i]);
         }
     }
-    LocalOrCookieStorage.setItem ('jio/localfilearray',newarray);
+    LocalOrCookieStorage.setItem('jio/localfilenamearray/'+user+'/'+appid,
+                                 newarray);
+    LocalOrCookieStorage.deleteItem(
+        'jio/local/'+user+'/'+appid+'/'+file.fileName);
 };
 //// end tools
 
@@ -281,11 +308,11 @@ test ('Check name availability', function () {
                           {"ID":'noid'});
 
     // name must be available
-    removePath ('jio/local/MrCheckName/jiotests/file');
+    removeFile ('MrCheckName','jiotests',{fileName:'file'});
     mytest(true);
 
     // name must be unavailable
-    addPath ('jio/local/MrCheckName/jiotests/file');
+    addFile ('MrCheckName','jiotests',{fileName:'file'});
     mytest(false);
 
     o.jio.stop();
@@ -401,10 +428,8 @@ test ('Get document list', function () {
             'lastModified':1,'creationDate':0};
     doc2 = {'fileName':'memo','fileContent':'test',
             'lastModified':5,'creationDate':2};
-    addPath ('jio/local/MrListName/jiotests/file');
-    addPath ('jio/local/MrListName/jiotests/memo');
-    LocalOrCookieStorage.setItem ('jio/local/MrListName/jiotests/file',doc1);
-    LocalOrCookieStorage.setItem ('jio/local/MrListName/jiotests/memo',doc2);
+    addFile ('MrListName','jiotests',doc1);
+    addFile ('MrListName','jiotests',doc2);
     delete doc1.fileContent;
     delete doc2.fileContent;
     mytest ([doc1,doc2]);

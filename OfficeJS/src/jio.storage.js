@@ -1,90 +1,125 @@
-
-// Adds 3 storages to JIO
-// type:
-//     - local
-//     - dav
-//     - replicate
+/**
+ * Adds 3 storages to JIO.
+ * - LocalStorage ('local')
+ * - DAVStorage ('dav')
+ * - ReplicateStorage ('replicate')
+ *
+ * @module JIOStorages
+ */
 (function () {
 var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
     ////////////////////////////////////////////////////////////////////////////
     // Tools
-    var extend = function (o1,o2) {
-        var key;
-        for (key in o2) {
-            o1[key] = o2[key];
-        }
-        return o1;
-    },
     // end Tools
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     // Classes
-    newLocalStorage,newDAVStorage,newReplicateStorage;
+    var newLocalStorage,newDAVStorage,newReplicateStorage,
+    newIndexedStorage,newCryptedStorage;
     // end Classes
     ////////////////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////////////////
     // Local Storage
+    /**
+     * JIO Local Storage. Type = 'local'.
+     * It is a database located in the browser local storage.
+     */
     newLocalStorage = function ( spec, my ) {
         // LocalStorage constructor
 
         var that = Jio.newBaseStorage( spec, my ), priv = {};
 
-        priv.storage_file_array_name = 'jio/localfilearray';
+        priv.storage_user_array_name = 'jio/localuserarray';
+        priv.storage_file_array_name = 'jio/localfilenamearray/' +
+            that.getStorageUserName() + '/' + that.getApplicantID();
 
-        priv.getPathArray = function () {
+        /**
+         * Returns a list of users.
+         * @method getUserArray
+         * @return {array} The list of users.
+         */
+        priv.getUserArray = function () {
+            return LocalOrCookieStorage.getItem(
+                priv.storage_user_array_name) || [];
+        };
+
+        /**
+         * Adds a user to the user list.
+         * @method addUser
+         * @param  {string} username The user name.
+         */
+        priv.addUser = function (username) {
+            var userarray = priv.getUserArray();
+            userarray.push(username);
+            LocalOrCookieStorage.setItem(priv.storage_user_array_name,
+                                         userarray);
+        };
+
+        /**
+         * Returns the file names of all existing files owned by the user.
+         * @method getFileNameArray
+         * @return {array} All the existing file paths.
+         */
+        priv.getFileNameArray = function () {
             return LocalOrCookieStorage.getItem(
                 priv.storage_file_array_name) || [];
         };
-        priv.addPath = function (path) {
-            var patharray = priv.getPathArray();
-            patharray.push(path);
+
+        /**
+         * Adds a file name to the local file name array.
+         * @method addFileName
+         * @param  {string} filename The new file name.
+         */
+        priv.addFileName = function (filename) {
+            var filenamearray = priv.getFileNameArray();
+            filenamearray.push(filename);
             LocalOrCookieStorage.setItem(priv.storage_file_array_name,
-                                         patharray);
+                                         filenamearray);
         };
-        priv.removePath = function (path) {
-            var i, patharray = priv.getPathArray(), newpatharray = [];
-            for (i = 0; i < patharray.length; i+= 1) {
-                if (patharray[i] !== path) {
-                    newpatharray.push(patharray[i]);
+
+        /**
+         * Removes a file name from the local file name array.
+         * @method removeFileName
+         * @param  {string} filename The file name to remove.
+         */
+        priv.removeFileName = function (filename) {
+            var i, l, array = priv.getFileNameArray(), newarray = [];
+            for (i = 0, l = array.length; i < l; i+= 1) {
+                if (array[i] !== filename) {
+                    newarray.push(array[i]);
                 }
             }
             LocalOrCookieStorage.setItem(priv.storage_file_array_name,
-                                         newpatharray);
+                                         newarray);
         };
 
+        /**
+         * Checks the availability of a user name set in the job.
+         * It will check if the user is set in the local user object
+         * @method checkNameAvailability
+         */
         that.checkNameAvailability = function () {
-            // checks the availability of the [job.userName].
-            // if the name already exists, it is not available.
-            // this.job.userName: the name we want to check.
-
-            // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                var allpatharray, i, split;
-
-                allpatharray = priv.getPathArray();
-                for (i = 0; i < allpatharray.length; i += 1) {
-                    split = allpatharray[i].split('/');
-                    if (split[0] === 'jio' &&
-                        split[1] === 'local' &&
-                        split[2] === that.getUserName()) {
-                        return that.done(false);
+                var i, l, array = priv.getUserArray();
+                for (i = 0, l = array.length; i < l; i+= 1) {
+                    if (array[i] === that.getUserName()) {
+                        that.done(false);
+                        return;
                     }
                 }
-                return that.done(true);
+                that.done(true);
             }, 100);
         }; // end checkNameAvailability
 
+        /**
+         * Saves a document in the local storage.
+         * It will store the file in 'jio/local/USR/APP/FILENAME'.
+         * @method saveDocument
+         */
         that.saveDocument = function () {
-            // Save a document in the local storage
-            // this.job.fileName: the document name.
-            // this.job.fileContent: the document content.
-            // this.job.storage: the storage information.
-            // this.job.storage.userName: the user name
-            // this.job.applicant.ID: the applicant id.
-
             // wait a little in order to simulate asynchronous saving
             setTimeout (function () {
                 var doc = null, path =
@@ -102,32 +137,30 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                         'creationDate': Date.now(),
                         'lastModified': Date.now()
                     };
-                    priv.addPath(path);
+                    priv.addFileName(that.getFileName());
                 } else {
                     // overwriting
                     doc.lastModified = Date.now();
                     doc.fileContent = that.getFileContent();
                 }
-                LocalOrCookieStorage.setItem(
-                    'jio/local/'+that.getStorageUserName()+'/'+
-                        that.getApplicantID()+'/'+
-                        that.getFileName(), doc);
+                LocalOrCookieStorage.setItem(path, doc);
                 return that.done();
             }, 100);
         }; // end saveDocument
 
+        /**
+         * Loads a document from the local storage.
+         * It will load file in 'jio/local/USR/APP/FILENAME'.
+         * You can add an 'options' object to the job, it can contain:
+         * - getContent {boolean} default true, retrieve the file content or not
+         * @method loadDocument
+         */
         that.loadDocument = function () {
-            // Load a document from the storage. It returns a document object
-            // containing all information of the document and its content.
-            // this.job.fileName : the document name we want to load.
-            // this.job.options.getContent: if true, also get the file content.
-
             // document object is {'fileName':string,'fileContent':string,
             // 'creationDate':date,'lastModified':date}
 
-            // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                var doc = null, settings = extend(
+                var doc = null, settings = $.extend(
                     {'getContent':true},that.cloneOptionObject());
 
                 doc = LocalOrCookieStorage.getItem(
@@ -146,45 +179,40 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             }, 100);
         }; // end loadDocument
 
+        /**
+         * Gets a document list from the local storage.
+         * It will retreive an array containing files meta data owned by
+         * the user.
+         * @method getDocumentList
+         */
         that.getDocumentList = function () {
-            // Get a document list from the storage. It returns a document
-            // array containing all the user documents informations.
-            // this.job.storage: the storage informations.
-            // this.job.storage.userName: the userName.
-            // this.job.storage.applicant.ID: the applicant ID.
-
             // the list is [object,object] -> object = {'fileName':string,
             // 'lastModified':date,'creationDate':date}
 
             setTimeout(function () {
-                var list = [], patharray = [], i, k = 'key',
-                splitk = ['splitedkey'], fileObject = {};
+                var newarray = [], array = [], i, l, k = 'key',
+                path = 'jio/local/'+that.getStorageUserName()+'/'+
+                    that.getApplicantID(), fileObject = {};
 
-                patharray = priv.getPathArray();
-                for (i = 0; i < patharray.length; i += 1) {
-                    k = patharray[i];
-                    splitk = k.split('/');
-                    if (splitk[0] === 'jio' &&
-                        splitk[1] === 'local' &&
-                        splitk[2] === that.getStorageUserName() &&
-                        splitk[3] === that.getApplicantID()) {
-                        fileObject = LocalOrCookieStorage.getItem(k);
-                        list.push ({
-                            'fileName':fileObject.fileName,
-                            'creationDate':fileObject.creationDate,
-                            'lastModified':fileObject.lastModified});
-                    }
+                array = priv.getFileNameArray();
+                for (i = 0, l = array.length; i < l; i += 1) {
+                    fileObject =
+                        LocalOrCookieStorage.getItem(path+'/'+array[i]);
+                    newarray.push ({
+                        'fileName':fileObject.fileName,
+                        'creationDate':fileObject.creationDate,
+                        'lastModified':fileObject.lastModified});
                 }
-                that.done(list);
+                that.done(newarray);
             }, 100);
         }; // end getDocumentList
 
+        /**
+         * Removes a document from the local storage.
+         * It will also remove the path from the local file array.
+         * @method removeDocument
+         */
         that.removeDocument = function () {
-            // Remove a document from the storage.
-            // this.job.storage.userName: the userName.
-            // this.job.applicant.ID: the applicant ID.
-            // this.job.fileName: the document name.
-
             setTimeout (function () {
                 var path = 'jio/local/'+
                     that.getStorageUserName()+'/'+
@@ -192,13 +220,12 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     that.getFileName()
                 // deleting
                 LocalOrCookieStorage.deleteItem(path);
-                priv.removePath(path);
+                priv.removeFileName(that.getFileName());
                 return that.done();
             }, 100);
         };
         return that;
     };
-
     // end Local Storage
     ////////////////////////////////////////////////////////////////////////////
 
@@ -218,7 +245,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
             // TODO this method is not working !!!
 
-            var settings = extend ({
+            var settings = $.extend ({
                 'success':function(){},'error':function(){}},options),
             splitpath = ['splitedpath'], tmppath = 'temp/path';
 
@@ -351,7 +378,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // 'creationDate':date,'lastModified':date}
 
             var doc = {},
-            settings = extend({'getContent':true},that.cloneOptionObject()),
+            settings = $.extend({'getContent':true},that.cloneOptionObject()),
 
             // TODO check if job's features are good
             getContent = function () {
