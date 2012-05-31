@@ -1,4 +1,8 @@
-
+/**
+ * JavaScript Input/Output
+ * @namespace JIO
+ * @module JIO
+ */
 var JIO =
 (function () { var jio_loader_function = function ( localOrCookieStorage, $ ) {
 
@@ -166,13 +170,6 @@ var JIO =
 
     ////////////////////////////////////////////////////////////////////////////
     // Tools
-    extend = function (o1,o2) {
-        var key;
-        for (key in o2) {
-            o1[key] = o2[key];
-        }
-        return o1;
-    },
     // end Tools
     ////////////////////////////////////////////////////////////////////////////
 
@@ -226,7 +223,7 @@ var JIO =
     newJob = function ( spec, my ) {
         // Job constructor
 
-        var job = extend({},spec);
+        var job = $.extend(true,{},spec);
         job['id']=0;
         job['status']='initial';
         job['date']=Date.now();
@@ -438,8 +435,8 @@ var JIO =
             // options.job  = the job object containing at least {id:..}.
             // options.where  = remove values where options.where(job) === true
 
-            var settings = extend ({where:function (job) {return true;}},
-                                   options),andwhere,found=false,k='key';
+            var settings = $.extend ({where:function (job) {return true;}},
+                                     options),andwhere,found=false,k='key';
 
             //// modify the job list
             if (settings.job) {
@@ -553,7 +550,7 @@ var JIO =
             // It is a callback function called just before user callback.
             // It is called to manage job_object according to the ended job.
 
-            var job = extend({},endedjob); // copy
+            var job = $.extend(true,{},endedjob); // copy
             // This job is supposed terminated, we can remove it from queue.
             that.removeJob ({'job':job});
 
@@ -797,7 +794,7 @@ var JIO =
 
         //// Getters Setters
         that.cloneJob = function () {
-            return extend({},priv.job);
+            return $.extend(true,{},priv.job);
         };
         that.getUserName = function () {
             return priv.job.userName || '';
@@ -814,6 +811,9 @@ var JIO =
         that.getStorageLocation = function () {
             return priv.job.storage.location || '';
         };
+        that.getSecondStorage = function () {
+            return priv.job.storage.storage || {};
+        };
         that.getStorageArray = function () {
             return priv.job.storage.storageArray || [];
         };
@@ -824,7 +824,7 @@ var JIO =
             return priv.job.fileContent || '';
         };
         that.cloneOptionObject = function () {
-            return extend({},priv.job.options);
+            return $.extend(true,{},priv.job.options);
         };
         that.getMaxTries = function () {
             return priv.job.maxtries;
@@ -1143,7 +1143,7 @@ var JIO =
             //         } else { } // Error
             //     }});
 
-            var settings = extend ({
+            var settings = $.extend (true,{
                 'userName': priv.storage.userName,
                 'storage': priv.storage,
                 'applicant': priv.applicant,
@@ -1176,7 +1176,7 @@ var JIO =
             //         } else { } // Error
             //     }});
 
-            var settings = extend({
+            var settings = $.extend(true,{
                 'storage': priv.storage,
                 'applicant': priv.applicant,
                 'fileContent': '',
@@ -1214,7 +1214,7 @@ var JIO =
             //     fileName:'string',fileContent:'string',
             //     creationDate:123,lastModified:456 }
 
-            var settings = extend ({
+            var settings = $.extend (true,{
                 'storage': priv.storage,
                 'applicant': priv.applicant,
                 'method':'loadDocument',
@@ -1248,7 +1248,7 @@ var JIO =
 
             // result.return_value is an Array that contains documents objects.
 
-            var settings = extend ({
+            var settings = $.extend (true,{
                 'storage': priv.storage,
                 'applicant': priv.applicant,
                 'method':'getDocumentList',
@@ -1278,7 +1278,7 @@ var JIO =
             //         } else { } // Not Removed
             //     }});
 
-            var settings = extend ({
+            var settings = $.extend (true,{
                 'storage': priv.storage,
                 'applicant': priv.applicant,
                 'method':'removeDocument',
@@ -1293,7 +1293,7 @@ var JIO =
         //// end Methods
 
         //// Initialize
-        var settings = extend({'use_local_storage':true},spec.options);
+        var settings = $.extend(true,{'use_local_storage':true},spec.options);
 
         // objectify storage and applicant
         if(typeof spec.storage === 'string') {
@@ -1346,7 +1346,7 @@ var JIO =
             // applicant: the applicant object or json string
             // options.useLocalStorage: if true, save job queue on localStorage.
 
-            var settings = extend({'use_local_storage':true},options);
+            var settings = $.extend(true,{'use_local_storage':true},options);
 
             return newJioConstructor({storage:storage,
                                       applicant:applicant,
@@ -1377,7 +1377,7 @@ var JIO =
         };
         that.getConstObject = function () {
             // Returns a copy of the constants
-            return extend({},jio_const_obj);
+            return $.extend(true,{},jio_const_obj);
         };
         return that;
     };
