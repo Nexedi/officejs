@@ -184,7 +184,7 @@
             // If pref does not exist it means that the extension is very
             // specific, so <app> is called instead of the default editor.
             // NOTE : the icon may be set in the app in app_object.
-            html:{pref:'imgEditor',app:'elrte',
+            html:{pref:'textEditor',app:'elrte',
                   icon:'<i class="icon-font"></i>'},
             svg:{pref:'imgEditor',app:'svg-edit',
                  icon:'<i class="icon-pencil"></i>'},
