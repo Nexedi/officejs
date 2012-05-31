@@ -22,6 +22,21 @@ var getXML = function (url) {
     $.ajax({'url':url,async:false,
             dataType:'text',success:function(xml){tmp=xml;}});
     return tmp;
+},
+addPath = function (path) {
+    var array = LocalOrCookieStorage.getItem ('jio/localfilearray') || [];
+    array.push(path);
+    LocalOrCookieStorage.setItem ('jio/localfilearray',array);
+},
+removePath = function (path) {
+    var array = LocalOrCookieStorage.getItem ('jio/localfilearray') || [],
+    newarray = [], i;
+    for (i = 0; i < array.length; i+= 1) {
+        if (array[i] !== path) {
+            newarray.push (array[i]);
+        }
+    }
+    LocalOrCookieStorage.setItem ('jio/localfilearray',newarray);
 };
 //// end tools
 
@@ -266,11 +281,11 @@ test ('Check name availability', function () {
                           {"ID":'noid'});
 
     // name must be available
-    LocalOrCookieStorage.deleteItem ('jio/local/MrCheckName/jiotests/file');
+    removePath ('jio/local/MrCheckName/jiotests/file');
     mytest(true);
 
     // name must be unavailable
-    LocalOrCookieStorage.setItem ('jio/local/MrCheckName/jiotests/file',{});
+    addPath ('jio/local/MrCheckName/jiotests/file');
     mytest(false);
 
     o.jio.stop();
@@ -386,6 +401,8 @@ test ('Get document list', function () {
             'lastModified':1,'creationDate':0};
     doc2 = {'fileName':'memo','fileContent':'test',
             'lastModified':5,'creationDate':2};
+    addPath ('jio/local/MrListName/jiotests/file');
+    addPath ('jio/local/MrListName/jiotests/memo');
     LocalOrCookieStorage.setItem ('jio/local/MrListName/jiotests/file',doc1);
     LocalOrCookieStorage.setItem ('jio/local/MrListName/jiotests/memo',doc2);
     delete doc1.fileContent;
