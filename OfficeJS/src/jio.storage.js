@@ -32,16 +32,11 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
         var that = Jio.newBaseStorage( spec, my ), priv = {};
 
-        priv.storage_file_array_name = 'jio/local/filearray';
+        priv.storage_file_array_name = 'jio/localfilearray';
 
         priv.getPathArray = function () {
-            var storage_file_array =
-                LocalOrCookieStorage.getItem(priv.storage_file_array_name);
-            if (storage_file_array === null) {
-                LocalOrCookieStorage.setItem(priv.storage_file_array_name,[]);
-                return [];
-            }
-            return storage_file_array;
+            return LocalOrCookieStorage.getItem(
+                priv.storage_file_array_name) || [];
         };
         priv.addPath = function (path) {
             var patharray = priv.getPathArray();
@@ -71,7 +66,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
 
                 allpatharray = priv.getPathArray();
                 for (i = 0; i < allpatharray.length; i += 1) {
-                    split = allpatharray.split('/');
+                    split = allpatharray[i].split('/');
                     if (split[0] === 'jio' &&
                         split[1] === 'local' &&
                         split[2] === that.getUserName()) {
