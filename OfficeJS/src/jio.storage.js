@@ -1,8 +1,9 @@
 /**
- * Adds 3 storages to JIO.
+ * Adds 4 storages to JIO.
  * - LocalStorage ('local')
  * - DAVStorage ('dav')
  * - ReplicateStorage ('replicate')
+ * - IndexedStorage ('indexed')
  *
  * @module JIOStorages
  */
@@ -152,7 +153,10 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
          * Loads a document from the local storage.
          * It will load file in 'jio/local/USR/APP/FILENAME'.
          * You can add an 'options' object to the job, it can contain:
-         * - getContent {boolean} default true, retrieve the file content or not
+         * - metadata_only {boolean} default false, retrieve the file metadata
+         *   only if true.
+         * - content_only  {boolean} default false, retrieve the file content
+         *   only if true.
          * @method loadDocument
          */
         that.loadDocument = function () {
@@ -160,8 +164,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // 'creationDate':date,'lastModified':date}
 
             setTimeout(function () {
-                var doc = null, settings = $.extend(
-                    {'getContent':true},that.cloneOptionObject());
+                var doc = null, settings = that.cloneOptionObject();
 
                 doc = LocalOrCookieStorage.getItem(
                     'jio/local/'+that.getStorageUserName()+'/'+
@@ -171,8 +174,11 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                                message:'Document "'+ that.getFileName() +
                                '" not found in localStorage.'});
                 } else {
-                    if (!settings.getContent) {
+                    if (settings.metadata_only) {
                         delete doc.fileContent;
+                    } else if (settings.content_only) {
+                        delete doc.lastModified;
+                        delete doc.creationDate;
                     }
                     that.done(doc);
                 }
@@ -217,7 +223,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                 var path = 'jio/local/'+
                     that.getStorageUserName()+'/'+
                     that.getApplicantID()+'/'+
-                    that.getFileName()
+                    that.getFileName();
                 // deleting
                 LocalOrCookieStorage.deleteItem(path);
                 priv.removeFileName(that.getFileName());
@@ -378,9 +384,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // 'creationDate':date,'lastModified':date}
 
             var doc = {},
-            settings = $.extend({'getContent':true},that.cloneOptionObject()),
-
-            // TODO check if job's features are good
+            settings = that.cloneOptionObject(),
             getContent = function () {
                 $.ajax ( {
                     url: that.getStorageLocation() + '/dav/' +
@@ -412,6 +416,11 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     }
                 } );
             };
+            doc.fileName = that.getFileName();
+            if (settings.content_only) {
+                getContent();
+                return;
+            }
             // Get properties
             $.ajax ( {
                 url: that.getStorageLocation() + '/dav/' +
@@ -436,8 +445,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                     ).each( function () {
                         doc.creationDate = $(this).text();
                     });
-                    doc.fileName = that.getFileName();
-                    if (settings.getContent) {
+                    if (!settings.metadata_only) {
                         getContent();
                     } else {
                         that.done(doc);
@@ -582,7 +590,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.userName: the name we want to check.
             // this.job.storage.storageArray: An Array of storages.
 
-            var newjob = {}, i = 'id', done = false, errorArray = [],
+            var i = 'id', done = false, errorArray = [],
             res = {'status':'done'}, callback = function (result) {
                 priv.returnsValuesArray.push(result);
                 if (!done) {
@@ -625,7 +633,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.fileName: the document name.
             // this.job.fileContent: the document content.
 
-            var newjob = {}, res = {'status':'done'}, i = 'id',
+            var res = {'status':'done'}, i = 'id',
             done = false, errorArray = [],
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
@@ -662,7 +670,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.storage.password: the user password.
             // this.job.options.getContent: if true, also get the file content.
 
-            var newjob = {}, aredifferent = false, doc = {}, i = 'id',
+            var doc = {}, i = 'id',
             done = false, errorArray = [],
             res = {'status':'done'}, callback = function (result) {
                 priv.returnsValuesArray.push(result);
@@ -696,7 +704,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
 
-            var newjob = {}, res = {'status':'done'}, i = 'id',
+            var res = {'status':'done'}, i = 'id',
             done = false, errorArray = [],
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
@@ -730,7 +738,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
 
-            var newjob = {}, res = {'status':'done'}, i = 'key',
+            var res = {'status':'done'}, i = 'key',
             done = false, errorArray = [],
             callback = function (result) {
                 priv.returnsValuesArray.push(result);
@@ -759,17 +767,309 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
     // end ReplicateStorage
     ////////////////////////////////////////////////////////////////////////////
 
-    // add key to storageObjectType of global jio
-    Jio.addStorageType('local', function (options) {
-        return newLocalStorage(options);
-    });
-    Jio.addStorageType('dav', function (options) {
-        return newDAVStorage(options);
-    });
-    Jio.addStorageType('replicate', function (options) {
-        return newReplicateStorage(options);
-    });
+    ////////////////////////////////////////////////////////////////////////////
+    // Indexed Storage
+    /**
+     * JIO Indexed Storage. Type = 'indexed'.
+     * It retreives files metadata from another storage and keep them
+     * in a cache so that we can work faster.
+     */
+    newIndexedStorage = function ( spec, my ) {
+        // IndexedStorage constructor
 
+        var that = Jio.newBaseStorage( spec, my ), priv = {};
+
+        priv.storage_array_name = 'jio/indexedstoragearray';
+        priv.storage_file_array_name = 'jio/indexedfilearray/'+
+            JSON.stringify (that.getSecondStorage()) + '/' +
+            that.getApplicantID();
+
+
+        /**
+         * Check if the indexed storage array exists.
+         * @method indexedStorageArrayExists
+         * @return {boolean} true if exists, else false
+         */
+        priv.indexedStorageArrayExists = function () {
+            return (LocalOrCookieStorage.getItem(
+                priv.storage_array_name) ? true : false);
+        };
+
+        /**
+         * Returns a list of indexed storages.
+         * @method getIndexedStorageArray
+         * @return {array} The list of indexed storages.
+         */
+        priv.getIndexedStorageArray = function () {
+            return LocalOrCookieStorage.getItem(
+                priv.storage_array_name) || [];
+        };
+
+        /**
+         * Adds a storage to the indexed storage list.
+         * @method addIndexedStorage
+         * @param  {object} storage The new indexed storage.
+         */
+        priv.addIndexedStorage = function (storage) {
+            var indexedstoragearray = priv.getIndexedStorageArray();
+            indexedstoragearray.push(JSON.stringify (storage));
+            LocalOrCookieStorage.setItem(priv.storage_array_name,
+                                         indexedstoragearray);
+        };
+
+        /**
+         * Checks if a storage exists in the indexed storage list.
+         * @method isAnIndexedStorage
+         * @param  {object} storage The storage to find.
+         * @return {boolean} true if found, else false
+         */
+        priv.isAnIndexedStorage = function (storage) {
+            var jsonstorage = JSON.stringify (storage),i,l,
+            array = priv.getIndexedStorageArray();
+            for (i = 0, l = array.length; i < l; i+= 1) {
+                if (JSON.stringify(array[i]) === jsonstorage) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        /**
+         * Checks if the file array exists.
+         * @method fileArrayExists
+         * @return {boolean} true if exists, else false
+         */
+        priv.fileArrayExists = function () {
+            return (LocalOrCookieStorage.getItem (
+                priv.storage_file_array_name) ? true : false);
+        };
+
+        /**
+         * Returns the file from the indexed storage but not there content.
+         * @method getFileArray
+         * @return {array} All the existing file.
+         */
+        priv.getFileArray = function () {
+            return LocalOrCookieStorage.getItem(
+                priv.storage_file_array_name) || [];
+        };
+
+        /**
+         * Sets the file array list.
+         * @method setFileArray
+         * @param  {array} filearray The array containing files.
+         */
+        priv.setFileArray = function (filearray) {
+            return LocalOrCookieStorage.setItem(
+                priv.storage_file_array_name,
+                filearray);
+        };
+
+        /**
+         * Checks if the file already exists in the array.
+         * @method isFileIndexed
+         * @param  {string} filename The file we want to find.
+         * @return {boolean} true if found, else false
+         */
+        priv.isFileIndexed = function (filename) {
+            var i, l, array = priv.getFileArray();
+            for (i = 0, l = array.length; i < l; i+= 1) {
+                if (array[i].fileName === filename){
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        /**
+         * Adds a file to the local file array.
+         * @method addFile
+         * @param  {object} file The new file.
+         */
+        priv.addFile = function (file) {
+            var filearray = priv.getFileArray();
+            filearray.push(file);
+            LocalOrCookieStorage.setItem(priv.storage_file_array_name,
+                                         filearray);
+        };
+
+        /**
+         * Removes a file from the local file array.
+         * @method removeFile
+         * @param  {string} filename The file to remove.
+         */
+        priv.removeFile = function (filename) {
+            var i, l, array = priv.getFileArray(), newarray = [];
+            for (i = 0, l = array.length; i < l; i+= 1) {
+                if (array[i].fileName !== filename) {
+                    newarray.push(array[i]);
+                }
+            }
+            LocalOrCookieStorage.setItem(priv.storage_file_array_name,
+                                         newarray);
+        };
+
+        /**
+         * Updates the storage.
+         * It will retreive all files from a storage. It is an asynchronous task
+         * so the update can be on going even if IndexedStorage has already
+         * returned the result.
+         * @method update
+         */
+        priv.update = function (callback) {
+            // retreive list before, and then retreive all files
+            var getlist_callback = function (result) {
+                if (result.status === 'done') {
+                    if (!priv.isAnIndexedStorage(that.getSecondStorage())) {
+                        priv.addIndexedStorage(that.getSecondStorage());
+                    }
+                    priv.setFileArray(result.return_value);
+                }
+            },
+            newjob = {
+                storage: that.getSecondStorage(),
+                applicant: {ID:that.getApplicantID()},
+                method: 'getDocumentList',
+                maxtries: 3,
+                callback: getlist_callback
+            };
+            that.addJob ( newjob );
+        };
+
+        /**
+         * Checks the availability of a user name set in the job.
+         * @method checkNameAvailability
+         */
+        that.checkNameAvailability = function () {
+            var newjob = that.cloneJob();
+            priv.update();
+            newjob.storage = that.getSecondStorage();
+            newjob.callback = function (result) {
+                if (result.status === 'done') {
+                    that.done(result.return_value);
+                } else {
+                    that.fail(result.error);
+                }
+            };
+            that.addJob( newjob );
+        }; // end checkNameAvailability
+
+        /**
+         * Saves a document.
+         * @method saveDocument
+         */
+        that.saveDocument = function () {
+            var newjob = that.cloneJob();
+            newjob.storage = that.getSecondStorage();
+            newjob.callback = function (result) {
+                if (result.status === 'done') {
+                    if (!priv.isFileIndexed(that.getFileName())) {
+                        priv.addFile({fileName:that.getFileName(),
+                                      lastModified:0,
+                                      creationDate:0});
+                    }
+                    priv.update();
+                    that.done();
+                } else {
+                    that.fail(result.error);
+                }
+            };
+            that.addJob ( newjob );
+        }; // end saveDocument
+
+        /**
+         * Loads a document.
+         * job.options.metadata_only {boolean}
+         * job.options.content_only  {boolean}
+         * @method loadDocument
+         */
+        that.loadDocument = function () {
+            var filearray, i, l, newjob,
+            loadcallback = function (result) {
+                if (result.status === 'done') {
+                    // if (filearray[i].lastModified !==
+                    //     result.return_value.lastModified ||
+                    //     filearray[i].creationDate !==
+                    //     result.return_value.creationDate) {
+                    //     // the file in the index storage is different than
+                    //     // the one in the second storage. priv.update will
+                    //     // take care of refresh the indexed storage
+                    // }
+                    that.done(result.return_value);
+                } else {
+                    that.fail(result.error);
+                }
+            },
+            secondLoadDocument = function () {
+                newjob = that.cloneJob();
+                newjob.storage = that.getSecondStorage();
+                newjob.callback = loadcallback;
+                console.log (newjob);
+                that.addJob ( newjob );
+            },
+            settings = that.cloneOptionObject();
+            priv.update();
+            if (settings.metadata_only) {
+                setTimeout(function () {
+                    if (priv.fileArrayExists()) {
+                        filearray = priv.getFileArray();
+                        for (i = 0, l = filearray.length; i < l; i+= 1) {
+                            if (filearray[i].fileName === that.getFileName()) {
+                                return that.done(filearray[i]);
+                            }
+                        }
+                    } else {
+                        secondLoadDocument();
+                    }
+                },100);
+            } else {
+                secondLoadDocument();
+            }
+        }; // end loadDocument
+
+        /**
+         * Gets a document list.
+         * @method getDocumentList
+         */
+        that.getDocumentList = function () {
+            var id;
+            priv.update();
+            id = setInterval(function () {
+                if (priv.fileArrayExists()) {
+                    that.done(priv.getFileArray());
+                    clearInterval(id);
+                }
+            },100);
+        }; // end getDocumentList
+
+        /**
+         * Removes a document.
+         * @method removeDocument
+         */
+        that.removeDocument = function () {
+            var newjob = that.cloneJob();
+            newjob.storage = that.getSecondStorage();
+            newjob.callback = function (result) {
+                if (result.status === 'done') {
+                    priv.removeFile(that.getFileName());
+                    priv.update();
+                    that.done();
+                } else {
+                    that.fail(result.error);
+                }
+            };
+            that.addJob(newjob);
+        };
+        return that;
+    };
+    // end Indexed Storage
+    ////////////////////////////////////////////////////////////////////////////
+
+    // add key to storageObjectType of global jio
+    Jio.addStorageType('local', newLocalStorage);
+    Jio.addStorageType('dav', newDAVStorage);
+    Jio.addStorageType('replicate', newReplicateStorage);
+    Jio.addStorageType('indexed', newIndexedStorage);
 };
 
 if (window.requirejs) {
