@@ -60,6 +60,22 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
         };
 
         /**
+         * checks if a user exists in the user array.
+         * @method userExists
+         * @param  {string} username The user name
+         * @return {boolean} true if exist, else false
+         */
+        priv.userExists = function (username) {
+            var userarray = priv.getUserArray(), i, l;
+            for (i = 0, l = userarray.length; i < l; i += 1) {
+                if (userarray[i] === username) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        /**
          * Returns the file names of all existing files owned by the user.
          * @method getFileNameArray
          * @return {array} All the existing file paths.
@@ -104,14 +120,7 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
          */
         that.checkNameAvailability = function () {
             setTimeout(function () {
-                var i, l, array = priv.getUserArray();
-                for (i = 0, l = array.length; i < l; i+= 1) {
-                    if (array[i] === that.getUserName()) {
-                        that.done(false);
-                        return;
-                    }
-                }
-                that.done(true);
+                that.done(!priv.userExists(that.getUserName()));
             }, 100);
         }; // end checkNameAvailability
 
@@ -138,6 +147,9 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                         'creationDate': Date.now(),
                         'lastModified': Date.now()
                     };
+                    if (!priv.userExists()){
+                        priv.addUser (that.getStorageUserName());
+                    }
                     priv.addFileName(that.getFileName());
                 } else {
                     // overwriting
