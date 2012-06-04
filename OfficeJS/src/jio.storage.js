@@ -1,14 +1,16 @@
 /**
- * Adds 4 storages to JIO.
+ * Adds 5 storages to JIO.
  * - LocalStorage ('local')
  * - DAVStorage ('dav')
  * - ReplicateStorage ('replicate')
  * - IndexedStorage ('indexed')
+ * - CryptedStorage ('crypted')
  *
  * @module JIOStorages
  */
 (function () {
-var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
+    var jio_storage_loader =
+        function ( LocalOrCookieStorage, $, Base64, sjcl, Jio) {
 
     ////////////////////////////////////////////////////////////////////////////
     // Tools
@@ -1016,7 +1018,6 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
                 newjob = that.cloneJob();
                 newjob.storage = that.getSecondStorage();
                 newjob.callback = loadcallback;
-                console.log (newjob);
                 that.addJob ( newjob );
             },
             settings = that.cloneOptionObject();
@@ -1077,19 +1078,194 @@ var jio_storage_loader = function ( LocalOrCookieStorage, Base64, Jio, $) {
     // end Indexed Storage
     ////////////////////////////////////////////////////////////////////////////
 
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Crypted Storage
+    /**
+     * JIO Crypted Storage. Type = 'crypted'.
+     * It will encrypt the file and its metadata stringified by JSON.
+     */
+    newCryptedStorage = function ( spec, my ) {
+        // CryptedStorage constructor
+
+        var that = Jio.newBaseStorage( spec, my ), priv = {};
+
+        priv.encrypt = function (data,callback,index) {
+            // end with a callback in order to improve encrypt to an
+            // asynchronous encryption.
+            var tmp = sjcl.encrypt (that.getStorageUserName()+':'+
+                                    that.getStoragePassword(), data);
+            callback(tmp,index);
+        };
+        priv.decrypt = function (data,callback,index) {
+            var tmp = sjcl.decrypt (that.getStorageUserName()+':'+
+                                    that.getStoragePassword(), data);
+            callback(tmp,index);
+        };
+
+        /**
+         * Checks the availability of a user name set in the job.
+         * @method checkNameAvailability
+         */
+        that.checkNameAvailability = function () {
+            var newjob = that.cloneJob();
+            newjob.storage = that.getSecondStorage();
+            newjob.callback = function (result) {
+                if (result.status === 'done') {
+                    that.done(result.return_value);
+                } else {
+                    that.fail(result.error);
+                }
+            };
+            that.addJob( newjob );
+        }; // end checkNameAvailability
+
+        /**
+         * Saves a document.
+         * @method saveDocument
+         */
+        that.saveDocument = function () {
+            var newjob, newfilename, newfilecontent,
+            _1 = function () {
+                priv.encrypt(that.getFileName(),function(res) {
+                    newfilename = res;
+                    _2();
+                });
+            },
+            _2 = function () {
+                priv.encrypt(
+                    JSON.stringify({
+                        fileName: that.getFileName(),
+                        fileContent:that.getFileContent()
+                    }),
+                    function(res) {
+                        newfilecontent = res;
+                        _3();
+                    });
+            },
+            _3 = function () {
+                newjob = that.cloneJob();
+                newjob.fileName = newfilename;
+                newjob.fileContent = newfilecontent;
+                newjob.storage = that.getSecondStorage();
+                newjob.callback = function (result) {
+                    if (result.status === 'done') {
+                        that.done();
+                    } else {
+                        that.fail(result.error);
+                    }
+                };
+                that.addJob ( newjob );
+            };
+            _1();
+        }; // end saveDocument
+
+        /**
+         * Loads a document.
+         * job.options.metadata_only {boolean}
+         * job.options.content_only  {boolean}
+         * @method loadDocument
+         */
+        that.loadDocument = function () {
+            var newjob, newfilename,
+            _1 = function () {
+                priv.encrypt(that.getFileName(),function(res) {
+                    newfilename = res;
+                    _2();
+                });
+            },
+            _2 = function () {
+                newjob = that.cloneJob();
+                newjob.fileName = newfilename;
+                newjob.storage = that.getSecondStorage();
+                newjob.callback = loadcallback;
+                console.log (newjob);
+                that.addJob ( newjob );
+            },
+            loadcallback = function (result) {
+                if (result.status === 'done') {
+                    priv.decrypt (result.return_value.fileContent,function(res){
+                        that.done(JSON.parse(res));
+                    });
+                } else {
+                    that.fail(result.error);
+                }
+            };
+            _1();
+        }; // end loadDocument
+
+        /**
+         * Gets a document list.
+         * @method getDocumentList
+         */
+        that.getDocumentList = function () {
+            var newjob, i, l, cpt = 0, array,
+            _1 = function () {
+                newjob = that.cloneJob();
+                newjob.storage = that.getSecondStorage();
+                newjob.callback = getListCallback;
+                that.addJob ( newjob );
+            },
+            getListCallback = function (result) {
+                if (result.status === 'done') {
+                    array = result.return_value;
+                    for (i = 0, l = array.length; i < l; i+= 1) {
+                        priv.decrypt (array[i],
+                                      lastCallback,i);
+                    }
+                } else {
+                    that.fail(result.error);
+                }
+            },
+            lastCallback = function (res,index) {
+                var tmp;
+                cpt++;
+                tmp = JSON.parse(res);
+                array[index] = res.fileName;
+                array[index] = res.fileContent;
+                if (cpt === l) {
+                    // this is the last callback
+                    that.done(array);
+                }
+            };
+            _1();
+        }; // end getDocumentList
+
+        /**
+         * Removes a document.
+         * @method removeDocument
+         */
+        that.removeDocument = function () {
+            var newjob = that.cloneJob();
+            newjob.storage = that.getSecondStorage();
+            newjob.callback = function (result) {
+                if (result.status === 'done') {
+                    that.done();
+                } else {
+                    that.fail(result.error);
+                }
+            };
+            that.addJob(newjob);
+        };
+        return that;
+    };
+    // end Crypted Storage
+    ////////////////////////////////////////////////////////////////////////////
+
     // add key to storageObjectType of global jio
     Jio.addStorageType('local', newLocalStorage);
     Jio.addStorageType('dav', newDAVStorage);
     Jio.addStorageType('replicate', newReplicateStorage);
     Jio.addStorageType('indexed', newIndexedStorage);
+    Jio.addStorageType('crypted', newCryptedStorage);
 };
 
 if (window.requirejs) {
     define ('JIOStorages',
-            ['LocalOrCookieStorage','Base64','JIO','jQuery'],
+            ['LocalOrCookieStorage','jQuery','Base64','SJCL','JIO'],
             jio_storage_loader);
 } else {
-    jio_storage_loader ( LocalOrCookieStorage, Base64, JIO, jQuery );
+    jio_storage_loader ( LocalOrCookieStorage, jQuery, Base64, sjcl, JIO);
 }
 
 }());

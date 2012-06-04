@@ -1,6 +1,7 @@
 (function () { var thisfun = function(loader) {
     var JIO = loader.JIO,
     LocalOrCookieStorage = loader.LocalOrCookieStorage,
+    sjcl = loader.sjcl,
     Base64 = loader.Base64,
     $ = loader.jQuery;
 
@@ -391,6 +392,8 @@ test ('Document load', function () {
     // re-load file after saving it manually
     doc = {'fileName':'file','fileContent':'content',
            'lastModified':1234,'creationDate':1000};
+    LocalOrCookieStorage.setItem ('jio/localfilenamearray/MrLoadName/jiotests',
+                                  ['file']);
     LocalOrCookieStorage.setItem ('jio/local/MrLoadName/jiotests/file',doc);
     mytest ('return_value',doc);
 
@@ -1001,6 +1004,74 @@ test ('Remove document', function () {
     o.jio.stop();
 });
 
+module ('Jio CryptedStorage');
+
+test ('Check name availability' , function () {
+    var o = {}, clock = this.sandbox.useFakeTimers();
+    o.jio=JIO.createNew({type:'crypted',
+                         storage:{type:'local',
+                                  userName:'cryptcheck'}},
+                        {ID:'jiotests'});
+    o.f = function (result) {
+        deepEqual (result.return_value,true,'name must be available');
+    };
+    this.spy(o,'f');
+    o.jio.checkNameAvailability({userName:'cryptcheck',
+                                 maxtries:1,callback:o.f});
+    clock.tick(1000);
+    if (!o.f.calledOnce) {
+        ok (false, 'no response / too much results');
+    }
+    o.jio.stop();
+});
+
+test ('Document save' , function () {
+    var o = {}, clock = this.sandbox.useFakeTimers();
+    o.jio=JIO.createNew({type:'crypted',
+                         password:'mypwd',
+                         storage:{type:'local',
+                                  userName:'cryptsave'}},
+                        {ID:'jiotests'});
+    o.f = function (result) {
+        deepEqual (result.status,'done','save ok');
+    };
+    this.spy(o,'f');
+    o.jio.saveDocument({fileName:'testsave',fileContent:'contentoftest',
+                        maxtries:1,callback:o.f});
+    clock.tick(1000);
+    if (!o.f.calledOnce) {
+        ok (false, 'no response / too much results');
+    }
+    o.jio.stop();
+});
+
+test ('Document Load' , function () {
+    var o = {}, clock = this.sandbox.useFakeTimers();
+    o.jio=JIO.createNew({type:'crypted',
+                         password:'mypwd',
+                         storage:{type:'local',
+                                  userName:'cryptload'}},
+                        {ID:'jiotests'});
+    o.f = function (result) {
+        if (result.status === 'done') {
+            deepEqual (result.return_value,{fileName:'testload',
+                                            fileContent:'contentoftest',
+                                            lastModified:500,
+                                            creationDate:500}
+                       ,'load ok');
+        } else {
+            ok (false ,'cannot load');
+        }
+    };
+    this.spy(o,'f');
+    o.jio.loadDocument({fileName:'testload',
+                        maxtries:1,callback:o.f});
+    clock.tick(1000);
+    if (!o.f.calledOnce) {
+        ok (false, 'no response / too much results');
+    }
+    o.jio.stop();
+});
 // end require
 };                              // end thisfun
 
@@ -1016,13 +1087,16 @@ if (window.requirejs) {
             Base64API: '../lib/base64/base64',
             Base64: '../js/base64.requirejs_module',
             JIODummyStorages: '../src/jio.dummystorages',
-            JIOStorages: '../src/jio.storage'
+            JIOStorages: '../src/jio.storage',
+            SJCLAPI:'../lib/sjcl/sjcl',
+            SJCL:'../js/sjcl.requirejs_module'
         }
     });
     require(['jiotestsloader'],thisfun);
 } else {
     thisfun ({LocalOrCookieStorage:LocalOrCookieStorage,
               JIO:JIO,
+              sjcl:sjcl,
               Base64:Base64,
               jQuery:jQuery});
 }
