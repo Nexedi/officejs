@@ -1,15 +1,12 @@
 (function () {
     // Tools
-    var extend = function (o1,o2) {
-        var key; for (key in o2) { o1[key] = o2[key]; } return o1;
-    },
-    baseName = function (filename) {
-        var split = filename.split('.');
+    var baseName = function (file_name) {
+        var split = file_name.split('.');
         if (split.length > 1) {
             split.length -= 1;
             return split.join('.');
         } else {
-            return filename;
+            return file_name;
         }
     };
 
@@ -20,22 +17,22 @@
         var that = {}, priv = {};
         // Attributes //
         priv.preference_object = {
-            documentLister:'slickgrid',
-            editpreferences:'simplepreferenceeditor',
-            textEditor:'elrte',
-            imgEditor:'svg-edit',
-            speadsheet:'jquery-sheet'
+            document_lister:'slickgrid',
+            edit_preferences:'simplepreferenceeditor',
+            text_editor:'elrte',
+            img_editor:'svg-edit',
+            spreadsheet:'jquery-sheet'
         };
         priv.app_object = {
             topnavbar: {
                 type:'nav',
                 path:'component/top_nav_bar.html',
-                gadgetid:'page-top_nav_bar'
+                gadget_id:'page-top_nav_bar'
             },
             leftnavbar: {
                 type:'nav',
                 path:'component/left_nav_bar.html',
-                gadgetid:'page-left_nav_bar',
+                gadget_id:'page-left_nav_bar',
                 bar_tools: false,
                 update: function () {
                     var elmt;
@@ -51,10 +48,10 @@
             login: {
                 type:'loader',
                 path:'component/login.html',
-                gadgetid:'page-content',
+                gadget_id:'page-content',
                 getContent: function () {
                     var tmp = {
-                        userName: 'NoName',
+                        user_name: 'NoName',
                         password: 'NoPwd'
                     };
                     // NOTE : stringify or not ?
@@ -64,12 +61,12 @@
             about: {
                 type:'viewer',
                 path:'component/about.html',
-                gadgetid:'page-content'
+                gadget_id:'page-content'
             },
             contact: {
                 type:'viewer',
                 path:'component/contact.html',
-                gadgetid:'page-content'
+                gadget_id:'page-content'
             },
             simplepreferenceeditor: {
                 // NOTE
@@ -80,7 +77,7 @@
             elrte: {
                 type:'editor',  // means it can edit a content
                 path:'component/elrte.html',
-                gadgetid:'page-content',
+                gadget_id:'page-content',
                 ext:'html',
                 element:'#elrte_editor',
                 getContent: function () {
@@ -93,12 +90,12 @@
                 onload: function (param) {
                     // FIXME : wait for initialization end
                     setTimeout(function () {
-                        if (typeof param.fileName !== 'undefined') {
-                            $('#input_fileName').attr('value',
-                                                      baseName(param.fileName));
-                            that.load(baseName(param.fileName));
+                        if (typeof param.file_name !== 'undefined') {
+                            $('#input_file_name').attr('value',
+                                                  baseName(param.file_name));
+                            that.load(baseName(param.file_name));
                         } else {
-                            $('#input_fileName').attr(
+                            $('#input_file_name').attr(
                                 'value','untitled');
                         }
                     },1000);
@@ -108,7 +105,7 @@
             'jquery-sheet': {
                 type:'editor',
                 path:'component/jquery-sheet.html',
-                gadgetid:'page-content',
+                gadget_id:'page-content',
                 ext:'jqs',
                 getContent: function () {
                     return JSON.stringify (
@@ -128,12 +125,12 @@
                 onload: function (param) {
                     // FIXME : wait for initialization end
                     setTimeout(function () {
-                        if (typeof param.fileName !== 'undefined') {
-                            $('#input_fileName').attr('value',
-                                                      baseName(param.fileName));
-                            that.load(baseName(param.fileName));
+                        if (typeof param.file_name !== 'undefined') {
+                            $('#input_file_name').attr('value',
+                                                  baseName(param.file_name));
+                            that.load(baseName(param.file_name));
                         } else {
-                            $('#input_fileName').attr(
+                            $('#input_file_name').attr(
                                 'value','untitled');
                         }
                     },1000);
@@ -142,7 +139,7 @@
             'svg-edit': {
                 type:'editor',
                 path:'component/svg-edit.html',
-                gadgetid:'page-content',
+                gadget_id:'page-content',
                 ext:'svg',
                 frameid:'svg_edit_frame',
                 getContent: function () {
@@ -159,12 +156,12 @@
                         setTimeout(fun,1000);
                     }
                     waitForInit(function () {
-                        if (typeof param.fileName !== 'undefined') {
-                            $('#input_fileName').attr('value',
-                                                      baseName(param.fileName));
-                            that.load(baseName(param.fileName));
+                        if (typeof param.file_name !== 'undefined') {
+                            $('#input_file_name').attr('value',
+                                                  baseName(param.file_name));
+                            that.load(baseName(param.file_name));
                         } else {
-                            $('#input_fileName').attr(
+                            $('#input_file_name').attr(
                                 'value','untitled');
                         }
                     });
@@ -173,9 +170,9 @@
             slickgrid: {
                 type:'editor',
                 path:'component/slickgrid_document_lister.html',
-                gadgetid:'page-content',
+                gadget_id:'page-content',
                 update: function () {
-                    OfficeJS.open({app:'documentLister',force:true});
+                    OfficeJS.open({app:'document_lister',force:true});
                 }
             }
         };
@@ -184,9 +181,9 @@
             // If pref does not exist it means that the extension is very
             // specific, so <app> is called instead of the default editor.
             // NOTE : the icon may be set in the app in app_object.
-            html:{pref:'textEditor',app:'elrte',
+            html:{pref:'text_editor',app:'elrte',
                   icon:'<i class="icon-font"></i>'},
-            svg:{pref:'imgEditor',app:'svg-edit',
+            svg:{pref:'img_editor',app:'svg-edit',
                  icon:'<i class="icon-pencil"></i>'},
             jqs:{app:'jquery-sheet',
                  icon:'<i class="icon-signal"></i>'}
@@ -282,7 +279,7 @@
                 console.error ('Unknown application: ' + option.app);
                 return null;
             }
-            realgadgetid = realapp.gadgetid;
+            realgadgetid = realapp.gadget_id;
             realpath = realapp.path;
             if (option.force || priv.data_object.currentEditor !== realapp) {
                 ancientapp = priv.data_object.gadget_object[realgadgetid];
@@ -387,7 +384,7 @@
                 return;
             }
             // if there is not any jio created
-            priv.jio = JIO.createNew (storage,applicant);
+            priv.jio = JIO.newJio (storage,applicant);
             // update left nav bar
             leftnavbar = priv.getRealApplication ('leftnavbar');
             if (typeof leftnavbar.update !== 'undefined') {
@@ -409,10 +406,10 @@
             }
             priv.loading_object.getlist();
             priv.jio.getDocumentList({
-                'sort':{'lastModified':'descending',
-                        'fileName':'ascending'},
+                'sort':{'last_modified':'descending',
+                        'name':'ascending'},
                 'limit':{begin:0,end:50},
-                // 'search':{fileName:'a'},
+                // 'search':{name:'a'},
                 'maxtries':3,
                 'callback':function (result) {
                     if (result.status === 'done') {
@@ -447,8 +444,8 @@
             }
             priv.loading_object.save();
             priv.jio.saveDocument({
-                'fileName':basename+'.'+current_editor.ext,
-                'fileContent':current_editor.getContent(),
+                'name':basename+'.'+current_editor.ext,
+                'content':current_editor.getContent(),
                 'callback':function (result) {
                     if (result.status === 'fail') {
                         console.error (result.message);
@@ -472,14 +469,14 @@
             }
             priv.loading_object.load();
             priv.jio.loadDocument({
-                'fileName':basename+'.'+current_editor.ext,
+                'name':basename+'.'+current_editor.ext,
                 'maxtries':3,
                 'callback':function (result) {
                     if (result.status === 'fail') {
                         console.error (result.message);
                     } else {
                         current_editor.setContent(
-                            result.return_value.fileContent);
+                            result.return_value.content);
                     }
                     priv.loading_object.end_load();
                 }
@@ -498,7 +495,7 @@
             }
             priv.loading_object.remove();
             priv.jio.removeDocument({
-                'fileName':name,
+                'name':name,
                 'callback':function (result) {
                     if (result.status === 'fail') {
                         console.error (result.message);
@@ -523,10 +520,9 @@
             for (i = 0, l = documentarray.length; i < l; i+= 1) {
                 priv.loading_object.remove();
                 priv.jio.removeDocument({
-                    fileName:documentarray[i],
+                    name:documentarray[i],
                     callback:function (result) {
                         cpt += 1;
-                        console.log (result);
                         if (cpt === l) {
                             if (typeof current_editor.update !== 'undefined') {
                                 that.getList(current_editor.update);

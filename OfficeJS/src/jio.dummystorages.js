@@ -5,7 +5,7 @@
 //     - dummyallfail
 //     - dummyallnotfound
 //     - dummyall3tries
-(function () { var jio_dummy_storage_loader = function ( Jio ) {
+(function () { var jioDummyStorageLoader = function ( Jio ) {
 
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 1 : all ok
@@ -33,16 +33,16 @@
             // Returns a document object containing all information of the
             // document and its content.
 
-            // document object is {'fileName':string,'fileContent':string,
-            // 'creationDate':date,'lastModified':date}
+            // document object is {'name':string,'content':string,
+            // 'creation_date':date,'last_modified':date}
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
                 var doc = {
-                    'fileContent': 'content',
-                    'fileName': 'file',
-                    'creationDate': 10000,
-                    'lastModified': 15000};
+                    'content': 'content',
+                    'name': 'file',
+                    'creation_date': 10000,
+                    'last_modified': 15000};
                 that.done(doc);
             }, 100);
         }; // end loadDocument
@@ -51,17 +51,17 @@
             // It returns a document array containing all the user documents
             // informations, but not their content.
 
-            // the list is [object,object] -> object = {'fileName':string,
-            // 'lastModified':date,'creationDate':date}
+            // the list is [object,object] -> object = {'name':string,
+            // 'last_modified':date,'creation_date':date}
 
             setTimeout(function () {
                 var list = [
-                    {'fileName':'file',
-                     'creationDate':10000,
-                     'lastModified':15000},
-                    {'fileName':'memo',
-                     'creationDate':20000,
-                     'lastModified':25000
+                    {'name':'file',
+                     'creation_date':10000,
+                     'last_modified':15000},
+                    {'name':'memo',
+                     'creation_date':20000,
+                     'last_modified':25000
                     }];
                 that.done(list);
             }, 100);
@@ -107,8 +107,8 @@
         that.loadDocument = function () {
             // Returns a document object containing nothing.
 
-            // document object is {'fileName':string,'fileContent':string,
-            // 'creationDate':date,'lastModified':date}
+            // document object is {'name':string,'content':string,
+            // 'creation_date':date,'last_modified':date}
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
@@ -120,8 +120,8 @@
         that.getDocumentList = function () {
             // It returns nothing.
 
-            // the list is [object,object] -> object = {'fileName':string,
-            // 'lastModified':date,'creationDate':date}
+            // the list is [object,object] -> object = {'name':string,
+            // 'last_modified':date,'creation_date':date}
 
             setTimeout(function () {
                 that.fail({status:0,statusText:'Unknown Error',
@@ -171,8 +171,8 @@
         that.loadDocument = function () {
             // Returns a document object containing nothing.
 
-            // document object is {'fileName':string,'fileContent':string,
-            // 'creationDate':date,'lastModified':date}
+            // document object is {'name':string,'content':string,
+            // 'creation_date':date,'last_modified':date}
 
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
@@ -185,8 +185,8 @@
         that.getDocumentList = function () {
             // It returns nothing.
 
-            // the list is [object,object] -> object = {'fileName':string,
-            // 'lastModified':date,'creationDate':date}
+            // the list is [object,object] -> object = {'name':string,
+            // 'last_modified':date,'creation_date':date}
 
             setTimeout(function () {
                 that.fail({status:404,statusText:'Not Found',
@@ -214,15 +214,15 @@
     newDummyStorageAll3Tries = function ( spec, my ) {
         var that = Jio.newBaseStorage( spec, my ), priv = {};
 
-        priv.doJob = function (ifokreturn) {
+        priv.doJob = function (if_ok_return) {
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                priv.Try3OKElseFail (that.cloneJob().tries,ifokreturn);
+                priv.Try3OKElseFail (that.cloneJob().tries,if_ok_return);
             }, 100);
         };
-        priv.Try3OKElseFail = function (tries,ifokreturn) {
+        priv.Try3OKElseFail = function (tries,if_ok_return) {
             if ( tries === 3 ) {
-                return that.done(ifokreturn);
+                return that.done(if_ok_return);
             }
             if ( tries < 3 ) {
                 return that.fail({message:'' + (3 - tries) + ' tries left.'});
@@ -242,20 +242,20 @@
 
         that.loadDocument = function () {
             priv.doJob ({
-                'fileContent': 'content2',
-                'fileName': 'file',
-                'creationDate': 11000,
-                'lastModified': 17000
+                'content': 'content2',
+                'name': 'file',
+                'creation_date': 11000,
+                'last_modified': 17000
             });
         }; // end loadDocument
 
         that.getDocumentList = function () {
-            priv.doJob([{'fileName':'file',
-                         'creationDate':10000,
-                         'lastModified':15000},
-                        {'fileName':'memo',
-                         'creationDate':20000,
-                         'lastModified':25000}
+            priv.doJob([{'name':'file',
+                         'creation_date':10000,
+                         'last_modified':15000},
+                        {'name':'memo',
+                         'creation_date':20000,
+                         'last_modified':25000}
                        ]);
         }; // end getDocumentList
 
@@ -269,25 +269,17 @@
     ////////////////////////////////////////////////////////////////////////////
 
     // add key to storageObjectType of global jio
-    Jio.addStorageType('dummyallok', function (options) {
-        return newDummyStorageAllOk(options);
-    });
-    Jio.addStorageType('dummyallfail', function (options) {
-        return newDummyStorageAllFail(options);
-    });
-    Jio.addStorageType('dummyallnotfound', function (options) {
-        return newDummyStorageAllNotFound(options);
-    });
-    Jio.addStorageType('dummyall3tries', function (options) {
-        return newDummyStorageAll3Tries(options);
-    });
+    Jio.addStorageType('dummyallok', newDummyStorageAllOk);
+    Jio.addStorageType('dummyallfail', newDummyStorageAllFail);
+    Jio.addStorageType('dummyallnotfound', newDummyStorageAllNotFound);
+    Jio.addStorageType('dummyall3tries', newDummyStorageAll3Tries);
 
 };
 
 if (window.requirejs) {
-    define ('JIODummyStorages',['JIO'], jio_dummy_storage_loader);
+    define ('JIODummyStorages',['JIO'], jioDummyStorageLoader);
 } else {
-    jio_dummy_storage_loader ( JIO );
+    jioDummyStorageLoader ( JIO );
 }
 
 }());

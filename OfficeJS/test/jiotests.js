@@ -26,45 +26,45 @@ var getXML = function (url) {
 },
 addFile = function (user,appid,file) {
     var i, l, found = false, filenamearray,
-    userarray = LocalOrCookieStorage.getItem('jio/localuserarray') || [];
+    userarray = LocalOrCookieStorage.getItem('jio/local_user_array') || [];
     for (i = 0, l = userarray.length; i < l; i+= 1) {
         if (userarray[i] === user) { found = true; }
     }
     if (!found) {
         userarray.push(user);
-        LocalOrCookieStorage.setItem('jio/localuserarray',userarray);
-        LocalOrCookieStorage.setItem('jio/localfilenamearray/'+user+'/'+appid,
-                                     [file.fileName]);
+        LocalOrCookieStorage.setItem('jio/local_user_array',userarray);
+        LocalOrCookieStorage.setItem(
+            'jio/local_file_name_array/'+user+'/'+appid,[file.name]);
     } else {
         filenamearray =
             LocalOrCookieStorage.getItem(
-                'jio/localfilenamearray/'+user+'/'+appid) || [];
-        filenamearray.push(file.fileName);
+                'jio/local_file_name_array/'+user+'/'+appid) || [];
+        filenamearray.push(file.name);
         LocalOrCookieStorage.setItem(
-            'jio/localfilenamearray/'+user+'/'+appid,
+            'jio/local_file_name_array/'+user+'/'+appid,
             filenamearray);
         LocalOrCookieStorage.setItem(
-            'jio/local/'+user+'/'+appid+'/'+file.fileName,
+            'jio/local/'+user+'/'+appid+'/'+file.name,
             file);
     }
     LocalOrCookieStorage.setItem(
-        'jio/local/'+user+'/'+appid+'/'+file.fileName,
+        'jio/local/'+user+'/'+appid+'/'+file.name,
         file);
 },
 removeFile = function (user,appid,file) {
     var i, l, newarray = [],
     filenamearray =
         LocalOrCookieStorage.getItem(
-            'jio/localfilenamearray/'+user+'/'+appid) || [];
+            'jio/local_file_name_array/'+user+'/'+appid) || [];
     for (i = 0, l = filenamearray.length; i < l; i+= 1) {
-        if (filenamearray[i] !== file.fileName) {
+        if (filenamearray[i] !== file.name) {
             newarray.push(filenamearray[i]);
         }
     }
-    LocalOrCookieStorage.setItem('jio/localfilenamearray/'+user+'/'+appid,
+    LocalOrCookieStorage.setItem('jio/local_file_name_array/'+user+'/'+appid,
                                  newarray);
     LocalOrCookieStorage.deleteItem(
-        'jio/local/'+user+'/'+appid+'/'+file.fileName);
+        'jio/local/'+user+'/'+appid+'/'+file.name);
 };
 //// end tools
 
@@ -80,10 +80,10 @@ test ( "Jio simple methods", function () {
     // have to be ready.
 
     var o = {};
-    o.jio = JIO.createNew();
+    o.jio = JIO.newJio();
     ok ( o.jio, 'a new jio -> 1');
 
-    o.jio2 = JIO.createNew();
+    o.jio2 = JIO.newJio();
     ok ( o.jio2, 'another new jio -> 2');
 
     ok ( JIO.addStorageType('qunit', function(){}) ,
@@ -109,7 +109,7 @@ test ( 'Jio Publish/Sububscribe/Unsubscribe methods', function () {
     // the unsubscribe method is not working correctly.
 
     var o = {};
-    o.jio = JIO.createNew();
+    o.jio = JIO.newJio();
 
     var spy1 = this.spy();
 
@@ -138,31 +138,31 @@ test ('All tests', function () {
         o.f = function (result) {
             deepEqual (result[retmethod],value,message);};
         t.spy(o,'f');
-        o.jio[method]({'userName':'Dummy','fileName':'file',
-                       'fileContent':'content','callback':o.f,
-                       'maxtries':1});
+        o.jio[method]({'user_name':'Dummy','name':'file',
+                       'content':'content','callback':o.f,
+                       'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
     // All Ok Dummy Storage
-    o.jio = JIO.createNew({'type':'dummyallok','userName':'Dummy'},
+    o.jio = JIO.newJio({'type':'dummyallok','user_name':'Dummy'},
                           {'ID':'jiotests'});
     mytest('check name availability OK','checkNameAvailability',
            'return_value',true);
     mytest('save document OK','saveDocument','status','done');
     mytest('load document OK','loadDocument','return_value',
-           {'fileName':'file','fileContent':'content',
-            'lastModified':15000,'creationDate':10000});
+           {'name':'file','content':'content',
+            'last_modified':15000,'creation_date':10000});
     mytest('get document list OK','getDocumentList','return_value',
-           [{'fileName':'file','creationDate':10000,'lastModified':15000},
-            {'fileName':'memo','creationDate':20000,'lastModified':25000}]);
+           [{'name':'file','creation_date':10000,'last_modified':15000},
+            {'name':'memo','creation_date':20000,'last_modified':25000}]);
     mytest('remove document OK','removeDocument','status','done');
     o.jio.stop();
 
     // All Fail Dummy Storage
-    o.jio = JIO.createNew({'type':'dummyallfail','userName':'Dummy'},
+    o.jio = JIO.newJio({'type':'dummyallfail','user_name':'Dummy'},
                           {'ID':'jiotests'});
     mytest('check name availability FAIL','checkNameAvailability',
            'status','fail');
@@ -173,7 +173,7 @@ test ('All tests', function () {
     o.jio.stop();
 
     // All Not Found Dummy Storage
-    o.jio = JIO.createNew({'type':'dummyallnotfound','userName':'Dummy'},
+    o.jio = JIO.newJio({'type':'dummyallnotfound','user_name':'Dummy'},
                           {'ID':'jiotests'});
     mytest('check name availability NOT FOUND','checkNameAvailability',
            'return_value',true);
@@ -190,17 +190,17 @@ test ('Simple Job Elimination', function () {
     var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
     o.f1 = this.spy(); o.f2 = this.spy();
 
-    o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
+    o.jio = JIO.newJio({'type':'dummyallok','user_name':'dummy'},
                           {'ID':'jiotests'});
     id = o.jio.getID();
-    o.jio.saveDocument({'fileName':'file','fileContent':'content',
-                        'callback':o.f1,'maxtries':1});
-    ok(LocalOrCookieStorage.getItem('jio/jobobject/'+id)['1'],
+    o.jio.saveDocument({'name':'file','content':'content',
+                        'callback':o.f1,'max_tries':1});
+    ok(LocalOrCookieStorage.getItem('jio/job_object/'+id)['1'],
        'job creation');
     clock.tick(10);
-    o.jio.removeDocument({'fileName':'file','fileContent':'content',
-                          'callback':o.f2,'maxtries':1});
-    o.tmp = LocalOrCookieStorage.getItem('jio/jobobject/'+id)['1'];
+    o.jio.removeDocument({'name':'file','content':'content',
+                          'callback':o.f2,'max_tries':1});
+    o.tmp = LocalOrCookieStorage.getItem('jio/job_object/'+id)['1'];
     ok(!o.tmp || o.tmp.status === 'fail','job elimination');
 });
 
@@ -214,16 +214,16 @@ test ('Simple Job Replacement', function () {
     this.spy(o,'f1');
     o.f2 = this.spy();
 
-    o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
+    o.jio = JIO.newJio({'type':'dummyallok','user_name':'dummy'},
                           {'ID':'jiotests'});
     id = o.jio.getID();
-    o.jio.saveDocument({'fileName':'file','fileContent':'content',
-                        'callback':o.f1,'maxtries':1});
+    o.jio.saveDocument({'name':'file','content':'content',
+                        'callback':o.f1,'max_tries':1});
     clock.tick(10);
-    o.jio.saveDocument({'fileName':'file','fileContent':'content',
-                        'callback':o.f2,'maxtries':1});
+    o.jio.saveDocument({'name':'file','content':'content',
+                        'callback':o.f2,'max_tries':1});
     deepEqual(LocalOrCookieStorage.getItem(
-        'jio/jobobject/'+id)['1'].date,10,
+        'jio/job_object/'+id)['1'].date,10,
               'The first job date have to be equal to the second job date.');
     clock.tick(500);
     deepEqual([o.f1.calledOnce,o.status],[true,'fail'],
@@ -234,30 +234,30 @@ test ('Simple Job Replacement', function () {
 });
 
 test ('Simple Job Waiting', function () {
-    // Test if the second job doesn't erase the first ongoing one
+    // Test if the second job doesn't erase the first on going one
 
     var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
     o.f3 = this.spy(); o.f4 = this.spy();
 
-    o.jio = JIO.createNew({'type':'dummyallok','userName':'dummy'},
+    o.jio = JIO.newJio({'type':'dummyallok','user_name':'dummy'},
                           {'ID':'jiotests'});
     id = o.jio.getID();
-    o.jio.saveDocument({'fileName':'file','fileContent':'content',
-                        'callback':o.f3,'maxtries':1});
+    o.jio.saveDocument({'name':'file','content':'content',
+                        'callback':o.f3,'max_tries':1});
     clock.tick(200);
-    o.jio.saveDocument({'fileName':'file','fileContent':'content',
-                        'callback':o.f4,'maxtries':1});
+    o.jio.saveDocument({'name':'file','content':'content',
+                        'callback':o.f4,'max_tries':1});
     ok(LocalOrCookieStorage.getItem(
-        'jio/jobobject/'+id)['2'] &&
+        'jio/job_object/'+id)['2'] &&
        LocalOrCookieStorage.getItem(
-           'jio/jobobject/'+id)['1'].status === 'ongoing',
-       'The second job must not overwrite the first ongoing one.');
+           'jio/job_object/'+id)['1'].status === 'on_going',
+       'The second job must not overwrite the first on going one.');
     ok(LocalOrCookieStorage.getItem(
-        'jio/jobobject/'+id)['2'].status === 'wait' &&
+        'jio/job_object/'+id)['2'].status === 'wait' &&
        LocalOrCookieStorage.getItem(
-           'jio/jobobject/'+id)['2'].waitingFor &&
+           'jio/job_object/'+id)['2'].waiting_for &&
        JSON.stringify (LocalOrCookieStorage.getItem(
-           'jio/jobobject/'+id)['2'].waitingFor.jobIdArray) === '["1"]',
+           'jio/job_object/'+id)['2'].waiting_for.job_id_array) === '["1"]',
        'The second job must be waiting for the first to end');
     clock.tick(500);
     ok(o.f3.calledOnce,'first request passed');
@@ -274,10 +274,10 @@ test ('Simple Time Waiting' , function () {
         o.res = (result.status === 'done');
     };
     this.spy(o,'f');
-    o.jio = JIO.createNew({'type':'dummyall3tries','userName':'dummy'},
+    o.jio = JIO.newJio({'type':'dummyall3tries','user_name':'dummy'},
                           {'ID':'jiotests'});
-    o.jio.saveDocument({'fileName':'file','fileContent':'content',
-                        'callback':o.f,'maxtries':3});
+    o.jio.saveDocument({'name':'file','content':'content',
+                        'callback':o.f,'max_tries':3});
     clock.tick(100000);
     ok(o.f.calledOnce,'callback called once.');
     ok(o.res,'job done.');
@@ -297,7 +297,7 @@ test ('Check name availability', function () {
             deepEqual(result.return_value,value,'checking name availabality');};
         t.spy(o,'f');
         o.jio.checkNameAvailability(
-            {'userName':'MrCheckName','callback': o.f,'maxtries':1});
+            {'user_name':'MrCheckName','callback': o.f,'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -305,15 +305,15 @@ test ('Check name availability', function () {
     };
 
     // new jio
-    o.jio = JIO.createNew({'type':'local','userName':'noname'},
+    o.jio = JIO.newJio({'type':'local','user_name':'noname'},
                           {"ID":'noid'});
 
     // name must be available
-    removeFile ('MrCheckName','jiotests',{fileName:'file'});
+    removeFile ('MrCheckName','jiotests',{name:'file'});
     mytest(true);
 
     // name must be unavailable
-    addFile ('MrCheckName','jiotests',{fileName:'file'});
+    addFile ('MrCheckName','jiotests',{name:'file'});
     mytest(false);
 
     o.jio.stop();
@@ -330,8 +330,8 @@ test ('Document save', function () {
             deepEqual(result.status,value,message);};
         t.spy(o,'f');
         o.jio.saveDocument(
-            {'fileName':'file','fileContent':'content','callback': o.f,
-             'maxtries':1});
+            {'name':'file','content':'content','callback': o.f,
+             'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -339,15 +339,15 @@ test ('Document save', function () {
             // check content
             o.tmp = LocalOrCookieStorage.getItem (
                 'jio/local/MrSaveName/jiotests/file');
-            o.tmp.lmcd = lmcd(o.tmp.creationDate,o.tmp.lastModified);
-            delete o.tmp.lastModified;
-            delete o.tmp.creationDate;
-            deepEqual (o.tmp,{'fileName':'file','fileContent':'content',
+            o.tmp.lmcd = lmcd(o.tmp.creation_date,o.tmp.last_modified);
+            delete o.tmp.last_modified;
+            delete o.tmp.creation_date;
+            deepEqual (o.tmp,{'name':'file','content':'content',
                               'lmcd':true},'check content');
         }
     };
 
-    o.jio = JIO.createNew({'type':'local','userName':'MrSaveName'},
+    o.jio = JIO.newJio({'type':'local','user_name':'MrSaveName'},
                           {"ID":'jiotests'});
     LocalOrCookieStorage.deleteItem ('jio/local/MrSaveName/jiotests/file');
     // save and check document existence
@@ -377,23 +377,23 @@ test ('Document load', function () {
             deepEqual(result[res],value,'loading document');};
         t.spy(o,'f');
         o.jio.loadDocument(
-            {'fileName':'file','callback': o.f,'maxtries':1});
+            {'name':'file','callback': o.f,'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio = JIO.createNew({'type':'local','userName':'MrLoadName'},
+    o.jio = JIO.newJio({'type':'local','user_name':'MrLoadName'},
                           {"ID":'jiotests'});
     // load a non existing file
     LocalOrCookieStorage.deleteItem ('jio/local/MrLoadName/jiotests/file');
     mytest ('status','fail');
 
     // re-load file after saving it manually
-    doc = {'fileName':'file','fileContent':'content',
-           'lastModified':1234,'creationDate':1000};
-    LocalOrCookieStorage.setItem ('jio/localfilenamearray/MrLoadName/jiotests',
-                                  ['file']);
+    doc = {'name':'file','content':'content',
+           'last_modified':1234,'creation_date':1000};
+    LocalOrCookieStorage.setItem (
+        'jio/local_file_name_array/MrLoadName/jiotests',['file']);
     LocalOrCookieStorage.setItem ('jio/local/MrLoadName/jiotests/file',doc);
     mytest ('return_value',doc);
 
@@ -411,7 +411,7 @@ test ('Get document list', function () {
             var objectifyDocumentArray = function (array) {
                 var obj = {}, k;
                 for (k = 0; k < array.length; k+=1) {
-                    obj[array[k].fileName] = array[k];
+                    obj[array[k].name] = array[k];
                 }
                 return obj;
             };
@@ -419,22 +419,22 @@ test ('Get document list', function () {
                        objectifyDocumentArray(value),'getting list');
         };
         t.spy(o,'f');
-        o.jio.getDocumentList({'callback': o.f,'maxtries':1});
+        o.jio.getDocumentList({'callback': o.f,'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio = JIO.createNew({'type':'local','userName':'MrListName'},
+    o.jio = JIO.newJio({'type':'local','user_name':'MrListName'},
                           {"ID":'jiotests'});
-    doc1 = {'fileName':'file','fileContent':'content',
-            'lastModified':1,'creationDate':0};
-    doc2 = {'fileName':'memo','fileContent':'test',
-            'lastModified':5,'creationDate':2};
+    doc1 = {'name':'file','content':'content',
+            'last_modified':1,'creation_date':0};
+    doc2 = {'name':'memo','content':'test',
+            'last_modified':5,'creation_date':2};
     addFile ('MrListName','jiotests',doc1);
     addFile ('MrListName','jiotests',doc2);
-    delete doc1.fileContent;
-    delete doc2.fileContent;
+    delete doc1.content;
+    delete doc2.content;
     mytest ([doc1,doc2]);
 
     o.jio.stop();
@@ -451,7 +451,7 @@ test ('Document remove', function () {
             deepEqual(result.status,'done','removing document');};
         t.spy(o,'f');
         o.jio.removeDocument(
-            {'fileName':'file','callback': o.f,'maxtries':1});
+            {'name':'file','callback': o.f,'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -462,7 +462,7 @@ test ('Document remove', function () {
             ok (!o.tmp, 'check no content');
         }
     };
-    o.jio = JIO.createNew({'type':'local','userName':'MrRemoveName'},
+    o.jio = JIO.newJio({'type':'local','user_name':'MrRemoveName'},
                           {"ID":'jiotests'});
     // test removing a file
     LocalOrCookieStorage.setItem ('jio/local/MrRemoveName/jiotests/file',{});
@@ -486,8 +486,8 @@ test ('Check name availability', function () {
         o.f = function (result) {
             deepEqual(result[method],value,'checking name availability');};
         t.spy(o,'f');
-        o.jio.checkNameAvailability({'userName':'davcheck','callback':o.f,
-                                     'maxtries':1});
+        o.jio.checkNameAvailability({'user_name':'davcheck','callback':o.f,
+                                     'max_tries':1});
         clock.tick(500);
         server.respond();
         if (!o.f.calledOnce) {
@@ -495,9 +495,9 @@ test ('Check name availability', function () {
         }
     };
 
-    o.jio = JIO.createNew({'type':'dav','userName':'davcheck',
+    o.jio = JIO.newJio({'type':'dav','user_name':'davcheck',
                            'password':'checkpwd',
-                           'location':'https://ca-davstorage:8080'},
+                           'url':'https://ca-davstorage:8080'},
                           {'ID':'jiotests'});
     // 404 error, the name does not exist, name is available.
     mytest ('return_value',true,404);
@@ -526,16 +526,16 @@ test ('Document load', function () {
         o.f = function (result) {
             deepEqual (result.return_value,doc,message);};
         t.spy(o,'f');
-        o.jio.loadDocument({'fileName':'file','callback':o.f,'maxtries':1});
+        o.jio.loadDocument({'name':'file','callback':o.f,'max_tries':1});
         clock.tick(500);
         server.respond();
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio = JIO.createNew({'type':'dav','userName':'davload',
+    o.jio = JIO.newJio({'type':'dav','user_name':'davload',
                            'password':'checkpwd',
-                           'location':'https://ca-davstorage:8080'},
+                           'url':'https://ca-davstorage:8080'},
                           {'ID':'jiotests'});
     // note: http errno:
     //     200 OK
@@ -547,9 +547,9 @@ test ('Document load', function () {
     // load an inexistant document.
     mytest ('load inexistant document',undefined,404,404);
     // load a document.
-    mytest ('load document',{'fileName':'file','fileContent':'content',
-                             'lastModified':1335953199000,
-                             'creationDate':1335953202000},207,200);
+    mytest ('load document',{'name':'file','content':'content',
+                             'last_modified':1335953199000,
+                             'creation_date':1335953202000},207,200);
     o.jio.stop();
 });
 
@@ -583,17 +583,17 @@ test ('Document save', function () {
         o.f = function (result) {
             deepEqual (result.status,value,message);};
         t.spy(o,'f');
-        o.jio.saveDocument({'fileName':'file','fileContent':'content',
-                            'callback':o.f,'maxtries':1});
+        o.jio.saveDocument({'name':'file','content':'content',
+                            'callback':o.f,'max_tries':1});
         clock.tick(500);
         server.respond();
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio = JIO.createNew({'type':'dav','userName':'davsave',
+    o.jio = JIO.newJio({'type':'dav','user_name':'davsave',
                            'password':'checkpwd',
-                           'location':'https://ca-davstorage:8080'},
+                           'url':'https://ca-davstorage:8080'},
                           {'ID':'jiotests'});
     // note: http errno:
     //     200 OK
@@ -628,7 +628,7 @@ test ('Get Document List', function () {
             var objectifyDocumentArray = function (array) {
                 var obj = {}, k;
                 for (k = 0; k < array.length; k += 1) {
-                    obj[array[k].fileName] = array[k];
+                    obj[array[k].name] = array[k];
                 }
                 return obj;
             };
@@ -640,22 +640,22 @@ test ('Get Document List', function () {
             }
         };
         t.spy(o,'f');
-        o.jio.getDocumentList({'callback':o.f,'maxtries':1});
+        o.jio.getDocumentList({'callback':o.f,'max_tries':1});
         clock.tick(500);
         server.respond();
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio = JIO.createNew({'type':'dav','userName':'davlist',
+    o.jio = JIO.newJio({'type':'dav','user_name':'davlist',
                            'password':'checkpwd',
-                           'location':'https://ca-davstorage:8080'},
+                           'url':'https://ca-davstorage:8080'},
                           {'ID':'jiotests'});
     mytest('fail to get list',undefined,404);
-    mytest('getting list',[{'fileName':'file','creationDate':1335962911000,
-                            'lastModified':1335962907000},
-                           {'fileName':'memo','creationDate':1335894073000,
-                            'lastModified':1335955713000}],207);
+    mytest('getting list',[{'name':'file','creation_date':1335962911000,
+                            'last_modified':1335962907000},
+                           {'name':'memo','creation_date':1335894073000,
+                            'last_modified':1335955713000}],207);
     o.jio.stop();
 });
 
@@ -671,16 +671,16 @@ test ('Remove document', function () {
         o.f = function (result) {
             deepEqual (result.status,value,message);};
         t.spy(o,'f');
-        o.jio.removeDocument({'fileName':'file','callback':o.f,'maxtries':1});
+        o.jio.removeDocument({'name':'file','callback':o.f,'max_tries':1});
         clock.tick(500);
         server.respond();
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio = JIO.createNew({'type':'dav','userName':'davremove',
+    o.jio = JIO.newJio({'type':'dav','user_name':'davremove',
                            'password':'checkpwd',
-                           'location':'https://ca-davstorage:8080'},
+                           'url':'https://ca-davstorage:8080'},
                           {'ID':'jiotests'});
 
     mytest('remove document','done',204);
@@ -702,58 +702,58 @@ test ('Check name availability', function () {
             deepEqual (result.return_value,value,message);
         };
         t.spy(o,'f');
-        o.jio.checkNameAvailability({'userName':'Dummy','callback':o.f,
-                                     'maxtries':o.maxtries});
+        o.jio.checkNameAvailability({'user_name':'Dummy','callback':o.f,
+                                     'max_tries':o.max_tries});
         clock.tick(300000);
         if (!o.f.calledOnce) {
             ok(false,'no respose / too much results');
         }
     };
-    o.maxtries = 1;
+    o.max_tries = 1;
     // DummyStorageAllOK,OK
-    o.jio = JIO.createNew({'type':'replicate','storageArray':[
-        {'type':'dummyallok','userName':'1'},
-        {'type':'dummyallok','userName':'2'}]},
+    o.jio = JIO.newJio({'type':'replicate','storage_array':[
+        {'type':'dummyallok','user_name':'1'},
+        {'type':'dummyallok','user_name':'2'}]},
                           {'ID':'jiotests'});
     mytest('DummyStoragesAllOK,OK : name available',true);
     o.jio.stop();
     // DummyStorageAllOK,Fail
-    o.jio = JIO.createNew({'type':'replicate','storageArray':[
-        {'type':'dummyallok','userName':'1'},
-        {'type':'dummyallfail','userName':'2'}]},
+    o.jio = JIO.newJio({'type':'replicate','storage_array':[
+        {'type':'dummyallok','user_name':'1'},
+        {'type':'dummyallfail','user_name':'2'}]},
                           {'ID':'jiotests'});
     mytest('DummyStoragesAllOK,Fail : name not available',undefined);
     o.jio.stop();
     // DummyStorageAllFail,OK
-    o.jio = JIO.createNew({'type':'replicate','storageArray':[
-        {'type':'dummyallfail','userName':'1'},
-        {'type':'dummyallok','userName':'2'}]},
+    o.jio = JIO.newJio({'type':'replicate','storage_array':[
+        {'type':'dummyallfail','user_name':'1'},
+        {'type':'dummyallok','user_name':'2'}]},
                           {'ID':'jiotests'});
     mytest('DummyStoragesAllFail,OK : name not available',undefined);
     o.jio.stop();
     // DummyStorageAllFail,Fail
-    o.jio = JIO.createNew({'type':'replicate','storageArray':[
-        {'type':'dummyallfail','userName':'1'},
-        {'type':'dummyallfail','userName':'2'}]},
+    o.jio = JIO.newJio({'type':'replicate','storage_array':[
+        {'type':'dummyallfail','user_name':'1'},
+        {'type':'dummyallfail','user_name':'2'}]},
                           {'ID':'jiotests'});
     mytest('DummyStoragesAllFail,Fail : fail to check name',undefined);
     o.jio.stop();
     // DummyStorageAllOK,3Tries
-    o.maxtries = 3 ;
-    o.jio = JIO.createNew({'type':'replicate','storageArray':[
-        {'type':'dummyallok','userName':'1'},
-        {'type':'dummyall3tries','userName':'2'}]},
+    o.max_tries = 3 ;
+    o.jio = JIO.newJio({'type':'replicate','storage_array':[
+        {'type':'dummyallok','user_name':'1'},
+        {'type':'dummyall3tries','user_name':'2'}]},
                           {'ID':'jiotests'});
     mytest('DummyStoragesAllOK,3Tries : name available',true);
     o.jio.stop();
     // DummyStorageAll{3tries,{3tries,3tries},3tries}
-    o.maxtries = 3 ;
-    o.jio = JIO.createNew({'type':'replicate','storageArray':[
-        {'type':'dummyall3tries','userName':'1'},
-        {'type':'replicate','storageArray':[
-            {'type':'dummyall3tries','userName':'2'},
-            {'type':'dummyall3tries','userName':'3'}]},
-        {'type':'dummyall3tries','userName':'4'}]},
+    o.max_tries = 3 ;
+    o.jio = JIO.newJio({'type':'replicate','storage_array':[
+        {'type':'dummyall3tries','user_name':'1'},
+        {'type':'replicate','storage_array':[
+            {'type':'dummyall3tries','user_name':'2'},
+            {'type':'dummyall3tries','user_name':'3'}]},
+        {'type':'dummyall3tries','user_name':'4'}]},
                           {'ID':'jiotests'});
     mytest('DummyStorageAll{3tries,{3tries,3tries},3tries} : name available',
            true);
@@ -768,29 +768,29 @@ test ('Document load', function () {
         o.f = function (result) {
             deepEqual (result.return_value,doc,message);};
         t.spy(o,'f');
-        o.jio.loadDocument({'fileName':'file','callback':o.f});
+        o.jio.loadDocument({'name':'file','callback':o.f});
         clock.tick(100000);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio=JIO.createNew({'type':'replicate','userName':'Dummy','storageArray':[
-        {'type':'dummyallok','userName':'1'},
-        {'type':'dummyallok','userName':'2'}]},
+    o.jio=JIO.newJio({'type':'replicate','user_name':'Dummy','storage_array':[
+        {'type':'dummyallok','user_name':'1'},
+        {'type':'dummyallok','user_name':'2'}]},
                         {'ID':'jiotests'});
     mytest('DummyStorageAllOK,OK: load same file',{
-        'fileName':'file','fileContent':'content',
-        'lastModified':15000,
-        'creationDate':10000});
+        'name':'file','content':'content',
+        'last_modified':15000,
+        'creation_date':10000});
     o.jio.stop();
-    o.jio=JIO.createNew({'type':'replicate','userName':'Dummy','storageArray':[
-        {'type':'dummyallok','userName':'1'},
-        {'type':'dummyall3tries','userName':'2'}]},
+    o.jio=JIO.newJio({'type':'replicate','user_name':'Dummy','storage_array':[
+        {'type':'dummyallok','user_name':'1'},
+        {'type':'dummyall3tries','user_name':'2'}]},
                         {'ID':'jiotests'});
     mytest('DummyStorageAllOK,3tries: load 2 different files',{
-        'fileName':'file','fileContent':'content',
-        'lastModified':15000,
-        'creationDate':10000});
+        'name':'file','content':'content',
+        'last_modified':15000,
+        'creation_date':10000});
 
     o.jio.stop();
 });
@@ -803,16 +803,16 @@ test ('Document save', function () {
         o.f = function (result) {
             deepEqual (result.status,value,message);};
         t.spy(o,'f');
-        o.jio.saveDocument({'fileName':'file','fileContent':'content',
-                            'callback':o.f,'maxtries':3});
+        o.jio.saveDocument({'name':'file','content':'content',
+                            'callback':o.f,'max_tries':3});
         clock.tick(500);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio=JIO.createNew({'type':'replicate','userName':'Dummy','storageArray':[
-        {'type':'dummyallok','userName':'1'},
-        {'type':'dummyallok','userName':'2'}]},
+    o.jio=JIO.newJio({'type':'replicate','user_name':'Dummy','storage_array':[
+        {'type':'dummyallok','user_name':'1'},
+        {'type':'dummyallok','user_name':'2'}]},
         {'ID':'jiotests'});
     mytest('DummyStorageAllOK,OK: save a file.','done');
     o.jio.stop();
@@ -827,7 +827,7 @@ test ('Get Document List', function () {
             var objectifyDocumentArray = function (array) {
                 var obj = {}, k;
                 for (k = 0; k < array.length; k += 1) {
-                    obj[array[k].fileName] = array[k];
+                    obj[array[k].name] = array[k];
                 }
                 return obj;
             };
@@ -835,20 +835,20 @@ test ('Get Document List', function () {
                        objectifyDocumentArray(value),'getting list');
         };
         t.spy(o,'f');
-        o.jio.getDocumentList({'callback':o.f,'maxtries':3});
+        o.jio.getDocumentList({'callback':o.f,'max_tries':3});
         clock.tick(100000);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio=JIO.createNew({'type':'replicate','userName':'Dummy','storageArray':[
-        {'type':'dummyallok','userName':'1'},
-        {'type':'dummyall3tries','userName':'2'}]},
+    o.jio=JIO.newJio({'type':'replicate','user_name':'Dummy','storage_array':[
+        {'type':'dummyallok','user_name':'1'},
+        {'type':'dummyall3tries','user_name':'2'}]},
         {'ID':'jiotests'});
-    o.doc1 = {'fileName':'file',
-              'lastModified':15000,'creationDate':10000};
-    o.doc2 = {'fileName':'memo',
-              'lastModified':25000,'creationDate':20000};
+    o.doc1 = {'name':'file',
+              'last_modified':15000,'creation_date':10000};
+    o.doc2 = {'name':'memo',
+              'last_modified':25000,'creation_date':20000};
     mytest('DummyStorageAllOK,3tries: get document list .',[o.doc1,o.doc2]);
     o.jio.stop();
 });
@@ -861,15 +861,15 @@ test ('Remove document', function () {
         o.f = function (result) {
             deepEqual (result.status,value,message);};
         t.spy(o,'f');
-        o.jio.removeDocument({'fileName':'file','callback':o.f,'maxtries':3});
+        o.jio.removeDocument({'name':'file','callback':o.f,'max_tries':3});
         clock.tick(100000);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio=JIO.createNew({'type':'replicate','userName':'Dummy','storageArray':[
-        {'type':'dummyallok','userName':'1'},
-        {'type':'dummyall3tries','userName':'2'}]},
+    o.jio=JIO.newJio({'type':'replicate','user_name':'Dummy','storage_array':[
+        {'type':'dummyallok','user_name':'1'},
+        {'type':'dummyall3tries','user_name':'2'}]},
         {'ID':'jiotests'});
     mytest('DummyStorageAllOK,3tries: remove document.','done');
     o.jio.stop();
@@ -883,16 +883,16 @@ test ('Check name availability', function () {
         o.f = function (result) {
             deepEqual (result.return_value,value,message);};
         t.spy(o,'f');
-        o.jio.checkNameAvailability({userName:'MrIndexedCheck',
-                                     callback:o.f,maxtries:3});
+        o.jio.checkNameAvailability({user_name:'MrIndexedCheck',
+                                     callback:o.f,max_tries:3});
         clock.tick(100000);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
-    o.jio=JIO.createNew({type:'indexed',
+    o.jio=JIO.newJio({type:'indexed',
                          storage:{type:'dummyall3tries',
-                                  userName:'indexedcheck'}},
+                                  user_name:'indexedcheck'}},
                         {ID:'jiotests'});
     mytest('dummy ok : name must be available', true);
     o.jio.stop();
@@ -900,39 +900,39 @@ test ('Check name availability', function () {
 
 test ('Document load', function () {
     var o = {}, clock = this.sandbox.useFakeTimers();
-    o.jio=JIO.createNew({type:'indexed',
+    o.jio=JIO.newJio({type:'indexed',
                          storage:{type:'dummyall3tries',
-                                  userName:'indexedload'}},
+                                  user_name:'indexedload'}},
                         {ID:'jiotests'});
     // loading must take long time with dummyall3tries
     o.f = function () {};
     this.spy(o,'f');
-    o.jio.loadDocument({fileName:'memo',maxtries:3,callback:o.f,
+    o.jio.loadDocument({name:'memo',max_tries:3,callback:o.f,
                         options:{metadata_only:true}});
     clock.tick(500);
     ok(!o.f.calledOnce,'Callback must not be called');
     // wait long time too retreive list
     clock.tick(100000);
     // now we can test if the document metadata are loaded faster.
-    o.doc = {fileName:'memo',lastModified:25000,creationDate:20000};
+    o.doc = {name:'memo',last_modified:25000,creation_date:20000};
     o.f2 = function (result) {
         deepEqual (result.return_value,o.doc,'Document metadata retrieved');
     };
     this.spy(o,'f2');
-    o.jio.loadDocument({fileName:'memo',maxtries:3,callback:o.f2,
+    o.jio.loadDocument({name:'memo',max_tries:3,callback:o.f2,
                         options:{metadata_only:true}});
     clock.tick(500);
     if (!o.f2.calledOnce) {
         ok (false, 'no response / too much results');
     }
     // test a simple document loading
-    o.doc2 = {fileName:'file',lastModified:17000,
-              creationDate:11000,fileContent:'content2'};
+    o.doc2 = {name:'file',last_modified:17000,
+              creation_date:11000,content:'content2'};
     o.f3 = function (result) {
         deepEqual (result.return_value,o.doc2,'Simple document loading');
     };
     this.spy(o,'f3');
-    o.jio.loadDocument({fileName:'file',maxtries:3,callback:o.f3});
+    o.jio.loadDocument({name:'file',max_tries:3,callback:o.f3});
     clock.tick(100000);
     if (!o.f3.calledOnce) {
         ok (false, 'no response / too much results');
@@ -942,15 +942,15 @@ test ('Document load', function () {
 
 test ('Document save', function () {
     var o = {}, clock = this.sandbox.useFakeTimers();
-    o.jio=JIO.createNew({type:'indexed',
+    o.jio=JIO.newJio({type:'indexed',
                          storage:{type:'dummyall3tries',
-                                  userName:'indexedsave'}},
+                                  user_name:'indexedsave'}},
                         {ID:'jiotests'});
     o.f = function (result) {
         deepEqual (result.status,'done','document save');
     };
     this.spy(o,'f');
-    o.jio.saveDocument({fileName:'file',maxtries:3,callback:o.f});
+    o.jio.saveDocument({name:'file',max_tries:3,callback:o.f});
     clock.tick(100000);
     if (!o.f.calledOnce){
         ok (false, 'no response / too much results');
@@ -960,16 +960,16 @@ test ('Document save', function () {
 
 test ('Get document list', function () {
     var o = {}, clock = this.sandbox.useFakeTimers();
-    o.jio=JIO.createNew({type:'indexed',
+    o.jio=JIO.newJio({type:'indexed',
                          storage:{type:'dummyall3tries',
-                                  userName:'indexedgetlist'}},
+                                  user_name:'indexedgetlist'}},
                         {ID:'jiotests'});
-    o.doc1 = {fileName:'file',lastModified:15000,creationDate:10000};
-    o.doc2 = {fileName:'memo',lastModified:25000,creationDate:20000};
+    o.doc1 = {name:'file',last_modified:15000,creation_date:10000};
+    o.doc2 = {name:'memo',last_modified:25000,creation_date:20000};
     // getting list must take long time with dummyall3tries
     o.f = function () {};
     this.spy(o,'f');
-    o.jio.getDocumentList({maxtries:3,callback:o.f});
+    o.jio.getDocumentList({max_tries:3,callback:o.f});
     clock.tick(500);
     ok(!o.f.calledOnce,'Callback must not be called');
     // wail long time too retreive list
@@ -979,7 +979,7 @@ test ('Get document list', function () {
         deepEqual (result.return_value,[o.doc1,o.doc2],'get document list');
     };
     this.spy(o,'f2');
-    o.jio.getDocumentList({maxtries:3,callback:o.f2});
+    o.jio.getDocumentList({max_tries:3,callback:o.f2});
     clock.tick(500);
     if (!o.f2.calledOnce) {
         ok (false, 'no response / too much results');
@@ -988,15 +988,15 @@ test ('Get document list', function () {
 
 test ('Remove document', function () {
     var o = {}, clock = this.sandbox.useFakeTimers();
-    o.jio=JIO.createNew({type:'indexed',
+    o.jio=JIO.newJio({type:'indexed',
                          storage:{type:'dummyall3tries',
-                                  userName:'indexedsave'}},
+                                  user_name:'indexedsave'}},
                         {ID:'jiotests'});
     o.f = function (result) {
         deepEqual (result.status,'done','document remove');
     };
     this.spy(o,'f');
-    o.jio.removeDocument({fileName:'file',maxtries:3,callback:o.f});
+    o.jio.removeDocument({name:'file',max_tries:3,callback:o.f});
     clock.tick(100000);
     if (!o.f.calledOnce){
         ok (false, 'no response / too much results');
@@ -1008,16 +1008,16 @@ module ('Jio CryptedStorage');
 
 test ('Check name availability' , function () {
     var o = {}, clock = this.sandbox.useFakeTimers();
-    o.jio=JIO.createNew({type:'crypted',
+    o.jio=JIO.newJio({type:'crypted',
                          storage:{type:'local',
-                                  userName:'cryptcheck'}},
+                                  user_name:'cryptcheck'}},
                         {ID:'jiotests'});
     o.f = function (result) {
         deepEqual (result.return_value,true,'name must be available');
     };
     this.spy(o,'f');
-    o.jio.checkNameAvailability({userName:'cryptcheck',
-                                 maxtries:1,callback:o.f});
+    o.jio.checkNameAvailability({user_name:'cryptcheck',
+                                 max_tries:1,callback:o.f});
     clock.tick(1000);
     if (!o.f.calledOnce) {
         ok (false, 'no response / too much results');
@@ -1027,17 +1027,17 @@ test ('Check name availability' , function () {
 
 test ('Document save' , function () {
     var o = {}, clock = this.sandbox.useFakeTimers();
-    o.jio=JIO.createNew({type:'crypted',
+    o.jio=JIO.newJio({type:'crypted',
                          password:'mypwd',
                          storage:{type:'local',
-                                  userName:'cryptsave'}},
+                                  user_name:'cryptsave'}},
                         {ID:'jiotests'});
     o.f = function (result) {
         deepEqual (result.status,'done','save ok');
     };
     this.spy(o,'f');
-    o.jio.saveDocument({fileName:'testsave',fileContent:'contentoftest',
-                        maxtries:1,callback:o.f});
+    o.jio.saveDocument({name:'testsave',content:'contentoftest',
+                        max_tries:1,callback:o.f});
     clock.tick(1000);
     if (!o.f.calledOnce) {
         ok (false, 'no response / too much results');
@@ -1047,25 +1047,25 @@ test ('Document save' , function () {
 
 test ('Document Load' , function () {
     var o = {}, clock = this.sandbox.useFakeTimers();
-    o.jio=JIO.createNew({type:'crypted',
+    o.jio=JIO.newJio({type:'crypted',
                          password:'mypwd',
                          storage:{type:'local',
-                                  userName:'cryptload'}},
+                                  user_name:'cryptload'}},
                         {ID:'jiotests'});
     o.f = function (result) {
         if (result.status === 'done') {
-            deepEqual (result.return_value,{fileName:'testload',
-                                            fileContent:'contentoftest',
-                                            lastModified:500,
-                                            creationDate:500}
+            deepEqual (result.return_value,{name:'testload',
+                                            content:'contentoftest',
+                                            last_modified:500,
+                                            creation_date:500}
                        ,'load ok');
         } else {
             ok (false ,'cannot load');
         }
     };
     this.spy(o,'f');
-    o.jio.loadDocument({fileName:'testload',
-                        maxtries:1,callback:o.f});
+    o.jio.loadDocument({name:'testload',
+                        max_tries:1,callback:o.f});
     clock.tick(1000);
     if (!o.f.calledOnce) {
         ok (false, 'no response / too much results');

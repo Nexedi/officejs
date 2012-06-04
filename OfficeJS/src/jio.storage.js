@@ -9,7 +9,7 @@
  * @module JIOStorages
  */
 (function () {
-    var jio_storage_loader =
+    var jioStorageLoader =
         function ( LocalOrCookieStorage, $, Base64, sjcl, Jio) {
 
     ////////////////////////////////////////////////////////////////////////////
@@ -35,8 +35,8 @@
 
         var that = Jio.newBaseStorage( spec, my ), priv = {};
 
-        priv.storage_user_array_name = 'jio/localuserarray';
-        priv.storage_file_array_name = 'jio/localfilenamearray/' +
+        priv.storage_user_array_name = 'jio/local_user_array';
+        priv.storage_file_array_name = 'jio/local_file_name_array/' +
             that.getStorageUserName() + '/' + that.getApplicantID();
 
         /**
@@ -52,25 +52,25 @@
         /**
          * Adds a user to the user list.
          * @method addUser
-         * @param  {string} username The user name.
+         * @param  {string} user_name The user name.
          */
-        priv.addUser = function (username) {
-            var userarray = priv.getUserArray();
-            userarray.push(username);
+        priv.addUser = function (user_name) {
+            var user_array = priv.getUserArray();
+            user_array.push(user_name);
             LocalOrCookieStorage.setItem(priv.storage_user_array_name,
-                                         userarray);
+                                         user_array);
         };
 
         /**
          * checks if a user exists in the user array.
          * @method userExists
-         * @param  {string} username The user name
+         * @param  {string} user_name The user name
          * @return {boolean} true if exist, else false
          */
-        priv.userExists = function (username) {
-            var userarray = priv.getUserArray(), i, l;
-            for (i = 0, l = userarray.length; i < l; i += 1) {
-                if (userarray[i] === username) {
+        priv.userExists = function (user_name) {
+            var user_array = priv.getUserArray(), i, l;
+            for (i = 0, l = user_array.length; i < l; i += 1) {
+                if (user_array[i] === user_name) {
                     return true;
                 }
             }
@@ -90,29 +90,29 @@
         /**
          * Adds a file name to the local file name array.
          * @method addFileName
-         * @param  {string} filename The new file name.
+         * @param  {string} file_name The new file name.
          */
-        priv.addFileName = function (filename) {
-            var filenamearray = priv.getFileNameArray();
-            filenamearray.push(filename);
+        priv.addFileName = function (file_name) {
+            var file_name_array = priv.getFileNameArray();
+            file_name_array.push(file_name);
             LocalOrCookieStorage.setItem(priv.storage_file_array_name,
-                                         filenamearray);
+                                         file_name_array);
         };
 
         /**
          * Removes a file name from the local file name array.
          * @method removeFileName
-         * @param  {string} filename The file name to remove.
+         * @param  {string} file_name The file name to remove.
          */
-        priv.removeFileName = function (filename) {
-            var i, l, array = priv.getFileNameArray(), newarray = [];
+        priv.removeFileName = function (file_name) {
+            var i, l, array = priv.getFileNameArray(), new_array = [];
             for (i = 0, l = array.length; i < l; i+= 1) {
-                if (array[i] !== filename) {
-                    newarray.push(array[i]);
+                if (array[i] !== file_name) {
+                    new_array.push(array[i]);
                 }
             }
             LocalOrCookieStorage.setItem(priv.storage_file_array_name,
-                                         newarray);
+                                         new_array);
         };
 
         /**
@@ -128,7 +128,7 @@
 
         /**
          * Saves a document in the local storage.
-         * It will store the file in 'jio/local/USR/APP/FILENAME'.
+         * It will store the file in 'jio/local/USR/APP/FILE_NAME'.
          * @method saveDocument
          */
         that.saveDocument = function () {
@@ -144,10 +144,10 @@
                 if (!doc) {
                     // create document
                     doc = {
-                        'fileName': that.getFileName(),
-                        'fileContent': that.getFileContent(),
-                        'creationDate': Date.now(),
-                        'lastModified': Date.now()
+                        'name': that.getFileName(),
+                        'content': that.getFileContent(),
+                        'creation_date': Date.now(),
+                        'last_modified': Date.now()
                     };
                     if (!priv.userExists()){
                         priv.addUser (that.getStorageUserName());
@@ -155,8 +155,8 @@
                     priv.addFileName(that.getFileName());
                 } else {
                     // overwriting
-                    doc.lastModified = Date.now();
-                    doc.fileContent = that.getFileContent();
+                    doc.last_modified = Date.now();
+                    doc.content = that.getFileContent();
                 }
                 LocalOrCookieStorage.setItem(path, doc);
                 return that.done();
@@ -165,7 +165,7 @@
 
         /**
          * Loads a document from the local storage.
-         * It will load file in 'jio/local/USR/APP/FILENAME'.
+         * It will load file in 'jio/local/USR/APP/FILE_NAME'.
          * You can add an 'options' object to the job, it can contain:
          * - metadata_only {boolean} default false, retrieve the file metadata
          *   only if true.
@@ -174,8 +174,8 @@
          * @method loadDocument
          */
         that.loadDocument = function () {
-            // document object is {'fileName':string,'fileContent':string,
-            // 'creationDate':date,'lastModified':date}
+            // document object is {'name':string,'content':string,
+            // 'creation_date':date,'last_modified':date}
 
             setTimeout(function () {
                 var doc = null, settings = that.cloneOptionObject();
@@ -189,10 +189,10 @@
                                '" not found in localStorage.'});
                 } else {
                     if (settings.metadata_only) {
-                        delete doc.fileContent;
+                        delete doc.content;
                     } else if (settings.content_only) {
-                        delete doc.lastModified;
-                        delete doc.creationDate;
+                        delete doc.last_modified;
+                        delete doc.creation_date;
                     }
                     that.done(doc);
                 }
@@ -206,24 +206,24 @@
          * @method getDocumentList
          */
         that.getDocumentList = function () {
-            // the list is [object,object] -> object = {'fileName':string,
-            // 'lastModified':date,'creationDate':date}
+            // the list is [object,object] -> object = {'name':string,
+            // 'last_modified':date,'creation_date':date}
 
             setTimeout(function () {
-                var newarray = [], array = [], i, l, k = 'key',
+                var new_array = [], array = [], i, l, k = 'key',
                 path = 'jio/local/'+that.getStorageUserName()+'/'+
-                    that.getApplicantID(), fileObject = {};
+                    that.getApplicantID(), file_object = {};
 
                 array = priv.getFileNameArray();
                 for (i = 0, l = array.length; i < l; i += 1) {
-                    fileObject =
+                    file_object =
                         LocalOrCookieStorage.getItem(path+'/'+array[i]);
-                    newarray.push ({
-                        'fileName':fileObject.fileName,
-                        'creationDate':fileObject.creationDate,
-                        'lastModified':fileObject.lastModified});
+                    new_array.push ({
+                        'name':file_object.name,
+                        'creation_date':file_object.creation_date,
+                        'last_modified':file_object.last_modified});
                 }
-                that.done(newarray);
+                that.done(new_array);
             }, 100);
         }; // end getDocumentList
 
@@ -257,17 +257,17 @@
         that.mkcol = function ( options ) {
             // create folders in dav storage, synchronously
             // options : contains mkcol list
-            // options.location : the davstorage locations
-            // options.path: if path=/foo/bar then creates location/dav/foo/bar
+            // options.url : the davstorage url
+            // options.path: if path=/foo/bar then creates url/dav/foo/bar
             // options.success: the function called if success
-            // options.userName: the username
+            // options.user_name: the user name
             // options.password: the password
 
             // TODO this method is not working !!!
 
             var settings = $.extend ({
                 'success':function(){},'error':function(){}},options),
-            splitpath = ['splitedpath'], tmppath = 'temp/path';
+            split_path = ['split_path'], tmp_path = 'temp/path';
 
             // if pathstep is not defined, then split the settings.path
             // and do mkcol recursively
@@ -275,25 +275,25 @@
                 settings.pathsteps = 1;
                 that.mkcol(settings);
             } else {
-                splitpath = settings.path.split('/');
+                split_path = settings.path.split('/');
                 // // check if the path is terminated by '/'
-                // if (splitpath[splitpath.length-1] == '') {
-                //     splitpath.length --;
+                // if (split_path[split_path.length-1] == '') {
+                //     split_path.length --;
                 // }
                 // check if the pathstep is lower than the longer
-                if (settings.pathsteps >= splitpath.length-1) {
+                if (settings.pathsteps >= split_path.length-1) {
                     return settings.success();
                 }
-                splitpath.length = settings.pathsteps + 1;
+                split_path.length = settings.pathsteps + 1;
                 settings.pathsteps++;
-                tmppath = splitpath.join('/');
-                // alert(settings.location + tmppath);
+                tmp_path = split_path.join('/');
+                // alert(settings.url + tmp_path);
                 $.ajax ( {
-                    url: settings.location + tmppath,
+                    url: settings.url + tmp_path,
                     type: 'MKCOL',
                     async: true,
                     headers: {'Authorization': 'Basic '+Base64.encode(
-                        settings.userName + ':' +
+                        settings.user_name + ':' +
                             settings.password ), Depth: '1'},
                     // xhrFields: {withCredentials: 'true'}, // cross domain
                     success: function () {
@@ -317,16 +317,16 @@
         };
 
         that.checkNameAvailability = function () {
-            // checks the availability of the [job.userName].
+            // checks the availability of the [job.user_name].
             // if the name already exists, it is not available.
             // this.job.storage: the storage informations.
-            // this.job.storage.location: the dav storage location.
-            // this.job.userName: the name we want to check.
-            // this.job.storage.userName: the user name.
+            // this.job.storage.url: the dav storage url.
+            // this.job.user_name: the name we want to check.
+            // this.job.storage.user_name: the user name.
             // this.job.storage.password: the user password.
 
             $.ajax ( {
-                url: that.getStorageLocation() + '/dav/' +
+                url: that.getStorageURL() + '/dav/' +
                     that.getStorageUserName() + '/',
                 async: true,
                 type: 'PROPFIND',
@@ -352,16 +352,16 @@
         that.saveDocument = function () {
             // Save a document in a DAVStorage
             // this.job.storage: the storage informations.
-            // this.job.storage.userName: the user name.
+            // this.job.storage.user_name: the user name.
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant ID.
-            // this.job.fileName: the document name.
-            // this.job.fileContent: the document content.
+            // this.job.name: the document name.
+            // this.job.content: the document content.
 
             // TODO if path of /dav/user/applic does not exists, it won't work!
             //// save on dav
             $.ajax ( {
-                url: that.getStorageLocation() + '/dav/' +
+                url: that.getStorageURL() + '/dav/' +
                     that.getStorageUserName() + '/' +
                     that.getApplicantID() + '/' +
                     that.getFileName(),
@@ -387,21 +387,21 @@
         that.loadDocument = function () {
             // Load a document from a DAVStorage. It returns a document object
             // containing all information of the document and its content.
-            // this.job.fileName: the document name we want to load.
+            // this.job.name: the document name we want to load.
             // this.job.storage: the storage informations.
-            // this.job.storage.location: the dav storage location.
+            // this.job.storage.url: the dav storage url.
             // this.job.storage.userName: the user name.
             // this.job.storage.password: the user password.
             // this.job.options.getContent: if true, also get the file content.
 
-            // document object is {'fileName':string,'fileContent':string,
-            // 'creationDate':date,'lastModified':date}
+            // document object is {'name':string,'content':string,
+            // 'creation_date':date,'last_modified':date}
 
             var doc = {},
             settings = that.cloneOptionObject(),
             getContent = function () {
                 $.ajax ( {
-                    url: that.getStorageLocation() + '/dav/' +
+                    url: that.getStorageURL() + '/dav/' +
                         that.getStorageUserName() + '/' +
                         that.getApplicantID() + '/' +
                         that.getFileName(),
@@ -413,7 +413,7 @@
                             that.getStoragePassword() )},
                     // xhrFields: {withCredentials: 'true'}, // cross domain
                     success: function (content) {
-                        doc.fileContent = content;
+                        doc.content = content;
                         that.done(doc);
                     },
                     error: function (type) {
@@ -430,14 +430,14 @@
                     }
                 } );
             };
-            doc.fileName = that.getFileName();
+            doc.name = that.getFileName();
             if (settings.content_only) {
                 getContent();
                 return;
             }
             // Get properties
             $.ajax ( {
-                url: that.getStorageLocation() + '/dav/' +
+                url: that.getStorageURL() + '/dav/' +
                     that.getStorageUserName() + '/' +
                     that.getApplicantID() + '/' +
                     that.getFileName(),
@@ -448,16 +448,16 @@
                     that.getStorageUserName() + ':' +
                         that.getStoragePassword() )},
                 success: function (xmlData) {
-                    // doc.lastModified =
+                    // doc.last_modified =
                     $(xmlData).find(
                         'lp1\\:getlastmodified, getlastmodified'
                     ).each( function () {
-                        doc.lastModified = $(this).text();
+                        doc.last_modified = $(this).text();
                     });
                     $(xmlData).find(
                         'lp1\\:creationdate, creationdate'
                     ).each( function () {
-                        doc.creationDate = $(this).text();
+                        doc.creation_date = $(this).text();
                     });
                     if (!settings.metadata_only) {
                         getContent();
@@ -477,18 +477,18 @@
             // Get a document list from a DAVStorage. It returns a document
             // array containing all the user documents informations.
             // this.job.storage: the storage informations.
-            // this.job.storage.location: the dav storage location.
-            // this.job.storage.userName: the user name.
+            // this.job.storage.url: the dav storage url.
+            // this.job.storage.user_name: the user name.
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
 
-            // the list is [object,object] -> object = {'fileName':string,
-            // 'lastModified':date,'creationDate':date}
+            // the list is [object,object] -> object = {'name':string,
+            // 'last_modified':date,'creation_date':date}
 
-            var documentArrayList = [], file = {}, pathArray = [];
+            var document_array = [], file = {}, path_array = [];
 
             $.ajax ( {
-                url: that.getStorageLocation() + '/dav/' +
+                url: that.getStorageURL() + '/dav/' +
                     that.getStorageUserName() + '/' +
                     that.getApplicantID() + '/',
                 async: true,
@@ -504,28 +504,28 @@
                         if(i>0) { // exclude parent folder
                             file = {};
                             $(data).find('D\\:href, href').each(function(){
-                                pathArray = $(this).text().split('/');
-                                file.fileName =
-                                    (pathArray[pathArray.length-1] ?
-                                     pathArray[pathArray.length-1] :
-                                     pathArray[pathArray.length-2]+'/');
+                                path_array = $(this).text().split('/');
+                                file.name =
+                                    (path_array[path_array.length-1] ?
+                                     path_array[path_array.length-1] :
+                                     path_array[path_array.length-2]+'/');
                             });
-                            if (file.fileName === '.htaccess' ||
-                                file.fileName === '.htpasswd') { return; }
+                            if (file.name === '.htaccess' ||
+                                file.name === '.htpasswd') { return; }
                             $(data).find(
                                 'lp1\\:getlastmodified, getlastmodified'
                             ).each(function () {
-                                file.lastModified = $(this).text();
+                                file.last_modified = $(this).text();
                             });
                             $(data).find(
                                 'lp1\\:creationdate, creationdate'
                             ).each(function () {
-                                file.creationDate = $(this).text();
+                                file.creation_date = $(this).text();
                             });
-                            documentArrayList.push (file);
+                            document_array.push (file);
                         }
                     });
-                    that.done(documentArrayList);
+                    that.done(document_array);
                 },
                 error: function (type) {
                     type.message =
@@ -537,15 +537,15 @@
 
         that.removeDocument = function () {
             // Remove a document from a DAVStorage.
-            // this.job.fileName: the document name we want to remove.
+            // this.job.name: the document name we want to remove.
             // this.job.storage: the storage informations.
-            // this.job.storage.location: the dav storage location.
-            // this.job.storage.userName: the user name.
+            // this.job.storage.url: the dav storage url.
+            // this.job.storage.user_name: the user name.
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
 
             $.ajax ( {
-                url: that.getStorageLocation() + '/dav/' +
+                url: that.getStorageURL() + '/dav/' +
                     that.getStorageUserName() + '/' +
                     that.getApplicantID() + '/' +
                     that.getFileName(),
@@ -582,8 +582,8 @@
         priv.storageArray = that.getStorageArray();
         // TODO Add a tests that check if there is no duplicate storages.
         priv.length = priv.storageArray.length;
-        priv.returnsValuesArray = [];
-        priv.maxtries = that.getMaxTries();
+        priv.return_value_array = [];
+        priv.max_tries = that.getMaxTries();
 
         that.setMaxTries (1);
 
@@ -591,7 +591,7 @@
             var newjob = {}, i;
             for (i = 0; i < priv.storageArray.length; i += 1) {
                 newjob = that.cloneJob();
-                newjob.maxtries = priv.maxtries;
+                newjob.max_tries = priv.max_tries;
                 newjob.storage = priv.storageArray[i];
                 newjob.callback = callback;
                 that.addJob ( newjob ) ;
@@ -599,18 +599,18 @@
         };
 
         that.checkNameAvailability = function () {
-            // Checks the availability of the [job.userName].
+            // Checks the availability of the [job.user_name].
             // if the name already exists in a storage, it is not available.
-            // this.job.userName: the name we want to check.
+            // this.job.user_name: the name we want to check.
             // this.job.storage.storageArray: An Array of storages.
 
-            var i = 'id', done = false, errorArray = [],
+            var i = 'id', done = false, error_array = [],
             res = {'status':'done'}, callback = function (result) {
-                priv.returnsValuesArray.push(result);
+                priv.return_value_array.push(result);
                 if (!done) {
                     if (result.status === 'fail') {
                         res.status = 'fail';
-                        errorArray.push(result.error);
+                        error_array.push(result.error);
                     } else {
                         if (result.return_value === false) {
                             that.done (false);
@@ -618,7 +618,7 @@
                             return;
                         }
                     }
-                    if (priv.returnsValuesArray.length ===
+                    if (priv.return_value_array.length ===
                         priv.length) {
                         if (res.status === 'fail') {
                             that.fail (
@@ -626,7 +626,7 @@
                                  statusText:'Multi-Status',
                                  message:'Some check availability of "' +
                                  that.getUserName() + '" requests have failed.',
-                                 array:errorArray});
+                                 array:error_array});
                         } else {
                             that.done (true);
                         }
@@ -641,30 +641,30 @@
             // Save a single document in several storages.
             // If a storage failed to save the document.
             // this.job.storage: the storage informations.
-            // this.job.storage.userName: the user name.
+            // this.job.storage.user_name: the user name.
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant ID.
-            // this.job.fileName: the document name.
-            // this.job.fileContent: the document content.
+            // this.job.name: the document name.
+            // this.job.content: the document content.
 
             var res = {'status':'done'}, i = 'id',
-            done = false, errorArray = [],
+            done = false, error_array = [],
             callback = function (result) {
-                priv.returnsValuesArray.push(result);
+                priv.return_value_array.push(result);
                 if (!done) {
                     if (result.status !== 'fail') {
                         that.done ();
                         done = true;
                     } else {
-                        errorArray.push(result.error);
-                        if (priv.returnsValuesArray.length ===
+                        error_array.push(result.error);
+                        if (priv.return_value_array.length ===
                             priv.length) {
                             that.fail (
                                 {status:207,
                                  statusText:'Multi-Status',
                                  message:'All save "' + that.getFileName() +
                                  '" requests have failed.',
-                                 array:errorArray});
+                                 array:error_array});
                         }
                     }
                 }
@@ -677,31 +677,30 @@
             // object containing all information of the document and its
             // content. TODO will popup a window which will help us to choose
             // the good file if the files are different.
-            // this.job.fileName: the document name we want to load.
+            // this.job.name: the document name we want to load.
             // this.job.storage: the storage informations.
-            // this.job.storage.location: the dav storage location.
-            // this.job.storage.userName: the user name.
+            // this.job.storage.user_name: the user name.
             // this.job.storage.password: the user password.
             // this.job.options.getContent: if true, also get the file content.
 
             var doc = {}, i = 'id',
-            done = false, errorArray = [],
+            done = false, error_array = [],
             res = {'status':'done'}, callback = function (result) {
-                priv.returnsValuesArray.push(result);
+                priv.return_value_array.push(result);
                 if (!done) {
                     if (result.status !== 'fail') {
                         that.done (result.return_value);
                         done = true;
                     } else {
-                        errorArray.push(result.error);
-                        if (priv.returnsValuesArray.length ===
+                        error_array.push(result.error);
+                        if (priv.return_value_array.length ===
                             priv.length) {
                             that.fail (
                                 {status:207,
                                  statusText:'Multi-Status',
                                  message:'All load "' + that.getFileName() +
                                  '" requests have failed.',
-                                 array:errorArray});
+                                 array:error_array});
                         }
                     }
                 }
@@ -713,29 +712,28 @@
             // Get a document list from several storages. It returns a document
             // array containing all the user documents informations.
             // this.job.storage: the storage informations.
-            // this.job.storage.location: the dav storage location.
-            // this.job.storage.userName: the user name.
+            // this.job.storage.user_name: the user name.
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
 
             var res = {'status':'done'}, i = 'id',
-            done = false, errorArray = [],
+            done = false, error_array = [],
             callback = function (result) {
-                priv.returnsValuesArray.push(result);
+                priv.return_value_array.push(result);
                 if (!done) {
                     if (result.status !== 'fail') {
                         that.done (result.return_value);
                         done = true;
                     } else {
-                        errorArray.push(result.error);
-                        if (priv.returnsValuesArray.length ===
+                        error_array.push(result.error);
+                        if (priv.return_value_array.length ===
                             priv.length) {
                             that.fail (
                                 {status:207,
                                  statusText:'Multi-Status',
                                  message:'All get document list requests'+
                                  ' have failed',
-                                 array:errorArray});
+                                 array:error_array});
                         }
                     }
                 }
@@ -745,31 +743,30 @@
 
         that.removeDocument = function () {
             // Remove a document from several storages.
-            // this.job.fileName: the document name we want to remove.
+            // this.job.name: the document name we want to remove.
             // this.job.storage: the storage informations.
-            // this.job.storage.location: the dav storage location.
-            // this.job.storage.userName: the user name.
+            // this.job.storage.user_name: the user name.
             // this.job.storage.password: the user password.
             // this.job.applicant.ID: the applicant id.
 
             var res = {'status':'done'}, i = 'key',
-            done = false, errorArray = [],
+            done = false, error_array = [],
             callback = function (result) {
-                priv.returnsValuesArray.push(result);
+                priv.return_value_array.push(result);
                 if (!done) {
                     if (result.status !== 'fail') {
                         that.done ();
                         done = true;
                     } else {
-                        errorArray.push(result.error);
-                        if (priv.returnsValuesArray.length ===
+                        error_array.push(result.error);
+                        if (priv.return_value_array.length ===
                             priv.length) {
                             that.fail (
                                 {status:207,
                                  statusText:'Multi-Status',
                                  message:'All remove "' + that.getFileName() +
                                  '" requests have failed.',
-                                 array:errorArray});
+                                 array:error_array});
                         }
                     }
                 }
@@ -793,8 +790,8 @@
 
         var that = Jio.newBaseStorage( spec, my ), priv = {};
 
-        priv.storage_array_name = 'jio/indexedstoragearray';
-        priv.storage_file_array_name = 'jio/indexedfilearray/'+
+        priv.storage_array_name = 'jio/indexed_storage_array';
+        priv.storage_file_array_name = 'jio/indexed_file_array/'+
             JSON.stringify (that.getSecondStorage()) + '/' +
             that.getApplicantID();
 
@@ -825,10 +822,10 @@
          * @param  {object} storage The new indexed storage.
          */
         priv.addIndexedStorage = function (storage) {
-            var indexedstoragearray = priv.getIndexedStorageArray();
-            indexedstoragearray.push(JSON.stringify (storage));
+            var indexed_storage_array = priv.getIndexedStorageArray();
+            indexed_storage_array.push(JSON.stringify (storage));
             LocalOrCookieStorage.setItem(priv.storage_array_name,
-                                         indexedstoragearray);
+                                         indexed_storage_array);
         };
 
         /**
@@ -838,10 +835,10 @@
          * @return {boolean} true if found, else false
          */
         priv.isAnIndexedStorage = function (storage) {
-            var jsonstorage = JSON.stringify (storage),i,l,
+            var json_storae = JSON.stringify (storage),i,l,
             array = priv.getIndexedStorageArray();
             for (i = 0, l = array.length; i < l; i+= 1) {
-                if (JSON.stringify(array[i]) === jsonstorage) {
+                if (JSON.stringify(array[i]) === json_storae) {
                     return true;
                 }
             }
@@ -871,24 +868,24 @@
         /**
          * Sets the file array list.
          * @method setFileArray
-         * @param  {array} filearray The array containing files.
+         * @param  {array} file_array The array containing files.
          */
-        priv.setFileArray = function (filearray) {
+        priv.setFileArray = function (file_array) {
             return LocalOrCookieStorage.setItem(
                 priv.storage_file_array_name,
-                filearray);
+                file_array);
         };
 
         /**
          * Checks if the file already exists in the array.
          * @method isFileIndexed
-         * @param  {string} filename The file we want to find.
+         * @param  {string} file_name The file we want to find.
          * @return {boolean} true if found, else false
          */
-        priv.isFileIndexed = function (filename) {
+        priv.isFileIndexed = function (file_name) {
             var i, l, array = priv.getFileArray();
             for (i = 0, l = array.length; i < l; i+= 1) {
-                if (array[i].fileName === filename){
+                if (array[i].name === file_name){
                     return true;
                 }
             }
@@ -901,26 +898,26 @@
          * @param  {object} file The new file.
          */
         priv.addFile = function (file) {
-            var filearray = priv.getFileArray();
-            filearray.push(file);
+            var file_array = priv.getFileArray();
+            file_array.push(file);
             LocalOrCookieStorage.setItem(priv.storage_file_array_name,
-                                         filearray);
+                                         file_array);
         };
 
         /**
          * Removes a file from the local file array.
          * @method removeFile
-         * @param  {string} filename The file to remove.
+         * @param  {string} file_name The file to remove.
          */
-        priv.removeFile = function (filename) {
-            var i, l, array = priv.getFileArray(), newarray = [];
+        priv.removeFile = function (file_name) {
+            var i, l, array = priv.getFileArray(), new_array = [];
             for (i = 0, l = array.length; i < l; i+= 1) {
-                if (array[i].fileName !== filename) {
-                    newarray.push(array[i]);
+                if (array[i].name !== file_name) {
+                    new_array.push(array[i]);
                 }
             }
             LocalOrCookieStorage.setItem(priv.storage_file_array_name,
-                                         newarray);
+                                         new_array);
         };
 
         /**
@@ -944,7 +941,7 @@
                 storage: that.getSecondStorage(),
                 applicant: {ID:that.getApplicantID()},
                 method: 'getDocumentList',
-                maxtries: 3,
+                max_tries: 3,
                 callback: getlist_callback
             };
             that.addJob ( newjob );
@@ -955,17 +952,17 @@
          * @method checkNameAvailability
          */
         that.checkNameAvailability = function () {
-            var newjob = that.cloneJob();
+            var new_job = that.cloneJob();
             priv.update();
-            newjob.storage = that.getSecondStorage();
-            newjob.callback = function (result) {
+            new_job.storage = that.getSecondStorage();
+            new_job.callback = function (result) {
                 if (result.status === 'done') {
                     that.done(result.return_value);
                 } else {
                     that.fail(result.error);
                 }
             };
-            that.addJob( newjob );
+            that.addJob( new_job );
         }; // end checkNameAvailability
 
         /**
@@ -973,14 +970,14 @@
          * @method saveDocument
          */
         that.saveDocument = function () {
-            var newjob = that.cloneJob();
-            newjob.storage = that.getSecondStorage();
-            newjob.callback = function (result) {
+            var new_job = that.cloneJob();
+            new_job.storage = that.getSecondStorage();
+            new_job.callback = function (result) {
                 if (result.status === 'done') {
                     if (!priv.isFileIndexed(that.getFileName())) {
-                        priv.addFile({fileName:that.getFileName(),
-                                      lastModified:0,
-                                      creationDate:0});
+                        priv.addFile({name:that.getFileName(),
+                                      last_modified:0,
+                                      creation_date:0});
                     }
                     priv.update();
                     that.done();
@@ -988,7 +985,7 @@
                     that.fail(result.error);
                 }
             };
-            that.addJob ( newjob );
+            that.addJob ( new_job );
         }; // end saveDocument
 
         /**
@@ -998,13 +995,13 @@
          * @method loadDocument
          */
         that.loadDocument = function () {
-            var filearray, i, l, newjob,
-            loadcallback = function (result) {
+            var file_array, i, l, new_job,
+            loadCallback = function (result) {
                 if (result.status === 'done') {
-                    // if (filearray[i].lastModified !==
-                    //     result.return_value.lastModified ||
-                    //     filearray[i].creationDate !==
-                    //     result.return_value.creationDate) {
+                    // if (file_array[i].last_modified !==
+                    //     result.return_value.last_modified ||
+                    //     file_array[i].creation_date !==
+                    //     result.return_value.creation_date) {
                     //     // the file in the index storage is different than
                     //     // the one in the second storage. priv.update will
                     //     // take care of refresh the indexed storage
@@ -1015,20 +1012,20 @@
                 }
             },
             secondLoadDocument = function () {
-                newjob = that.cloneJob();
-                newjob.storage = that.getSecondStorage();
-                newjob.callback = loadcallback;
-                that.addJob ( newjob );
+                new_job = that.cloneJob();
+                new_job.storage = that.getSecondStorage();
+                new_job.callback = loadCallback;
+                that.addJob ( new_job );
             },
             settings = that.cloneOptionObject();
             priv.update();
             if (settings.metadata_only) {
                 setTimeout(function () {
                     if (priv.fileArrayExists()) {
-                        filearray = priv.getFileArray();
-                        for (i = 0, l = filearray.length; i < l; i+= 1) {
-                            if (filearray[i].fileName === that.getFileName()) {
-                                return that.done(filearray[i]);
+                        file_array = priv.getFileArray();
+                        for (i = 0, l = file_array.length; i < l; i+= 1) {
+                            if (file_array[i].name === that.getFileName()) {
+                                return that.done(file_array[i]);
                             }
                         }
                     } else {
@@ -1060,9 +1057,9 @@
          * @method removeDocument
          */
         that.removeDocument = function () {
-            var newjob = that.cloneJob();
-            newjob.storage = that.getSecondStorage();
-            newjob.callback = function (result) {
+            var new_job = that.cloneJob();
+            new_job.storage = that.getSecondStorage();
+            new_job.callback = function (result) {
                 if (result.status === 'done') {
                     priv.removeFile(that.getFileName());
                     priv.update();
@@ -1071,7 +1068,7 @@
                     that.fail(result.error);
                 }
             };
-            that.addJob(newjob);
+            that.addJob(new_job);
         };
         return that;
     };
@@ -1108,16 +1105,16 @@
          * @method checkNameAvailability
          */
         that.checkNameAvailability = function () {
-            var newjob = that.cloneJob();
-            newjob.storage = that.getSecondStorage();
-            newjob.callback = function (result) {
+            var new_job = that.cloneJob();
+            new_job.storage = that.getSecondStorage();
+            new_job.callback = function (result) {
                 if (result.status === 'done') {
                     that.done(result.return_value);
                 } else {
                     that.fail(result.error);
                 }
             };
-            that.addJob( newjob );
+            that.addJob( new_job );
         }; // end checkNameAvailability
 
         /**
@@ -1125,18 +1122,18 @@
          * @method saveDocument
          */
         that.saveDocument = function () {
-            var newjob, newfilename, newfilecontent,
+            var new_job, new_file_name, newfilecontent,
             _1 = function () {
                 priv.encrypt(that.getFileName(),function(res) {
-                    newfilename = res;
+                    new_file_name = res;
                     _2();
                 });
             },
             _2 = function () {
                 priv.encrypt(
                     JSON.stringify({
-                        fileName: that.getFileName(),
-                        fileContent:that.getFileContent()
+                        name: that.getFileName(),
+                        content:that.getFileContent()
                     }),
                     function(res) {
                         newfilecontent = res;
@@ -1144,18 +1141,18 @@
                     });
             },
             _3 = function () {
-                newjob = that.cloneJob();
-                newjob.fileName = newfilename;
-                newjob.fileContent = newfilecontent;
-                newjob.storage = that.getSecondStorage();
-                newjob.callback = function (result) {
+                new_job = that.cloneJob();
+                new_job.name = new_file_name;
+                new_job.content = newfilecontent;
+                new_job.storage = that.getSecondStorage();
+                new_job.callback = function (result) {
                     if (result.status === 'done') {
                         that.done();
                     } else {
                         that.fail(result.error);
                     }
                 };
-                that.addJob ( newjob );
+                that.addJob ( new_job );
             };
             _1();
         }; // end saveDocument
@@ -1167,24 +1164,24 @@
          * @method loadDocument
          */
         that.loadDocument = function () {
-            var newjob, newfilename,
+            var new_job, new_file_name,
             _1 = function () {
                 priv.encrypt(that.getFileName(),function(res) {
-                    newfilename = res;
+                    new_file_name = res;
                     _2();
                 });
             },
             _2 = function () {
-                newjob = that.cloneJob();
-                newjob.fileName = newfilename;
-                newjob.storage = that.getSecondStorage();
-                newjob.callback = loadcallback;
-                console.log (newjob);
-                that.addJob ( newjob );
+                new_job = that.cloneJob();
+                new_job.name = new_file_name;
+                new_job.storage = that.getSecondStorage();
+                new_job.callback = loadCallback;
+                console.log (new_job);
+                that.addJob ( new_job );
             },
-            loadcallback = function (result) {
+            loadCallback = function (result) {
                 if (result.status === 'done') {
-                    priv.decrypt (result.return_value.fileContent,function(res){
+                    priv.decrypt (result.return_value.content,function(res){
                         that.done(JSON.parse(res));
                     });
                 } else {
@@ -1199,12 +1196,12 @@
          * @method getDocumentList
          */
         that.getDocumentList = function () {
-            var newjob, i, l, cpt = 0, array,
+            var new_job, i, l, cpt = 0, array,
             _1 = function () {
-                newjob = that.cloneJob();
-                newjob.storage = that.getSecondStorage();
-                newjob.callback = getListCallback;
-                that.addJob ( newjob );
+                new_job = that.cloneJob();
+                new_job.storage = that.getSecondStorage();
+                new_job.callback = getListCallback;
+                that.addJob ( new_job );
             },
             getListCallback = function (result) {
                 if (result.status === 'done') {
@@ -1221,8 +1218,8 @@
                 var tmp;
                 cpt++;
                 tmp = JSON.parse(res);
-                array[index] = res.fileName;
-                array[index] = res.fileContent;
+                array[index] = res.name;
+                array[index] = res.content;
                 if (cpt === l) {
                     // this is the last callback
                     that.done(array);
@@ -1236,16 +1233,16 @@
          * @method removeDocument
          */
         that.removeDocument = function () {
-            var newjob = that.cloneJob();
-            newjob.storage = that.getSecondStorage();
-            newjob.callback = function (result) {
+            var new_job = that.cloneJob();
+            new_job.storage = that.getSecondStorage();
+            new_job.callback = function (result) {
                 if (result.status === 'done') {
                     that.done();
                 } else {
                     that.fail(result.error);
                 }
             };
-            that.addJob(newjob);
+            that.addJob(new_job);
         };
         return that;
     };
@@ -1263,9 +1260,9 @@
 if (window.requirejs) {
     define ('JIOStorages',
             ['LocalOrCookieStorage','jQuery','Base64','SJCL','JIO'],
-            jio_storage_loader);
+            jioStorageLoader);
 } else {
-    jio_storage_loader ( LocalOrCookieStorage, jQuery, Base64, sjcl, JIO);
+    jioStorageLoader ( LocalOrCookieStorage, jQuery, Base64, sjcl, JIO);
 }
 
 }());
