@@ -1053,11 +1053,12 @@ test ('Document Load' , function () {
                      {ID:'jiotests'});
     o.f = function (result) {
         if (result.status === 'done') {
-            deepEqual (result.return_value,{name:'testload',
-                                            content:'contentoftest',
-                                            last_modified:500,
-                                            creation_date:500}
-                       ,'load ok');
+            deepEqual (result.return_value,
+                       {name:'testload',
+                        content:'contentoftest',
+                        last_modified:500,
+                        creation_date:500},
+                       'load ok');
         } else {
             ok (false ,'cannot load');
         }
@@ -1176,7 +1177,7 @@ if (window.requirejs) {
             Base64: '../js/base64.requirejs_module',
             JIODummyStorages: '../src/jio.dummystorages',
             JIOStorages: '../src/jio.storage',
-            SJCLAPI:'../lib/sjcl/sjcl',
+            SJCLAPI:'../lib/sjcl/sjcl.min',
             SJCL:'../js/sjcl.requirejs_module'
         }
     });
