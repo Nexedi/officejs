@@ -50,6 +50,7 @@ module.exports = function(grunt) {
             },
             globals: {
                 jQuery: true,
+                sjcl: true,
                 LocalOrCookieStorage: true,
                 Base64: true,
                 JIO: true,

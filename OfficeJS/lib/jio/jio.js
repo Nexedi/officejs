@@ -1,8 +1,8 @@
-/*! JIO - v0.1.0 - 2012-06-01
+/*! JIO - v0.1.0 - 2012-06-05
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var JIO =
-(function () { var jio_loader_function = function ( localOrCookieStorage, $ ) {
+(function () { var jioLoaderFunction = function ( localOrCookieStorage, $ ) {
 
     ////////////////////////////////////////////////////////////////////////////
     // constants
@@ -25,8 +25,8 @@ var JIO =
               - s: storage
               - a: applicant
               - m: method
-              - n: fileName
-              - c: fileContent
+              - n: name
+              - c: content
               - o: options
               - =: are equal
               - !: are not equal
@@ -94,7 +94,7 @@ var JIO =
                     JSON.stringify (job2.storage) &&
                     JSON.stringify (job1.applicant) ===
                     JSON.stringify (job2.applicant) &&
-                    job1.fileName === job2.fileName) {
+                    job1.name === job2.name) {
                     return true;
                 }
                 return false;
@@ -107,7 +107,7 @@ var JIO =
                 return false;
             },
             canEliminate:function (job1,job2) {
-                if (job1.status !== 'ongoing' &&
+                if (job1.status !== 'on_going' &&
                     (job1.method === 'removeDocument' &&
                      job2.method === 'saveDocument' ||
                      job1.method === 'saveDocument' &&
@@ -117,7 +117,7 @@ var JIO =
                 return false;
             },
             canReplace:function (job1,job2) {
-                if (job1.status !== 'ongoing' &&
+                if (job1.status !== 'on_going' &&
                     job1.method === job2.method &&
                     job1.date < job2.date) {
                     return true;
@@ -125,7 +125,7 @@ var JIO =
                 return false;
             },
             cannotAccept:function (job1,job2) {
-                if (job1.status !== 'ongoing' ) {
+                if (job1.status !== 'on_going' ) {
                     if (job1.method === 'removeDocument' &&
                         job2.method === 'loadDocument') {
                         return true;
@@ -138,7 +138,7 @@ var JIO =
                                 job2.method === 'removeDocument')) {
                         return true;
                     } else if (job1.method === job2.method === 'saveDocument' &&
-                               job1.fileContent === job2.fileContent) {
+                               job1.content === job2.content) {
                         return true;
                     } else if (job1.method === job2.method ===
                                'getDocumentList' ||
@@ -198,18 +198,18 @@ var JIO =
             }
             return topic;
         };
-        that.publish = function (eventname,obj) {
+        that.publish = function (event_name,obj) {
             // publish an event
-            priv.eventAction(eventname).publish(obj);
+            priv.eventAction(event_name).publish(obj);
         };
-        that.subscribe = function (eventname,callback) {
+        that.subscribe = function (event_name,callback) {
             // subscribe and return the callback function
-            priv.eventAction(eventname).subscribe(callback);
+            priv.eventAction(event_name).subscribe(callback);
             return callback;
         };
-        that.unsubscribe = function (eventname,callback) {
+        that.unsubscribe = function (event_name,callback) {
             // unsubscribe the callback from eventname
-            priv.eventAction(eventname).unsubscribe(callback);
+            priv.eventAction(event_name).unsubscribe(callback);
         };
         return that;
     };
@@ -235,14 +235,14 @@ var JIO =
         // spec.options.useLocalStorage: if true, save jobs into localStorage,
         //                               else only save on memory.
 
-        var that = {}, priv = {}, jio_id_array_name = 'jio/idarray';
+        var that = {}, priv = {}, jio_id_array_name = 'jio/id_array';
 
         that.init = function ( options ) {
             // initialize the JobQueue
             // options.publisher : is the publisher to use to send events
             // options.jio_id : the jio ID
 
-            var k, emptyfun = function (){}, jio_id_array;
+            var k, emptyFun = function (){}, jio_id_array;
             if (priv.use_local_storage) {
                 jio_id_array = localOrCookieStorage.
                     getItem (jio_id_array_name)||[];
@@ -250,14 +250,14 @@ var JIO =
                     priv.publisher = spec.publisher;
                 }
                 priv.jio_id = options.jio_id;
-                priv.job_object_name = 'jio/jobobject/' + priv.jio_id;
+                priv.job_object_name = 'jio/job_object/' + priv.jio_id;
                 jio_id_array.push (priv.jio_id);
                 localOrCookieStorage.setItem (jio_id_array_name,jio_id_array);
             }
             priv.job_object = {};
             that.copyJobQueueToLocalStorage();
             for (k in priv.recovered_job_object) {
-                priv.recovered_job_object[k].callback = emptyfun;
+                priv.recovered_job_object[k].callback = emptyFun;
                 that.addJob (priv.recovered_job_object[k]);
             }
         };
@@ -302,10 +302,10 @@ var JIO =
                                                         jio_id_array[k]);
                         // job recovery
                         priv.recovered_job_object = localOrCookieStorage.
-                            getItem('jio/jobobject/'+ jio_id_array[k]);
+                            getItem('jio/job_object/'+ jio_id_array[k]);
                         // remove ex job object
                         localOrCookieStorage.deleteItem(
-                            'jio/jobobject/'+ jio_id_array[k]);
+                            'jio/job_object/'+ jio_id_array[k]);
                         jio_id_array_changed = true;
                     } else {
                         new_jio_id_array.push (jio_id_array[k]);
@@ -351,8 +351,8 @@ var JIO =
             // It also clean fail or done jobs.
             // job  = the job object
 
-            var newone = true, elim_array = [], wait_array = [],
-            remove_array = [], basestorage = null, id = 'id';
+            var new_one = true, elim_array = [], wait_array = [],
+            remove_array = [], base_storage = null, id = 'id';
 
             //// browsing current jobs
             for (id in priv.job_object) {
@@ -370,10 +370,10 @@ var JIO =
                     }
                     if (jio_global_obj.job_managing_method.canReplace(
                         priv.job_object[id],job)) {
-                        basestorage = newBaseStorage(
+                        base_storage = newBaseStorage(
                             {'queue':that,'job':priv.job_object[id]});
-                        basestorage.replace(job);
-                        newone = false;
+                        base_storage.replace(job);
+                        new_one = false;
                         break;
                     }
                     if (jio_global_obj.job_managing_method.cannotAccept(
@@ -392,21 +392,21 @@ var JIO =
             }
             //// end browsing current jobs
 
-            if (newone) {
+            if (new_one) {
                 // if it is a new job, we can eliminate deprecated jobs and
                 // set this job dependencies.
                 for (id = 0; id < elim_array.length; id += 1) {
-                    basestorage = newBaseStorage(
+                    base_storage = newBaseStorage(
                         {'queue':that,
                          'job':priv.job_object[elim_array[id]]});
-                    basestorage.eliminate();
+                    base_storage.eliminate();
                 }
                 if (wait_array.length > 0) {
                     job.status = 'wait';
-                    job.waitingFor = {'jobIdArray':wait_array};
+                    job.waiting_for = {'job_id_array':wait_array};
                     for (id = 0; id < wait_array.length; id += 1) {
                         if (priv.job_object[wait_array[id]]) {
-                            priv.job_object[wait_array[id]].maxtries = 1;
+                            priv.job_object[wait_array[id]].max_tries = 1;
                         }
                     }
                 }
@@ -483,24 +483,24 @@ var JIO =
                 } else if (priv.job_object[i].status === 'wait') {
                     ok = true;
                     // if status wait
-                    if (priv.job_object[i].waitingFor.jobIdArray) {
+                    if (priv.job_object[i].waiting_for.job_id_array) {
                         // wait job
                         // browsing job id array
                         for (j = 0;
                              j < priv.job_object[i].
-                             waitingFor.jobIdArray.length;
+                             waiting_for.job_id_array.length;
                              j += 1) {
                             if (priv.job_object[priv.job_object[i].
-                                                waitingFor.jobIdArray[j]]) {
+                                                waiting_for.job_id_array[j]]) {
                                 // if a job is still exist, don't invoke
                                 ok = false;
                                 break;
                             }
                         }
                     }
-                    if (priv.job_object[i].waitingFor.time) {
+                    if (priv.job_object[i].waiting_for.time) {
                         // wait time
-                        if (priv.job_object[i].waitingFor.time > Date.now()) {
+                        if (priv.job_object[i].waiting_for.time > Date.now()) {
                             // it is not time to restore the job!
                             ok = false;
                         }
@@ -519,7 +519,7 @@ var JIO =
         that.invoke = function (job) {
             // Do a job invoking the good method in the good storage.
 
-            var basestorage;
+            var base_storage;
 
             //// analysing job method
             // if the method does not exist, do nothing
@@ -532,15 +532,15 @@ var JIO =
                 return (testjob.method === job.method &&
                         testjob.method === 'initial');
             })) {
-                job.status = 'ongoing';
+                job.status = 'on_going';
                 priv.publisher.publish(jio_const_obj.job_method_object[
                     job.method]['start_'+job.method]);
             } else {
-                job.status = 'ongoing';
+                job.status = 'on_going';
             }
             // Create a storage object and use it to save,load,...!
-            basestorage = newBaseStorage({'queue':this,'job':job});
-            basestorage.execute();
+            base_storage = newBaseStorage({'queue':this,'job':job});
+            base_storage.execute();
             //// end method analyse
         };
 
@@ -561,7 +561,7 @@ var JIO =
             if (!that.isThereJobsWhere(function(testjob){
                 return (testjob.method === job.method &&
                         // testjob.status === 'wait' || // TODO ?
-                        testjob.status === 'ongoing' ||
+                        testjob.status === 'on_going' ||
                         testjob.status === 'initial');
             })) {
                 priv.publisher.publish(
@@ -709,7 +709,7 @@ var JIO =
             priv.res.message = 'Unable to check name availability.';
         };
         priv.done_checkNameAvailability = function ( isavailable ) {
-            priv.res.message = priv.job.userName + ' is ' +
+            priv.res.message = priv.job.user_name + ' is ' +
                 (isavailable?'':'not ') + 'available.';
             priv.res.return_value = isavailable;
         };
@@ -720,10 +720,10 @@ var JIO =
             priv.res.message = 'Document loaded.';
             priv.res.return_value = returneddocument;
             // transform date into ms
-            priv.res.return_value.lastModified =
-                new Date(priv.res.return_value.lastModified).getTime();
-            priv.res.return_value.creationDate =
-                new Date(priv.res.return_value.creationDate).getTime();
+            priv.res.return_value.last_modified =
+                new Date(priv.res.return_value.last_modified).getTime();
+            priv.res.return_value.creation_date =
+                new Date(priv.res.return_value.creation_date).getTime();
         };
         priv.fail_saveDocument = function () {
             priv.res.message = 'Unable to save document.';
@@ -741,14 +741,14 @@ var JIO =
             for (i = 0; i < priv.res.return_value.length; i += 1) {
                 // transform current date format into ms since 1/1/1970
                 // useful for easy comparison
-                if (typeof priv.res.return_value[i].lastModified !== 'number') {
-                    priv.res.return_value[i].lastModified =
-                        new Date(priv.res.return_value[i].lastModified).
+                if (typeof priv.res.return_value[i].last_modified !== 'number') {
+                    priv.res.return_value[i].last_modified =
+                        new Date(priv.res.return_value[i].last_modified).
                         getTime();
                 }
-                if (typeof priv.res.return_value[i].creationDate !== 'number') {
-                    priv.res.return_value[i].creationDate =
-                        new Date(priv.res.return_value[i].creationDate).
+                if (typeof priv.res.return_value[i].creation_date !== 'number') {
+                    priv.res.return_value[i].creation_date =
+                        new Date(priv.res.return_value[i].creation_date).
                         getTime();
                 }
             }
@@ -786,7 +786,7 @@ var JIO =
                 time = jio_global_obj.max_wait_time;
             }
             priv.job.status = 'wait';
-            priv.job.waitingFor = {'time':Date.now() + time};
+            priv.job.waiting_for = {'time':Date.now() + time};
         };
         //// end Private Methods
 
@@ -795,43 +795,43 @@ var JIO =
             return $.extend(true,{},priv.job);
         };
         that.getUserName = function () {
-            return priv.job.userName || '';
+            return priv.job.user_name || '';
         };
         that.getApplicantID = function () {
             return priv.job.applicant.ID || '';
         };
         that.getStorageUserName = function () {
-            return priv.job.storage.userName || '';
+            return priv.job.storage.user_name || '';
         };
         that.getStoragePassword = function () {
             return priv.job.storage.password || '';
         };
-        that.getStorageLocation = function () {
-            return priv.job.storage.location || '';
+        that.getStorageURL = function () {
+            return priv.job.storage.url || '';
         };
         that.getSecondStorage = function () {
             return priv.job.storage.storage || {};
         };
         that.getStorageArray = function () {
-            return priv.job.storage.storageArray || [];
+            return priv.job.storage.storage_array || [];
         };
         that.getFileName = function () {
-            return priv.job.fileName || '';
+            return priv.job.name || '';
         };
         that.getFileContent = function () {
-            return priv.job.fileContent || '';
+            return priv.job.content || '';
         };
         that.cloneOptionObject = function () {
             return $.extend(true,{},priv.job.options);
         };
         that.getMaxTries = function () {
-            return priv.job.maxtries;
+            return priv.job.max_tries;
         };
         that.getTries = function () {
             return priv.job.tries || 0;
         };
-        that.setMaxTries = function (maxtries) {
-            priv.job.maxtries = maxtries;
+        that.setMaxTries = function (max_tries) {
+            priv.job.max_tries = max_tries;
         };
         //// end Getters Setters
 
@@ -842,7 +842,7 @@ var JIO =
         that.eliminate = function () {
             // Stop and remove a job !
 
-            priv.job.maxtries = 1;
+            priv.job.max_tries = 1;
             priv.job.tries = 1;
             that.fail('Job Stopped!',0);
         };
@@ -877,8 +877,8 @@ var JIO =
             priv.res.error.array = priv.res.error.array || [];
             priv.res.error.message = priv.res.error.message || '';
             // retry ?
-            if (!priv.job.maxtries ||
-                priv.job.tries < priv.job.maxtries) {
+            if (!priv.job.max_tries ||
+                priv.job.tries < priv.job.max_tries) {
                 priv.retryLater();
             } else {
                 priv.job.status = 'fail';
@@ -1133,7 +1133,7 @@ var JIO =
             //          - true if the job was added or replaced
 
             // example :
-            // jio.checkNameAvailability({'userName':'myName','callback':
+            // jio.checkNameAvailability({'user_name':'myName','callback':
             //     function (result) {
             //         if (result.status === 'done') {
             //             if (result.return_value === true) { // available
@@ -1142,14 +1142,14 @@ var JIO =
             //     }});
 
             var settings = $.extend (true,{
-                'userName': priv.storage.userName,
+                'user_name': priv.storage.user_name,
                 'storage': priv.storage,
                 'applicant': priv.applicant,
                 'method': 'checkNameAvailability',
                 'callback': function () {}
             },options);
             // check dependencies
-            if (that.isReady() && settings.userName &&
+            if (that.isReady() && settings.user_name &&
                 settings.storage && settings.applicant) {
                 return priv.queue.createJob ( settings );
             }
@@ -1168,7 +1168,7 @@ var JIO =
             //          - false if the job was not added
             //          - true if the job was added or replaced
 
-            // jio.saveDocument({'fileName':'file','fileContent':'content',
+            // jio.saveDocument({'name':'file','content':'content',
             //     'callback': function (result) {
             //         if (result.status === 'done') { // Saved
             //         } else { } // Error
@@ -1177,12 +1177,12 @@ var JIO =
             var settings = $.extend(true,{
                 'storage': priv.storage,
                 'applicant': priv.applicant,
-                'fileContent': '',
+                'content': '',
                 'method':'saveDocument',
                 'callback': function () {}
             },options);
             // check dependencies
-            if (that.isReady() && settings.fileName &&
+            if (that.isReady() && settings.name &&
                 settings.storage && settings.applicant) {
                 return priv.queue.createJob ( settings );
             }
@@ -1192,7 +1192,7 @@ var JIO =
         that.loadDocument = function ( options ) {
             // Load a document in the storage set in [options]
             // or in the storage set at init. At the end of the job,
-            // 'job_done' will be sent with this job and its 'fileContent'
+            // 'job_done' will be sent with this job and its 'content'
             // return value.
             // options.storage : the storage where to load (optional)
             // options.applicant : the applicant (optional)
@@ -1202,15 +1202,15 @@ var JIO =
             //          - false if the job was not added
             //          - true if the job was added or replaced
 
-            // jio.loadDocument({'fileName':'file','callback':
+            // jio.loadDocument({'name':'file','callback':
             //     function (result) {
             //         if (result.status === 'done') { // Loaded
             //         } else { } // Error
             //     }});
 
             // result.return_value is a document object that looks like {
-            //     fileName:'string',fileContent:'string',
-            //     creationDate:123,lastModified:456 }
+            //     name:'string',content:'string',
+            //     creation_date:123,last_modified:456 }
 
             var settings = $.extend (true,{
                 'storage': priv.storage,
@@ -1219,7 +1219,7 @@ var JIO =
                 'callback': function(){}
             },options);
             // check dependencies
-            if (that.isReady() && settings.fileName &&
+            if (that.isReady() && settings.name &&
                 settings.storage && settings.applicant) {
                 return priv.queue.createJob ( settings );
             }
@@ -1270,7 +1270,7 @@ var JIO =
             //          - false if the job was not added
             //          - true if the job was added or replaced
 
-            // jio.removeDocument({'fileName':'file','callback':
+            // jio.removeDocument({'name':'file','callback':
             //     function (result) {
             //         if(result.status === 'done') { // Removed
             //         } else { } // Not Removed
@@ -1282,7 +1282,7 @@ var JIO =
                 'method':'removeDocument',
                 'callback':function (){}
             },options);
-            if (that.isReady() && settings.fileName &&
+            if (that.isReady() && settings.name &&
                 settings.storage && settings.applicant ) {
                 return priv.queue.createJob ( settings );
             }
@@ -1338,7 +1338,7 @@ var JIO =
         var that = {};
         // Jio creator object
         // this object permit to create jio object
-        that.createNew = function ( storage, applicant, options ) {
+        that.newJio = function ( storage, applicant, options ) {
             // Return a new instance of JIO
             // storage: the storage object or json string
             // applicant: the applicant object or json string
@@ -1385,10 +1385,10 @@ var JIO =
 };
 
 if (window.requirejs) {
-    define ('JIO',['LocalOrCookieStorage','jQuery'],jio_loader_function);
+    define ('JIO',['LocalOrCookieStorage','jQuery'],jioLoaderFunction);
     return undefined;
 } else {
-    return jio_loader_function ( LocalOrCookieStorage, jQuery );
+    return jioLoaderFunction ( LocalOrCookieStorage, jQuery );
 }
 
 }());

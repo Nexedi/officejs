@@ -1089,17 +1089,47 @@
 
         var that = Jio.newBaseStorage( spec, my ), priv = {};
 
+        // TODO : IT IS NOT SECURE AT ALL!
+        // WE MUST REWORK CRYPTED STORAGE!
+        priv.encrypt_param_object = {
+            "iv":"kaprWwY/Ucr7pumXoTHbpA",
+            "v":1,
+            "iter":1000,
+            "ks":256,
+            "ts":128,
+            "mode":"ccm",
+            "adata":"",
+            "cipher":"aes",
+            "salt":"K4bmZG9d704"
+        };
+        priv.decrypt_param_object = {
+            "iv":"kaprWwY/Ucr7pumXoTHbpA",
+            "ks":256,
+            "ts":128,
+            "salt":"K4bmZG9d704"
+        };
         priv.encrypt = function (data,callback,index) {
             // end with a callback in order to improve encrypt to an
             // asynchronous encryption.
             var tmp = sjcl.encrypt (that.getStorageUserName()+':'+
-                                    that.getStoragePassword(), data);
-            callback(tmp,index);
+                                    that.getStoragePassword(), data,
+                                    priv.encrypt_param_object);
+            callback(JSON.parse(tmp).ct,index);
         };
-        priv.decrypt = function (data,callback,index) {
-            var tmp = sjcl.decrypt (that.getStorageUserName()+':'+
-                                    that.getStoragePassword(), data);
-            callback(tmp,index);
+        priv.decrypt = function (data,callback,index,key) {
+            var tmp, param = $.extend(true,{},priv.decrypt_param_object);
+            param.ct = data || '';
+            param = JSON.stringify (param);
+            try {
+                tmp = sjcl.decrypt (that.getStorageUserName()+':'+
+                                    that.getStoragePassword(),
+                                    param);
+            } catch (e) {
+                callback({status:0,statusText:'Decrypt Fail',
+                          message:'Unable to decrypt.'},index,key);
+                return;
+            }
+            callback(tmp,index,key);
         };
 
         /**
@@ -1132,15 +1162,10 @@
                 });
             },
             _2 = function () {
-                priv.encrypt(
-                    JSON.stringify({
-                        name: that.getFileName(),
-                        content:that.getFileContent()
-                    }),
-                    function(res) {
-                        newfilecontent = res;
-                        _3();
-                    });
+                priv.encrypt(that.getFileContent(),function(res) {
+                    newfilecontent = res;
+                    _3();
+                });
             },
             _3 = function () {
                 new_job = that.cloneJob();
@@ -1166,7 +1191,7 @@
          * @method loadDocument
          */
         that.loadDocument = function () {
-            var new_job, new_file_name,
+            var new_job, new_file_name, option = that.cloneOptionObject(),
             _1 = function () {
                 priv.encrypt(that.getFileName(),function(res) {
                     new_file_name = res;
@@ -1178,15 +1203,31 @@
                 new_job.name = new_file_name;
                 new_job.storage = that.getSecondStorage();
                 new_job.callback = loadCallback;
-                console.log (new_job);
                 that.addJob ( new_job );
             },
             loadCallback = function (result) {
                 if (result.status === 'done') {
-                    priv.decrypt (result.return_value.content,function(res){
-                        that.done(JSON.parse(res));
-                    });
+                    result.return_value.name = that.getFileName();
+                    if (option.metadata_only) {
+                        that.done(result.return_value);
+                    } else {
+                        priv.decrypt (result.return_value.content,function(res){
+                            if (typeof res === 'object') {
+                                that.fail({status:0,statusText:'Decrypt Fail',
+                                           message:'Unable to decrypt'});
+                            } else {
+                                result.return_value.content = res;
+                                // content only: the second storage should
+                                // manage content_only option, so it is not
+                                // necessary to manage it.
+                                that.done(result.return_value);
+                            }
+                        });
+                    }
                 } else {
+                    // NOTE : we can re create an error object instead of
+                    // keep the old ex:status=404,message="document 1y59gyl8g
+                    // not found in localStorage"...
                     that.fail(result.error);
                 }
             };
@@ -1198,7 +1239,7 @@
          * @method getDocumentList
          */
         that.getDocumentList = function () {
-            var new_job, i, l, cpt = 0, array,
+            var new_job, i, l, cpt = 0, array, ok = true,
             _1 = function () {
                 new_job = that.cloneJob();
                 new_job.storage = that.getSecondStorage();
@@ -1209,20 +1250,29 @@
                 if (result.status === 'done') {
                     array = result.return_value;
                     for (i = 0, l = array.length; i < l; i+= 1) {
-                        priv.decrypt (array[i],
-                                      lastCallback,i);
+                        // cpt--;
+                        priv.decrypt (array[i].name,
+                                      lastCallback,i,'name');
+                        // priv.decrypt (array[i].content,
+                        //               lastCallback,i,'content');
                     }
                 } else {
                     that.fail(result.error);
                 }
             },
-            lastCallback = function (res,index) {
+            lastCallback = function (res,index,key) {
                 var tmp;
                 cpt++;
-                tmp = JSON.parse(res);
-                array[index] = res.name;
-                array[index] = res.content;
-                if (cpt === l) {
+                if (typeof res === 'object') {
+                    if (ok) {
+                        that.fail({status:0,statusText:'Decrypt Fail',
+                                   message:'Unable to decrypt.'});
+                    }
+                    ok = false;
+                    return;
+                }
+                array[index][key] = res;
+                if (cpt === l && ok) {
                     // this is the last callback
                     that.done(array);
                 }
@@ -1235,16 +1285,28 @@
          * @method removeDocument
          */
         that.removeDocument = function () {
-            var new_job = that.cloneJob();
-            new_job.storage = that.getSecondStorage();
-            new_job.callback = function (result) {
+            var new_job, new_file_name,
+            _1 = function () {
+                priv.encrypt(that.getFileName(),function(res) {
+                    new_file_name = res;
+                    _2();
+                });
+            },
+            _2 = function () {
+                new_job = that.cloneJob();
+                new_job.name = new_file_name;
+                new_job.storage = that.getSecondStorage();
+                new_job.callback = removeCallback;
+                that.addJob(new_job);
+            },
+            removeCallback = function (result) {
                 if (result.status === 'done') {
                     that.done();
                 } else {
                     that.fail(result.error);
                 }
             };
-            that.addJob(new_job);
+            _1();
         };
         return that;
     };
