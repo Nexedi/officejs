@@ -149,7 +149,7 @@
                         'creation_date': Date.now(),
                         'last_modified': Date.now()
                     };
-                    if (!priv.userExists()){
+                    if (!priv.userExists(that.getStorageUserName())) {
                         priv.addUser (that.getStorageUserName());
                     }
                     priv.addFileName(that.getFileName());
@@ -218,10 +218,12 @@
                 for (i = 0, l = array.length; i < l; i += 1) {
                     file_object =
                         LocalOrCookieStorage.getItem(path+'/'+array[i]);
-                    new_array.push ({
-                        'name':file_object.name,
-                        'creation_date':file_object.creation_date,
-                        'last_modified':file_object.last_modified});
+                    if (file_object) {
+                        new_array.push ({
+                            'name':file_object.name,
+                            'creation_date':file_object.creation_date,
+                            'last_modified':file_object.last_modified});
+                    }
                 }
                 that.done(new_array);
             }, 100);
