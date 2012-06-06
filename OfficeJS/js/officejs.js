@@ -411,7 +411,7 @@
                 'limit':{begin:0,end:50},
                 // 'search':{name:'a'},
                 'maxtries':3,
-                'callback':function (result) {
+                'onResponse':function (result) {
                     if (result.status === 'done') {
                         priv.data_object.documentList = result.return_value;
                         priv.showDocumentListInsideLeftNavBar();
@@ -446,7 +446,7 @@
             priv.jio.saveDocument({
                 'name':basename+'.'+current_editor.ext,
                 'content':current_editor.getContent(),
-                'callback':function (result) {
+                'onResponse':function (result) {
                     if (result.status === 'fail') {
                         console.error (result.message);
                     }
@@ -471,7 +471,7 @@
             priv.jio.loadDocument({
                 'name':basename+'.'+current_editor.ext,
                 'maxtries':3,
-                'callback':function (result) {
+                'onResponse':function (result) {
                     if (result.status === 'fail') {
                         console.error (result.message);
                     } else {
@@ -496,7 +496,7 @@
             priv.loading_object.remove();
             priv.jio.removeDocument({
                 'name':name,
-                'callback':function (result) {
+                'onResponse':function (result) {
                     if (result.status === 'fail') {
                         console.error (result.message);
                     }
@@ -521,7 +521,7 @@
                 priv.loading_object.remove();
                 priv.jio.removeDocument({
                     name:documentarray[i],
-                    callback:function (result) {
+                    onResponse:function (result) {
                         cpt += 1;
                         if (cpt === l) {
                             if (typeof current_editor.update !== 'undefined') {

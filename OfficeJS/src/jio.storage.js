@@ -589,13 +589,13 @@
 
         that.setMaxTries (1);
 
-        priv.execJobsFromStorageArray = function (callback) {
+        priv.execJobsFromStorageArray = function (onResponse) {
             var newjob = {}, i;
             for (i = 0; i < priv.storageArray.length; i += 1) {
                 newjob = that.cloneJob();
                 newjob.max_tries = priv.max_tries;
                 newjob.storage = priv.storageArray[i];
-                newjob.callback = callback;
+                newjob.onResponse = onResponse;
                 that.addJob ( newjob ) ;
             }
         };
@@ -607,7 +607,7 @@
             // this.job.storage.storageArray: An Array of storages.
 
             var i = 'id', done = false, error_array = [],
-            res = {'status':'done'}, callback = function (result) {
+            res = {'status':'done'}, onResponse = function (result) {
                 priv.return_value_array.push(result);
                 if (!done) {
                     if (result.status === 'fail') {
@@ -637,7 +637,7 @@
                     }
                 }
             };
-            priv.execJobsFromStorageArray(callback);
+            priv.execJobsFromStorageArray(onResponse);
         };
         that.saveDocument = function () {
             // Save a single document in several storages.
@@ -651,7 +651,7 @@
 
             var res = {'status':'done'}, i = 'id',
             done = false, error_array = [],
-            callback = function (result) {
+            onResponse = function (result) {
                 priv.return_value_array.push(result);
                 if (!done) {
                     if (result.status !== 'fail') {
@@ -671,7 +671,7 @@
                     }
                 }
             };
-            priv.execJobsFromStorageArray(callback);
+            priv.execJobsFromStorageArray(onResponse);
         };
 
         that.loadDocument = function () {
@@ -687,7 +687,7 @@
 
             var doc = {}, i = 'id',
             done = false, error_array = [],
-            res = {'status':'done'}, callback = function (result) {
+            res = {'status':'done'}, onResponse = function (result) {
                 priv.return_value_array.push(result);
                 if (!done) {
                     if (result.status !== 'fail') {
@@ -707,7 +707,7 @@
                     }
                 }
             };
-            priv.execJobsFromStorageArray(callback);
+            priv.execJobsFromStorageArray(onResponse);
         };
 
         that.getDocumentList = function () {
@@ -720,7 +720,7 @@
 
             var res = {'status':'done'}, i = 'id',
             done = false, error_array = [],
-            callback = function (result) {
+            onResponse = function (result) {
                 priv.return_value_array.push(result);
                 if (!done) {
                     if (result.status !== 'fail') {
@@ -740,7 +740,7 @@
                     }
                 }
             };
-            priv.execJobsFromStorageArray(callback);
+            priv.execJobsFromStorageArray(onResponse);
         };
 
         that.removeDocument = function () {
@@ -753,7 +753,7 @@
 
             var res = {'status':'done'}, i = 'key',
             done = false, error_array = [],
-            callback = function (result) {
+            onResponse = function (result) {
                 priv.return_value_array.push(result);
                 if (!done) {
                     if (result.status !== 'fail') {
@@ -773,7 +773,7 @@
                     }
                 }
             };
-            priv.execJobsFromStorageArray(callback);
+            priv.execJobsFromStorageArray(onResponse);
         };
         return that;
     };
@@ -929,9 +929,9 @@
          * returned the result.
          * @method update
          */
-        priv.update = function (callback) {
+        priv.update = function (onResponse) {
             // retreive list before, and then retreive all files
-            var getlist_callback = function (result) {
+            var getlist_onResponse = function (result) {
                 if (result.status === 'done') {
                     if (!priv.isAnIndexedStorage(that.getSecondStorage())) {
                         priv.addIndexedStorage(that.getSecondStorage());
@@ -944,7 +944,7 @@
                 applicant: {ID:that.getApplicantID()},
                 method: 'getDocumentList',
                 max_tries: 3,
-                callback: getlist_callback
+                onResponse: getlist_onResponse
             };
             that.addJob ( newjob );
         };
@@ -957,7 +957,7 @@
             var new_job = that.cloneJob();
             priv.update();
             new_job.storage = that.getSecondStorage();
-            new_job.callback = function (result) {
+            new_job.onResponse = function (result) {
                 if (result.status === 'done') {
                     that.done(result.return_value);
                 } else {
@@ -974,7 +974,7 @@
         that.saveDocument = function () {
             var new_job = that.cloneJob();
             new_job.storage = that.getSecondStorage();
-            new_job.callback = function (result) {
+            new_job.onResponse = function (result) {
                 if (result.status === 'done') {
                     if (!priv.isFileIndexed(that.getFileName())) {
                         priv.addFile({name:that.getFileName(),
@@ -998,7 +998,7 @@
          */
         that.loadDocument = function () {
             var file_array, i, l, new_job,
-            loadCallback = function (result) {
+            loadOnResponse = function (result) {
                 if (result.status === 'done') {
                     // if (file_array[i].last_modified !==
                     //     result.return_value.last_modified ||
@@ -1016,7 +1016,7 @@
             secondLoadDocument = function () {
                 new_job = that.cloneJob();
                 new_job.storage = that.getSecondStorage();
-                new_job.callback = loadCallback;
+                new_job.onResponse = loadOnResponse;
                 that.addJob ( new_job );
             },
             settings = that.cloneOptionObject();
@@ -1061,7 +1061,7 @@
         that.removeDocument = function () {
             var new_job = that.cloneJob();
             new_job.storage = that.getSecondStorage();
-            new_job.callback = function (result) {
+            new_job.onResponse = function (result) {
                 if (result.status === 'done') {
                     priv.removeFile(that.getFileName());
                     priv.update();
@@ -1139,7 +1139,7 @@
         that.checkNameAvailability = function () {
             var new_job = that.cloneJob();
             new_job.storage = that.getSecondStorage();
-            new_job.callback = function (result) {
+            new_job.onResponse = function (result) {
                 if (result.status === 'done') {
                     that.done(result.return_value);
                 } else {
@@ -1172,7 +1172,7 @@
                 new_job.name = new_file_name;
                 new_job.content = newfilecontent;
                 new_job.storage = that.getSecondStorage();
-                new_job.callback = function (result) {
+                new_job.onResponse = function (result) {
                     if (result.status === 'done') {
                         that.done();
                     } else {
@@ -1202,10 +1202,10 @@
                 new_job = that.cloneJob();
                 new_job.name = new_file_name;
                 new_job.storage = that.getSecondStorage();
-                new_job.callback = loadCallback;
+                new_job.onResponse = loadOnResponse;
                 that.addJob ( new_job );
             },
-            loadCallback = function (result) {
+            loadOnResponse = function (result) {
                 if (result.status === 'done') {
                     result.return_value.name = that.getFileName();
                     if (option.metadata_only) {
@@ -1243,24 +1243,24 @@
             _1 = function () {
                 new_job = that.cloneJob();
                 new_job.storage = that.getSecondStorage();
-                new_job.callback = getListCallback;
+                new_job.onResponse = getListOnResponse;
                 that.addJob ( new_job );
             },
-            getListCallback = function (result) {
+            getListOnResponse = function (result) {
                 if (result.status === 'done') {
                     array = result.return_value;
                     for (i = 0, l = array.length; i < l; i+= 1) {
                         // cpt--;
                         priv.decrypt (array[i].name,
-                                      lastCallback,i,'name');
+                                      lastOnResponse,i,'name');
                         // priv.decrypt (array[i].content,
-                        //               lastCallback,i,'content');
+                        //               lastOnResponse,i,'content');
                     }
                 } else {
                     that.fail(result.error);
                 }
             },
-            lastCallback = function (res,index,key) {
+            lastOnResponse = function (res,index,key) {
                 var tmp;
                 cpt++;
                 if (typeof res === 'object') {
@@ -1296,10 +1296,10 @@
                 new_job = that.cloneJob();
                 new_job.name = new_file_name;
                 new_job.storage = that.getSecondStorage();
-                new_job.callback = removeCallback;
+                new_job.onResponse = removeOnResponse;
                 that.addJob(new_job);
             },
-            removeCallback = function (result) {
+            removeOnResponse = function (result) {
                 if (result.status === 'done') {
                     that.done();
                 } else {

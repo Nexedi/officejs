@@ -146,7 +146,7 @@ test ('All tests', function () {
             deepEqual (result[retmethod],value,message);};
         t.spy(o,'f');
         o.jio[method]({'user_name':'Dummy','name':'file',
-                       'content':'content','callback':o.f,
+                       'content':'content','onResponse':o.f,
                        'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
@@ -201,12 +201,12 @@ test ('Simple Job Elimination', function () {
                           {'ID':'jiotests'});
     id = o.jio.getID();
     o.jio.saveDocument({'name':'file','content':'content',
-                        'callback':o.f1,'max_tries':1});
+                        'onResponse':o.f1,'max_tries':1});
     ok(LocalOrCookieStorage.getItem('jio/job_object/'+id)['1'],
        'job creation');
     clock.tick(10);
     o.jio.removeDocument({'name':'file','content':'content',
-                          'callback':o.f2,'max_tries':1});
+                          'onResponse':o.f2,'max_tries':1});
     o.tmp = LocalOrCookieStorage.getItem('jio/job_object/'+id)['1'];
     ok(!o.tmp || o.tmp.status === 'fail','job elimination');
 });
@@ -225,10 +225,10 @@ test ('Simple Job Replacement', function () {
                           {'ID':'jiotests'});
     id = o.jio.getID();
     o.jio.saveDocument({'name':'file','content':'content',
-                        'callback':o.f1,'max_tries':1});
+                        'onResponse':o.f1,'max_tries':1});
     clock.tick(10);
     o.jio.saveDocument({'name':'file','content':'content',
-                        'callback':o.f2,'max_tries':1});
+                        'onResponse':o.f2,'max_tries':1});
     deepEqual(LocalOrCookieStorage.getItem(
         'jio/job_object/'+id)['1'].date,10,
               'The first job date have to be equal to the second job date.');
@@ -250,10 +250,10 @@ test ('Simple Job Waiting', function () {
                           {'ID':'jiotests'});
     id = o.jio.getID();
     o.jio.saveDocument({'name':'file','content':'content',
-                        'callback':o.f3,'max_tries':1});
+                        'onResponse':o.f3,'max_tries':1});
     clock.tick(200);
     o.jio.saveDocument({'name':'file','content':'content',
-                        'callback':o.f4,'max_tries':1});
+                        'onResponse':o.f4,'max_tries':1});
     ok(LocalOrCookieStorage.getItem(
         'jio/job_object/'+id)['2'] &&
        LocalOrCookieStorage.getItem(
@@ -284,7 +284,7 @@ test ('Simple Time Waiting' , function () {
     o.jio = JIO.newJio({'type':'dummyall3tries','user_name':'dummy'},
                           {'ID':'jiotests'});
     o.jio.saveDocument({'name':'file','content':'content',
-                        'callback':o.f,'max_tries':3});
+                        'onResponse':o.f,'max_tries':3});
     clock.tick(100000);
     ok(o.f.calledOnce,'callback called once.');
     ok(o.res,'job done.');
@@ -304,7 +304,7 @@ test ('Check name availability', function () {
             deepEqual(result.return_value,value,'checking name availabality');};
         t.spy(o,'f');
         o.jio.checkNameAvailability(
-            {'user_name':'MrCheckName','callback': o.f,'max_tries':1});
+            {'user_name':'MrCheckName','onResponse': o.f,'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -337,7 +337,7 @@ test ('Document save', function () {
             deepEqual(result.status,value,message);};
         t.spy(o,'f');
         o.jio.saveDocument(
-            {'name':'file','content':'content','callback': o.f,
+            {'name':'file','content':'content','onResponse': o.f,
              'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
@@ -384,7 +384,7 @@ test ('Document load', function () {
             deepEqual(result[res],value,'loading document');};
         t.spy(o,'f');
         o.jio.loadDocument(
-            {'name':'file','callback': o.f,'max_tries':1});
+            {'name':'file','onResponse': o.f,'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -419,7 +419,7 @@ test ('Get document list', function () {
                        objectifyDocumentArray(value),'getting list');
         };
         t.spy(o,'f');
-        o.jio.getDocumentList({'callback': o.f,'max_tries':1});
+        o.jio.getDocumentList({'onResponse': o.f,'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -451,7 +451,7 @@ test ('Document remove', function () {
             deepEqual(result.status,'done','removing document');};
         t.spy(o,'f');
         o.jio.removeDocument(
-            {'name':'file','callback': o.f,'max_tries':1});
+            {'name':'file','onResponse': o.f,'max_tries':1});
         clock.tick(510);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -486,7 +486,7 @@ test ('Check name availability', function () {
         o.f = function (result) {
             deepEqual(result[method],value,'checking name availability');};
         t.spy(o,'f');
-        o.jio.checkNameAvailability({'user_name':'davcheck','callback':o.f,
+        o.jio.checkNameAvailability({'user_name':'davcheck','onResponse':o.f,
                                      'max_tries':1});
         clock.tick(500);
         server.respond();
@@ -526,7 +526,7 @@ test ('Document load', function () {
         o.f = function (result) {
             deepEqual (result.return_value,doc,message);};
         t.spy(o,'f');
-        o.jio.loadDocument({'name':'file','callback':o.f,'max_tries':1});
+        o.jio.loadDocument({'name':'file','onResponse':o.f,'max_tries':1});
         clock.tick(500);
         server.respond();
         if (!o.f.calledOnce) {
@@ -584,7 +584,7 @@ test ('Document save', function () {
             deepEqual (result.status,value,message);};
         t.spy(o,'f');
         o.jio.saveDocument({'name':'file','content':'content',
-                            'callback':o.f,'max_tries':1});
+                            'onResponse':o.f,'max_tries':1});
         clock.tick(500);
         server.respond();
         if (!o.f.calledOnce) {
@@ -633,7 +633,7 @@ test ('Get Document List', function () {
             }
         };
         t.spy(o,'f');
-        o.jio.getDocumentList({'callback':o.f,'max_tries':1});
+        o.jio.getDocumentList({'onResponse':o.f,'max_tries':1});
         clock.tick(500);
         server.respond();
         if (!o.f.calledOnce) {
@@ -664,7 +664,7 @@ test ('Remove document', function () {
         o.f = function (result) {
             deepEqual (result.status,value,message);};
         t.spy(o,'f');
-        o.jio.removeDocument({'name':'file','callback':o.f,'max_tries':1});
+        o.jio.removeDocument({'name':'file','onResponse':o.f,'max_tries':1});
         clock.tick(500);
         server.respond();
         if (!o.f.calledOnce) {
@@ -695,7 +695,7 @@ test ('Check name availability', function () {
             deepEqual (result.return_value,value,message);
         };
         t.spy(o,'f');
-        o.jio.checkNameAvailability({'user_name':'Dummy','callback':o.f,
+        o.jio.checkNameAvailability({'user_name':'Dummy','onResponse':o.f,
                                      'max_tries':o.max_tries});
         clock.tick(300000);
         if (!o.f.calledOnce) {
@@ -761,7 +761,7 @@ test ('Document load', function () {
         o.f = function (result) {
             deepEqual (result.return_value,doc,message);};
         t.spy(o,'f');
-        o.jio.loadDocument({'name':'file','callback':o.f});
+        o.jio.loadDocument({'name':'file','onResponse':o.f});
         clock.tick(100000);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -797,7 +797,7 @@ test ('Document save', function () {
             deepEqual (result.status,value,message);};
         t.spy(o,'f');
         o.jio.saveDocument({'name':'file','content':'content',
-                            'callback':o.f,'max_tries':3});
+                            'onResponse':o.f,'max_tries':3});
         clock.tick(500);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -821,7 +821,7 @@ test ('Get Document List', function () {
                        objectifyDocumentArray(value),'getting list');
         };
         t.spy(o,'f');
-        o.jio.getDocumentList({'callback':o.f,'max_tries':3});
+        o.jio.getDocumentList({'onResponse':o.f,'max_tries':3});
         clock.tick(100000);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -847,7 +847,7 @@ test ('Remove document', function () {
         o.f = function (result) {
             deepEqual (result.status,value,message);};
         t.spy(o,'f');
-        o.jio.removeDocument({'name':'file','callback':o.f,'max_tries':3});
+        o.jio.removeDocument({'name':'file','onResponse':o.f,'max_tries':3});
         clock.tick(100000);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -870,7 +870,7 @@ test ('Check name availability', function () {
             deepEqual (result.return_value,value,message);};
         t.spy(o,'f');
         o.jio.checkNameAvailability({user_name:'MrIndexedCheck',
-                                     callback:o.f,max_tries:3});
+                                     onResponse:o.f,max_tries:3});
         clock.tick(100000);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
@@ -893,7 +893,7 @@ test ('Document load', function () {
     // loading must take long time with dummyall3tries
     o.f = function () {};
     this.spy(o,'f');
-    o.jio.loadDocument({name:'memo',max_tries:3,callback:o.f,
+    o.jio.loadDocument({name:'memo',max_tries:3,onResponse:o.f,
                         options:{metadata_only:true}});
     clock.tick(500);
     ok(!o.f.calledOnce,'Callback must not be called');
@@ -905,7 +905,7 @@ test ('Document load', function () {
         deepEqual (result.return_value,o.doc,'Document metadata retrieved');
     };
     this.spy(o,'f2');
-    o.jio.loadDocument({name:'memo',max_tries:3,callback:o.f2,
+    o.jio.loadDocument({name:'memo',max_tries:3,onResponse:o.f2,
                         options:{metadata_only:true}});
     clock.tick(500);
     if (!o.f2.calledOnce) {
@@ -918,7 +918,7 @@ test ('Document load', function () {
         deepEqual (result.return_value,o.doc2,'Simple document loading');
     };
     this.spy(o,'f3');
-    o.jio.loadDocument({name:'file',max_tries:3,callback:o.f3});
+    o.jio.loadDocument({name:'file',max_tries:3,onResponse:o.f3});
     clock.tick(100000);
     if (!o.f3.calledOnce) {
         ok (false, 'no response / too much results');
@@ -936,7 +936,7 @@ test ('Document save', function () {
         deepEqual (result.status,'done','document save');
     };
     this.spy(o,'f');
-    o.jio.saveDocument({name:'file',max_tries:3,callback:o.f});
+    o.jio.saveDocument({name:'file',max_tries:3,onResponse:o.f});
     clock.tick(100000);
     if (!o.f.calledOnce){
         ok (false, 'no response / too much results');
@@ -955,7 +955,7 @@ test ('Get document list', function () {
     // getting list must take long time with dummyall3tries
     o.f = function () {};
     this.spy(o,'f');
-    o.jio.getDocumentList({max_tries:3,callback:o.f});
+    o.jio.getDocumentList({max_tries:3,onResponse:o.f});
     clock.tick(500);
     ok(!o.f.calledOnce,'Callback must not be called');
     // wail long time too retreive list
@@ -965,7 +965,7 @@ test ('Get document list', function () {
         deepEqual (result.return_value,[o.doc1,o.doc2],'get document list');
     };
     this.spy(o,'f2');
-    o.jio.getDocumentList({max_tries:3,callback:o.f2});
+    o.jio.getDocumentList({max_tries:3,onResponse:o.f2});
     clock.tick(500);
     if (!o.f2.calledOnce) {
         ok (false, 'no response / too much results');
@@ -982,7 +982,7 @@ test ('Remove document', function () {
         deepEqual (result.status,'done','document remove');
     };
     this.spy(o,'f');
-    o.jio.removeDocument({name:'file',max_tries:3,callback:o.f});
+    o.jio.removeDocument({name:'file',max_tries:3,onResponse:o.f});
     clock.tick(100000);
     if (!o.f.calledOnce){
         ok (false, 'no response / too much results');
@@ -1003,7 +1003,7 @@ test ('Check name availability' , function () {
     };
     this.spy(o,'f');
     o.jio.checkNameAvailability({user_name:'cryptcheck',
-                                 max_tries:1,callback:o.f});
+                                 max_tries:1,onResponse:o.f});
     clock.tick(1000);
     if (!o.f.calledOnce) {
         ok (false, 'no response / too much results');
@@ -1024,7 +1024,7 @@ test ('Document save' , function () {
     };
     this.spy(o,'f');
     o.jio.saveDocument({name:'testsave',content:'contentoftest',
-                        max_tries:1,callback:o.f});
+                        max_tries:1,onResponse:o.f});
     clock.tick(1000);
     if (!o.f.calledOnce) {
         ok (false, 'no response / too much results');
@@ -1072,7 +1072,7 @@ test ('Document Load' , function () {
          content:'kSulH8Qo105dSKHcY2hEBXWXC9b+3PCEFSm1k7k',
          last_modified:500,creation_date:500});
     o.jio.loadDocument({name:'testload',
-                        max_tries:1,callback:o.f});
+                        max_tries:1,onResponse:o.f});
     clock.tick(1000);
     if (!o.f.calledOnce) {
         ok (false, 'no response / too much results');
@@ -1122,7 +1122,7 @@ test ('Get Document List', function () {
     LocalOrCookieStorage.setItem(
         'jio/local/cryptgetlistlocal/jiotests/'+o.doc_encrypt_list[1].name,
         o.doc_encrypt_list[1]);
-    o.jio.getDocumentList({max_tries:1,callback:o.f});
+    o.jio.getDocumentList({max_tries:1,onResponse:o.f});
     clock.tick (2000);
     if (!o.f.calledOnce) {
         ok (false, 'no response / too much results');
@@ -1154,7 +1154,7 @@ test ('Remove document', function () {
          "content":"LKaLZopWgML6IxERqoJ2mUyyO",
          "creation_date":500,
          "last_modified":500});
-    o.jio.removeDocument({name:'file',max_tries:1,callback:o.f});
+    o.jio.removeDocument({name:'file',max_tries:1,onResponse:o.f});
     clock.tick(1000);
     if (!o.f.calledOnce){
         ok (false, 'no response / too much results');

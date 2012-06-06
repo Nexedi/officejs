@@ -259,7 +259,7 @@ var JIO =
             priv.job_object = {};
             that.copyJobQueueToLocalStorage();
             for (k in priv.recovered_job_object) {
-                priv.recovered_job_object[k].callback = emptyFun;
+                priv.recovered_job_object[k].onResponse = emptyFun;
                 that.addJob (priv.recovered_job_object[k]);
             }
         };
@@ -547,7 +547,7 @@ var JIO =
         };
 
         that.ended = function (endedjob) {
-            // It is a callback function called just before user callback.
+            // It is a callback function called just before user onResponse.
             // It is called to manage job_object according to the ended job.
 
             var job = $.extend(true,{},endedjob); // copy
@@ -698,7 +698,7 @@ var JIO =
 
         //// Private attributes
         priv.job = options.job;
-        priv.callback = options.job.callback;
+        priv.onResponse = options.job.onResponse;
         priv.queue = options.queue;
         priv.res = {'status':'done','message':''};
         priv.sorted = false;
@@ -854,7 +854,7 @@ var JIO =
 
             priv.job.tries = 0;
             priv.job.date = newjob.date;
-            priv.job.callback = newjob.callback;
+            priv.job.onResponse = newjob.onResponse;
 
             priv.res.status = 'fail';
             priv.res.message = 'Job Stopped!';
@@ -863,7 +863,7 @@ var JIO =
             priv.res.error.statusText = 'Replaced';
             priv.res.error.message = 'The job was replaced by a newer one.';
             priv['fail_'+priv.job.method]();
-            priv.callback(priv.res);
+            priv.onResponse(priv.res);
         };
         that.fail = function ( errorobject ) {
             // Called when a job has failed.
@@ -886,18 +886,18 @@ var JIO =
                 priv.job.status = 'fail';
                 priv['fail_'+priv.job.method]();
                 priv.queue.ended(priv.job);
-                priv.callback(priv.res);
+                priv.onResponse(priv.res);
             }
         };
         that.done = function ( retvalue ) {
             // Called when a job has terminated successfully.
-            // It will return the return value by the calling the callback
+            // It will return the return value by the calling of onResponse
             // function.
 
             priv.job.status = 'done';
             priv['done_'+priv.job.method]( retvalue );
             priv.queue.ended(priv.job);
-            priv.callback(priv.res);
+            priv.onResponse(priv.res);
         };
         that.execute = function () {
             // Execute the good function from the good storage.
@@ -1037,10 +1037,10 @@ var JIO =
             var m = 'Method: '+ settings.method +
                 ', One or some parameters are undefined.';
             console.error (m);
-            settings.callback({status:'fail',
-                               error: {status:0,
-                                       statusText:'Undefined Parameter',
-                                       message: m}});
+            settings.onResponse({status:'fail',
+                                  error: {status:0,
+                                          statusText:'Undefined Parameter',
+                                          message: m}});
             return null;
         };
 
@@ -1128,14 +1128,14 @@ var JIO =
             // return value.
             // options.storage : the storage where to check (optional)
             // options.applicant : the applicant (optional)
-            // options.callback(result) : called to get the result.
+            // options.onResponse(result) : called to get the result.
 
             // returns: - null if dependencies are missing
             //          - false if the job was not added
             //          - true if the job was added or replaced
 
             // example :
-            // jio.checkNameAvailability({'user_name':'myName','callback':
+            // jio.checkNameAvailability({'user_name':'myName','onResponse':
             //     function (result) {
             //         if (result.status === 'done') {
             //             if (result.return_value === true) { // available
@@ -1148,7 +1148,7 @@ var JIO =
                 'storage': priv.storage,
                 'applicant': priv.applicant,
                 'method': 'checkNameAvailability',
-                'callback': function () {}
+                'onResponse': function () {}
             },options);
             // check dependencies
             if (that.isReady() && settings.user_name &&
@@ -1164,14 +1164,14 @@ var JIO =
             // 'job_done' will be sent with this job.
             // options.storage : the storage where to save (optional)
             // options.applicant : the applicant (optional)
-            // options.callback(result) : called to get the result.
+            // options.onResponse(result) : called to get the result.
 
             // returns: - null if dependencies are missing
             //          - false if the job was not added
             //          - true if the job was added or replaced
 
             // jio.saveDocument({'name':'file','content':'content',
-            //     'callback': function (result) {
+            //     'onResponse': function (result) {
             //         if (result.status === 'done') { // Saved
             //         } else { } // Error
             //     }});
@@ -1181,7 +1181,7 @@ var JIO =
                 'applicant': priv.applicant,
                 'content': '',
                 'method':'saveDocument',
-                'callback': function () {}
+                'onResponse': function () {}
             },options);
             // check dependencies
             if (that.isReady() && settings.name &&
@@ -1198,13 +1198,13 @@ var JIO =
             // return value.
             // options.storage : the storage where to load (optional)
             // options.applicant : the applicant (optional)
-            // options.callback(result) : called to get the result.
+            // options.onResponse(result) : called to get the result.
 
             // returns: - null if dependencies are missing
             //          - false if the job was not added
             //          - true if the job was added or replaced
 
-            // jio.loadDocument({'name':'file','callback':
+            // jio.loadDocument({'name':'file','onResponse':
             //     function (result) {
             //         if (result.status === 'done') { // Loaded
             //         } else { } // Error
@@ -1218,7 +1218,7 @@ var JIO =
                 'storage': priv.storage,
                 'applicant': priv.applicant,
                 'method':'loadDocument',
-                'callback': function(){}
+                'onResponse': function(){}
             },options);
             // check dependencies
             if (that.isReady() && settings.name &&
@@ -1233,13 +1233,13 @@ var JIO =
             // or in the storage set at init.
             // options.storage : the storage where to get the list (optional)
             // options.applicant : the applicant (optional)
-            // options.callback(result) : called to get the result.
+            // options.onResponse(result) : called to get the result.
 
             // returns: - null if dependencies are missing
             //          - false if the job was not added
             //          - true if the job was added or replaced
 
-            // jio.getDocumentList({'callback':
+            // jio.getDocumentList({'onResponse':
             //     function (result) {
             //         if (result.status === 'done') { // OK
             //             console.log(result.return_value);
@@ -1252,7 +1252,7 @@ var JIO =
                 'storage': priv.storage,
                 'applicant': priv.applicant,
                 'method':'getDocumentList',
-                'callback':function(){}
+                'onResponse':function(){}
             },options);
             // check dependencies
             if (that.isReady() && settings.storage && settings.applicant ) {
@@ -1266,13 +1266,13 @@ var JIO =
             // or in the storage set at init.
             // options.storage : the storage where to remove (optional)
             // options.applicant : the applicant (optional)
-            // options.callback(result) : called to get the result.
+            // options.onResponse(result) : called to get the result.
 
             // returns: - null if dependencies are missing
             //          - false if the job was not added
             //          - true if the job was added or replaced
 
-            // jio.removeDocument({'name':'file','callback':
+            // jio.removeDocument({'name':'file','onResponse':
             //     function (result) {
             //         if(result.status === 'done') { // Removed
             //         } else { } // Not Removed
@@ -1282,7 +1282,7 @@ var JIO =
                 'storage': priv.storage,
                 'applicant': priv.applicant,
                 'method':'removeDocument',
-                'callback':function (){}
+                'onResponse':function (){}
             },options);
             if (that.isReady() && settings.name &&
                 settings.storage && settings.applicant ) {
