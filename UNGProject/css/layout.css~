@@ -1,0 +1,12 @@
+#content .ungleftlist {
+
+	width:230px;
+	float:left;
+
+}
+
+#content .ungrightlist {
+	width:1000px;
+	float:left;
+
+}

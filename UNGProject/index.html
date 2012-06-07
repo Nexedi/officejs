@@ -1,6 +1,6 @@
+<!doctype html>
 
-
-<html class="no-js" lang="en" >
+<html class="no-js" lang="en" manifest="UNG.manifest">
 <!-- the "no-js" class is for Modernizr. -->
 
 <head id="UNGinitial" data-template-set="html5-reset">
@@ -93,6 +93,10 @@
 		   Storage.initialize();//initialize storage
 		}
 		$(document).ready(initung);
+		//a global value for the iframe of the image editor
+		var iframeNumber=0;
+		
+		
     </script>
 <!--For the theme gadget-->
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -161,7 +165,21 @@
 		<!--Finance-->
 			<script type="text/javascript" src="jquery.sheet/jquery.sheet.financefn.js"></script>
 		<!--/Finance-->
-
+	<!--HTML BOX-->
+	<script type="text/javascript">
+		//controller for save ,every time saved also will make a load(bug?)
+		var isSaving=false;
+		//controller for the load prolblem ,first time load twice(bug?)
+		var isFirstTimeLoad=true;
+		var FirstTimeLoadControl=true;
+		var FirstTimeListLoad=true;
+   	</script>
+	<script language="Javascript" src="HtmlBox/htmlbox.colors.js" type="text/javascript"></script>
+	<script language="Javascript" src="HtmlBox/htmlbox.styles.js" type="text/javascript"></script>
+	<script language="Javascript" src="HtmlBox/htmlbox.syntax.js" type="text/javascript"></script>
+	<script language="Javascript" src="HtmlBox/xhtml.js" type="text/javascript"></script>
+	<script language="Javascript" src="HtmlBox/htmlbox.min.js" type="text/javascript"></script>
+	<!--/HTML BOX-->
 <body>
   <!-- Gadget work start here -->
 <div id="application" gadget="portal_gadgets/application/gadget.html"

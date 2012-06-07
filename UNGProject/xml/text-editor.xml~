@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <title> Page web - Web Page </title>
+    <content>
+        <label>
+            Page Content
+        </label>
+
+        <div class='input'><div id="textEditor">		
+            
+	<textarea id='ha'></textarea>
+
+	</div>
+        </div>
+    </content>
+    <dependencies>
+        <scriptfile>js/table-editor.js</scriptfile>
+    </dependencies>
+</root>

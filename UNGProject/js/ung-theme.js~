@@ -6,11 +6,9 @@ var showUng=function(m) {
 		document.getElementById("themeheader").style.display='block';
 	}
 	else{
-$("#svgframe").attr("src", "blank.html");
 		document.getElementById("ungcontent").style.display='block';
 		document.getElementById("themecontent").style.display='none';
 		document.getElementById("ungheader").style.display='block';
 		document.getElementById("themeheader").style.display='none';
-		$(document).ready(initung);
 	}
 }

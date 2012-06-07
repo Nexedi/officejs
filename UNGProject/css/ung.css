@@ -9,7 +9,7 @@ body {
   font-weight:normal;
   overflow-x: hidden;
 }
-
+		textEditor{padding: 20px;}
 /* buttons aspect */
 .ung_button {
     background-image: url('../images/ung/button_background.png');

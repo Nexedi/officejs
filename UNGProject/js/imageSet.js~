@@ -1,0 +1,13 @@
+
+
+		var frmMainName="svgframe";
+		var image = document.getElementById("image"); 
+		var frm=document.createElement("iframe");
+		var frmName=frmMainName+iframeNumber;
+		image.appendChild(frm);
+		frm.setAttribute("id","svgframe");
+		frm.setAttribute("name","svgframe");
+		frm.setAttribute("width","100%");
+		frm.setAttribute("height","600");
+		console.log("come to here");
+		var wholeName="#"+frmName;

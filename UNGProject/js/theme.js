@@ -87,7 +87,7 @@ var Page = {
                      });
                 }
                 else {
-                     Page.loadEditor(editor);
+                    Page.loadEditor(editor);
                      Page.displayUserInformation(getCurrentUser());
                      Page.displayDocumentInformation(getCurrentDocument());
                 }
@@ -386,6 +386,7 @@ var Document = {
       * save document modification
       */
     saveCurrentDocument: function() {
+	isSaving=true;
         getCurrentPage().getEditor().saveEdition();
 	getCurrentDocument().save();
         localStorage.currentDocument = JSON.stringify(getCurrentDocument());
@@ -399,16 +400,18 @@ var Document = {
     startDocumentEdition: function(doc) {
         if(Document.supportedDocuments[doc.getType()].editorPage) {
             getCurrentStorage().getDocument(doc.getAddress(), function(data) {
+
+
 	       this.setCurrentDocument(data);
 	       // initialize
-
+               var thedialog;
                var inittheme = function() {
                     Page.initialize(Document.supportedDocuments[getCurrentDocument().getType()].editorPage);
                     Storage.initialize();
+                    thedialog = $("#diag").dialog({title:"",modal: true, autoOpen: false});
                }
                $(document).ready(inittheme);
 	       showUng(false);
-	       this.setCurrentDocument(data);
           });
         } else {
             alert("no editor available for this document");
@@ -420,6 +423,8 @@ var Document = {
       */
     stopDocumentEdition: function() {
      //   this.saveCurrentDocument();
+	//change the saving status
+	isSaving==false;
         showUng(true);
         return false;
     },

@@ -5,8 +5,8 @@
             Page Content
         </label>
 
-        <div class="input"><div  >
-            <iframe name="svgframe" id="svgframe" width="100%" height="600"/>
+        <div class="input"><div  id="image">
+		<iframe name="svgframe" id="svgframe" width="100%" height="600"/>
         </div></div>
     </content>
     <dependencies>

@@ -231,7 +231,11 @@ Line.prototype = {
                 .click(function() {line.changeState();})//clic on a checkbox
             .end()
             .find("td.listbox-table-data-cell")
-                .click(function() {//click on a line
+                .click(function() {//clic on a line
+		    if(isFirstTimeLoad){
+			FirstTimeLoadControl=false;
+			isFirstTimeLoad=false;
+		    }
                     setCurrentDocumentID(line.getID());
                     Document.startDocumentEdition(line.getDocument())
                 })
