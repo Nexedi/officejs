@@ -93,45 +93,41 @@ test ( "Jio simple methods", function () {
     o.jio2 = JIO.newJio();
     ok ( o.jio2, 'another new jio -> 2');
 
-    ok ( JIO.addStorageType('qunit', function(){}) ,
-         "adding storage type.");
+    JIO.addStorageType('qunit', function(){});
 
-    deepEqual ( o.jio.isReady(), true, '1 must be not ready');
+    ok ( o.jio2.getId() !== o.jio.getId(), '1 and 2 must be different');
 
-    ok ( o.jio2.getID() !== o.jio.getID(), '1 and 2 must be different');
-
-    deepEqual ( o.jio.stop(), true, '1 must be stopped');
-
+    o.jio.stop();
     o.jio2.stop();
 
 });
 
-test ( 'Jio Publish/Sububscribe/Unsubscribe methods', function () {
-    // Test the Publisher, Subscriber of a single jio.
-    // It is just testing if these function are working correctly.
-    // The test publishes an event, waits a little, and check if the
-    // event has been received by the callback of the previous
-    // subscribe. Then, the test unsubscribe the callback function from
-    // the event, and publish the same event. If it receives the event,
-    // the unsubscribe method is not working correctly.
+// test ( 'Jio Publish/Sububscribe/Unsubscribe methods', function () {
+//     // Test the Publisher, Subscriber of a single jio.
+//     // It is just testing if these function are working correctly.
+//     // The test publishes an event, waits a little, and check if the
+//     // event has been received by the callback of the previous
+//     // subscribe. Then, the test unsubscribe the callback function from
+//     // the event, and publish the same event. If it receives the event,
+//     // the unsubscribe method is not working correctly.
 
-    var o = {};
-    o.jio = JIO.newJio();
+//     var o = {};
+//     o.jio = JIO.newJio();
 
-    var spy1 = this.spy();
+//     var spy1 = this.spy();
 
-    // Subscribe the pubsub_test event.
-    o.callback = o.jio.subscribe('pubsub_test',spy1);
-    // And publish the event.
-    o.jio.publish('pubsub_test');
-    ok (spy1.calledOnce, 'subscribing & publishing, event called once');
+//     // Subscribe the pubsub_test event.
+//     o.callback = o.jio.subscribe('pubsub_test',spy1);
+//     // And publish the event.
+//     o.jio.publish('pubsub_test');
+//     ok (spy1.calledOnce, 'subscribing & publishing, event called once');
 
-    o.jio.unsubscribe('pubsub_test',spy1);
-    o.jio.publish('pubsub_test');
-    ok (spy1.calledOnce, 'unsubscribing, same event not called twice');
+//     o.jio.unsubscribe('pubsub_test',spy1);
+//     o.jio.publish('pubsub_test');
+//     ok (spy1.calledOnce, 'unsubscribing, same event not called twice');
 
-    o.jio.stop();
-});
+//     o.jio.stop();
+// });
 
 module ( 'Jio Dummy Storages' );
 
@@ -140,11 +136,12 @@ test ('All tests', function () {
     // It is simple tests, but they will be used by replicate storage later
     // for sync operation.
 
-    var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
+    var o = {}, clock = this.sandbox.useFakeTimers(),
     mytest = function (message,method,retmethod,value){
         o.f = function (result) {
-            deepEqual (result[retmethod],value,message);};
-        t.spy(o,'f');
+            deepEqual (result,value,message);
+        };
+        this.spy(o,'f');
         o.jio[method]({'user_name':'Dummy','name':'file',
                        'content':'content','onResponse':o.f,
                        'max_tries':1});
@@ -154,40 +151,43 @@ test ('All tests', function () {
         }
     };
     // All Ok Dummy Storage
-    o.jio = JIO.newJio({'type':'dummyallok','user_name':'Dummy'},
-                          {'ID':'jiotests'});
-    mytest('check name availability OK','checkNameAvailability',
-           'return_value',true);
-    mytest('save document OK','saveDocument','status','done');
-    mytest('load document OK','loadDocument','return_value',
-           {'name':'file','content':'content',
-            'last_modified':15000,'creation_date':10000});
-    mytest('get document list OK','getDocumentList','return_value',
-           [{'name':'file','creation_date':10000,'last_modified':15000},
-            {'name':'memo','creation_date':20000,'last_modified':25000}]);
-    mytest('remove document OK','removeDocument','status','done');
-    o.jio.stop();
+    o.jio = JIO.newJio({'type':'dummyallok','user_name':'Dummy',
+                        'applicationname':'jiotests'});
+    o.f = function (result) {
+        deepEqual (result,undefined,'');
+    };
+    this.spy(o,'f');
+    o.jio.saveDocument('file','content',{onDone:o.f});
+    clock.tick(1000);
+    if (!o.f.calledOnce) {
+        ok(false, 'no response / too much results');
+    }
+    // mytest('save document OK','saveDocument','status','done');
+    // mytest('load document OK','loadDocument','return_value',
+    //        {'name':'file','content':'content',
+    //         'last_modified':15000,'creation_date':10000});
+    // mytest('get document list OK','getDocumentList','return_value',
+    //        [{'name':'file','creation_date':10000,'last_modified':15000},
+    //         {'name':'memo','creation_date':20000,'last_modified':25000}]);
+    // mytest('remove document OK','removeDocument','status','done');
+    // o.jio.stop();
 
-    // All Fail Dummy Storage
-    o.jio = JIO.newJio({'type':'dummyallfail','user_name':'Dummy'},
-                          {'ID':'jiotests'});
-    mytest('check name availability FAIL','checkNameAvailability',
-           'status','fail');
-    mytest('save document FAIL','saveDocument','status','fail');
-    mytest('load document FAIL','loadDocument','status','fail');
-    mytest('get document list FAIL','getDocumentList','status','fail');
-    mytest('remove document FAIL','removeDocument','status','fail');
-    o.jio.stop();
+    // // All Fail Dummy Storage
+    // o.jio = JIO.newJio({'type':'dummyallfail','user_name':'Dummy'},
+    //                       {'ID':'jiotests'});
+    // mytest('save document FAIL','saveDocument','status','fail');
+    // mytest('load document FAIL','loadDocument','status','fail');
+    // mytest('get document list FAIL','getDocumentList','status','fail');
+    // mytest('remove document FAIL','removeDocument','status','fail');
+    // o.jio.stop();
 
-    // All Not Found Dummy Storage
-    o.jio = JIO.newJio({'type':'dummyallnotfound','user_name':'Dummy'},
-                          {'ID':'jiotests'});
-    mytest('check name availability NOT FOUND','checkNameAvailability',
-           'return_value',true);
-    mytest('save document NOT FOUND','saveDocument','status','done');
-    mytest('load document NOT FOUND','loadDocument','status','fail');
-    mytest('get document list NOT FOUND','getDocumentList','status','fail');
-    mytest('remove document NOT FOUND','removeDocument','status','done');
+    // // All Not Found Dummy Storage
+    // o.jio = JIO.newJio({'type':'dummyallnotfound','user_name':'Dummy'},
+    //                       {'ID':'jiotests'});
+    // mytest('save document NOT FOUND','saveDocument','status','done');
+    // mytest('load document NOT FOUND','loadDocument','status','fail');
+    // mytest('get document list NOT FOUND','getDocumentList','status','fail');
+    // mytest('remove document NOT FOUND','removeDocument','status','done');
     o.jio.stop();
 });
 
@@ -1184,7 +1184,7 @@ if (window.requirejs) {
     require(['jiotestsloader'],thisfun);
 } else {
     thisfun ({LocalOrCookieStorage:LocalOrCookieStorage,
-              JIO:JIO,
+              JIO:jio,
               sjcl:sjcl,
               Base64:Base64,
               jQuery:jQuery});

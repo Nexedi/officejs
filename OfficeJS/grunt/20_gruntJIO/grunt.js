@@ -14,7 +14,39 @@ module.exports = function(grunt) {
         concat: {
             dist: {
                 src: ['<banner:meta.banner>',
-                      '<file_strip_banner:../../src/<%= pkg.name %>.js>'],
+                      // Wrapper top
+                      '<file_strip_banner:../../src/<%= pkg.name %>/wrapper.top.js>',
+                      // Classes
+                      '<file_strip_banner:../../src/<%= pkg.name %>/commands/command.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/commands/getDocumentList.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/commands/loadDocument.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/commands/removeDocument.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/commands/saveDocument.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/exceptions.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/jobStatus.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/doneStatus.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/failStatus.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/initialStatus.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/onGoingStatus.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/waitStatus.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/storages/storage.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/storages/storageHandler.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/activityUpdater.js>',
+                      // Jio wrapper top
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jio.top.js>',
+                      // Jio Classes
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jobs/job.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/announcements/announcement.js>',
+                      // Singletons
+                      '<file_strip_banner:../../src/<%= pkg.name %>/announcements/announcer.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jobs/jobIdHandler.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jobs/jobManager.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jobs/jobRules.js>',
+                      // Jio wrappor bottem
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jio.bottom.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jioNamespace.js>',
+                      // Wrapper bottom
+                      '<file_strip_banner:../../src/<%= pkg.name %>/wrapper.bottom.js>'],
                 dest: '../../lib/jio/<%= pkg.name %>.js'
             }
         },
@@ -25,17 +57,17 @@ module.exports = function(grunt) {
             }
         },
         qunit: {
-            files: ['../../test/jiotests.html',
+            files: [// '../../test/jiotests.html',
                     '../../test/jiotests_withoutrequirejs.html']
         },
         lint: {
             files: ['grunt.js',
-                    '../../src/<%= pkg.name %>.js',
-                    '../../js/base64.requirejs_module.js',
-                    '../../src/jio.dummystorages.js',
-                    '../../js/jquery.requirejs_module.js',
-                    '../../test/jiotests.js',
-                    '../../test/jiotests.loader.js']
+                    '../../lib/jio/<%= pkg.name %>.js']
+                    // '../../js/base64.requirejs_module.js',
+                    // '../../src/jio.dummystorages.js',
+                    // '../../js/jquery.requirejs_module.js',
+                    // '../../test/jiotests.js',
+                    // '../../test/jiotests.loader.js']
         },
         watch: {
             files: '<config:lint.files>',
@@ -60,7 +92,6 @@ module.exports = function(grunt) {
                 sjcl:true,
                 LocalOrCookieStorage: true,
                 Base64: true,
-                JIO: true,
                 console: true,
                 unescape: true,
                 // Needed to avoid "not defined error" with requireJs
@@ -82,6 +113,6 @@ module.exports = function(grunt) {
     });
 
     // Default task.
-    grunt.registerTask('default', 'lint qunit concat min');
+    grunt.registerTask('default', 'concat min lint qunit');
 
 };
