@@ -1,202 +1,7 @@
-/*! JIO - v0.1.0 - 2012-06-11
+/*! JIO - v0.1.0 - 2012-06-12
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
-
-var command = function(spec, my) {
-    var that = {};
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    var priv = {};
-    priv.path      = spec.path || '';
-    priv.option    = spec.option || {};
-    priv.respond   = priv.option.onResponse || function(){};
-    priv.done      = priv.option.onDone || function(){};
-    priv.fail      = priv.option.onFail || function(){};
-    priv.end       = function() {};
-
-    // Methods //
-    /**
-     * Returns the label of the command.
-     * @method getLabel
-     * @return {string} The label.
-     */
-    that.getLabel = function() {
-        return 'command';
-    };
-
-    /**
-     * Returns the path of the command.
-     * @method getPath
-     * @return {string} The path of the command.
-     */
-    that.getPath = function() {
-        return priv.path;
-    };
-
-    /**
-     * Returns the value of an option.
-     * @method getOption
-     * @param  {string} optionname The option name.
-     * @return The option value.
-     */
-    that.getOption = function(optionname) {
-        return priv.option[optionname];
-    };
-
-    /**
-     * Validates the storage.
-     * Override this function.
-     * @param  {object} handler The storage handler
-     */
-    that.validate = function(handler) {
-        that.validateState();
-    };
-
-    /**
-     * Delegate actual excecution the storage handler.
-     * @param {object} handler The storage handler.
-     */
-    that.execute = function(handler) {
-        that.validate(handler);
-        handler.execute(that);
-    };
-
-    /**
-     * Execute the good method from the storage.
-     * Override this function.
-     * @method executeOn
-     * @param  {object} storage The storage.
-     */
-    that.executeOn = function(storage) {};
-
-    /*
-     * Do not override.
-     * Override `validate()' instead
-     */
-    that.validateState = function() {
-        if (priv.path === '') {
-            throw invalidCommandState({command:that,message:'Path is empty'});
-        }
-    };
-
-    that.done = function(return_value) {
-        console.log ('test');
-        priv.done(return_value);
-        priv.respond({value:return_value});
-        priv.end();
-    };
-
-    that.fail = function(return_error) {
-        priv.fail(return_error);
-        priv.respond({error:return_error});
-        priv.end();
-    };
-
-    that.onEndDo = function(fun) {
-        priv.end = fun;
-    };
-
-    /**
-     * Returns a serialized version of this command.
-     * Override this function.
-     * @method serialized
-     * @return {object} The serialized command.
-     */
-    that.serialized = function() {
-        return {label:that.getLabel(),
-                path:priv.path,
-                option:priv.option};
-    };
-
-    return that;
-};
-
-var getDocumentList = function(spec, my) {
-    var that = command(spec, my);
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    // Methods //
-    that.label = function() {
-        return 'getDocumentList';
-    };
-
-    that.executeOn = function(storage) {
-        storage.getDocumentList(that);
-    };
-
-    return that;
-};
-
-var loadDocument = function(spec, my) {
-    var that = command(spec, my);
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    // Methods //
-    that.label = function() {
-        return 'loadDocument';
-    };
-
-    that.executeOn = function(storage) {
-        storage.loadDocument(that);
-    };
-
-    return that;
-};
-
-var removeDocument = function(spec, my) {
-    var that = command(spec, my);
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    // Methods //
-    that.label = function() {
-        return 'removeDocument';
-    };
-
-    that.executeOn = function(storage) {
-        storage.removeDocument(that);
-    };
-
-    return that;
-};
-
-var saveDocument = function(spec, my) {
-    var that = command(spec, my);
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    var content = spec.content;
-    // Methods //
-    that.label = function() {
-        return 'saveDocument';
-    };
-
-    that.getContent = function() {
-        return content;
-    };
-
-    /**
-     * Validates the storage handler.
-     * @param  {object} handler The storage handler
-     */
-    var super_validate = that.validate;
-    that.validate = function(handler) {
-        if (typeof content !== 'string') {
-            throw invalidCommandState({command:that,message:'No data to save'});
-        }
-        super_validate(handler);
-    };
-
-    that.executeOn = function(storage) {
-        storage.saveDocument(that);
-    };
-
-    return that;
-};
 
 var jioException = function(spec, my) {
     var that = {};
@@ -263,151 +68,6 @@ var invalidJobException = function(spec, my) {
     return that;
 };
 
-var jobStatus = function(spec, my) {
-    var that = {};
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    // Methods //
-    that.getLabel = function() {
-        return 'job status';
-    };
-
-    that.canStart = function() {};
-    that.canRestart = function() {};
-
-    that.serialized = function() {
-        return {label:that.getLabel()};
-    };
-    return that;
-};
-var doneStatus = function(spec, my) {
-    var that = jobStatus(spec, my);
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    // Methods //
-    that.getLabel = function() {
-        return 'done';
-    };
-
-    that.canStart = function() {
-        return false;
-    };
-    that.canRestart = function() {
-        return false;
-    };
-    return that;
-};
-
-var failStatus = function(spec, my) {
-    var that = jobStatus(spec, my);
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    // Methods //
-    that.getLabel = function() {
-        return 'fail';
-    };
-
-    that.canStart = function() {
-        return false;
-    };
-    that.canRestart = function() {
-        return true;
-    };
-    return that;
-};
-var initialStatus = function(spec, my) {
-    var that = jobStatus(spec, my);
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    // Methods //
-    that.getLabel = function() {
-        return 'initial';
-    };
-
-    that.canStart = function() {
-        return true;
-    };
-    that.canRestart = function() {
-        return true;
-    };
-    return that;
-};
-var onGoingStatus = function(spec, my) {
-    var that = jobStatus(spec, my);
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    // Methods //
-    that.getLabel = function() {
-        return 'on going';
-    };
-
-    that.canStart = function() {
-        return false;
-    };
-    that.canRestart = function() {
-        return false;
-    };
-    return that;
-};
-var waitStatus = function(spec, my) {
-    var that = jobStatus(spec, my);
-    spec = spec || {};
-    my = my || {};
-    // Attributes //
-    var job_id_a = spec.job_id_array || [];
-    var threshold = 0;
-    // Methods //
-    that.getLabel = function() {
-        return 'wait';
-    };
-
-    that.waitForJob = function(job) {
-        var i;
-        for (i = 0; i < job_id_a.length; i+= 1) {
-            if (job_id_a[i] === job.getId()) {
-                return;
-            }
-        }
-        job_id_a.push(job.getId());
-    };
-    that.dontWaitForJob = function(job) {
-        var i, tmp_job_id_a = [];
-        for (i = 0; i < job_id_a.length; i+= 1) {
-            if (job_id_a[i] !== job.getId()){
-                tmp_job_id_a.push(job_id_a[i]);
-            }
-        }
-        job_id_a = tmp_job_id_a;
-    };
-
-    that.waitForTime = function(ms) {
-        threshold = Date.now() + ms;
-    };
-    that.stopWaitForTime = function() {
-        threshold = 0;
-    };
-
-    that.canStart = function() {
-        return (job_id_a.length === 0 && Date.now() >= threshold);
-    };
-    that.canRestart = function() {
-        return false;
-    };
-
-    that.serialized = function() {
-        return {label:that.getLabel(),
-                waitfortime:threshold,
-                waitforjob:job_id_a};
-    };
-
-    return that;
-};
-
 var storage = function(spec, my) {
     var that = {};
     spec = spec || {};
@@ -420,6 +80,9 @@ var storage = function(spec, my) {
     // Methods //
     that.getType = function() {
         return priv.type;
+    };
+    that.setType = function(type) {
+        priv.type = type;
     };
 
     /**
@@ -527,46 +190,399 @@ var storageHandler = function(spec, my) {
     return that;
 };
 
-var activityUpdater = (function(spec, my) {
+var jio = function(spec, my) {
+
+
+var command = function(spec, my) {
     var that = {};
     spec = spec || {};
     my = my || {};
     // Attributes //
     var priv = {};
-    priv.id = spec.id || 0;
-    priv.interval = 400;
-    priv.interval_id = null;
+    priv.commandlist = {'saveDocument':saveDocument,
+                        'loadDocument':loadDocument,
+                        'removeDocument':removeDocument,
+                        'getDocumentList':getDocumentList};
+    // creates the good command thanks to his label
+    if (spec.label && priv.commandlist[spec.label]) {
+        priv.label = spec.label;
+        delete spec.label;
+        return priv.commandlist[priv.label](spec, my);
+    }
+
+    priv.path      = spec.path || '';
+    priv.tried     = 0;
+    priv.option    = spec.option || {};
+    priv.respond   = priv.option.onResponse || function(){};
+    priv.done      = priv.option.onDone || function(){};
+    priv.fail      = priv.option.onFail || function(){};
+    priv.retry     = function() {
+        that.setMaxRetry(-1);
+        that.fail({status:0,statusText:'Fail Retry',
+                   message:'Impossible to retry.'});
+    };
+    priv.end       = function() {};
+
     // Methods //
-    priv.touch = function() {
-        LocalOrCookieStorage.setItem ('jio/id/'+priv.id, Date.now());
+    /**
+     * Returns the label of the command.
+     * @method getLabel
+     * @return {string} The label.
+     */
+    that.getLabel = function() {
+        return 'command';
     };
-    that.setId = function(id) {
-        priv.id = id;
+
+    /**
+     * Returns the path of the command.
+     * @method getPath
+     * @return {string} The path of the command.
+     */
+    that.getPath = function() {
+        return priv.path;
     };
-    that.setIntervalDelay = function(ms) {
-        priv.interval = ms;
+
+    /**
+     * Returns the value of an option.
+     * @method getOption
+     * @param  {string} optionname The option name.
+     * @return The option value.
+     */
+    that.getOption = function(optionname) {
+        return priv.option[optionname];
     };
-    that.getIntervalDelay = function() {
-        return priv.interval;
+
+    /**
+     * Validates the storage.
+     * Override this function.
+     * @param  {object} handler The storage handler
+     */
+    that.validate = function(handler) {
+        that.validateState();
     };
-    that.start = function() {
-        if (!priv.interval_id) {
-            priv.touch();
-            priv.interval_id = setInterval(function() {
-                priv.touch();
-            }, priv.interval);
+
+    that.getTried = function() {
+        return priv.tried;
+    };
+
+    that.setMaxRetry = function(max_retry) {
+        priv.option.max_retry = max_retry;
+    };
+
+    /**
+     * Delegate actual excecution the storage handler.
+     * @param {object} handler The storage handler.
+     */
+    that.execute = function(handler) {
+        that.validate(handler);
+        priv.tried ++;
+        handler.execute(that);
+    };
+
+    /**
+     * Execute the good method from the storage.
+     * Override this function.
+     * @method executeOn
+     * @param  {object} storage The storage.
+     */
+    that.executeOn = function(storage) {};
+
+    /*
+     * Do not override.
+     * Override `validate()' instead
+     */
+    that.validateState = function() {
+        if (priv.path === '') {
+            throw invalidCommandState({command:that,message:'Path is empty'});
         }
     };
-    that.stop = function() {
-        if (priv.interval_id !== null) {
-            clearInterval(priv.interval_id);
-            priv.interval_id = null;
+
+    that.done = function(return_value) {
+        console.log ('done');
+        priv.done(return_value);
+        priv.respond({status:doneStatus(),value:return_value});
+        priv.end();
+    };
+
+    that.fail = function(return_error) {
+        if (priv.option.max_retry === 0 || priv.tried < priv.option.max_retry) {
+            priv.retry();
+        } else {
+            console.log ('fail');
+            priv.fail(return_error);
+            priv.respond({status:failStatus(),error:return_error});
+            priv.end();
         }
+    };
+
+    that.onEndDo = function(fun) {
+        priv.end = fun;
+    };
+
+    that.onRetryDo = function(fun) {
+        priv.retry = fun;
+    };
+
+    /**
+     * Returns a serialized version of this command.
+     * Override this function.
+     * @method serialized
+     * @return {object} The serialized command.
+     */
+    that.serialized = function() {
+        return {label:that.getLabel(),
+                tried:priv.tried,
+                max_retry:priv.max_retry,
+                path:priv.path,
+                option:priv.option};
+    };
+
+    return that;
+};
+
+var getDocumentList = function(spec, my) {
+    var that = command(spec, my);
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    // Methods //
+    that.getLabel = function() {
+        return 'getDocumentList';
+    };
+
+    that.executeOn = function(storage) {
+        storage.getDocumentList(that);
+    };
+
+    return that;
+};
+
+var loadDocument = function(spec, my) {
+    var that = command(spec, my);
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    // Methods //
+    that.getLabel = function() {
+        return 'loadDocument';
+    };
+
+    that.executeOn = function(storage) {
+        storage.loadDocument(that);
+    };
+
+    return that;
+};
+
+var removeDocument = function(spec, my) {
+    var that = command(spec, my);
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    // Methods //
+    that.getLabel = function() {
+        return 'removeDocument';
+    };
+
+    that.executeOn = function(storage) {
+        storage.removeDocument(that);
+    };
+
+    return that;
+};
+
+var saveDocument = function(spec, my) {
+    var that = command(spec, my);
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    var content = spec.content;
+    // Methods //
+    that.getLabel = function() {
+        return 'saveDocument';
+    };
+
+    that.getContent = function() {
+        return content;
+    };
+
+    /**
+     * Validates the storage handler.
+     * @param  {object} handler The storage handler
+     */
+    var super_validate = that.validate;
+    that.validate = function(handler) {
+        if (typeof content !== 'string') {
+            throw invalidCommandState({command:that,message:'No data to save'});
+        }
+        super_validate(handler);
+    };
+
+    that.executeOn = function(storage) {
+        storage.saveDocument(that);
+    };
+
+    return that;
+};
+
+var jobStatus = function(spec, my) {
+    var that = {};
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    // Methods //
+    that.getLabel = function() {
+        return 'job status';
+    };
+
+    that.canStart = function() {};
+    that.canRestart = function() {};
+
+    that.serialized = function() {
+        return {label:that.getLabel()};
     };
     return that;
-}());
-var jio = function(spec, my) {
+};
+var doneStatus = function(spec, my) {
+    var that = jobStatus(spec, my);
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    // Methods //
+    that.getLabel = function() {
+        return 'done';
+    };
 
+    that.canStart = function() {
+        return false;
+    };
+    that.canRestart = function() {
+        return false;
+    };
+    return that;
+};
+
+var failStatus = function(spec, my) {
+    var that = jobStatus(spec, my);
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    // Methods //
+    that.getLabel = function() {
+        return 'fail';
+    };
+
+    that.canStart = function() {
+        return false;
+    };
+    that.canRestart = function() {
+        return true;
+    };
+    return that;
+};
+
+var initialStatus = function(spec, my) {
+    var that = jobStatus(spec, my);
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    // Methods //
+    that.getLabel = function() {
+        return 'initial';
+    };
+
+    that.canStart = function() {
+        return true;
+    };
+    that.canRestart = function() {
+        return true;
+    };
+    return that;
+};
+var onGoingStatus = function(spec, my) {
+    var that = jobStatus(spec, my);
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    // Methods //
+    that.getLabel = function() {
+        return 'on going';
+    };
+
+    that.canStart = function() {
+        return false;
+    };
+    that.canRestart = function() {
+        return false;
+    };
+    return that;
+};
+var waitStatus = function(spec, my) {
+    var that = jobStatus(spec, my);
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    var priv = {};
+    priv.job_id_a = spec.job_id_array || [];
+    priv.threshold = 0;
+    // Methods //
+    that.getLabel = function() {
+        return 'wait';
+    };
+
+    priv.refreshJobIdArray = function() {
+        var tmp_job_id_a = [], i;
+        for (i = 0; i < priv.job_id_a.length; i+= 1) {
+            if (jobManager.jobIdExists(priv.job_id_a[i])) {
+                tmp_job_id_a.push(priv.job_id_a[i]);
+            }
+        }
+        priv.job_id_a = tmp_job_id_a;
+    };
+
+    that.waitForJob = function(job) {
+        var i;
+        for (i = 0; i < priv.job_id_a.length; i+= 1) {
+            if (priv.job_id_a[i] === job.getId()) {
+                return;
+            }
+        }
+        priv.job_id_a.push(job.getId());
+    };
+    that.dontWaitForJob = function(job) {
+        var i, tmp_job_id_a = [];
+        for (i = 0; i < priv.job_id_a.length; i+= 1) {
+            if (priv.job_id_a[i] !== job.getId()){
+                tmp_job_id_a.push(priv.job_id_a[i]);
+            }
+        }
+        priv.job_id_a = tmp_job_id_a;
+    };
+
+    that.waitForTime = function(ms) {
+        priv.threshold = Date.now() + ms;
+    };
+    that.stopWaitForTime = function() {
+        priv.threshold = 0;
+    };
+
+    that.canStart = function() {
+        priv.refreshJobIdArray();
+        console.log (priv.job_id_a);
+        return (priv.job_id_a.length === 0 && Date.now() >= priv.threshold);
+    };
+    that.canRestart = function() {
+        return that.canStart();
+    };
+
+    that.serialized = function() {
+        return {label:that.getLabel(),
+                waitfortime:priv.threshold,
+                waitforjob:priv.job_id_a};
+    };
+
+    return that;
+};
 
 var job = function(spec, my) {
     var that = {};
@@ -578,8 +594,6 @@ var job = function(spec, my) {
     priv.command   = spec.command;
     priv.storage   = spec.storage;
     priv.status    = initialStatus();
-    priv.tried     = 0;
-    priv.max_retry = 0;
     priv.date      = new Date();
 
     // Initialize //
@@ -613,6 +627,10 @@ var job = function(spec, my) {
         return priv.storage;
     };
 
+    that.getDate = function() {
+        return priv.date;
+    };
+
     /**
      * Checks if the job is ready.
      * @method isReady
@@ -634,8 +652,6 @@ var job = function(spec, my) {
     that.serialized = function() {
         return {id:priv.id,
                 date:priv.date.getTime(),
-                tried:priv.tried,
-                max_retry:priv.max_retry,
                 status:priv.status.serialized(),
                 command:priv.command.serialized(),
                 storage:priv.storage.serialized()};
@@ -692,7 +708,13 @@ var job = function(spec, my) {
      * @param  {object} job The other job.
      */
     that.update = function(job) {
+        console.log ('updating');
+        priv.command.setMaxRetry(-1);
+        priv.command.fail({status:0,statusText:'Replaced',
+                           message:'Job has been replaced by another one.'});
         priv.date = job.getDate();
+        priv.command = job.getCommand();
+        priv.status = job.getStatus();
     };
 
     that.execute = function() {
@@ -704,7 +726,14 @@ var job = function(spec, my) {
             throw jobNotReadyException({message:'Can not execute this job.'});
         }
         priv.status = onGoingStatus();
-        priv.tried ++;
+        priv.command.onRetryDo (function() {
+            var ms = priv.command.getTried();
+            ms = ms*ms*200;
+            if (ms>10000){
+                ms = 10000;
+            }
+            that.waitForTime(ms);
+        });
         priv.command.onEndDo (function() {
             jobManager.terminateJob (that);
         });
@@ -754,6 +783,44 @@ var announcement = function(spec, my) {
     return that;
 };
 
+var activityUpdater = (function(spec, my) {
+    var that = {};
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    var priv = {};
+    priv.id = spec.id || 0;
+    priv.interval = 400;
+    priv.interval_id = null;
+    // Methods //
+    priv.touch = function() {
+        LocalOrCookieStorage.setItem ('jio/id/'+priv.id, Date.now());
+    };
+    that.setId = function(id) {
+        priv.id = id;
+    };
+    that.setIntervalDelay = function(ms) {
+        priv.interval = ms;
+    };
+    that.getIntervalDelay = function() {
+        return priv.interval;
+    };
+    that.start = function() {
+        if (!priv.interval_id) {
+            priv.touch();
+            priv.interval_id = setInterval(function() {
+                priv.touch();
+            }, priv.interval);
+        }
+    };
+    that.stop = function() {
+        if (priv.interval_id !== null) {
+            clearInterval(priv.interval_id);
+            priv.interval_id = null;
+        }
+    };
+    return that;
+}());
 var announcer = (function(spec, my) {
     var that = {};
     spec = spec || {};
@@ -859,6 +926,7 @@ var jobManager = (function(spec, my) {
         var i;
         if (priv.interval_id === null) {
             priv.interval_id = setInterval (function() {
+                priv.restoreOldJio();
                 for (i = 0; i < priv.job_a.length; i+= 1) {
                     that.execute(priv.job_a[i]);
                 }
@@ -880,6 +948,47 @@ var jobManager = (function(spec, my) {
         }
     };
 
+    priv.restoreOldJio = function() {
+        var i, jio_id_a;
+        priv.lastrestore = priv.lastrestore || 0;
+        if (priv.lastrestore > (Date.now()) - 2000) { return; }
+        jio_id_a = LocalOrCookieStorage.getItem('jio/id_array')||[];
+        for (i = 0; i < jio_id_a.length; i+= 1) {
+            priv.restoreOldJioId(jio_id_a[i]);
+        }
+        priv.lastrestore = Date.now();
+    };
+
+    priv.restoreOldJioId = function(id) {
+        var jio_date;
+        jio_date = LocalOrCookieStorage.getItem('jio/id/'+id)||0;
+        if (jio_date < Date.now() - 10000) {
+            priv.restoreOldJobFromJioId(id);
+            priv.removeOldJioId(id);
+        }
+    };
+
+    priv.restoreOldJobFromJioId = function(id) {
+        var i, jio_job_array;
+        jio_job_array = LocalOrCookieStorage.getItem('jio/job_array/'+id)||[];
+        for (i = 0; i < jio_job_array.length; i+= 1) {
+            that.addJob ( job(
+                {storage:jioNamespace.storage(jio_job_array[i]),
+                 command:command(jio_job_array[i].command)}));
+        }
+    };
+
+    priv.removeOldJioId = function(id) {
+        var i, jio_id_a, new_a = [];
+        jio_id_a = LocalOrCookieStorage.getItem('jio/id_array')||[];
+        for (i = 0; i < jio_id_a.length; i+= 1) {
+            if (jio_id_a[i] !== id) {
+                new_a.push(jio_id_a[i]);
+            }
+        }
+        LocalOrCookieStorage.setItem('jio/id_array',new_a);
+    };
+
     /**
      * Executes a job.
      * @method execute
@@ -898,6 +1007,18 @@ var jobManager = (function(spec, my) {
         priv.copyJobArrayToLocal();
     };
 
+    that.jobIdExists = function(id) {
+        var i;
+        for (i = 0; i < priv.job_a.length; i+= 1) {
+            if (priv.job_a[i].getId() === id) {
+                console.log ('found');
+                return true;
+            }
+        }
+        console.log ('not found');
+        return false;
+    };
+
     that.terminateJob = function(job) {
         priv.removeJob(job);
         priv.copyJobArrayToLocal();
@@ -906,7 +1027,6 @@ var jobManager = (function(spec, my) {
     that.addJob = function(job) {
         var result_a = that.validateJobAccordingToJobList (priv.job_a,job);
         priv.manage (job,result_a);
-        priv.copyJobArrayToLocal();
     };
 
     that.validateJobAccordingToJobList = function(job_a,job) {
@@ -927,16 +1047,19 @@ var jobManager = (function(spec, my) {
                 return;
             }
         }
+        console.log ('managing '+JSON.stringify (result_a));
         for (i = 0; i < result_a.length; i+= 1) {
             switch (result_a[i].action) {
             case 'eliminate':
+                console.log ('eliminating');
                 that.eliminate(result_a[i].job);
                 break;
-            case 'replace':
-                job.update(result_a[i].job);
+            case 'update':
+                result_a[i].job.update(job);
                 priv.copyJobArrayToLocal();
                 return;
             case 'wait':
+                console.log ('wait');
                 job.waitForJob(result_a[i].job);
                 break;
             default: break;
@@ -951,13 +1074,16 @@ var jobManager = (function(spec, my) {
         for (i = 0; i < priv.job_a.length; i+= 1) {
             if (priv.job_a[i].getId() !== job.getId()) {
                 tmp_a.push(priv.job_a[i]);
+                console.log ('add: '+priv.job_a[i].getId()+' -> it is not '+job.getId());
             }
         }
         priv.job_a = tmp_a;
+        priv.copyJobArrayToLocal();
     };
 
     return that;
 }());
+
 var jobRules = (function(spec, my) {
     var that = {};
     // Attributes //
@@ -972,8 +1098,8 @@ var jobRules = (function(spec, my) {
     };
     priv.default_compare = function(job1,job2) {
         return (job1.getCommand().getPath() === job2.getCommand().getPath() &&
-                JSON.stringify(job1.getStorage()) ===
-                JSON.stringify(job2.getStorage()));
+                JSON.stringify(job1.getStorage().serialized()) ===
+                JSON.stringify(job2.getStorage().serialized()));
     };
     priv.action = {
         /*
@@ -1090,7 +1216,7 @@ var jobRules = (function(spec, my) {
             }
         }
     };
-    priv.default_action = 'none';
+    priv.default_action = that.none;
     // Methods //
     priv.getAction = function(job1,job2) {
         var j1label, j2label, j1status;
@@ -1099,24 +1225,36 @@ var jobRules = (function(spec, my) {
         j1status = (job1.getStatus().getLabel()==='on going'?
                     'on going':'not on going');
         try {
+            console.log (j1label);
+            console.log (j2label);
+            console.log (j1status);
             return priv.action[j1label][j1status][j2label](job1,job2);
         } catch (e) {
-            return priv.default_action;
+            if(e.name==='TypeError') {
+                return priv.default_action(job1,job2);
+            } else {
+                throw e;
+            }
         }
     };
     priv.canCompare = function(job1,job2) {
-        var key = priv.stringifyJobForCompare(job1,job2);
-        if (priv.compare[key]) {
-            return priv.compare[key](job1,job2);
+        var job1label = job1.getCommand().getLabel(),
+        job2label = job2.getCommand().getLabel();
+        try {
+            return priv.compare[job1label][job2label](job1,job2);
+        } catch(e) {
+            if (e.name==='TypeError') {
+                return priv.default_compare(job1,job2);
+            } else {
+                throw e;
+            }
         }
-        return priv.default_compare(job1,job2);
     };
     that.validateJobAccordingToJob = function(job1,job2) {
-        var key = priv.stringifyJobForAction(job1,job2);
         if (priv.canCompare(job1,job2)) {
             return {action:priv.getAction(job1,job2),job:job1};
         }
-        return {action:priv.default_action,job:job1};
+        return {action:priv.default_action(job1,job2),job:job1};
     };
 
     return that;
@@ -1199,7 +1337,6 @@ var jobRules = (function(spec, my) {
         option.onDone     = option.onDone     || function(){};
         option.onFail     = option.onFail     || function(){};
         option.max_retry  = option.max_retry  || 0;
-        console.log ('add job save: ' + JSON.stringify (priv.storage.serialized()));
         jobManager.addJob(
             job({storage:(specificstorage?
                           jioNamespace.storage(specificstorage):
@@ -1315,9 +1452,9 @@ var jioNamespace = (function(spec, my) {
         spec = spec || {};
         var type = spec.type || 'base';
         if (!storage_type_o[type]) {
-            throw invalidStorageType({type:type});
+            throw invalidStorageType({type:type,
+                                      message:'Storage does not exists.'});
         }
-        console.log ('create storage: ' + JSON.stringify (spec) + JSON.stringify (my));
         return storage_type_o[type](spec, my);
     };
 
@@ -1337,7 +1474,6 @@ var jioNamespace = (function(spec, my) {
             storage = JSON.parse (storage);
         }
         storage = storage || {type:'base'};
-        console.log ('new jio: storage: ' + JSON.stringify (spec));
         return jio(spec);
     };
 
@@ -1353,7 +1489,6 @@ var jioNamespace = (function(spec, my) {
             throw invalidStorageType({type:type,message:'Already known.'});
         }
         storage_type_o[type] = constructor;
-        console.log ('adding: '+type);
     };
 
     return that;

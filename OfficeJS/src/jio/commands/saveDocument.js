@@ -5,7 +5,7 @@ var saveDocument = function(spec, my) {
     // Attributes //
     var content = spec.content;
     // Methods //
-    that.label = function() {
+    that.getLabel = function() {
         return 'saveDocument';
     };
 

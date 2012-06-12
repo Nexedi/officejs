@@ -136,103 +136,126 @@ test ('All tests', function () {
     // It is simple tests, but they will be used by replicate storage later
     // for sync operation.
 
-    var o = {}, clock = this.sandbox.useFakeTimers(),
-    mytest = function (message,method,retmethod,value){
-        o.f = function (result) {
-            deepEqual (result,value,message);
+    var o = {}; o.t = this; o.clock = o.t.sandbox.useFakeTimers();
+    o.spy = function(res,value,message) {
+        o.f = function(result) {
+            if (res === 'status') {
+                deepEqual (result.status.getLabel(),value,message);
+            } else {
+                deepEqual (result.value,value,message);
+            }
         };
-        this.spy(o,'f');
-        o.jio[method]({'user_name':'Dummy','name':'file',
-                       'content':'content','onResponse':o.f,
-                       'max_tries':1});
-        clock.tick(510);
+        o.t.spy(o,'f');
+    };
+    o.tick = function (tick) {
+        o.clock.tick(tick || 1000);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
     };
     // All Ok Dummy Storage
-    o.jio = JIO.newJio({'type':'dummyallok','user_name':'Dummy',
-                        'applicationname':'jiotests'});
-    o.f = function (result) {
-        deepEqual (result,undefined,'');
-    };
-    this.spy(o,'f');
-    o.jio.saveDocument('file','content',{onDone:o.f});
-    clock.tick(1000);
-    if (!o.f.calledOnce) {
-        ok(false, 'no response / too much results');
-    }
-    // mytest('save document OK','saveDocument','status','done');
-    // mytest('load document OK','loadDocument','return_value',
-    //        {'name':'file','content':'content',
-    //         'last_modified':15000,'creation_date':10000});
-    // mytest('get document list OK','getDocumentList','return_value',
-    //        [{'name':'file','creation_date':10000,'last_modified':15000},
-    //         {'name':'memo','creation_date':20000,'last_modified':25000}]);
-    // mytest('remove document OK','removeDocument','status','done');
-    // o.jio.stop();
+    o.jio = JIO.newJio({'type':'dummyallok'});
+    // save
+    o.spy('status','done','dummyallok saving');
+    o.jio.saveDocument('file','content',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // load
+    o.spy('value',{name:'file',content:'content',last_modified:15000,
+                   creation_date:10000},'dummyallok loading');
+    o.jio.loadDocument('file',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // remove
+    o.spy('status','done','dummyallok removing');
+    o.jio.removeDocument('file',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // get list
+    o.spy ('value',[{name:'file',content:'filecontent',last_modified:15000,
+                     creation_date:10000},
+                    {name:'memo',content:'memocontent',last_modified:25000,
+                     creation_date:20000}],'dummyallok getting list');
+    o.jio.getDocumentList('.',{onResponse:o.f,metadata_only:false,max_retry:1});
+    o.tick();
+    o.jio.stop();
 
-    // // All Fail Dummy Storage
-    // o.jio = JIO.newJio({'type':'dummyallfail','user_name':'Dummy'},
-    //                       {'ID':'jiotests'});
-    // mytest('save document FAIL','saveDocument','status','fail');
-    // mytest('load document FAIL','loadDocument','status','fail');
-    // mytest('get document list FAIL','getDocumentList','status','fail');
-    // mytest('remove document FAIL','removeDocument','status','fail');
-    // o.jio.stop();
+    // All Fail Dummy Storage
+    o.jio = JIO.newJio({'type':'dummyallfail'});
+    // save
+    o.spy ('status','fail','dummyallfail saving');
+    o.jio.saveDocument('file','content',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // load
+    o.spy ('status','fail','dummyallfail loading');
+    o.jio.loadDocument('file',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // remove
+    o.spy ('status','fail','dummyallfail removing');
+    o.jio.removeDocument('file',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // get list
+    o.spy ('status','fail','dummyallfail getting list');
+    o.jio.getDocumentList('.',{onResponse:o.f,max_retry:1});
+    o.tick();
+    o.jio.stop();
 
-    // // All Not Found Dummy Storage
-    // o.jio = JIO.newJio({'type':'dummyallnotfound','user_name':'Dummy'},
-    //                       {'ID':'jiotests'});
-    // mytest('save document NOT FOUND','saveDocument','status','done');
-    // mytest('load document NOT FOUND','loadDocument','status','fail');
-    // mytest('get document list NOT FOUND','getDocumentList','status','fail');
-    // mytest('remove document NOT FOUND','removeDocument','status','done');
+    // All Not Found Dummy Storage
+    o.jio = JIO.newJio({'type':'dummyallnotfound'});
+    // save
+    o.spy('status','done','dummyallnotfound saving');
+    o.jio.saveDocument('file','content',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // load
+    o.spy('status','fail','dummyallnotfound loading');
+    o.jio.loadDocument('file',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // remove
+    o.spy('status','done','dummyallnotfound removing');
+    o.jio.removeDocument('file',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // get list
+    o.spy('status','fail','dummyallnotfound getting list');
+    o.jio.getDocumentList ('.',{onResponse:o.f,max_retry:1});
+    o.tick();
     o.jio.stop();
 });
 
 module ( 'Jio Job Managing' );
 
 test ('Simple Job Elimination', function () {
-    var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
+    var o = {}, id = 0;
     o.f1 = this.spy(); o.f2 = this.spy();
 
-    o.jio = JIO.newJio({'type':'dummyallok','user_name':'dummy'},
-                          {'ID':'jiotests'});
-    id = o.jio.getID();
-    o.jio.saveDocument({'name':'file','content':'content',
-                        'onResponse':o.f1,'max_tries':1});
-    ok(LocalOrCookieStorage.getItem('jio/job_object/'+id)['1'],
+    o.jio = JIO.newJio({type:'dummyallok',applicationname:'jiotests'});
+    id = o.jio.getId();
+    o.jio.saveDocument('file','content',{onResponse:o.f1,max_retry:1});
+    ok(LocalOrCookieStorage.getItem('jio/job_array/'+id)[0],
        'job creation');
-    clock.tick(10);
-    o.jio.removeDocument({'name':'file','content':'content',
-                          'onResponse':o.f2,'max_tries':1});
-    o.tmp = LocalOrCookieStorage.getItem('jio/job_object/'+id)['1'];
-    ok(!o.tmp || o.tmp.status === 'fail','job elimination');
+    o.jio.removeDocument('file',{onResponse:o.f2,max_retry:1});
+    o.tmp = LocalOrCookieStorage.getItem('jio/job_array/'+id)[0];
+    console.log (localStorage);
+    deepEqual(o.tmp.command.label,'removeDocument','job elimination');
 });
 
 test ('Simple Job Replacement', function () {
     // Test if the second job write over the first one
 
-    var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
+    var o = {};
+    o.clock = this.sandbox.useFakeTimers();
+    o.id = 0;
     o.f1 = function (result) {
-        o.status = result.status;
+        o.status = result.status.getLabel();
     };
     this.spy(o,'f1');
     o.f2 = this.spy();
 
-    o.jio = JIO.newJio({'type':'dummyallok','user_name':'dummy'},
-                          {'ID':'jiotests'});
-    id = o.jio.getID();
-    o.jio.saveDocument({'name':'file','content':'content',
-                        'onResponse':o.f1,'max_tries':1});
-    clock.tick(10);
-    o.jio.saveDocument({'name':'file','content':'content',
-                        'onResponse':o.f2,'max_tries':1});
+    o.jio = JIO.newJio({type:'dummyallok',applicationname:'jiotests'});
+    o.id = o.jio.getId();
+    o.jio.saveDocument('file','content',{onResponse:o.f1,max_retry:1});
+    o.clock.tick(10);
+    o.jio.saveDocument('file','content',{onResponse:o.f2,max_retry:1});
     deepEqual(LocalOrCookieStorage.getItem(
-        'jio/job_object/'+id)['1'].date,10,
+        'jio/job_array/'+o.id)[0].date,10,
               'The first job date have to be equal to the second job date.');
-    clock.tick(500);
+    o.clock.tick(1000);
     deepEqual([o.f1.calledOnce,o.status],[true,'fail'],
        'callback for the first save request -> result fail');
     ok(o.f2.calledOnce,'second callback is called once');
@@ -243,30 +266,31 @@ test ('Simple Job Replacement', function () {
 test ('Simple Job Waiting', function () {
     // Test if the second job doesn't erase the first on going one
 
-    var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
+    var o = {};
+    o.clock = this.sandbox.useFakeTimers();
+    o.id = 0;
     o.f3 = this.spy(); o.f4 = this.spy();
 
-    o.jio = JIO.newJio({'type':'dummyallok','user_name':'dummy'},
-                          {'ID':'jiotests'});
-    id = o.jio.getID();
-    o.jio.saveDocument({'name':'file','content':'content',
-                        'onResponse':o.f3,'max_tries':1});
-    clock.tick(200);
-    o.jio.saveDocument({'name':'file','content':'content',
-                        'onResponse':o.f4,'max_tries':1});
-    ok(LocalOrCookieStorage.getItem(
-        'jio/job_object/'+id)['2'] &&
-       LocalOrCookieStorage.getItem(
-           'jio/job_object/'+id)['1'].status === 'on_going',
+    o.jio = JIO.newJio({type:'dummyallok',applicationname:'jiotests'});
+    o.id = o.jio.getId();
+    o.jio.saveDocument('file','content',{onResponse:o.f3,max_retry:1});
+    console.log (LocalOrCookieStorage.getItem ('jio/job_array/'+o.id));
+    o.clock.tick(200);
+    console.log (LocalOrCookieStorage.getItem ('jio/job_array/'+o.id));
+    o.jio.saveDocument('file','content1',{onResponse:o.f4,max_retry:1});
+    console.log (LocalOrCookieStorage.getItem ('jio/job_array/'+o.id));
+    o.tmp0 = LocalOrCookieStorage.getItem('jio/job_array/'+o.id)[0];
+    o.tmp1 = LocalOrCookieStorage.getItem('jio/job_array/'+o.id)[1];
+    ok(o.tmp1 && o.tmp0.status.label === 'on going',
        'The second job must not overwrite the first on going one.');
-    ok(LocalOrCookieStorage.getItem(
-        'jio/job_object/'+id)['2'].status === 'wait' &&
-       LocalOrCookieStorage.getItem(
-           'jio/job_object/'+id)['2'].waiting_for &&
-       JSON.stringify (LocalOrCookieStorage.getItem(
-           'jio/job_object/'+id)['2'].waiting_for.job_id_array) === '["1"]',
+    console.log (LocalOrCookieStorage.getItem ('jio/job_array/'+o.id));
+    ok(o.tmp1.status.label === 'wait' &&
+       o.tmp1.status.waitforjob &&
+       JSON.stringify(o.tmp1.status.waitforjob) ===
+       JSON.stringify ([1]),
        'The second job must be waiting for the first to end');
-    clock.tick(500);
+    o.clock.tick(1000);
+    console.log (LocalOrCookieStorage.getItem ('jio/job_array/'+o.id));
     ok(o.f3.calledOnce,'first request passed');
     ok(o.f4.calledOnce,'restore waiting job');
     o.jio.stop();
@@ -278,17 +302,39 @@ test ('Simple Time Waiting' , function () {
 
     var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
     o.f = function (result) {
-        o.res = (result.status === 'done');
+        o.res = (result.status.getLabel() === 'done');
     };
     this.spy(o,'f');
-    o.jio = JIO.newJio({'type':'dummyall3tries','user_name':'dummy'},
-                          {'ID':'jiotests'});
-    o.jio.saveDocument({'name':'file','content':'content',
-                        'onResponse':o.f,'max_tries':3});
+    o.jio = JIO.newJio({type:'dummyall3tries',applicationname:'jiotests'});
+    o.jio.saveDocument('file','content',{onResponse:o.f,max_retry:3});
     clock.tick(100000);
     ok(o.f.calledOnce,'callback called once.');
     ok(o.res,'job done.');
     o.jio.stop();
+});
+
+module ( 'Jio Restore');
+
+test ('Restore old Jio', function() {
+    var o = {};
+    o.clock = this.sandbox.useFakeTimers();
+    o.f = function(result) {
+        ok(false,'must never be called!');
+    };
+    o.clock.tick(10000000);
+    this.spy(o,'f');
+    o.jio = JIO.newJio({type:'dummyall3tries',applicationname:'jiotests'});
+    o.id = o.jio.getId();
+    o.jio.saveDocument('file','content',{onResponse:o.f,max_retry:3});
+    o.clock.tick(1000);
+    o.jio.stop();
+    o.jio = JIO.newJio({type:'dummyallok',applicationname:'jiotests'});
+    o.clock.tick(10000);        // 10 sec
+    console.log (localStorage);
+    deepEqual(LocalOrCookieStorage.getItem('jio/job_array/'+o.id),null,
+              'job array list must be empty');
+    deepEqual(LocalOrCookieStorage.getItem('jio/job_array/'+o.jio.getId()),[],
+              'ee');
 });
 
 module ( 'Jio LocalStorage' );

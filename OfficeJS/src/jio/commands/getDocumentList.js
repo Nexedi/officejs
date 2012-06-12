@@ -4,7 +4,7 @@ var getDocumentList = function(spec, my) {
     my = my || {};
     // Attributes //
     // Methods //
-    that.label = function() {
+    that.getLabel = function() {
         return 'getDocumentList';
     };
 

@@ -4,11 +4,28 @@ var command = function(spec, my) {
     my = my || {};
     // Attributes //
     var priv = {};
+    priv.commandlist = {'saveDocument':saveDocument,
+                        'loadDocument':loadDocument,
+                        'removeDocument':removeDocument,
+                        'getDocumentList':getDocumentList};
+    // creates the good command thanks to his label
+    if (spec.label && priv.commandlist[spec.label]) {
+        priv.label = spec.label;
+        delete spec.label;
+        return priv.commandlist[priv.label](spec, my);
+    }
+
     priv.path      = spec.path || '';
+    priv.tried     = 0;
     priv.option    = spec.option || {};
     priv.respond   = priv.option.onResponse || function(){};
     priv.done      = priv.option.onDone || function(){};
     priv.fail      = priv.option.onFail || function(){};
+    priv.retry     = function() {
+        that.setMaxRetry(-1);
+        that.fail({status:0,statusText:'Fail Retry',
+                   message:'Impossible to retry.'});
+    };
     priv.end       = function() {};
 
     // Methods //
@@ -49,12 +66,21 @@ var command = function(spec, my) {
         that.validateState();
     };
 
+    that.getTried = function() {
+        return priv.tried;
+    };
+
+    that.setMaxRetry = function(max_retry) {
+        priv.option.max_retry = max_retry;
+    };
+
     /**
      * Delegate actual excecution the storage handler.
      * @param {object} handler The storage handler.
      */
     that.execute = function(handler) {
         that.validate(handler);
+        priv.tried ++;
         handler.execute(that);
     };
 
@@ -77,20 +103,29 @@ var command = function(spec, my) {
     };
 
     that.done = function(return_value) {
-        console.log ('test');
+        console.log ('done');
         priv.done(return_value);
         priv.respond({status:doneStatus(),value:return_value});
         priv.end();
     };
 
     that.fail = function(return_error) {
-        priv.fail(return_error);
-        priv.respond({status:failStatus(),error:return_error});
-        priv.end();
+        if (priv.option.max_retry === 0 || priv.tried < priv.option.max_retry) {
+            priv.retry();
+        } else {
+            console.log ('fail');
+            priv.fail(return_error);
+            priv.respond({status:failStatus(),error:return_error});
+            priv.end();
+        }
     };
 
     that.onEndDo = function(fun) {
         priv.end = fun;
+    };
+
+    that.onRetryDo = function(fun) {
+        priv.retry = fun;
     };
 
     /**
@@ -101,6 +136,8 @@ var command = function(spec, my) {
      */
     that.serialized = function() {
         return {label:that.getLabel(),
+                tried:priv.tried,
+                max_retry:priv.max_retry,
                 path:priv.path,
                 option:priv.option};
     };

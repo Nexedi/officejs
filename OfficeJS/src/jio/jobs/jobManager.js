@@ -53,6 +53,7 @@ var jobManager = (function(spec, my) {
         var i;
         if (priv.interval_id === null) {
             priv.interval_id = setInterval (function() {
+                priv.restoreOldJio();
                 for (i = 0; i < priv.job_a.length; i+= 1) {
                     that.execute(priv.job_a[i]);
                 }
@@ -74,6 +75,47 @@ var jobManager = (function(spec, my) {
         }
     };
 
+    priv.restoreOldJio = function() {
+        var i, jio_id_a;
+        priv.lastrestore = priv.lastrestore || 0;
+        if (priv.lastrestore > (Date.now()) - 2000) { return; }
+        jio_id_a = LocalOrCookieStorage.getItem('jio/id_array')||[];
+        for (i = 0; i < jio_id_a.length; i+= 1) {
+            priv.restoreOldJioId(jio_id_a[i]);
+        }
+        priv.lastrestore = Date.now();
+    };
+
+    priv.restoreOldJioId = function(id) {
+        var jio_date;
+        jio_date = LocalOrCookieStorage.getItem('jio/id/'+id)||0;
+        if (jio_date < Date.now() - 10000) {
+            priv.restoreOldJobFromJioId(id);
+            priv.removeOldJioId(id);
+        }
+    };
+
+    priv.restoreOldJobFromJioId = function(id) {
+        var i, jio_job_array;
+        jio_job_array = LocalOrCookieStorage.getItem('jio/job_array/'+id)||[];
+        for (i = 0; i < jio_job_array.length; i+= 1) {
+            that.addJob ( job(
+                {storage:jioNamespace.storage(jio_job_array[i]),
+                 command:command(jio_job_array[i].command)}));
+        }
+    };
+
+    priv.removeOldJioId = function(id) {
+        var i, jio_id_a, new_a = [];
+        jio_id_a = LocalOrCookieStorage.getItem('jio/id_array')||[];
+        for (i = 0; i < jio_id_a.length; i+= 1) {
+            if (jio_id_a[i] !== id) {
+                new_a.push(jio_id_a[i]);
+            }
+        }
+        LocalOrCookieStorage.setItem('jio/id_array',new_a);
+    };
+
     /**
      * Executes a job.
      * @method execute
@@ -92,6 +134,18 @@ var jobManager = (function(spec, my) {
         priv.copyJobArrayToLocal();
     };
 
+    that.jobIdExists = function(id) {
+        var i;
+        for (i = 0; i < priv.job_a.length; i+= 1) {
+            if (priv.job_a[i].getId() === id) {
+                console.log ('found');
+                return true;
+            }
+        }
+        console.log ('not found');
+        return false;
+    };
+
     that.terminateJob = function(job) {
         priv.removeJob(job);
         priv.copyJobArrayToLocal();
@@ -100,7 +154,6 @@ var jobManager = (function(spec, my) {
     that.addJob = function(job) {
         var result_a = that.validateJobAccordingToJobList (priv.job_a,job);
         priv.manage (job,result_a);
-        priv.copyJobArrayToLocal();
     };
 
     that.validateJobAccordingToJobList = function(job_a,job) {
@@ -121,16 +174,19 @@ var jobManager = (function(spec, my) {
                 return;
             }
         }
+        console.log ('managing '+JSON.stringify (result_a));
         for (i = 0; i < result_a.length; i+= 1) {
             switch (result_a[i].action) {
             case 'eliminate':
+                console.log ('eliminating');
                 that.eliminate(result_a[i].job);
                 break;
-            case 'replace':
-                job.update(result_a[i].job);
+            case 'update':
+                result_a[i].job.update(job);
                 priv.copyJobArrayToLocal();
                 return;
             case 'wait':
+                console.log ('wait');
                 job.waitForJob(result_a[i].job);
                 break;
             default: break;
@@ -145,9 +201,11 @@ var jobManager = (function(spec, my) {
         for (i = 0; i < priv.job_a.length; i+= 1) {
             if (priv.job_a[i].getId() !== job.getId()) {
                 tmp_a.push(priv.job_a[i]);
+                console.log ('add: '+priv.job_a[i].getId()+' -> it is not '+job.getId());
             }
         }
         priv.job_a = tmp_a;
+        priv.copyJobArrayToLocal();
     };
 
     return that;

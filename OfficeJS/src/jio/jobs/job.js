@@ -8,8 +8,6 @@ var job = function(spec, my) {
     priv.command   = spec.command;
     priv.storage   = spec.storage;
     priv.status    = initialStatus();
-    priv.tried     = 0;
-    priv.max_retry = 0;
     priv.date      = new Date();
 
     // Initialize //
@@ -43,6 +41,10 @@ var job = function(spec, my) {
         return priv.storage;
     };
 
+    that.getDate = function() {
+        return priv.date;
+    };
+
     /**
      * Checks if the job is ready.
      * @method isReady
@@ -64,8 +66,6 @@ var job = function(spec, my) {
     that.serialized = function() {
         return {id:priv.id,
                 date:priv.date.getTime(),
-                tried:priv.tried,
-                max_retry:priv.max_retry,
                 status:priv.status.serialized(),
                 command:priv.command.serialized(),
                 storage:priv.storage.serialized()};
@@ -122,7 +122,13 @@ var job = function(spec, my) {
      * @param  {object} job The other job.
      */
     that.update = function(job) {
+        console.log ('updating');
+        priv.command.setMaxRetry(-1);
+        priv.command.fail({status:0,statusText:'Replaced',
+                           message:'Job has been replaced by another one.'});
         priv.date = job.getDate();
+        priv.command = job.getCommand();
+        priv.status = job.getStatus();
     };
 
     that.execute = function() {
@@ -134,7 +140,14 @@ var job = function(spec, my) {
             throw jobNotReadyException({message:'Can not execute this job.'});
         }
         priv.status = onGoingStatus();
-        priv.tried ++;
+        priv.command.onRetryDo (function() {
+            var ms = priv.command.getTried();
+            ms = ms*ms*200;
+            if (ms>10000){
+                ms = 10000;
+            }
+            that.waitForTime(ms);
+        });
         priv.command.onEndDo (function() {
             jobManager.terminateJob (that);
         });

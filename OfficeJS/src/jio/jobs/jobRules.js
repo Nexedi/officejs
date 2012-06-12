@@ -12,8 +12,8 @@ var jobRules = (function(spec, my) {
     };
     priv.default_compare = function(job1,job2) {
         return (job1.getCommand().getPath() === job2.getCommand().getPath() &&
-                JSON.stringify(job1.getStorage()) ===
-                JSON.stringify(job2.getStorage()));
+                JSON.stringify(job1.getStorage().serialized()) ===
+                JSON.stringify(job2.getStorage().serialized()));
     };
     priv.action = {
         /*
@@ -130,7 +130,7 @@ var jobRules = (function(spec, my) {
             }
         }
     };
-    priv.default_action = 'none';
+    priv.default_action = that.none;
     // Methods //
     priv.getAction = function(job1,job2) {
         var j1label, j2label, j1status;
@@ -139,24 +139,36 @@ var jobRules = (function(spec, my) {
         j1status = (job1.getStatus().getLabel()==='on going'?
                     'on going':'not on going');
         try {
+            console.log (j1label);
+            console.log (j2label);
+            console.log (j1status);
             return priv.action[j1label][j1status][j2label](job1,job2);
         } catch (e) {
-            return priv.default_action;
+            if(e.name==='TypeError') {
+                return priv.default_action(job1,job2);
+            } else {
+                throw e;
+            }
         }
     };
     priv.canCompare = function(job1,job2) {
-        var key = priv.stringifyJobForCompare(job1,job2);
-        if (priv.compare[key]) {
-            return priv.compare[key](job1,job2);
+        var job1label = job1.getCommand().getLabel(),
+        job2label = job2.getCommand().getLabel();
+        try {
+            return priv.compare[job1label][job2label](job1,job2);
+        } catch(e) {
+            if (e.name==='TypeError') {
+                return priv.default_compare(job1,job2);
+            } else {
+                throw e;
+            }
         }
-        return priv.default_compare(job1,job2);
     };
     that.validateJobAccordingToJob = function(job1,job2) {
-        var key = priv.stringifyJobForAction(job1,job2);
         if (priv.canCompare(job1,job2)) {
             return {action:priv.getAction(job1,job2),job:job1};
         }
-        return {action:priv.default_action,job:job1};
+        return {action:priv.default_action(job1,job2),job:job1};
     };
 
     return that;

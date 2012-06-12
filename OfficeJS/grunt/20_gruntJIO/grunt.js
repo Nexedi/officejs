@@ -16,28 +16,27 @@ module.exports = function(grunt) {
                 src: ['<banner:meta.banner>',
                       // Wrapper top
                       '<file_strip_banner:../../src/<%= pkg.name %>/wrapper.top.js>',
-                      // Classes
+                      '<file_strip_banner:../../src/<%= pkg.name %>/exceptions.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/storages/storage.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/storages/storageHandler.js>',
+                      // Jio wrapper top
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jio.top.js>',
+                      // Jio Classes
                       '<file_strip_banner:../../src/<%= pkg.name %>/commands/command.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/commands/getDocumentList.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/commands/loadDocument.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/commands/removeDocument.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/commands/saveDocument.js>',
-                      '<file_strip_banner:../../src/<%= pkg.name %>/exceptions.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/jobStatus.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/doneStatus.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/failStatus.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/initialStatus.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/onGoingStatus.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/waitStatus.js>',
-                      '<file_strip_banner:../../src/<%= pkg.name %>/storages/storage.js>',
-                      '<file_strip_banner:../../src/<%= pkg.name %>/storages/storageHandler.js>',
-                      '<file_strip_banner:../../src/<%= pkg.name %>/activityUpdater.js>',
-                      // Jio wrapper top
-                      '<file_strip_banner:../../src/<%= pkg.name %>/jio.top.js>',
-                      // Jio Classes
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/job.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/announcements/announcement.js>',
                       // Singletons
+                      '<file_strip_banner:../../src/<%= pkg.name %>/activityUpdater.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/announcements/announcer.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/jobIdHandler.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/jobManager.js>',

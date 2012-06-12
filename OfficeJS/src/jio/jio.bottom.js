@@ -75,7 +75,6 @@
         option.onDone     = option.onDone     || function(){};
         option.onFail     = option.onFail     || function(){};
         option.max_retry  = option.max_retry  || 0;
-        console.log ('add job save: ' + JSON.stringify (priv.storage.serialized()));
         jobManager.addJob(
             job({storage:(specificstorage?
                           jioNamespace.storage(specificstorage):

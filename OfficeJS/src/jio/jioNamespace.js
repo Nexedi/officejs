@@ -18,9 +18,9 @@ var jioNamespace = (function(spec, my) {
         spec = spec || {};
         var type = spec.type || 'base';
         if (!storage_type_o[type]) {
-            throw invalidStorageType({type:type});
+            throw invalidStorageType({type:type,
+                                      message:'Storage does not exists.'});
         }
-        console.log ('create storage: ' + JSON.stringify (spec) + JSON.stringify (my));
         return storage_type_o[type](spec, my);
     };
 
@@ -40,7 +40,6 @@ var jioNamespace = (function(spec, my) {
             storage = JSON.parse (storage);
         }
         storage = storage || {type:'base'};
-        console.log ('new jio: storage: ' + JSON.stringify (spec));
         return jio(spec);
     };
 
@@ -56,7 +55,6 @@ var jioNamespace = (function(spec, my) {
             throw invalidStorageType({type:type,message:'Already known.'});
         }
         storage_type_o[type] = constructor;
-        console.log ('adding: '+type);
     };
 
     return that;
