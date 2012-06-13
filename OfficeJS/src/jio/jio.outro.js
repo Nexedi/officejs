@@ -53,6 +53,15 @@
     };
 
     /**
+     * Returns the jio job rules object used by the job manager.
+     * @method getJobRules
+     * @return {object} The job rules object
+     */
+    that.getJobRules = function() {
+        return jobRules;
+    };
+
+    /**
      * Checks if the storage description is valid or not.
      * @method validateStorageDescription
      * @param  {object} description The description object.
