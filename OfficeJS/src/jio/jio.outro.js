@@ -5,37 +5,43 @@
     // Attributes //
     var priv = {};
     var jio_id_array_name = 'jio/id_array';
-    priv.id = 1;
-    priv.storage = jioNamespace.storage(spec, that);
+    priv.id = null;
+    priv.storage = jioNamespace.storage(spec);
 
     // initialize //
-    (function () {
+    priv.init = function() {
         // Initialize the jio id and add the new id to the list
-        var i,
-        jio_id_a = LocalOrCookieStorage.getItem (jio_id_array_name) || [];
-        for (i = 0; i < jio_id_a.length; i+= 1) {
-            if (jio_id_a[i] >= priv.id) {
-                priv.id = jio_id_a[i] + 1;
+        if (priv.id === null) {
+            var i, jio_id_a =
+                LocalOrCookieStorage.getItem (jio_id_array_name) || [];
+            priv.id = 1;
+            for (i = 0; i < jio_id_a.length; i+= 1) {
+                if (jio_id_a[i] >= priv.id) {
+                    priv.id = jio_id_a[i] + 1;
+                }
             }
+            jio_id_a.push(priv.id);
+            LocalOrCookieStorage.setItem (jio_id_array_name,jio_id_a);
+            activityUpdater.setId(priv.id);
+            jobManager.setId(priv.id);
         }
-        jio_id_a.push(priv.id);
-        LocalOrCookieStorage.setItem (jio_id_array_name,jio_id_a);
-    }());
-    (function (){
-        // Start Jio updater, and the jobManager
-        activityUpdater.setId(priv.id);
-        activityUpdater.start();
-        jobManager.setId(priv.id);
-        jobManager.start();
-    }());
+    };
 
     // Methods //
     that.start = function() {
+        priv.init();
+        activityUpdater.start();
         jobManager.start();
     };
     that.stop = function() {
         jobManager.stop();
     };
+    that.close = function() {
+        activityUpdater.stop();
+        jobManager.stop();
+        priv.id = null;
+    };
+    that.start();
 
     /**
      * Returns the jio id.

@@ -14,7 +14,9 @@ module.exports = function(grunt) {
         concat: {
             dist: {
                 src: ['<banner:meta.banner>',
-                      '<file_strip_banner:../../src/<%= pkg.name %>.js>'],
+                      '<file_strip_banner:../../src/<%= pkg.name %>/intro.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/localStorage.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/outro.js>'],
                 dest: '../../lib/jio/<%= pkg.name %>.js'
             }
         },
@@ -28,7 +30,7 @@ module.exports = function(grunt) {
             files: []
         },
         lint: {
-            files: ['grunt.js','../../src/<%= pkg.name %>.js']
+            files: ['grunt.js','../../lib/jio/<%= pkg.name %>.js']
         },
         watch: {
             files: '<config:lint.files>',
@@ -53,7 +55,7 @@ module.exports = function(grunt) {
                 sjcl: true,
                 LocalOrCookieStorage: true,
                 Base64: true,
-                JIO: true,
+                jio: true,
                 console: true,
                 unescape: true,
                 // Needed to avoid "not defined error" with requireJs
@@ -75,6 +77,6 @@ module.exports = function(grunt) {
     });
 
     // Default task.
-    grunt.registerTask('default', 'lint concat min');
+    grunt.registerTask('default', 'concat lint min');
 
 };

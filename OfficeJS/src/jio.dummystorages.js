@@ -10,9 +10,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 1 : all ok
     var newDummyStorageAllOk = function ( spec, my ) {
-        var that = Jio.storage( {type:'base'}, my );
-
-        that.setType('dummyallok');
+        var that = Jio.storage( spec, my, 'base' );
 
         that.saveDocument = function (command) {
             // Tells us that the document is saved.
@@ -74,7 +72,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 2 : all fail
     newDummyStorageAllFail = function ( spec, my ) {
-        var that = Jio.storage( {type:'base'}, my );
+        var that = Jio.storage( spec, my, 'base' );
 
         that.setType('dummyallfail');
 
@@ -121,7 +119,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 3 : all not found
     newDummyStorageAllNotFound = function ( spec, my ) {
-        var that = Jio.storage( {type:'base'}, my );
+        var that = Jio.storage( spec, my, 'base' );
 
         that.setType('dummyallnotfound');
 
@@ -167,7 +165,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 4 : all 3 tries
     newDummyStorageAll3Tries = function ( spec, my ) {
-        var that = Jio.storage( {type:'base'}, my ), priv = {};
+        var that = Jio.storage( spec, my, 'base' ), priv = {};
 
         that.setType('dummyall3tries');
 

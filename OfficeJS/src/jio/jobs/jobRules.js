@@ -138,30 +138,22 @@ var jobRules = (function(spec, my) {
         j2label = job2.getCommand().getLabel();
         j1status = (job1.getStatus().getLabel()==='on going'?
                     'on going':'not on going');
-        try {
-            console.log (j1label);
-            console.log (j2label);
-            console.log (j1status);
+        if (priv.action[j1label] &&
+            priv.action[j1label][j1status] &&
+            priv.action[j1label][j1status][j2label]) {
             return priv.action[j1label][j1status][j2label](job1,job2);
-        } catch (e) {
-            if(e.name==='TypeError') {
-                return priv.default_action(job1,job2);
-            } else {
-                throw e;
-            }
+        } else {
+            return priv.default_action(job1,job2);
         }
     };
     priv.canCompare = function(job1,job2) {
         var job1label = job1.getCommand().getLabel(),
         job2label = job2.getCommand().getLabel();
-        try {
+        if (priv.compare[job1label] &&
+            priv.compare[job2label]) {
             return priv.compare[job1label][job2label](job1,job2);
-        } catch(e) {
-            if (e.name==='TypeError') {
-                return priv.default_compare(job1,job2);
-            } else {
-                throw e;
-            }
+        } else {
+            return priv.default_compare(job1,job2);
         }
     };
     that.validateJobAccordingToJob = function(job1,job2) {

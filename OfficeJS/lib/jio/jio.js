@@ -1,4 +1,4 @@
-/*! JIO - v0.1.0 - 2012-06-12
+/*! JIO - v0.1.0 - 2012-06-13
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
@@ -91,6 +91,7 @@ var storage = function(spec, my) {
      * @param  {object} command The command
      */
     that.execute = function(command) {
+        that.validate(command);
         command.executeOn(that);
     };
 
@@ -104,6 +105,10 @@ var storage = function(spec, my) {
     };
 
     that.validate = function(command) {
+        var mess = that.validateState();
+        if (mess) {
+            throw invalidStorage({storage:that,message:mess});
+        }
         command.validate(that);
     };
 
@@ -129,6 +134,10 @@ var storage = function(spec, my) {
         that.saveDocument();
     };
 
+    that.validateState = function() {
+        return '';
+    };
+
     return that;
 };
 
@@ -146,24 +155,22 @@ var storageHandler = function(spec, my) {
      * Override this function.
      * @method beforeExecute
      * @param  {object} command The command.
-     * @param  {object} option Some options.
      */
-    that.beforeExecute = function(command,option) {};
+    that.beforeExecute = function(command) {};
 
     /**
      * Execute the command according to this storage.
      * @method execute
      * @param  {object} command The command.
-     * @param  {object} option Some options.
      */
-    that.execute = function(command,option) {
+    that.execute = function(command) {
         var i;
         that.validate(command);
-        that.beforeExecute(command,option);
+        that.beforeExecute(command);
         for(i = 0; i < priv.storage_a.length; i++) {
             priv.storage_a[i].execute(command);
         }
-        that.afterExecute(command,option);
+        that.afterExecute(command);
     };
 
     /**
@@ -171,10 +178,9 @@ var storageHandler = function(spec, my) {
      * Override this function.
      * @method afterExecute
      * @param  {object} command The command.
-     * @param  {object} option Some options.
      */
-    that.afterExecute = function(command,option) {
-        that.done();
+    that.afterExecute = function(command) {
+        command.done();
     };
 
     /**
@@ -298,7 +304,6 @@ var command = function(spec, my) {
     };
 
     that.done = function(return_value) {
-        console.log ('done');
         priv.done(return_value);
         priv.respond({status:doneStatus(),value:return_value});
         priv.end();
@@ -308,7 +313,6 @@ var command = function(spec, my) {
         if (priv.option.max_retry === 0 || priv.tried < priv.option.max_retry) {
             priv.retry();
         } else {
-            console.log ('fail');
             priv.fail(return_error);
             priv.respond({status:failStatus(),error:return_error});
             priv.end();
@@ -337,6 +341,10 @@ var command = function(spec, my) {
                 option:priv.option};
     };
 
+    that.canBeRestored = function() {
+        return true;
+    };
+
     return that;
 };
 
@@ -354,6 +362,10 @@ var getDocumentList = function(spec, my) {
         storage.getDocumentList(that);
     };
 
+    that.canBeRestored = function() {
+        return false;
+    };
+
     return that;
 };
 
@@ -369,6 +381,10 @@ var loadDocument = function(spec, my) {
 
     that.executeOn = function(storage) {
         storage.loadDocument(that);
+    };
+
+    that.canBeRestored = function() {
+        return false;
     };
 
     return that;
@@ -396,14 +412,15 @@ var saveDocument = function(spec, my) {
     spec = spec || {};
     my = my || {};
     // Attributes //
-    var content = spec.content;
+    var priv = {};
+    priv.content = spec.content;
     // Methods //
     that.getLabel = function() {
         return 'saveDocument';
     };
 
     that.getContent = function() {
-        return content;
+        return priv.content;
     };
 
     /**
@@ -412,7 +429,7 @@ var saveDocument = function(spec, my) {
      */
     var super_validate = that.validate;
     that.validate = function(handler) {
-        if (typeof content !== 'string') {
+        if (typeof priv.content !== 'string') {
             throw invalidCommandState({command:that,message:'No data to save'});
         }
         super_validate(handler);
@@ -420,6 +437,13 @@ var saveDocument = function(spec, my) {
 
     that.executeOn = function(storage) {
         storage.saveDocument(that);
+    };
+
+    var super_serialized = that.serialized;
+    that.serialized = function() {
+        var o = super_serialized();
+        o.content = priv.content;
+        return o;
     };
 
     return that;
@@ -568,7 +592,6 @@ var waitStatus = function(spec, my) {
 
     that.canStart = function() {
         priv.refreshJobIdArray();
-        console.log (priv.job_id_a);
         return (priv.job_id_a.length === 0 && Date.now() >= priv.threshold);
     };
     that.canRestart = function() {
@@ -708,7 +731,6 @@ var job = function(spec, my) {
      * @param  {object} job The other job.
      */
     that.update = function(job) {
-        console.log ('updating');
         priv.command.setMaxRetry(-1);
         priv.command.fail({status:0,statusText:'Replaced',
                            message:'Job has been replaced by another one.'});
@@ -821,6 +843,8 @@ var activityUpdater = (function(spec, my) {
     };
     return that;
 }());
+
+
 var announcer = (function(spec, my) {
     var that = {};
     spec = spec || {};
@@ -965,6 +989,7 @@ var jobManager = (function(spec, my) {
         if (jio_date < Date.now() - 10000) {
             priv.restoreOldJobFromJioId(id);
             priv.removeOldJioId(id);
+            priv.removeJobArrayFromJioId(id);
         }
     };
 
@@ -972,9 +997,12 @@ var jobManager = (function(spec, my) {
         var i, jio_job_array;
         jio_job_array = LocalOrCookieStorage.getItem('jio/job_array/'+id)||[];
         for (i = 0; i < jio_job_array.length; i+= 1) {
-            that.addJob ( job(
-                {storage:jioNamespace.storage(jio_job_array[i]),
-                 command:command(jio_job_array[i].command)}));
+            var command_o = command(jio_job_array[i].command);
+            if (command_o.canBeRestored()) {
+                that.addJob ( job(
+                    {storage:jioNamespace.storage(jio_job_array[i].storage),
+                     command:command_o}));
+            }
         }
     };
 
@@ -987,6 +1015,11 @@ var jobManager = (function(spec, my) {
             }
         }
         LocalOrCookieStorage.setItem('jio/id_array',new_a);
+        LocalOrCookieStorage.deleteItem('jio/id/'+id);
+    };
+
+    priv.removeJobArrayFromJioId = function(id) {
+        LocalOrCookieStorage.deleteItem('jio/job_array/'+id);
     };
 
     /**
@@ -1011,11 +1044,9 @@ var jobManager = (function(spec, my) {
         var i;
         for (i = 0; i < priv.job_a.length; i+= 1) {
             if (priv.job_a[i].getId() === id) {
-                console.log ('found');
                 return true;
             }
         }
-        console.log ('not found');
         return false;
     };
 
@@ -1047,11 +1078,9 @@ var jobManager = (function(spec, my) {
                 return;
             }
         }
-        console.log ('managing '+JSON.stringify (result_a));
         for (i = 0; i < result_a.length; i+= 1) {
             switch (result_a[i].action) {
             case 'eliminate':
-                console.log ('eliminating');
                 that.eliminate(result_a[i].job);
                 break;
             case 'update':
@@ -1059,7 +1088,6 @@ var jobManager = (function(spec, my) {
                 priv.copyJobArrayToLocal();
                 return;
             case 'wait':
-                console.log ('wait');
                 job.waitForJob(result_a[i].job);
                 break;
             default: break;
@@ -1074,7 +1102,6 @@ var jobManager = (function(spec, my) {
         for (i = 0; i < priv.job_a.length; i+= 1) {
             if (priv.job_a[i].getId() !== job.getId()) {
                 tmp_a.push(priv.job_a[i]);
-                console.log ('add: '+priv.job_a[i].getId()+' -> it is not '+job.getId());
             }
         }
         priv.job_a = tmp_a;
@@ -1224,30 +1251,22 @@ var jobRules = (function(spec, my) {
         j2label = job2.getCommand().getLabel();
         j1status = (job1.getStatus().getLabel()==='on going'?
                     'on going':'not on going');
-        try {
-            console.log (j1label);
-            console.log (j2label);
-            console.log (j1status);
+        if (priv.action[j1label] &&
+            priv.action[j1label][j1status] &&
+            priv.action[j1label][j1status][j2label]) {
             return priv.action[j1label][j1status][j2label](job1,job2);
-        } catch (e) {
-            if(e.name==='TypeError') {
-                return priv.default_action(job1,job2);
-            } else {
-                throw e;
-            }
+        } else {
+            return priv.default_action(job1,job2);
         }
     };
     priv.canCompare = function(job1,job2) {
         var job1label = job1.getCommand().getLabel(),
         job2label = job2.getCommand().getLabel();
-        try {
+        if (priv.compare[job1label] &&
+            priv.compare[job2label]) {
             return priv.compare[job1label][job2label](job1,job2);
-        } catch(e) {
-            if (e.name==='TypeError') {
-                return priv.default_compare(job1,job2);
-            } else {
-                throw e;
-            }
+        } else {
+            return priv.default_compare(job1,job2);
         }
     };
     that.validateJobAccordingToJob = function(job1,job2) {
@@ -1267,37 +1286,43 @@ var jobRules = (function(spec, my) {
     // Attributes //
     var priv = {};
     var jio_id_array_name = 'jio/id_array';
-    priv.id = 1;
-    priv.storage = jioNamespace.storage(spec, that);
+    priv.id = null;
+    priv.storage = jioNamespace.storage(spec);
 
     // initialize //
-    (function () {
+    priv.init = function() {
         // Initialize the jio id and add the new id to the list
-        var i,
-        jio_id_a = LocalOrCookieStorage.getItem (jio_id_array_name) || [];
-        for (i = 0; i < jio_id_a.length; i+= 1) {
-            if (jio_id_a[i] >= priv.id) {
-                priv.id = jio_id_a[i] + 1;
+        if (priv.id === null) {
+            var i, jio_id_a =
+                LocalOrCookieStorage.getItem (jio_id_array_name) || [];
+            priv.id = 1;
+            for (i = 0; i < jio_id_a.length; i+= 1) {
+                if (jio_id_a[i] >= priv.id) {
+                    priv.id = jio_id_a[i] + 1;
+                }
             }
+            jio_id_a.push(priv.id);
+            LocalOrCookieStorage.setItem (jio_id_array_name,jio_id_a);
+            activityUpdater.setId(priv.id);
+            jobManager.setId(priv.id);
         }
-        jio_id_a.push(priv.id);
-        LocalOrCookieStorage.setItem (jio_id_array_name,jio_id_a);
-    }());
-    (function (){
-        // Start Jio updater, and the jobManager
-        activityUpdater.setId(priv.id);
-        activityUpdater.start();
-        jobManager.setId(priv.id);
-        jobManager.start();
-    }());
+    };
 
     // Methods //
     that.start = function() {
+        priv.init();
+        activityUpdater.start();
         jobManager.start();
     };
     that.stop = function() {
         jobManager.stop();
     };
+    that.close = function() {
+        activityUpdater.stop();
+        jobManager.stop();
+        priv.id = null;
+    };
+    that.start();
 
     /**
      * Returns the jio id.
@@ -1446,11 +1471,12 @@ var jioNamespace = (function(spec, my) {
      * @method storage
      * @param  {object} spec The specifications.
      * @param  {object} my The protected object.
+     * @param  {string} forcetype Force storage type
      * @return {object} The storage object.
      */
-    that.storage = function(spec, my) {
+    that.storage = function(spec, my, forcetype) {
         spec = spec || {};
-        var type = spec.type || 'base';
+        var type = forcetype || spec.type || 'base';
         if (!storage_type_o[type]) {
             throw invalidStorageType({type:type,
                                       message:'Storage does not exists.'});

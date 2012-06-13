@@ -15,12 +15,12 @@ module.exports = function(grunt) {
             dist: {
                 src: ['<banner:meta.banner>',
                       // Wrapper top
-                      '<file_strip_banner:../../src/<%= pkg.name %>/wrapper.top.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/intro.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/exceptions.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/storages/storage.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/storages/storageHandler.js>',
                       // Jio wrapper top
-                      '<file_strip_banner:../../src/<%= pkg.name %>/jio.top.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jio.intro.js>',
                       // Jio Classes
                       '<file_strip_banner:../../src/<%= pkg.name %>/commands/command.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/commands/getDocumentList.js>',
@@ -42,10 +42,10 @@ module.exports = function(grunt) {
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/jobManager.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/jobRules.js>',
                       // Jio wrappor bottem
-                      '<file_strip_banner:../../src/<%= pkg.name %>/jio.bottom.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jio.outro.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jioNamespace.js>',
                       // Wrapper bottom
-                      '<file_strip_banner:../../src/<%= pkg.name %>/wrapper.bottom.js>'],
+                      '<file_strip_banner:../../src/<%= pkg.name %>/outro.js>'],
                 dest: '../../lib/jio/<%= pkg.name %>.js'
             }
         },
@@ -87,10 +87,7 @@ module.exports = function(grunt) {
                 browser: true
             },
             globals: {
-                jQuery: true,
-                sjcl:true,
                 LocalOrCookieStorage: true,
-                Base64: true,
                 console: true,
                 unescape: true,
                 // Needed to avoid "not defined error" with requireJs
@@ -112,6 +109,6 @@ module.exports = function(grunt) {
     });
 
     // Default task.
-    grunt.registerTask('default', 'concat min lint qunit');
+    grunt.registerTask('default', 'concat lint min qunit');
 
 };

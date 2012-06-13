@@ -12,5 +12,9 @@ var getDocumentList = function(spec, my) {
         storage.getDocumentList(that);
     };
 
+    that.canBeRestored = function() {
+        return false;
+    };
+
     return that;
 };

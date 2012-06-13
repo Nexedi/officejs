@@ -92,6 +92,7 @@ var jobManager = (function(spec, my) {
         if (jio_date < Date.now() - 10000) {
             priv.restoreOldJobFromJioId(id);
             priv.removeOldJioId(id);
+            priv.removeJobArrayFromJioId(id);
         }
     };
 
@@ -99,9 +100,12 @@ var jobManager = (function(spec, my) {
         var i, jio_job_array;
         jio_job_array = LocalOrCookieStorage.getItem('jio/job_array/'+id)||[];
         for (i = 0; i < jio_job_array.length; i+= 1) {
-            that.addJob ( job(
-                {storage:jioNamespace.storage(jio_job_array[i]),
-                 command:command(jio_job_array[i].command)}));
+            var command_o = command(jio_job_array[i].command);
+            if (command_o.canBeRestored()) {
+                that.addJob ( job(
+                    {storage:jioNamespace.storage(jio_job_array[i].storage),
+                     command:command_o}));
+            }
         }
     };
 
@@ -114,6 +118,11 @@ var jobManager = (function(spec, my) {
             }
         }
         LocalOrCookieStorage.setItem('jio/id_array',new_a);
+        LocalOrCookieStorage.deleteItem('jio/id/'+id);
+    };
+
+    priv.removeJobArrayFromJioId = function(id) {
+        LocalOrCookieStorage.deleteItem('jio/job_array/'+id);
     };
 
     /**
@@ -138,11 +147,9 @@ var jobManager = (function(spec, my) {
         var i;
         for (i = 0; i < priv.job_a.length; i+= 1) {
             if (priv.job_a[i].getId() === id) {
-                console.log ('found');
                 return true;
             }
         }
-        console.log ('not found');
         return false;
     };
 
@@ -174,11 +181,9 @@ var jobManager = (function(spec, my) {
                 return;
             }
         }
-        console.log ('managing '+JSON.stringify (result_a));
         for (i = 0; i < result_a.length; i+= 1) {
             switch (result_a[i].action) {
             case 'eliminate':
-                console.log ('eliminating');
                 that.eliminate(result_a[i].job);
                 break;
             case 'update':
@@ -186,7 +191,6 @@ var jobManager = (function(spec, my) {
                 priv.copyJobArrayToLocal();
                 return;
             case 'wait':
-                console.log ('wait');
                 job.waitForJob(result_a[i].job);
                 break;
             default: break;
@@ -201,7 +205,6 @@ var jobManager = (function(spec, my) {
         for (i = 0; i < priv.job_a.length; i+= 1) {
             if (priv.job_a[i].getId() !== job.getId()) {
                 tmp_a.push(priv.job_a[i]);
-                console.log ('add: '+priv.job_a[i].getId()+' -> it is not '+job.getId());
             }
         }
         priv.job_a = tmp_a;

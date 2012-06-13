@@ -12,24 +12,22 @@ var storageHandler = function(spec, my) {
      * Override this function.
      * @method beforeExecute
      * @param  {object} command The command.
-     * @param  {object} option Some options.
      */
-    that.beforeExecute = function(command,option) {};
+    that.beforeExecute = function(command) {};
 
     /**
      * Execute the command according to this storage.
      * @method execute
      * @param  {object} command The command.
-     * @param  {object} option Some options.
      */
-    that.execute = function(command,option) {
+    that.execute = function(command) {
         var i;
         that.validate(command);
-        that.beforeExecute(command,option);
+        that.beforeExecute(command);
         for(i = 0; i < priv.storage_a.length; i++) {
             priv.storage_a[i].execute(command);
         }
-        that.afterExecute(command,option);
+        that.afterExecute(command);
     };
 
     /**
@@ -37,10 +35,9 @@ var storageHandler = function(spec, my) {
      * Override this function.
      * @method afterExecute
      * @param  {object} command The command.
-     * @param  {object} option Some options.
      */
-    that.afterExecute = function(command,option) {
-        that.done();
+    that.afterExecute = function(command) {
+        command.done();
     };
 
     /**

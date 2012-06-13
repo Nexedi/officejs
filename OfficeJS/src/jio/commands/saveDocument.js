@@ -3,14 +3,15 @@ var saveDocument = function(spec, my) {
     spec = spec || {};
     my = my || {};
     // Attributes //
-    var content = spec.content;
+    var priv = {};
+    priv.content = spec.content;
     // Methods //
     that.getLabel = function() {
         return 'saveDocument';
     };
 
     that.getContent = function() {
-        return content;
+        return priv.content;
     };
 
     /**
@@ -19,7 +20,7 @@ var saveDocument = function(spec, my) {
      */
     var super_validate = that.validate;
     that.validate = function(handler) {
-        if (typeof content !== 'string') {
+        if (typeof priv.content !== 'string') {
             throw invalidCommandState({command:that,message:'No data to save'});
         }
         super_validate(handler);
@@ -27,6 +28,13 @@ var saveDocument = function(spec, my) {
 
     that.executeOn = function(storage) {
         storage.saveDocument(that);
+    };
+
+    var super_serialized = that.serialized;
+    that.serialized = function() {
+        var o = super_serialized();
+        o.content = priv.content;
+        return o;
     };
 
     return that;

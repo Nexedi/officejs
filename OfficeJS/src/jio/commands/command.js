@@ -103,7 +103,6 @@ var command = function(spec, my) {
     };
 
     that.done = function(return_value) {
-        console.log ('done');
         priv.done(return_value);
         priv.respond({status:doneStatus(),value:return_value});
         priv.end();
@@ -113,7 +112,6 @@ var command = function(spec, my) {
         if (priv.option.max_retry === 0 || priv.tried < priv.option.max_retry) {
             priv.retry();
         } else {
-            console.log ('fail');
             priv.fail(return_error);
             priv.respond({status:failStatus(),error:return_error});
             priv.end();
@@ -140,6 +138,10 @@ var command = function(spec, my) {
                 max_retry:priv.max_retry,
                 path:priv.path,
                 option:priv.option};
+    };
+
+    that.canBeRestored = function() {
+        return true;
     };
 
     return that;

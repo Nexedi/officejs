@@ -12,11 +12,12 @@ var jioNamespace = (function(spec, my) {
      * @method storage
      * @param  {object} spec The specifications.
      * @param  {object} my The protected object.
+     * @param  {string} forcetype Force storage type
      * @return {object} The storage object.
      */
-    that.storage = function(spec, my) {
+    that.storage = function(spec, my, forcetype) {
         spec = spec || {};
-        var type = spec.type || 'base';
+        var type = forcetype || spec.type || 'base';
         if (!storage_type_o[type]) {
             throw invalidStorageType({type:type,
                                       message:'Storage does not exists.'});

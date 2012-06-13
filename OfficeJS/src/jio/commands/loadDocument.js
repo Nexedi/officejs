@@ -12,5 +12,9 @@ var loadDocument = function(spec, my) {
         storage.loadDocument(that);
     };
 
+    that.canBeRestored = function() {
+        return false;
+    };
+
     return that;
 };

@@ -49,7 +49,6 @@ var waitStatus = function(spec, my) {
 
     that.canStart = function() {
         priv.refreshJobIdArray();
-        console.log (priv.job_id_a);
         return (priv.job_id_a.length === 0 && Date.now() >= priv.threshold);
     };
     that.canRestart = function() {

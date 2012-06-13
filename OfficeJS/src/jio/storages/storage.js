@@ -21,6 +21,7 @@ var storage = function(spec, my) {
      * @param  {object} command The command
      */
     that.execute = function(command) {
+        that.validate(command);
         command.executeOn(that);
     };
 
@@ -34,6 +35,10 @@ var storage = function(spec, my) {
     };
 
     that.validate = function(command) {
+        var mess = that.validateState();
+        if (mess) {
+            throw invalidStorage({storage:that,message:mess});
+        }
         command.validate(that);
     };
 
@@ -57,6 +62,10 @@ var storage = function(spec, my) {
     };
     that.getDocumentList = function(command) {
         that.saveDocument();
+    };
+
+    that.validateState = function() {
+        return '';
     };
 
     return that;

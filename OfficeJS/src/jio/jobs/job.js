@@ -122,7 +122,6 @@ var job = function(spec, my) {
      * @param  {object} job The other job.
      */
     that.update = function(job) {
-        console.log ('updating');
         priv.command.setMaxRetry(-1);
         priv.command.fail({status:0,statusText:'Replaced',
                            message:'Job has been replaced by another one.'});

@@ -36,3 +36,4 @@ var activityUpdater = (function(spec, my) {
     };
     return that;
 }());
+
