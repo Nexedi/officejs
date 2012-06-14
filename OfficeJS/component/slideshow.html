@@ -1,0 +1,234 @@
+
+      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+      <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+        <head>
+          <script type="text/javascript"
+                    src="lib/powerpoint/jquery.js"></script>
+          
+            <script type="text/javascript"
+                    src="lib/powerpoint/jquery-ui.js"></script>
+
+
+
+
+
+          <link type="text/css" rel="stylesheet"
+                  href="lib/powerpoint/erp5_knowledge_box.css" />
+          
+          
+            <link type="text/css" rel="stylesheet"
+                  href="lib/powerpoint/erp5.css" />
+          
+          
+            <link type="text/css" rel="stylesheet"
+                  href="lib/powerpoint/erp5_listbox.css" />
+          
+          
+            <script type="text/javascript"
+                    src="lib/powerpoint/erp5.js"></script>
+          
+          
+            <script type="text/javascript"
+                    src="lib/powerpoint/erp5_knowledge_box.js"></script>
+          
+          
+            <script type="text/javascript"
+                    src="lib/powerpoint/erp5_xhtml_appearance.js"></script>
+          
+        </head>
+        <body>
+	<div>
+    	  <input type="text"
+             name="fileName"
+             id="input_file_name"
+             value=""
+             placeholder="File name here" />&nbsp;
+   	   <button type="submit"
+              class="btn btn-primary"
+              onclick="OfficeJS.save($('#input_file_name').attr('value'));">
+     	   <i class="icon-download-alt icon-white"></i>
+      		  Save
+      	   </button>&nbsp;
+    	</div>
+              
+            
+   
+        
+          <fieldset class="bottom editable">
+	      <div class="field" title="">
+		  <div class="input">Drag and drop to modify the order of the slides.<br />
+			Click on the top left corner of a slide to modify it or on the top right corner to delete it.</div>
+		  
+		  <p class="clear"></p>
+		
+	      </div>
+    
+	       <div class="field"
+		   title="The content of the document considered as a text string">
+		
+		  <label>
+		    Page Content
+		    
+		  </label>
+		  <div class="input"><div  >
+
+
+		  <link rel="stylesheet" type="text/css"
+			href="lib/powerpoint/jquery-ui.css">
+		  <link rel="stylesheet" type="text/css"
+			href="lib/powerpoint/slideshow_editor.css">
+		  <script language="javascript"
+			  src="lib/powerpoint/slideshow_editor.js"></script>
+		  <script language="javascript"
+			  src="lib/powerpoint/erp5_run_my_docs.js"></script>
+
+		  <div id="list"></div>
+		  <div id="add_slide">
+		    <section id="add_slide_button"> Add Slide </section>
+		  </div>
+		  <div id="dialog_add_slide" class="slide_dialog"></div>
+		  <div id="dialog_edit_slide" class="slide_dialog"></div>
+
+		</div>
+          
+          	<p class="clear"></p>
+	      <div class="field hidden"
+		   title="Content of the web page">
+		  <div class="input"><textarea class="hidden" rows="40" cols="120" name="field_my_text_content" >
+&lt;section class=&quot;screenshot&quot;&gt;
+        &lt;h1&gt;Where is your processed Events (1)&lt;/h1&gt;
+        &lt;img alt=&quot;Browse for Support Requests&quot; title=&quot;Browse for Support Requests&quot; src=&quot;http://www.erp5.com/user-Howto.Manage.Support.Requests.Browse.Support.Requests?format=&quot; type=&quot;image/svg+xml&quot;&gt;
+        &lt;details open=&quot;open&quot;&gt;
+          &lt;p&gt;We will need to find all the related Events after we have communicated with the client, so we will go back to the Follow Up Ticket of the original Event, which we created to recorded all the related Events to the original Event from our clients.&lt;/p&gt;You remember the Ticket is a Support  Request. In order to find it, &lt;strong&gt;click on the “Browse” tab&lt;/strong&gt;
+          of  your  ERP5 instance Home Page, and
+          &lt;strong&gt;click on “Support Requests”&lt;/strong&gt;
+          in order to reach the Support Request module.
+          &lt;p&gt;&lt;/p&gt;
+        &lt;/details&gt;
+        &lt;test&gt;
+          &lt;table style=&quot;display: none;&quot; class=&quot;test&quot;&gt;
+            &lt;tbody&gt;
+              &lt;tr&gt;
+                &lt;td&gt;selectAndWait&lt;/td&gt;
+                &lt;td&gt;//select[@name=&quot;select_module&quot;]&lt;/td&gt;
+                &lt;td&gt;Events&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr&gt;
+                &lt;td&gt;verifyText&lt;/td&gt;
+                &lt;td&gt;//div[@id=&quot;breadcrumb&quot;]/a[2]&lt;/td&gt;
+                &lt;td&gt;Events&lt;/td&gt;
+              &lt;/tr&gt;
+            &lt;/tbody&gt;
+          &lt;/table&gt;
+        &lt;/test&gt;
+      &lt;/section&gt;&lt;section class=&quot;screenshot&quot;&gt;
+        &lt;h1&gt;Where is your processed Events (2)&lt;/h1&gt;
+        &lt;img alt=&quot;Browse for Support Requests module&quot; title=&quot;Browse for Support Requests module&quot; type=&quot;image/svg+xml&quot; src=&quot;http://www.erp5.com/user-Howto.Manage.Support.Requests.Browse.For.Support.Requests.Module?format=&quot;&gt;
+        &lt;details open=&quot;open&quot;&gt;
+          &lt;p&gt;
+            The red line is the line of the Support Request Ticket we created when we assigned the incoming Event.&lt;strong&gt;Click on this line&lt;/strong&gt;
+            in order to open this support Request Ticket.
+          &lt;/p&gt;
+        &lt;/details&gt;
+        &lt;test&gt;
+          &lt;table style=&quot;display: none;&quot; class=&quot;test&quot;&gt;
+            &lt;tbody&gt;
+              &lt;tr&gt;
+                &lt;td&gt;clickAndWait&lt;/td&gt;
+                &lt;td&gt;//button[@name=&quot;Folder_show:method&quot;]&lt;/td&gt;
+                &lt;td&gt;&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr&gt;
+                &lt;td&gt;type&lt;/td&gt;
+                &lt;td&gt;//tr[@class='listbox-search-line']/th[@class=&quot;listbox-table-filter-cell&quot;]/input[@name='listbox_title']&lt;/td&gt;
+                &lt;td&gt;%ZUITE-TEST-INCOMING-EVENT-EVENT-001&lt;/td&gt;
+              &lt;/tr&gt;
+             &lt;tr&gt;
+                &lt;td&gt;clickAndWait&lt;/td&gt;
+                &lt;td&gt;//input[@name=&quot;Base_doSelect:method&quot;]&lt;/td&gt;
+                &lt;td&gt;&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr&gt;
+                &lt;td&gt;verifyText&lt;/td&gt;
+                &lt;td&gt;//span[@class=&quot;listbox-current-page-total-number&quot;]&lt;/td&gt;
+                &lt;td&gt;2 records&lt;/td&gt;
+              &lt;/tr&gt;
+            &lt;/tbody&gt;
+          &lt;/table&gt;
+        &lt;/test&gt;
+      &lt;/section&gt;&lt;section class=&quot;screenshot&quot;&gt;
+        &lt;h1&gt;Your processed Events in Follow Up Ticket&lt;/h1&gt;
+        &lt;img alt=&quot;Processed Events in the Ticket&quot; title=&quot;Processed Events in the Ticket&quot; src=&quot;http://www.erp5.com/user-Howto.Manage.Support.Requests.Processed.Events.In.Follow.Up.Ticket?format=&quot; type=&quot;image/svg+xml&quot;&gt;
+        &lt;details open=&quot;open&quot;&gt;
+          &lt;p&gt;
+            We can see first that not much information has been edited, but you can do it now. Indeed, we have just created this ticket but not edited it yet. You can find some help in the tutorial &lt;strong&gt;“How to Create a Marketing Campaign”&lt;/strong&gt;
+            in order to understand which field is used for what (the Campaign and Support Request Tickets look exactly the same indeed).
+          &lt;/p&gt;&lt;p&gt;
+            &lt;strong&gt;The red area displays all the related Events stored in this ticket&lt;/strong&gt;
+            . As you can see there are three Events listed: the first one is the original Event which is the incoming Event we created to notice our team of John's question. This Event is on the Delivered state, because user “Yingjie” acknowledged it. The second and third ones are the answers that we created for John Doh. These Events are on the “Sent” state, because the email was sent to the client!
+          &lt;/p&gt;&lt;p&gt;
+            &lt;strong&gt;From now on, this Support Request can be used if in the future, client John Doh sends new emails about configuration problems&lt;/strong&gt;
+            . The only thing you will have to do in order to add Events to this Support Requests, is to open the “Action” item list and select “Create new Event”. Then the new Event will be created and associated automatically to the Ticket, as described in the
+            &lt;strong&gt;“How to Prepare Outgoing Events”&lt;/strong&gt;
+            tutorial.
+          &lt;/p&gt;
+        &lt;/details&gt;
+        &lt;test&gt;
+          &lt;table style=&quot;display: none;&quot; class=&quot;test&quot;&gt;
+            &lt;tbody&gt;
+              &lt;tr style=&quot;opacity: 1;&quot;&gt;
+                &lt;td colspan=&quot;3&quot;&gt;&amp;lt;span metal:use-macro=&quot;container/Zuite_viewTestMacroLibrary/macros/login_as_manager&quot;&amp;gt;Login As Manager&amp;lt;/span&amp;gt;&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr&gt;
+                &lt;td&gt;openAndWait&lt;/td&gt;
+                &lt;td&gt;${base_url}/view&lt;/td&gt;
+                &lt;td&gt;&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr&gt;
+                &lt;td&gt;selectAndWait&lt;/td&gt;
+                &lt;td&gt;//select[@name=&quot;select_module&quot;]&lt;/td&gt;
+                &lt;td&gt;Support Requests&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr&gt;
+                &lt;td colspan=&quot;3&quot;&gt;&amp;lt;tal:block tal:content=&quot;structure python: here.Zuite_generateListboxBrowsing(listbox_selection=(['title', 'ZUITE-TEST-INCOMING-EVENT-TICKET-TITLE-001'],), enter_object=True)&quot;/&amp;gt;&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr&gt;
+                &lt;td&gt;verifyText&lt;/td&gt;
+                &lt;td&gt;//span[@class=&quot;listbox-current-page-total-number&quot;]&lt;/td&gt;
+                &lt;td&gt;2 records&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr style=&quot;opacity: 1;&quot;&gt;
+                &lt;td colspan=&quot;3&quot;&gt;&amp;lt;span metal:use-macro=&quot;container/Zuite_viewTestMacroLibrary/macros/login_as_manager&quot;&amp;gt;Login As Manager&amp;lt;/span&amp;gt;&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr&gt;
+                &lt;td&gt;openAndWait&lt;/td&gt;
+                &lt;td&gt;${base_url}/Zuite_tearDownIncomingEventTest&lt;/td&gt;
+                &lt;td&gt;&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr&gt;
+                &lt;td&gt;verifyTextPresent&lt;/td&gt;
+                &lt;td&gt;Clean Ok&lt;/td&gt;
+                &lt;td&gt;&lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;tr style=&quot;opacity: 1;&quot;&gt;
+                &lt;td colspan=&quot;3&quot;&gt;&amp;lt;span metal:use-macro=&quot;container/Zuite_viewTestMacroLibrary/macros/wait_for_activities&quot;&amp;gt; Wait for activities &amp;lt;/span&amp;gt;&lt;/td&gt;
+              &lt;/tr&gt;
+            &lt;/tbody&gt;
+          &lt;/table&gt;
+        &lt;/test&gt;
+      &lt;/section&gt;
+	    		</textarea></div>
+		 </div>
+    	   </fieldset>
+           <p class="clear"></p>
+ 	</form>
+    </body>
+</html>
+    
+  
+    
+  
+    
+  
+  
+

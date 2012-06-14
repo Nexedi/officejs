@@ -170,7 +170,7 @@
             },
 	    'power-point': {
                 type:'editor',
-                path:'component/svg-edit.html',
+                path:'component/slideshow.html',
                 gadget_id:'page-content',
                 ext:'ppt',
                 frameid:'svg_edit_frame',
@@ -218,7 +218,7 @@
             svg:{pref:'img_editor',app:'svg-edit',
                  icon:'<i class="icon-pencil"></i>'},
             ppt:{pref:'power_point',app:'power-point',
-                 icon:'<i class="icon-pencil"></i>'},
+                 icon:'<i class="icon-facetime-video"></i>'},
             jqs:{app:'jquery-sheet',
                  icon:'<i class="icon-signal"></i>'}
         };
