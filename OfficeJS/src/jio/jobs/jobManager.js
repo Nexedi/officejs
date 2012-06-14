@@ -10,13 +10,32 @@ var jobManager = (function(spec, my) {
     priv.interval = 200;
     priv.job_a = [];
 
+    my.jobManager = that;
+    my.jobIdHandler = that;
+
     // Methods //
+    /**
+     * Get the job array name in the localStorage
+     * @method getJobArrayName
+     * @return {string} The job array name
+     */
     priv.getJobArrayName = function() {
         return job_array_name + '/' + priv.id;
     };
+
+    /**
+     * Returns the job array from the localStorage
+     * @method getJobArray
+     * @return {array} The job array.
+     */
     priv.getJobArray = function() {
         return LocalOrCookieStorage.getItem(priv.getJobArrayName())||[];
     };
+
+    /**
+     * Does a backup of the job array in the localStorage.
+     * @method copyJobArrayToLocal
+     */
     priv.copyJobArrayToLocal = function() {
         var new_a = [], i;
         for (i = 0; i < priv.job_a.length; i+= 1) {
@@ -25,6 +44,11 @@ var jobManager = (function(spec, my) {
         LocalOrCookieStorage.setItem(priv.getJobArrayName(),new_a);
     };
 
+    /**
+     * Removes a job from the current job array.
+     * @method removeJob
+     * @param  {object} job The job object.
+     */
     priv.removeJob = function(job) {
         var i, tmp_job_a = [];
         for (i = 0; i < priv.job_a.length; i+= 1) {
@@ -75,6 +99,12 @@ var jobManager = (function(spec, my) {
         }
     };
 
+    /**
+     * Try to restore an the inactive older jio instances.
+     * It will restore the on going or initial jobs from their job array
+     * and it will add them to this job array.
+     * @method restoreOldJio
+     */
     priv.restoreOldJio = function() {
         var i, jio_id_a;
         priv.lastrestore = priv.lastrestore || 0;
@@ -86,6 +116,11 @@ var jobManager = (function(spec, my) {
         priv.lastrestore = Date.now();
     };
 
+    /**
+     * Try to restore an old jio according to an id.
+     * @method restoreOldJioId
+     * @param  {number} id The jio id.
+     */
     priv.restoreOldJioId = function(id) {
         var jio_date;
         jio_date = LocalOrCookieStorage.getItem('jio/id/'+id)||0;
@@ -96,19 +131,29 @@ var jobManager = (function(spec, my) {
         }
     };
 
+    /**
+     * Try to restore all jobs from another jio according to an id.
+     * @method restoreOldJobFromJioId
+     * @param  {number} id The jio id.
+     */
     priv.restoreOldJobFromJioId = function(id) {
         var i, jio_job_array;
         jio_job_array = LocalOrCookieStorage.getItem('jio/job_array/'+id)||[];
         for (i = 0; i < jio_job_array.length; i+= 1) {
-            var command_o = command(jio_job_array[i].command);
+            var command_o = command(jio_job_array[i].command, my);
             if (command_o.canBeRestored()) {
                 that.addJob ( job(
-                    {storage:jioNamespace.storage(jio_job_array[i].storage),
-                     command:command_o}));
+                    {storage:jioNamespace.storage(jio_job_array[i].storage,my),
+                     command:command_o}, my));
             }
         }
     };
 
+    /**
+     * Removes a jio instance according to an id.
+     * @method removeOldJioId
+     * @param  {number} id The jio id.
+     */
     priv.removeOldJioId = function(id) {
         var i, jio_id_a, new_a = [];
         jio_id_a = LocalOrCookieStorage.getItem('jio/id_array')||[];
@@ -121,6 +166,11 @@ var jobManager = (function(spec, my) {
         LocalOrCookieStorage.deleteItem('jio/id/'+id);
     };
 
+    /**
+     * Removes a job array from a jio instance according to an id.
+     * @method removeJobArrayFromJioId
+     * @param  {number} id The jio id.
+     */
     priv.removeJobArrayFromJioId = function(id) {
         LocalOrCookieStorage.deleteItem('jio/job_array/'+id);
     };
@@ -143,6 +193,12 @@ var jobManager = (function(spec, my) {
         priv.copyJobArrayToLocal();
     };
 
+    /**
+     * Checks if a job exists in the job array according to a job id.
+     * @method jobIdExists
+     * @param  {number} id The job id.
+     * @return {boolean} true if exists, else false.
+     */
     that.jobIdExists = function(id) {
         var i;
         for (i = 0; i < priv.job_a.length; i+= 1) {
@@ -153,16 +209,32 @@ var jobManager = (function(spec, my) {
         return false;
     };
 
+    /**
+     * Terminate a job. It only remove it from the job array.
+     * @method terminateJob
+     * @param  {object} job The job object
+     */
     that.terminateJob = function(job) {
         priv.removeJob(job);
-        priv.copyJobArrayToLocal();
     };
 
+    /**
+     * Adds a job to the current job array.
+     * @method addJob
+     * @param  {object} job The new job.
+     */
     that.addJob = function(job) {
         var result_a = that.validateJobAccordingToJobList (priv.job_a,job);
-        priv.manage (job,result_a);
+        priv.appendJob (job,result_a);
     };
 
+    /**
+     * Generate a result array containing action string to do with the good job.
+     * @method validateJobAccordingToJobList
+     * @param  {array} job_a A job array.
+     * @param  {object} job The new job to compare with.
+     * @return {array} A result array.
+     */
     that.validateJobAccordingToJobList = function(job_a,job) {
         var i, result_a = [];
         for (i = 0; i < job_a.length; i+= 1) {
@@ -171,7 +243,16 @@ var jobManager = (function(spec, my) {
         return result_a;
     };
 
-    priv.manage = function(job,result_a) {
+    /**
+     * It will manage the job in order to know what to do thanks to a result
+     * array. The new job can be added to the job array, but it can also be
+     * not accepted. It is this method which can tells jobs to wait for another
+     * one, to replace one or to eliminate some while browsing.
+     * @method appendJob
+     * @param  {object} job The job to append.
+     * @param  {array} result_a The result array.
+     */
+    priv.appendJob = function(job,result_a) {
         var i;
         if (priv.job_a.length !== result_a.length) {
             throw new RangeError("Array out of bound");
@@ -184,7 +265,7 @@ var jobManager = (function(spec, my) {
         for (i = 0; i < result_a.length; i+= 1) {
             switch (result_a[i].action) {
             case 'eliminate':
-                that.eliminate(result_a[i].job);
+                priv.removeJob(result_a[i].job);
                 break;
             case 'update':
                 result_a[i].job.update(job);
@@ -197,17 +278,6 @@ var jobManager = (function(spec, my) {
             }
         }
         priv.job_a.push(job);
-        priv.copyJobArrayToLocal();
-    };
-
-    that.eliminate = function(job) {
-        var i, tmp_a = [];
-        for (i = 0; i < priv.job_a.length; i+= 1) {
-            if (priv.job_a[i].getId() !== job.getId()) {
-                tmp_a.push(priv.job_a[i]);
-            }
-        }
-        priv.job_a = tmp_a;
         priv.copyJobArrayToLocal();
     };
 

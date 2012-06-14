@@ -18,6 +18,13 @@ var jobRules = (function(spec, my) {
     };
 
     // Methods //
+    /**
+     * Returns an action according the jobs given in parameters.
+     * @method getAction
+     * @param  {object} job1 The already existant job.
+     * @param  {object} job2 The job to compare with.
+     * @return {string} An action string.
+     */
     priv.getAction = function(job1,job2) {
         var j1label, j2label, j1status;
         j1label = job1.getCommand().getLabel();
@@ -32,6 +39,14 @@ var jobRules = (function(spec, my) {
             return that.default_action(job1,job2);
         }
     };
+
+    /**
+     * Checks if the two jobs are comparable.
+     * @method canCompare
+     * @param  {object} job1 The already existant job.
+     * @param  {object} job2 The job to compare with.
+     * @return {boolean} true if comparable, else false.
+     */
     priv.canCompare = function(job1,job2) {
         var job1label = job1.getCommand().getLabel(),
         job2label = job2.getCommand().getLabel();
@@ -85,6 +100,8 @@ var jobRules = (function(spec, my) {
         priv.compare[method1][method2] = rule;
     };
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Adding some rules
     /*
       LEGEND:
       - s: storage
@@ -165,5 +182,7 @@ var jobRules = (function(spec, my) {
 
     that.addActionRule('getDocumentList',true ,'getDocumentList',that.dontAccept);
     that.addActionRule('getDocumentList',false,'getDocumentList',that.update);
+    // end adding rules
+    ////////////////////////////////////////////////////////////////////////////
     return that;
 }());

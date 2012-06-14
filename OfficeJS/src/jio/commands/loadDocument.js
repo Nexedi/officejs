@@ -16,5 +16,17 @@ var loadDocument = function(spec, my) {
         return false;
     };
 
+    var super_done = that.done;
+    that.done = function (res) {
+        if (res) {
+            if (typeof res.last_modified !== 'number') {
+                res.last_modified=new Date(res.last_modified).getTime();
+            }
+            if (typeof res.creation_date !== 'number') {
+                res.creation_date=new Date(res.creation_date).getTime();
+            }
+        }
+        super_done(res);
+    };
     return that;
 };

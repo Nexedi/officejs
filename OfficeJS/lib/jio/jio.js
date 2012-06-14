@@ -1,4 +1,4 @@
-/*! JIO - v0.1.0 - 2012-06-13
+/*! JIO - v0.1.0 - 2012-06-14
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
@@ -75,7 +75,6 @@ var storage = function(spec, my) {
     // Attributes //
     var priv = {};
     priv.type = spec.type || '';
-    // my.jio exists
 
     // Methods //
     that.getType = function() {
@@ -92,6 +91,8 @@ var storage = function(spec, my) {
      */
     that.execute = function(command) {
         that.validate(command);
+        that.done = command.done;
+        that.fail = command.fail;
         command.executeOn(that);
     };
 
@@ -138,66 +139,23 @@ var storage = function(spec, my) {
         return '';
     };
 
+    that.done = function() {};
+    that.fail = function() {};
+
     return that;
 };
 
 var storageHandler = function(spec, my) {
-    var that = storage(spec, my);
     spec = spec || {};
     my = my || {};
-    // Attributes //
-    var priv = {};
-    priv.storage_a = spec.storagelist || [];
+    var that = storage( spec, my );
 
-    // Methods //
-    /**
-     * It is called before the execution.
-     * Override this function.
-     * @method beforeExecute
-     * @param  {object} command The command.
-     */
-    that.beforeExecute = function(command) {};
-
-    /**
-     * Execute the command according to this storage.
-     * @method execute
-     * @param  {object} command The command.
-     */
-    that.execute = function(command) {
-        var i;
-        that.validate(command);
-        that.beforeExecute(command);
-        for(i = 0; i < priv.storage_a.length; i++) {
-            priv.storage_a[i].execute(command);
-        }
-        that.afterExecute(command);
-    };
-
-    /**
-     * Is is called after the execution.
-     * Override this function.
-     * @method afterExecute
-     * @param  {object} command The command.
-     */
-    that.afterExecute = function(command) {
-        command.done();
-    };
-
-    /**
-     * Returns a serialized version of this storage
-     * @method serialized
-     * @return {object} The serialized storage.
-     */
-    that.serialized = function() {
-        return {type:priv.type,
-                storagelist:priv.storagelist};
+    that.addJob = function (storage,command) {
+        my.jobManager.addJob ( job({storage:storage, command:command}), my );
     };
 
     return that;
 };
-
-var jio = function(spec, my) {
-
 
 var command = function(spec, my) {
     var that = {};
@@ -304,8 +262,8 @@ var command = function(spec, my) {
     };
 
     that.done = function(return_value) {
-        priv.done(return_value);
         priv.respond({status:doneStatus(),value:return_value});
+        priv.done(return_value);
         priv.end();
     };
 
@@ -313,17 +271,29 @@ var command = function(spec, my) {
         if (priv.option.max_retry === 0 || priv.tried < priv.option.max_retry) {
             priv.retry();
         } else {
-            priv.fail(return_error);
             priv.respond({status:failStatus(),error:return_error});
+            priv.fail(return_error);
             priv.end();
         }
     };
 
-    that.onEndDo = function(fun) {
+    that.onResponseDo = function (fun) {
+        priv.respond = fun;
+    };
+
+    that.onDoneDo = function (fun) {
+        priv.done = fun;
+    };
+
+    that.onFailDo = function (fun) {
+        priv.fail = fun;
+    };
+
+    that.onEndDo = function (fun) {
         priv.end = fun;
     };
 
-    that.onRetryDo = function(fun) {
+    that.onRetryDo = function (fun) {
         priv.retry = fun;
     };
 
@@ -343,6 +313,10 @@ var command = function(spec, my) {
 
     that.canBeRestored = function() {
         return true;
+    };
+
+    that.clone = function () {
+        return command(that.serialized(), my);
     };
 
     return that;
@@ -366,6 +340,24 @@ var getDocumentList = function(spec, my) {
         return false;
     };
 
+    var super_done = that.done;
+    that.done = function (res) {
+        var i;
+        if (res) {
+            for (i = 0; i < res.length; i+= 1) {
+                if (typeof res[i].last_modified !== 'number') {
+                    res[i].last_modified =
+                        new Date(res[i].last_modified).getTime();
+                }
+                if (typeof res[i].creation_date !== 'number') {
+                    res[i].creation_date =
+                        new Date(res[i].creation_date).getTime();
+                }
+            }
+        }
+        super_done(res);
+    };
+
     return that;
 };
 
@@ -387,6 +379,18 @@ var loadDocument = function(spec, my) {
         return false;
     };
 
+    var super_done = that.done;
+    that.done = function (res) {
+        if (res) {
+            if (typeof res.last_modified !== 'number') {
+                res.last_modified=new Date(res.last_modified).getTime();
+            }
+            if (typeof res.creation_date !== 'number') {
+                res.creation_date=new Date(res.creation_date).getTime();
+            }
+        }
+        super_done(res);
+    };
     return that;
 };
 
@@ -465,8 +469,14 @@ var jobStatus = function(spec, my) {
     that.serialized = function() {
         return {label:that.getLabel()};
     };
+
+    that.isWaitStatus = function() {
+        return false;
+    };
+
     return that;
 };
+
 var doneStatus = function(spec, my) {
     var that = jobStatus(spec, my);
     spec = spec || {};
@@ -549,21 +559,36 @@ var waitStatus = function(spec, my) {
     var priv = {};
     priv.job_id_a = spec.job_id_array || [];
     priv.threshold = 0;
+
     // Methods //
+    /**
+     * Returns the label of this status.
+     * @method getLabel
+     * @return {string} The label: 'wait'.
+     */
     that.getLabel = function() {
         return 'wait';
     };
 
+    /**
+     * Refresh the job id array to wait.
+     * @method refreshJobIdArray
+     */
     priv.refreshJobIdArray = function() {
         var tmp_job_id_a = [], i;
         for (i = 0; i < priv.job_id_a.length; i+= 1) {
-            if (jobManager.jobIdExists(priv.job_id_a[i])) {
+            if (my.jobManager.jobIdExists(priv.job_id_a[i])) {
                 tmp_job_id_a.push(priv.job_id_a[i]);
             }
         }
         priv.job_id_a = tmp_job_id_a;
     };
 
+    /**
+     * The status must wait for the job end before start again.
+     * @method waitForJob
+     * @param  {object} job The job to wait for.
+     */
     that.waitForJob = function(job) {
         var i;
         for (i = 0; i < priv.job_id_a.length; i+= 1) {
@@ -573,6 +598,12 @@ var waitStatus = function(spec, my) {
         }
         priv.job_id_a.push(job.getId());
     };
+
+    /**
+     * The status stops to wait for this job.
+     * @method dontWaitForJob
+     * @param  {object} job The job to stop waiting for.
+     */
     that.dontWaitForJob = function(job) {
         var i, tmp_job_id_a = [];
         for (i = 0; i < priv.job_id_a.length; i+= 1) {
@@ -583,9 +614,19 @@ var waitStatus = function(spec, my) {
         priv.job_id_a = tmp_job_id_a;
     };
 
+    /**
+     * The status must wait for some milliseconds.
+     * @method waitForTime
+     * @param  {number} ms The number of milliseconds
+     */
     that.waitForTime = function(ms) {
         priv.threshold = Date.now() + ms;
     };
+
+    /**
+     * The status stops to wait for some time.
+     * @method stopWaitForTime
+     */
     that.stopWaitForTime = function() {
         priv.threshold = 0;
     };
@@ -604,6 +645,15 @@ var waitStatus = function(spec, my) {
                 waitforjob:priv.job_id_a};
     };
 
+    /**
+     * Checks if this status is waitStatus
+     * @method isWaitStatus
+     * @return {boolean} true
+     */
+    that.isWaitStatus = function () {
+        return true;
+    };
+
     return that;
 };
 
@@ -613,7 +663,7 @@ var job = function(spec, my) {
     my = my || {};
     // Attributes //
     var priv = {};
-    priv.id        = jobIdHandler.nextId();
+    priv.id        = my.jobIdHandler.nextId();
     priv.command   = spec.command;
     priv.storage   = spec.storage;
     priv.status    = initialStatus();
@@ -687,7 +737,7 @@ var job = function(spec, my) {
      */
     that.waitForJob = function(job) {
         if (priv.status.getLabel() !== 'wait') {
-            priv.status = waitStatus();
+            priv.status = waitStatus({},my);
         }
         priv.status.waitForJob(job);
     };
@@ -710,7 +760,7 @@ var job = function(spec, my) {
      */
     that.waitForTime = function(ms) {
         if (priv.status.getLabel() !== 'wait') {
-            priv.status = waitStatus();
+            priv.status = waitStatus({},my);
         }
         priv.status.waitForTime(ms);
     };
@@ -757,7 +807,7 @@ var job = function(spec, my) {
             that.waitForTime(ms);
         });
         priv.command.onEndDo (function() {
-            jobManager.terminateJob (that);
+            my.jobManager.terminateJob (that);
         });
         priv.command.execute (priv.storage);
     };
@@ -772,6 +822,7 @@ var announcement = function(spec, my) {
     // Attributes //
     var callback_a = [];
     var name = spec.name || '';
+    var announcer = spec.announcer || {};
     // Methods //
     that.add = function(callback) {
         callback_a.push(callback);
@@ -805,6 +856,9 @@ var announcement = function(spec, my) {
     return that;
 };
 
+var jio = function(spec, my) {
+
+
 var activityUpdater = (function(spec, my) {
     var that = {};
     spec = spec || {};
@@ -814,19 +868,49 @@ var activityUpdater = (function(spec, my) {
     priv.id = spec.id || 0;
     priv.interval = 400;
     priv.interval_id = null;
+
     // Methods //
+    /**
+     * Update the last activity date in the localStorage.
+     * @method touch
+     */
     priv.touch = function() {
         LocalOrCookieStorage.setItem ('jio/id/'+priv.id, Date.now());
     };
+
+    /**
+     * Sets the jio id into the activity.
+     * @method setId
+     * @param  {number} id The jio id.
+     */
     that.setId = function(id) {
         priv.id = id;
     };
+
+    /**
+     * Sets the interval delay between two updates.
+     * @method setIntervalDelay
+     * @param  {number} ms In milliseconds
+     */
     that.setIntervalDelay = function(ms) {
         priv.interval = ms;
     };
+
+    /**
+     * Gets the interval delay.
+     * @method getIntervalDelay
+     * @return {number} The interval delay.
+     */
     that.getIntervalDelay = function() {
         return priv.interval;
     };
+
+    /**
+     * Starts the activity updater. It will update regulary the last activity
+     * date in the localStorage to show to other jio instance that this instance
+     * is active.
+     * @method start
+     */
     that.start = function() {
         if (!priv.interval_id) {
             priv.touch();
@@ -835,12 +919,18 @@ var activityUpdater = (function(spec, my) {
             }, priv.interval);
         }
     };
+
+    /**
+     * Stops the activity updater.
+     * @method stop
+     */
     that.stop = function() {
         if (priv.interval_id !== null) {
             clearInterval(priv.interval_id);
             priv.interval_id = null;
         }
     };
+
     return that;
 }());
 
@@ -907,13 +997,32 @@ var jobManager = (function(spec, my) {
     priv.interval = 200;
     priv.job_a = [];
 
+    my.jobManager = that;
+    my.jobIdHandler = that;
+
     // Methods //
+    /**
+     * Get the job array name in the localStorage
+     * @method getJobArrayName
+     * @return {string} The job array name
+     */
     priv.getJobArrayName = function() {
         return job_array_name + '/' + priv.id;
     };
+
+    /**
+     * Returns the job array from the localStorage
+     * @method getJobArray
+     * @return {array} The job array.
+     */
     priv.getJobArray = function() {
         return LocalOrCookieStorage.getItem(priv.getJobArrayName())||[];
     };
+
+    /**
+     * Does a backup of the job array in the localStorage.
+     * @method copyJobArrayToLocal
+     */
     priv.copyJobArrayToLocal = function() {
         var new_a = [], i;
         for (i = 0; i < priv.job_a.length; i+= 1) {
@@ -922,6 +1031,11 @@ var jobManager = (function(spec, my) {
         LocalOrCookieStorage.setItem(priv.getJobArrayName(),new_a);
     };
 
+    /**
+     * Removes a job from the current job array.
+     * @method removeJob
+     * @param  {object} job The job object.
+     */
     priv.removeJob = function(job) {
         var i, tmp_job_a = [];
         for (i = 0; i < priv.job_a.length; i+= 1) {
@@ -972,6 +1086,12 @@ var jobManager = (function(spec, my) {
         }
     };
 
+    /**
+     * Try to restore an the inactive older jio instances.
+     * It will restore the on going or initial jobs from their job array
+     * and it will add them to this job array.
+     * @method restoreOldJio
+     */
     priv.restoreOldJio = function() {
         var i, jio_id_a;
         priv.lastrestore = priv.lastrestore || 0;
@@ -983,6 +1103,11 @@ var jobManager = (function(spec, my) {
         priv.lastrestore = Date.now();
     };
 
+    /**
+     * Try to restore an old jio according to an id.
+     * @method restoreOldJioId
+     * @param  {number} id The jio id.
+     */
     priv.restoreOldJioId = function(id) {
         var jio_date;
         jio_date = LocalOrCookieStorage.getItem('jio/id/'+id)||0;
@@ -993,19 +1118,29 @@ var jobManager = (function(spec, my) {
         }
     };
 
+    /**
+     * Try to restore all jobs from another jio according to an id.
+     * @method restoreOldJobFromJioId
+     * @param  {number} id The jio id.
+     */
     priv.restoreOldJobFromJioId = function(id) {
         var i, jio_job_array;
         jio_job_array = LocalOrCookieStorage.getItem('jio/job_array/'+id)||[];
         for (i = 0; i < jio_job_array.length; i+= 1) {
-            var command_o = command(jio_job_array[i].command);
+            var command_o = command(jio_job_array[i].command, my);
             if (command_o.canBeRestored()) {
                 that.addJob ( job(
-                    {storage:jioNamespace.storage(jio_job_array[i].storage),
-                     command:command_o}));
+                    {storage:jioNamespace.storage(jio_job_array[i].storage,my),
+                     command:command_o}, my));
             }
         }
     };
 
+    /**
+     * Removes a jio instance according to an id.
+     * @method removeOldJioId
+     * @param  {number} id The jio id.
+     */
     priv.removeOldJioId = function(id) {
         var i, jio_id_a, new_a = [];
         jio_id_a = LocalOrCookieStorage.getItem('jio/id_array')||[];
@@ -1018,6 +1153,11 @@ var jobManager = (function(spec, my) {
         LocalOrCookieStorage.deleteItem('jio/id/'+id);
     };
 
+    /**
+     * Removes a job array from a jio instance according to an id.
+     * @method removeJobArrayFromJioId
+     * @param  {number} id The jio id.
+     */
     priv.removeJobArrayFromJioId = function(id) {
         LocalOrCookieStorage.deleteItem('jio/job_array/'+id);
     };
@@ -1040,6 +1180,12 @@ var jobManager = (function(spec, my) {
         priv.copyJobArrayToLocal();
     };
 
+    /**
+     * Checks if a job exists in the job array according to a job id.
+     * @method jobIdExists
+     * @param  {number} id The job id.
+     * @return {boolean} true if exists, else false.
+     */
     that.jobIdExists = function(id) {
         var i;
         for (i = 0; i < priv.job_a.length; i+= 1) {
@@ -1050,16 +1196,32 @@ var jobManager = (function(spec, my) {
         return false;
     };
 
+    /**
+     * Terminate a job. It only remove it from the job array.
+     * @method terminateJob
+     * @param  {object} job The job object
+     */
     that.terminateJob = function(job) {
         priv.removeJob(job);
-        priv.copyJobArrayToLocal();
     };
 
+    /**
+     * Adds a job to the current job array.
+     * @method addJob
+     * @param  {object} job The new job.
+     */
     that.addJob = function(job) {
         var result_a = that.validateJobAccordingToJobList (priv.job_a,job);
-        priv.manage (job,result_a);
+        priv.appendJob (job,result_a);
     };
 
+    /**
+     * Generate a result array containing action string to do with the good job.
+     * @method validateJobAccordingToJobList
+     * @param  {array} job_a A job array.
+     * @param  {object} job The new job to compare with.
+     * @return {array} A result array.
+     */
     that.validateJobAccordingToJobList = function(job_a,job) {
         var i, result_a = [];
         for (i = 0; i < job_a.length; i+= 1) {
@@ -1068,7 +1230,16 @@ var jobManager = (function(spec, my) {
         return result_a;
     };
 
-    priv.manage = function(job,result_a) {
+    /**
+     * It will manage the job in order to know what to do thanks to a result
+     * array. The new job can be added to the job array, but it can also be
+     * not accepted. It is this method which can tells jobs to wait for another
+     * one, to replace one or to eliminate some while browsing.
+     * @method appendJob
+     * @param  {object} job The job to append.
+     * @param  {array} result_a The result array.
+     */
+    priv.appendJob = function(job,result_a) {
         var i;
         if (priv.job_a.length !== result_a.length) {
             throw new RangeError("Array out of bound");
@@ -1081,7 +1252,7 @@ var jobManager = (function(spec, my) {
         for (i = 0; i < result_a.length; i+= 1) {
             switch (result_a[i].action) {
             case 'eliminate':
-                that.eliminate(result_a[i].job);
+                priv.removeJob(result_a[i].job);
                 break;
             case 'update':
                 result_a[i].job.update(job);
@@ -1094,17 +1265,6 @@ var jobManager = (function(spec, my) {
             }
         }
         priv.job_a.push(job);
-        priv.copyJobArrayToLocal();
-    };
-
-    that.eliminate = function(job) {
-        var i, tmp_a = [];
-        for (i = 0; i < priv.job_a.length; i+= 1) {
-            if (priv.job_a[i].getId() !== job.getId()) {
-                tmp_a.push(priv.job_a[i]);
-            }
-        }
-        priv.job_a = tmp_a;
         priv.copyJobArrayToLocal();
     };
 
@@ -1131,6 +1291,13 @@ var jobRules = (function(spec, my) {
     };
 
     // Methods //
+    /**
+     * Returns an action according the jobs given in parameters.
+     * @method getAction
+     * @param  {object} job1 The already existant job.
+     * @param  {object} job2 The job to compare with.
+     * @return {string} An action string.
+     */
     priv.getAction = function(job1,job2) {
         var j1label, j2label, j1status;
         j1label = job1.getCommand().getLabel();
@@ -1145,6 +1312,14 @@ var jobRules = (function(spec, my) {
             return that.default_action(job1,job2);
         }
     };
+
+    /**
+     * Checks if the two jobs are comparable.
+     * @method canCompare
+     * @param  {object} job1 The already existant job.
+     * @param  {object} job2 The job to compare with.
+     * @return {boolean} true if comparable, else false.
+     */
     priv.canCompare = function(job1,job2) {
         var job1label = job1.getCommand().getLabel(),
         job2label = job2.getCommand().getLabel();
@@ -1198,6 +1373,8 @@ var jobRules = (function(spec, my) {
         priv.compare[method1][method2] = rule;
     };
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Adding some rules
     /*
       LEGEND:
       - s: storage
@@ -1278,6 +1455,8 @@ var jobRules = (function(spec, my) {
 
     that.addActionRule('getDocumentList',true ,'getDocumentList',that.dontAccept);
     that.addActionRule('getDocumentList',false,'getDocumentList',that.update);
+    // end adding rules
+    ////////////////////////////////////////////////////////////////////////////
     return that;
 }());
 
@@ -1289,7 +1468,11 @@ var jobRules = (function(spec, my) {
     var priv = {};
     var jio_id_array_name = 'jio/id_array';
     priv.id = null;
-    priv.storage = jioNamespace.storage(spec);
+
+    my.jobManager = jobManager;
+    my.jobIdHandler = jobIdHandler;
+
+    priv.storage = jioNamespace.storage(spec, my);
 
     // initialize //
     priv.init = function() {
@@ -1351,7 +1534,7 @@ var jobRules = (function(spec, my) {
      * @return {boolean} true if ok, else false.
      */
     that.validateStorageDescription = function(description) {
-        return jioNamespace.storage(description.type)(description).isValid();
+        return jioNamespace.storage(description, my).isValid();
     };
 
     /**
@@ -1375,10 +1558,10 @@ var jobRules = (function(spec, my) {
         option.max_retry  = option.max_retry  || 0;
         jobManager.addJob(
             job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage):
+                          jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:saveDocument(
-                     {path:path,content:content,option:option})}));
+                     {path:path,content:content,option:option})},my));
     };
 
     /**
@@ -1404,10 +1587,10 @@ var jobRules = (function(spec, my) {
                                 option.metadata_only:false);
         jobManager.addJob(
             job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage):
+                          jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:loadDocument(
-                     {path:path,option:option})}));
+                     {path:path,option:option})},my));
     };
 
     /**
@@ -1430,10 +1613,10 @@ var jobRules = (function(spec, my) {
         option.max_retry  = option.max_retry  || 0;
         jobManager.addJob(
             job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage):
+                          jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:removeDocument(
-                     {path:path,option:option})}));
+                     {path:path,option:option})},my));
     };
 
     /**
@@ -1459,10 +1642,10 @@ var jobRules = (function(spec, my) {
                                 option.metadata_only:true);
         jobManager.addJob(
             job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage):
+                          jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:getDocumentList(
-                     {path:path,option:option})}));
+                     {path:path,option:option})},my));
     };
 
     return that;
@@ -1473,7 +1656,10 @@ var jioNamespace = (function(spec, my) {
     spec = spec || {};
     my = my || {};
     // Attributes //
-    var storage_type_o = {'base':storage,'handler':storageHandler};
+    var storage_type_o = {      // -> 'key':constructorFunction
+        'base': storage,
+        'handler': storageHandler
+    };
 
     // Methods //
 

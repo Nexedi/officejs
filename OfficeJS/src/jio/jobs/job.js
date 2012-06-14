@@ -4,7 +4,7 @@ var job = function(spec, my) {
     my = my || {};
     // Attributes //
     var priv = {};
-    priv.id        = jobIdHandler.nextId();
+    priv.id        = my.jobIdHandler.nextId();
     priv.command   = spec.command;
     priv.storage   = spec.storage;
     priv.status    = initialStatus();
@@ -78,7 +78,7 @@ var job = function(spec, my) {
      */
     that.waitForJob = function(job) {
         if (priv.status.getLabel() !== 'wait') {
-            priv.status = waitStatus();
+            priv.status = waitStatus({},my);
         }
         priv.status.waitForJob(job);
     };
@@ -101,7 +101,7 @@ var job = function(spec, my) {
      */
     that.waitForTime = function(ms) {
         if (priv.status.getLabel() !== 'wait') {
-            priv.status = waitStatus();
+            priv.status = waitStatus({},my);
         }
         priv.status.waitForTime(ms);
     };
@@ -148,7 +148,7 @@ var job = function(spec, my) {
             that.waitForTime(ms);
         });
         priv.command.onEndDo (function() {
-            jobManager.terminateJob (that);
+            my.jobManager.terminateJob (that);
         });
         priv.command.execute (priv.storage);
     };

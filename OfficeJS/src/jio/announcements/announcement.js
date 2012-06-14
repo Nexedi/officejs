@@ -5,6 +5,7 @@ var announcement = function(spec, my) {
     // Attributes //
     var callback_a = [];
     var name = spec.name || '';
+    var announcer = spec.announcer || {};
     // Methods //
     that.add = function(callback) {
         callback_a.push(callback);

@@ -14,5 +14,10 @@ var jobStatus = function(spec, my) {
     that.serialized = function() {
         return {label:that.getLabel()};
     };
+
+    that.isWaitStatus = function() {
+        return false;
+    };
+
     return that;
 };

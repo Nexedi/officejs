@@ -5,7 +5,6 @@ var storage = function(spec, my) {
     // Attributes //
     var priv = {};
     priv.type = spec.type || '';
-    // my.jio exists
 
     // Methods //
     that.getType = function() {
@@ -22,6 +21,8 @@ var storage = function(spec, my) {
      */
     that.execute = function(command) {
         that.validate(command);
+        that.done = command.done;
+        that.fail = command.fail;
         command.executeOn(that);
     };
 
@@ -67,6 +68,9 @@ var storage = function(spec, my) {
     that.validateState = function() {
         return '';
     };
+
+    that.done = function() {};
+    that.fail = function() {};
 
     return that;
 };

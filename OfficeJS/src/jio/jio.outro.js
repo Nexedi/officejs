@@ -6,7 +6,11 @@
     var priv = {};
     var jio_id_array_name = 'jio/id_array';
     priv.id = null;
-    priv.storage = jioNamespace.storage(spec);
+
+    my.jobManager = jobManager;
+    my.jobIdHandler = jobIdHandler;
+
+    priv.storage = jioNamespace.storage(spec, my);
 
     // initialize //
     priv.init = function() {
@@ -68,7 +72,7 @@
      * @return {boolean} true if ok, else false.
      */
     that.validateStorageDescription = function(description) {
-        return jioNamespace.storage(description.type)(description).isValid();
+        return jioNamespace.storage(description, my).isValid();
     };
 
     /**
@@ -92,10 +96,10 @@
         option.max_retry  = option.max_retry  || 0;
         jobManager.addJob(
             job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage):
+                          jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:saveDocument(
-                     {path:path,content:content,option:option})}));
+                     {path:path,content:content,option:option})},my));
     };
 
     /**
@@ -121,10 +125,10 @@
                                 option.metadata_only:false);
         jobManager.addJob(
             job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage):
+                          jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:loadDocument(
-                     {path:path,option:option})}));
+                     {path:path,option:option})},my));
     };
 
     /**
@@ -147,10 +151,10 @@
         option.max_retry  = option.max_retry  || 0;
         jobManager.addJob(
             job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage):
+                          jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:removeDocument(
-                     {path:path,option:option})}));
+                     {path:path,option:option})},my));
     };
 
     /**
@@ -176,10 +180,10 @@
                                 option.metadata_only:true);
         jobManager.addJob(
             job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage):
+                          jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:getDocumentList(
-                     {path:path,option:option})}));
+                     {path:path,option:option})},my));
     };
 
     return that;

@@ -16,7 +16,7 @@
             // Tells us that the document is saved.
 
             setTimeout (function () {
-                command.done();
+                that.done();
             }, 100);
         }; // end saveDocument
 
@@ -30,7 +30,7 @@
                     'content': 'content',
                     'creation_date': 10000,
                     'last_modified': 15000};
-                command.done(doc);
+                that.done(doc);
             }, 100);
         }; // end loadDocument
 
@@ -53,7 +53,7 @@
                     delete list[0].content;
                     delete list[1].content;
                 }
-                command.done(list);
+                that.done(list);
             }, 100);
         }; // end getDocumentList
 
@@ -61,7 +61,7 @@
             // Remove a document from the storage.
 
             setTimeout (function () {
-                command.done();
+                that.done();
             }, 100);
         };
         return that;
@@ -80,7 +80,7 @@
             // Tells us that the document is not saved.
 
             setTimeout (function () {
-                command.fail({status:0,statusText:'Unknown Error',
+                that.fail({status:0,statusText:'Unknown Error',
                               message:'Unknown error.'});
             }, 100);
         }; // end saveDocument
@@ -89,7 +89,7 @@
             // Returns a document object containing nothing.
 
             setTimeout(function () {
-                command.fail({status:0,statusText:'Unknown Error',
+                that.fail({status:0,statusText:'Unknown Error',
                               message:'Unknown error.'});
             }, 100);
         }; // end loadDocument
@@ -98,7 +98,7 @@
             // It returns nothing.
 
             setTimeout(function () {
-                command.fail({status:0,statusText:'Unknown Error',
+                that.fail({status:0,statusText:'Unknown Error',
                               message:'Unknown error.'});
             }, 100);
         }; // end getDocumentList
@@ -107,7 +107,7 @@
             // Remove a document from the storage.
 
             setTimeout (function () {
-                command.fail({status:0,statusText:'Unknown Error',
+                that.fail({status:0,statusText:'Unknown Error',
                               message:'Unknown error.'});
             }, 100);
         };
@@ -127,7 +127,7 @@
             // Document does not exists yet, create it.
 
             setTimeout (function () {
-                command.done();
+                that.done();
             }, 100);
         }; // end saveDocument
 
@@ -135,7 +135,7 @@
             // Returns a document object containing nothing.
 
             setTimeout(function () {
-                command.fail({status:404,statusText:'Not Found',
+                that.fail({status:404,statusText:'Not Found',
                               message:'Document "'+ command.getPath() +
                               '" not found.'});
             }, 100);
@@ -145,7 +145,7 @@
             // It returns nothing.
 
             setTimeout(function () {
-                command.fail({status:404,statusText:'Not Found',
+                that.fail({status:404,statusText:'Not Found',
                               message:'User list not found.'});
             }, 100);
         }; // end getDocumentList
@@ -154,7 +154,7 @@
             // Remove a document from the storage.
 
             setTimeout (function () {
-                command.done();
+                that.done();
             }, 100);
         };
         return that;
@@ -169,33 +169,31 @@
 
         that.setType('dummyall3tries');
 
-        priv.doJob = function (if_ok_return) {
+        priv.doJob = function (command,if_ok_return) {
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {
-                priv.Try3OKElseFail (priv.command.getTried(),if_ok_return);
+                priv.Try3OKElseFail (command.getTried(),if_ok_return);
             }, 100);
         };
         priv.Try3OKElseFail = function (tries,if_ok_return) {
             if ( tries === 3 ) {
-                return priv.command.done(if_ok_return);
+                return that.done(if_ok_return);
             }
             if ( tries < 3 ) {
-                return priv.command.fail(
+                return that.fail(
                     {message:'' + (3 - tries) + ' tries left.'});
             }
             if ( tries > 3 ) {
-                return priv.command.fail({message:'Too much tries.'});
+                return that.fail({message:'Too much tries.'});
             }
         };
 
         that.saveDocument = function (command) {
-            priv.command = command;
-            priv.doJob ();
+            priv.doJob (command);
         }; // end saveDocument
 
         that.loadDocument = function (command) {
-            priv.command = command;
-            priv.doJob ({
+            priv.doJob (command,{
                 'content': 'content2',
                 'name': 'file',
                 'creation_date': 11000,
@@ -204,19 +202,17 @@
         }; // end loadDocument
 
         that.getDocumentList = function (command) {
-            priv.command = command;
-            priv.doJob([{'name':'file',
-                         'creation_date':10000,
-                         'last_modified':15000},
-                        {'name':'memo',
-                         'creation_date':20000,
-                         'last_modified':25000}
-                       ]);
+            priv.doJob(command,[{'name':'file',
+                                 'creation_date':10000,
+                                 'last_modified':15000},
+                                {'name':'memo',
+                                 'creation_date':20000,
+                                 'last_modified':25000}
+                               ]);
         }; // end getDocumentList
 
         that.removeDocument = function (command) {
-            priv.command = command;
-            priv.doJob();
+            priv.doJob(command);
         }; // end removeDocument
 
         return that;

@@ -15,7 +15,9 @@ module.exports = function(grunt) {
             dist: {
                 src: ['<banner:meta.banner>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/intro.js>',
-                      '<file_strip_banner:../../src/<%= pkg.name %>/localStorage.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/localstorage.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/davstorage.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/replicatestorage.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/outro.js>'],
                 dest: '../../lib/jio/<%= pkg.name %>.js'
             }

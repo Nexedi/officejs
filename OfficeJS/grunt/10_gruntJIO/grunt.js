@@ -17,11 +17,9 @@ module.exports = function(grunt) {
                       // Wrapper top
                       '<file_strip_banner:../../src/<%= pkg.name %>/intro.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/exceptions.js>',
+                      // Jio wrapper top
                       '<file_strip_banner:../../src/<%= pkg.name %>/storages/storage.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/storages/storageHandler.js>',
-                      // Jio wrapper top
-                      '<file_strip_banner:../../src/<%= pkg.name %>/jio.intro.js>',
-                      // Jio Classes
                       '<file_strip_banner:../../src/<%= pkg.name %>/commands/command.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/commands/getDocumentList.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/commands/loadDocument.js>',
@@ -35,6 +33,7 @@ module.exports = function(grunt) {
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/status/waitStatus.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/jobs/job.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/announcements/announcement.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/jio.intro.js>',
                       // Singletons
                       '<file_strip_banner:../../src/<%= pkg.name %>/activityUpdater.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/announcements/announcer.js>',

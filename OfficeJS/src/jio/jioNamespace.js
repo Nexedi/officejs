@@ -3,7 +3,10 @@ var jioNamespace = (function(spec, my) {
     spec = spec || {};
     my = my || {};
     // Attributes //
-    var storage_type_o = {'base':storage,'handler':storageHandler};
+    var storage_type_o = {      // -> 'key':constructorFunction
+        'base': storage,
+        'handler': storageHandler
+    };
 
     // Methods //
 

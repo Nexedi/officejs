@@ -103,8 +103,8 @@ var command = function(spec, my) {
     };
 
     that.done = function(return_value) {
-        priv.done(return_value);
         priv.respond({status:doneStatus(),value:return_value});
+        priv.done(return_value);
         priv.end();
     };
 
@@ -112,17 +112,29 @@ var command = function(spec, my) {
         if (priv.option.max_retry === 0 || priv.tried < priv.option.max_retry) {
             priv.retry();
         } else {
-            priv.fail(return_error);
             priv.respond({status:failStatus(),error:return_error});
+            priv.fail(return_error);
             priv.end();
         }
     };
 
-    that.onEndDo = function(fun) {
+    that.onResponseDo = function (fun) {
+        priv.respond = fun;
+    };
+
+    that.onDoneDo = function (fun) {
+        priv.done = fun;
+    };
+
+    that.onFailDo = function (fun) {
+        priv.fail = fun;
+    };
+
+    that.onEndDo = function (fun) {
         priv.end = fun;
     };
 
-    that.onRetryDo = function(fun) {
+    that.onRetryDo = function (fun) {
         priv.retry = fun;
     };
 
@@ -142,6 +154,10 @@ var command = function(spec, my) {
 
     that.canBeRestored = function() {
         return true;
+    };
+
+    that.clone = function () {
+        return command(that.serialized(), my);
     };
 
     return that;
