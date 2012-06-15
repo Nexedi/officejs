@@ -9,6 +9,7 @@
             return file_name;
         }
     };
+    var JIO = jio;
 
     /**
      * OfficeJS Object
@@ -174,6 +175,25 @@
                 update: function () {
                     OfficeJS.open({app:'document_lister',force:true});
                 }
+            },
+            workinprogress: {
+                type:'viewer',
+                path:'component/workinprogress.html',
+                gadget_id:'page-content',
+                onload: function () {
+                    var i = null, wait = function() {
+                        // wait for workinprogress initialization end.
+                        if (window.workinprogress) {
+                            window.workinprogress.start();
+                            clearInterval(i);
+                        }
+                    }
+                    i = setInterval (wait,100);
+                },
+                onunload: function () {
+                    window.workinprogress.stop();
+                    return true;
+                }
             }
         };
         priv.mime_object = {
@@ -227,7 +247,7 @@
             end_getlist:function(){this.end_main('getlist');this.end_spin();},
             end_remove:function(){this.end_main('remove');this.end_spin();}
         };
-
+        priv.lastfailure = {};
         // Initializer //
         priv.init = function() {
         };
@@ -384,7 +404,7 @@
                 return;
             }
             // if there is not any jio created
-            priv.jio = JIO.newJio (storage,applicant);
+            priv.jio = JIO.newJio (JSON.parse(storage));
             // update left nav bar
             leftnavbar = priv.getRealApplication ('leftnavbar');
             if (typeof leftnavbar.update !== 'undefined') {
@@ -405,18 +425,21 @@
                 return;
             }
             priv.loading_object.getlist();
-            priv.jio.getDocumentList({
-                'sort':{'last_modified':'descending',
-                        'name':'ascending'},
-                'limit':{begin:0,end:50},
-                // 'search':{name:'a'},
-                'maxtries':3,
-                'onResponse':function (result) {
-                    if (result.status === 'done') {
-                        priv.data_object.documentList = result.return_value;
+            priv.jio.getDocumentList(
+                '.',
+                {sort:{last_modified:'descending',
+                       name:'ascending'},
+                limit:{begin:0,end:50},
+                 // search:{name:'a'},
+                max_retry:3,
+                onResponse:function (result) {
+                    if (result.status.isDone()) {
+                        priv.data_object.documentList = result.value;
                         priv.showDocumentListInsideLeftNavBar();
                     } else {
-                        console.error (result.message);
+                        priv.lastfailure.path = '.';
+                        priv.lastfailure.method = 'getDocumentList';
+                        console.error (result.error.message);
                     }
                     priv.loading_object.end_getlist();
                     if (typeof callback !== 'undefined') {
@@ -443,17 +466,18 @@
                 return;
             }
             priv.loading_object.save();
-            priv.jio.saveDocument({
-                'name':basename+'.'+current_editor.ext,
-                'content':current_editor.getContent(),
-                'onResponse':function (result) {
-                    if (result.status === 'fail') {
-                        console.error (result.message);
+            priv.jio.saveDocument(
+                basename+'.'+current_editor.ext,
+                current_editor.getContent(),
+                {onResponse:function (result) {
+                    if (!result.status.isDone()) {
+                        priv.lastfailure.path = basename;
+                        priv.lastfailure.method = 'saveDocument';
+                        console.error (result.error.message);
                     }
                     priv.loading_object.end_save();
                     that.getList();
-                }
-            });
+                }});
         };
 
         /**
@@ -468,19 +492,20 @@
                 return;
             }
             priv.loading_object.load();
-            priv.jio.loadDocument({
-                'name':basename+'.'+current_editor.ext,
-                'maxtries':3,
-                'onResponse':function (result) {
-                    if (result.status === 'fail') {
-                        console.error (result.message);
+            priv.jio.loadDocument(
+                basename+'.'+current_editor.ext,
+                {max_retry:3,
+                onResponse:function (result) {
+                    if (!result.status.isDone()) {
+                        console.error (result.error.message);
+                        priv.lastfailure.path = basename;
+                        priv.lastfailure.method = 'loadDocument';
                     } else {
                         current_editor.setContent(
-                            result.return_value.content);
+                            result.value.content);
                     }
                     priv.loading_object.end_load();
-                }
-            });
+                }});
         };
 
         /**
@@ -494,16 +519,17 @@
                 return;
             }
             priv.loading_object.remove();
-            priv.jio.removeDocument({
-                'name':name,
-                'onResponse':function (result) {
-                    if (result.status === 'fail') {
-                        console.error (result.message);
+            priv.jio.removeDocument(
+                name,
+                {onResponse:function (result) {
+                    if (!result.status.isDone()) {
+                        console.error (result.error.message);
+                        priv.lastfailure.path = name;
+                        priv.lastfailure.method = 'removeDocument';
                     }
                     priv.loading_object.end_remove();
                     that.getList();
-                }
-            });
+                }});
         };
 
         /**
@@ -519,9 +545,9 @@
             }
             for (i = 0, l = documentarray.length; i < l; i+= 1) {
                 priv.loading_object.remove();
-                priv.jio.removeDocument({
-                    name:documentarray[i],
-                    onResponse:function (result) {
+                priv.jio.removeDocument(
+                    documentarray[i],
+                    {onResponse:function (result) {
                         cpt += 1;
                         if (cpt === l) {
                             if (typeof current_editor.update !== 'undefined') {
@@ -531,6 +557,60 @@
                         priv.loading_object.end_remove();
                     }});
             }
+        };
+
+        that.getActivity = function () {
+            var activity = priv.jio.getJobArray ();
+            var lastfailure = that.getLastFailure();
+            var res = [], i;
+            for (i = 0; i < activity.length; i+= 1) {
+                switch (activity[i].command.label) {
+                case 'saveDocument':
+                    res.push('Saving "' + activity[i].command.path + '",');
+                    break;
+                case 'loadDocument':
+                    res.push('Loading "' + activity[i].command.path + '".');
+                    break;
+                case 'removeDocument':
+                    res.push('Removing "' + activity[i].command.path + '".');
+                    break;
+                case 'getDocumentList':
+                    res.push('Get document list' +
+                             ' at "' + activity[i].command.path + '".');
+                    break;
+                default:
+                    res.push('Unknown action.');
+                    break;
+                }
+            }
+            if (lastfailure.method) {
+                switch (lastfailure.method) {
+                case 'saveDocument':
+                    res.push('<span style="color:red;">LastFailure: '+
+                             'Fail to save "'+ lastfailure.path + '"</span>');
+                    break;
+                case 'loadDocument':
+                    res.push('<span style="color:red;">LastFailure: '+
+                             'Fail to load "'+ lastfailure.path + '"</span>');
+                    break;
+                case 'removeDocument':
+                    res.push('<span style="color:red;">LastFailure: '+
+                             'Fail to remove "'+ lastfailure.path + '"</span>');
+                    break;
+                case 'getDocumentList':
+                    res.push('<span style="color:red;">LastFailure: '+
+                             'Fail to retreive list from ' +
+                             ' at "' + lastfailure.path + '"</span>');
+                    break;
+                default:
+                    break;
+                }
+            }
+            return res;
+        };
+
+        that.getLastFailure = function () {
+            return priv.lastfailure;
         };
 
         // End of class //

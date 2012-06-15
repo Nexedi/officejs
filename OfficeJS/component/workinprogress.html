@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+  <h2>Activities</h2>
+  <div id="workinprogress"></div>
+  <script type="text/javascript">
+    <!--
+(function() {
+    var id;
+    if (!window.workinprogress) {
+        id = null;
+        window.workinprogress = {
+            start:function(){
+                if (id === null) {
+                    var update = function () {
+                        var act = OfficeJS.getActivity(), i, str = '';
+                        for (i = 0; i < act.length; i+= 1) {
+                            str += act[i] + '<br />';
+                        }
+                        if (str === '') {
+                            str = 'There is no on going tasks.';
+                        }
+                        document.querySelector('#workinprogress').innerHTML=str;
+                    };
+                    update();
+                    id = setInterval (update, 200);
+                }
+            },
+            stop:function(){
+                if (id !== null) {
+                    clearInterval(id);
+                    id = null;
+                }
+            }
+        };
+    }
+}());
+//-->
+  </script>
+</body>
+</html>
