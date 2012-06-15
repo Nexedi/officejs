@@ -1,4 +1,4 @@
-/*! JIO - v0.1.0 - 2012-06-14
+/*! JIO - v0.1.0 - 2012-06-15
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
@@ -150,8 +150,19 @@ var storageHandler = function(spec, my) {
     my = my || {};
     var that = storage( spec, my );
 
+    that.newCommand = function (method, spec) {
+        var o = spec || {};
+        o.label = method;
+        return command (o, my);
+    };
+
+    that.newStorage = function (spec) {
+        var o = spec || {};
+        return jioNamespace.storage (o, my);
+    };
+
     that.addJob = function (storage,command) {
-        my.jobManager.addJob ( job({storage:storage, command:command}), my );
+        my.jobManager.addJob ( job({storage:storage, command:command}, my) );
     };
 
     return that;
@@ -278,15 +289,27 @@ var command = function(spec, my) {
     };
 
     that.onResponseDo = function (fun) {
-        priv.respond = fun;
+        if (fun) {
+            priv.respond = fun;
+        } else {
+            return priv.respond;
+        }
     };
 
     that.onDoneDo = function (fun) {
-        priv.done = fun;
+        if (fun) {
+            priv.done = fun;
+        } else {
+            return priv.done;
+        }
     };
 
     that.onFailDo = function (fun) {
-        priv.fail = fun;
+        if (fun) {
+            priv.fail = fun;
+        } else {
+            return priv.fail;
+        }
     };
 
     that.onEndDo = function (fun) {
@@ -308,15 +331,38 @@ var command = function(spec, my) {
                 tried:priv.tried,
                 max_retry:priv.max_retry,
                 path:priv.path,
-                option:priv.option};
+                option:that.cloneOption()};
     };
 
+    /**
+     * Is the command can be restored by another JIO : yes.
+     * @method canBeRestored
+     * @return {boolean} true
+     */
     that.canBeRestored = function() {
         return true;
     };
 
+    /**
+     * Clones the command and returns it.
+     * @method clone
+     * @return {object} The cloned command.
+     */
     that.clone = function () {
         return command(that.serialized(), my);
+    };
+
+    /**
+     * Clones the command options and returns the clone version.
+     * @method cloneOption
+     * @return {object} The clone of the command options.
+     */
+    that.cloneOption = function () {
+        var k, o = {};
+        for (k in priv.option) {
+            o[k] = priv.option[k];
+        }
+        return o;
     };
 
     return that;
@@ -474,6 +520,10 @@ var jobStatus = function(spec, my) {
         return false;
     };
 
+    that.isDone = function() {
+        return false;
+    };
+
     return that;
 };
 
@@ -492,6 +542,10 @@ var doneStatus = function(spec, my) {
     };
     that.canRestart = function() {
         return false;
+    };
+
+    that.isDone = function() {
+        return true;
     };
     return that;
 };
@@ -998,7 +1052,7 @@ var jobManager = (function(spec, my) {
     priv.job_a = [];
 
     my.jobManager = that;
-    my.jobIdHandler = that;
+    my.jobIdHandler = jobIdHandler;
 
     // Methods //
     /**
@@ -1471,7 +1525,6 @@ var jobRules = (function(spec, my) {
 
     my.jobManager = jobManager;
     my.jobIdHandler = jobIdHandler;
-
     priv.storage = jioNamespace.storage(spec, my);
 
     // initialize //
@@ -1561,7 +1614,7 @@ var jobRules = (function(spec, my) {
                           jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:saveDocument(
-                     {path:path,content:content,option:option})},my));
+                     {path:path,content:content,option:option},my)},my));
     };
 
     /**
@@ -1590,7 +1643,7 @@ var jobRules = (function(spec, my) {
                           jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:loadDocument(
-                     {path:path,option:option})},my));
+                     {path:path,option:option},my)},my));
     };
 
     /**
@@ -1616,7 +1669,7 @@ var jobRules = (function(spec, my) {
                           jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:removeDocument(
-                     {path:path,option:option})},my));
+                     {path:path,option:option},my)},my));
     };
 
     /**
@@ -1645,7 +1698,7 @@ var jobRules = (function(spec, my) {
                           jioNamespace.storage(specificstorage,my):
                           priv.storage),
                  command:getDocumentList(
-                     {path:path,option:option})},my));
+                     {path:path,option:option},my)},my));
     };
 
     return that;
@@ -1673,6 +1726,7 @@ var jioNamespace = (function(spec, my) {
      */
     that.storage = function(spec, my, forcetype) {
         spec = spec || {};
+        my = my || {};
         var type = forcetype || spec.type || 'base';
         if (!storage_type_o[type]) {
             throw invalidStorageType({type:type,

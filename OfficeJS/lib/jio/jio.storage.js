@@ -1,4 +1,4 @@
-/*! JIO Storage - v0.1.0 - 2012-06-14
+/*! JIO Storage - v0.1.0 - 2012-06-15
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 (function(LocalOrCookieStorage, $, Base64, sjcl, Jio) {
@@ -464,6 +464,21 @@ var newReplicateStorage = function ( spec, my ) {
     priv.storagelist = spec.storagelist || [];
     priv.nb_storage = priv.storagelist.length;
 
+    var super_serialized = that.serialized;
+    that.serialized = function () {
+        var o = super_serialized();
+        o.storagelist = priv.storagelist;
+        return o;
+    };
+
+    that.validateState = function () {
+        if (priv.storagelist.length === 0) {
+            return 'Need at least one parameter: "storagelist" '+
+                'containing at least one storage.';
+        }
+        return '';
+    };
+
     priv.isTheLast = function () {
         return (priv.return_value_array.length === priv.nb_storage);
     };
@@ -471,12 +486,10 @@ var newReplicateStorage = function ( spec, my ) {
     priv.doJob = function (command,errormessage) {
         var done = false, error_array = [], i,
         onResponseDo = function (result) {
-            console.log ('respond');
             priv.return_value_array.push(result);
         },
         onFailDo = function (result) {
             if (!done) {
-                console.log ('fail');
                 error_array.push(result);
                 if (priv.isTheLast()) {
                     that.fail (
@@ -489,7 +502,6 @@ var newReplicateStorage = function ( spec, my ) {
         },
         onDoneDo = function (result) {
             if (!done) {
-                console.log ('done');
                 done = true;
                 that.done (result);
             }
@@ -497,7 +509,7 @@ var newReplicateStorage = function ( spec, my ) {
         command.setMaxRetry (1);
         for (i = 0; i < priv.nb_storage; i+= 1) {
             var newcommand = command.clone();
-            var newstorage = Jio.storage(priv.storagelist[i], my);
+            var newstorage = that.newStorage(priv.storagelist[i]);
             newcommand.onResponseDo (onResponseDo);
             newcommand.onFailDo (onFailDo);
             newcommand.onDoneDo (onDoneDo);
@@ -550,5 +562,535 @@ var newReplicateStorage = function ( spec, my ) {
     return that;
 };
 Jio.addStorageType('replicate', newReplicateStorage);
+
+var newIndexStorage = function ( spec, my ) {
+    var that = Jio.storage( spec, my, 'handler' ), priv = {};
+
+    priv.secondstorage_spec = spec.storage || {type:'base'};
+    priv.secondstorage_string = JSON.stringify (priv.secondstorage_spec);
+
+    var storage_array_name = 'jio/indexed_storage_array';
+    var storage_file_array_name = 'jio/indexed_file_array/'+
+        priv.secondstorage_string;
+
+    var super_serialized = that.serialized;
+    that.serialized = function () {
+        var o = super_serialized();
+        o.storage = priv.secondstorage_spec;
+        return o;
+    };
+
+    that.validateState = function () {
+        if (priv.secondstorage_string === JSON.stringify ({type:'base'})) {
+            return 'Need at least one parameter: "storage" '+
+                'containing storage specifications.';
+        }
+        return '';
+    };
+
+    /**
+     * Check if the indexed storage array exists.
+     * @method isStorageArrayIndexed
+     * @return {boolean} true if exists, else false
+     */
+    priv.isStorageArrayIndexed = function () {
+        return (LocalOrCookieStorage.getItem(
+            storage_array_name) ? true : false);
+    };
+
+    /**
+     * Returns a list of indexed storages.
+     * @method getIndexedStorageArray
+     * @return {array} The list of indexed storages.
+     */
+    priv.getIndexedStorageArray = function () {
+        return LocalOrCookieStorage.getItem(
+            storage_array_name) || [];
+    };
+
+    /**
+     * Adds a storage to the indexed storage list.
+     * @method indexStorage
+     * @param  {object/json} storage The new indexed storage.
+     */
+    priv.indexStorage = function (storage) {
+        var indexed_storage_array = priv.getIndexedStorageArray();
+        indexed_storage_array.push(typeof storage === 'string'? storage:
+                                   JSON.stringify (storage));
+        LocalOrCookieStorage.setItem(storage_array_name,
+                                     indexed_storage_array);
+    };
+
+    /**
+     * Checks if a storage exists in the indexed storage list.
+     * @method isAnIndexedStorage
+     * @param  {object/json} storage The storage to find.
+     * @return {boolean} true if found, else false
+     */
+    priv.isAnIndexedStorage = function (storage) {
+        var json_storage = (typeof storage === 'string'?storage:
+                            JSON.stringify(storage)),
+        i,l,array = priv.getIndexedStorageArray();
+        for (i = 0, l = array.length; i < l; i+= 1) {
+            if (JSON.stringify(array[i]) === json_storage) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    /**
+     * Checks if the file array exists.
+     * @method fileArrayExists
+     * @return {boolean} true if exists, else false
+     */
+    priv.fileArrayExists = function () {
+        return (LocalOrCookieStorage.getItem (
+            storage_file_array_name) ? true : false);
+    };
+
+    /**
+     * Returns the file from the indexed storage but not there content.
+     * @method getFileArray
+     * @return {array} All the existing file.
+     */
+    priv.getFileArray = function () {
+        return LocalOrCookieStorage.getItem(
+            storage_file_array_name) || [];
+    };
+
+    /**
+     * Sets the file array list.
+     * @method setFileArray
+     * @param  {array} file_array The array containing files.
+     */
+    priv.setFileArray = function (file_array) {
+        return LocalOrCookieStorage.setItem(
+            storage_file_array_name,
+            file_array);
+    };
+
+    /**
+     * Checks if the file already exists in the array.
+     * @method isFileIndexed
+     * @param  {string} file_name The file we want to find.
+     * @return {boolean} true if found, else false
+     */
+    priv.isFileIndexed = function (file_name) {
+        var i, l, array = priv.getFileArray();
+        for (i = 0, l = array.length; i < l; i+= 1) {
+            if (array[i].name === file_name){
+                return true;
+            }
+        }
+        return false;
+    };
+
+    /**
+     * Adds a file to the local file array.
+     * @method addFile
+     * @param  {object} file The new file.
+     */
+    priv.addFile = function (file) {
+        var file_array = priv.getFileArray();
+        file_array.push(file);
+        LocalOrCookieStorage.setItem(storage_file_array_name,
+                                     file_array);
+    };
+
+    /**
+     * Removes a file from the local file array.
+     * @method removeFile
+     * @param  {string} file_name The file to remove.
+     */
+    priv.removeFile = function (file_name) {
+        var i, l, array = priv.getFileArray(), new_array = [];
+        for (i = 0, l = array.length; i < l; i+= 1) {
+            if (array[i].name !== file_name) {
+                new_array.push(array[i]);
+            }
+        }
+        LocalOrCookieStorage.setItem(storage_file_array_name,
+                                     new_array);
+    };
+
+    /**
+     * Updates the storage.
+     * It will retreive all files from a storage. It is an asynchronous task
+     * so the update can be on going even if IndexedStorage has already
+     * returned the result.
+     * @method update
+     */
+    priv.update = function () {
+        // retreive list before, and then retreive all files
+        var getlist_onDone = function (result) {
+            if (!priv.isAnIndexedStorage(priv.secondstorage_string)) {
+                priv.indexStorage(priv.secondstorage_string);
+            }
+            priv.setFileArray(result);
+        };
+        that.addJob ( that.newStorage (priv.secondstorage_spec),
+                      that.newCommand ('getDocumentList',
+                                       {path:'.',
+                                        option:{onDone:getlist_onDone,
+                                                max_retry: 3}}) );
+    };
+
+    /**
+     * Saves a document.
+     * @method saveDocument
+     */
+    that.saveDocument = function (command) {
+        var newcommand = command.clone();
+        newcommand.onResponseDo (function(){});
+        newcommand.onDoneDo (function (result) {
+            if (!priv.isFileIndexed(command.getPath())) {
+                priv.addFile({name:command.getPath(),
+                              last_modified:0,creation_date:0});
+            }
+            priv.update();
+            that.done();
+        });
+        newcommand.onFailDo (function (result) {
+            that.fail(result);
+        });
+        that.addJob ( that.newStorage(priv.secondstorage_spec),
+                      newcommand );
+    }; // end saveDocument
+
+    /**
+     * Loads a document.
+     * @method loadDocument
+     */
+    that.loadDocument = function (command) {
+        var file_array, i, l, new_job,
+        loadOnDone = function (result) {
+            // if (file_array[i].last_modified !==
+            //     result.return_value.last_modified ||
+            //     file_array[i].creation_date !==
+            //     result.return_value.creation_date) {
+            //     // the file in the index storage is different than
+            //     // the one in the second storage. priv.update will
+            //     // take care of refresh the indexed storage
+            // }
+            that.done(result);
+        },
+        loadOnFail = function (result) {
+            that.fail(result);
+        },
+        secondLoadDocument = function () {
+            var newcommand = command.clone();
+            newcommand.onResponseDo (function(){});
+            newcommand.onFailDo (loadOnFail);
+            newcommand.onDoneDo (loadOnDone);
+            that.addJob ( that.newStorage(priv.secondstorage_spec),
+                          newcommand );
+        };
+        priv.update();
+        if (command.getOption('metadata_only')) {
+            setTimeout(function () {
+                if (priv.fileArrayExists()) {
+                    file_array = priv.getFileArray();
+                    for (i = 0, l = file_array.length; i < l; i+= 1) {
+                        if (file_array[i].name === command.getPath()) {
+                            return that.done(file_array[i]);
+                        }
+                    }
+                } else {
+                    secondLoadDocument();
+                }
+            },100);
+        } else {
+            secondLoadDocument();
+        }
+    }; // end loadDocument
+
+    /**
+     * Gets a document list.
+     * @method getDocumentList
+     */
+    that.getDocumentList = function (command) {
+        var id, newcommand, timeout = false;
+        priv.update();
+        if (command.getOption('metadata_only')) {
+            id = setInterval(function () {
+                if (timeout) {
+                    that.fail({status:0,statusText:'Timeout',
+                               message:'The request has timed out.'});
+                    clearInterval(id);
+                }
+                if (priv.fileArrayExists()) {
+                    that.done(priv.getFileArray());
+                    clearInterval(id);
+                }
+            },100);
+            setTimeout (function () {
+                timeout = true;
+            }, 10000);           // 10 sec
+        } else {
+            newcommand = command.clone();
+            newcommand.onDoneDo (function (result) {
+                that.done(result);
+            });
+            newcommand.onFailDo (function (result) {
+                that.fail(result);
+            });
+            that.addJob ( that.newStorage (priv.secondstorage_spec),
+                          newcommand );
+        }
+    }; // end getDocumentList
+
+    /**
+     * Removes a document.
+     * @method removeDocument
+     */
+    that.removeDocument = function (command) {
+        var newcommand = command.clone();
+        newcommand.onResponseDo (function(){});
+        newcommand.onDoneDo (function (result) {
+            priv.removeFile(command.getPath());
+            priv.update();
+            that.done();
+        });
+        newcommand.onFailDo (function (result) {
+            that.fail(result);
+        });
+        that.addJob( that.newStorage(priv.secondstorage_spec),
+                     newcommand );
+    };
+    return that;
+};
+Jio.addStorageType ('indexed', newIndexStorage);
+
+var newCryptedStorage = function ( spec, my ) {
+    var that = Jio.storage( spec, my, 'handler' ), priv = {};
+
+    priv.username = spec.username || '';
+    priv.password = spec.password || '';
+    priv.secondstorage_spec = spec.storage || {type:'base'};
+
+    var super_serialized = that.serialized;
+    that.serialized = function () {
+        var o = super_serialized();
+        o.username = priv.username;
+        o.password = priv.password;
+        return o;
+    };
+
+    that.validateState = function () {
+        if (priv.username &&
+            JSON.stringify (priv.secondstorage_spec) ===
+            JSON.stringify ({type:'base'})) {
+            return '';
+        }
+        return 'Need at least two parameters: "username" and "storage".';
+    };
+
+    // TODO : IT IS NOT SECURE AT ALL!
+    // WE MUST REWORK CRYPTED STORAGE!
+    priv.encrypt_param_object = {
+        "iv":"kaprWwY/Ucr7pumXoTHbpA",
+        "v":1,
+        "iter":1000,
+        "ks":256,
+        "ts":128,
+        "mode":"ccm",
+        "adata":"",
+        "cipher":"aes",
+        "salt":"K4bmZG9d704"
+    };
+    priv.decrypt_param_object = {
+        "iv":"kaprWwY/Ucr7pumXoTHbpA",
+        "ks":256,
+        "ts":128,
+        "salt":"K4bmZG9d704"
+    };
+    priv.encrypt = function (data,callback,index) {
+        // end with a callback in order to improve encrypt to an
+        // asynchronous encryption.
+        var tmp = sjcl.encrypt (that.getStorageUserName()+':'+
+                                that.getStoragePassword(), data,
+                                priv.encrypt_param_object);
+        callback(JSON.parse(tmp).ct,index);
+    };
+    priv.decrypt = function (data,callback,index,key) {
+        var tmp, param = $.extend(true,{},priv.decrypt_param_object);
+        param.ct = data || '';
+        param = JSON.stringify (param);
+        try {
+            tmp = sjcl.decrypt (that.getStorageUserName()+':'+
+                                that.getStoragePassword(),
+                                param);
+        } catch (e) {
+            callback({status:0,statusText:'Decrypt Fail',
+                      message:'Unable to decrypt.'},index,key);
+            return;
+        }
+        callback(tmp,index,key);
+    };
+
+    /**
+     * Saves a document.
+     * @method saveDocument
+     */
+    that.saveDocument = function (command) {
+        var new_file_name, newfilecontent,
+        _1 = function () {
+            priv.encrypt(command.getPath(),function(res) {
+                new_file_name = res;
+                _2();
+            });
+        },
+        _2 = function () {
+            priv.encrypt(command.getContent(),function(res) {
+                newfilecontent = res;
+                _3();
+            });
+        },
+        _3 = function () {
+            var settings = that.cloneOption(), newcommand, newstorage;
+            settings.onResponse = function (){};
+            settings.onDone = function () { that.done(); };
+            settings.onFail = function (r) { that.fail(r); };
+            newcommand = that.newCommand(
+                {path:new_file_name,
+                 content:newfilecontent,
+                 option:settings});
+            newstorage = that.newStorage( priv.secondstorage_spec );
+            that.addJob ( newstorage, newcommand );
+        };
+        _1();
+    }; // end saveDocument
+
+    /**
+     * Loads a document.
+     * @method loadDocument
+     */
+    that.loadDocument = function (command) {
+        var new_file_name, option,
+        _1 = function () {
+            priv.encrypt(command.getPath(),function(res) {
+                new_file_name = res;
+                _2();
+            });
+        },
+        _2 = function () {
+            var settings = command.cloneOption(), newcommand, newstorage;
+            settings.onResponse = function(){};
+            settings.onFail = loadOnFail;
+            settings.onDone = loadOnDone;
+            newcommand = that.newCommand (
+                {path:new_file_name,
+                 option:settings});
+            newstorage = that.newStorage ( priv.secondstorage_spec );
+            that.addJob ( newstorage, newcommand );
+        },
+        loadOnDone = function (result) {
+            result.name = command.getPath();
+            if (command.getOption('metadata_only')) {
+                that.done(result);
+            } else {
+                priv.decrypt (result.content,function(res){
+                    if (typeof res === 'object') {
+                        that.fail({status:0,statusText:'Decrypt Fail',
+                                   message:'Unable to decrypt'});
+                    } else {
+                        result.content = res;
+                        // content only: the second storage should
+                        // manage content_only option, so it is not
+                        // necessary to manage it.
+                        that.done(result);
+                    }
+                });
+            }
+        },
+        loadOnFail = function (result) {
+            // NOTE : we can re create an error object instead of
+            // keep the old ex:status=404,message="document 1y59gyl8g
+            // not found in localStorage"...
+            that.fail(result);
+        };
+        _1();
+    }; // end loadDocument
+
+    /**
+     * Gets a document list.
+     * @method getDocumentList
+     */
+    that.getDocumentList = function (command) {
+        var new_job, i, l, cpt = 0, array, ok = true,
+        _1 = function () {
+            var newcommand = command.clone(),
+            newstorage = that.newStorage ( priv.secondstorage_spec );
+            newcommand.onResponseDo (getListOnResponse);
+            newcommand.onDoneDo (function(){});
+            newcommand.onFailDo (function(){});
+            that.addJob ( new_job );
+        },
+        getListOnResponse = function (result) {
+            if (result.status.isDone()) {
+                array = result.return_value;
+                for (i = 0, l = array.length; i < l; i+= 1) {
+                    // cpt--;
+                    priv.decrypt (array[i].name,
+                                  lastOnResponse,i,'name');
+                    // priv.decrypt (array[i].content,
+                    //               lastOnResponse,i,'content');
+                }
+            } else {
+                that.fail(result.error);
+            }
+        },
+        lastOnResponse = function (res,index,key) {
+            var tmp;
+            cpt++;
+            if (typeof res === 'object') {
+                if (ok) {
+                    that.fail({status:0,statusText:'Decrypt Fail',
+                               message:'Unable to decrypt.'});
+                }
+                ok = false;
+                return;
+            }
+            array[index][key] = res;
+            if (cpt === l && ok) {
+                // this is the last callback
+                that.done(array);
+            }
+        };
+        _1();
+    }; // end getDocumentList
+
+    /**
+     * Removes a document.
+     * @method removeDocument
+     */
+    that.removeDocument = function () {
+        var new_job, new_file_name,
+        _1 = function () {
+            priv.encrypt(that.getFileName(),function(res) {
+                new_file_name = res;
+                _2();
+            });
+        },
+        _2 = function () {
+            new_job = that.cloneJob();
+            new_job.name = new_file_name;
+            new_job.storage = that.getSecondStorage();
+            new_job.onResponse = removeOnResponse;
+            that.addJob(new_job);
+        },
+        removeOnResponse = function (result) {
+            if (result.status === 'done') {
+                that.done();
+            } else {
+                that.fail(result.error);
+            }
+        };
+        _1();
+    };
+    return that;
+};
+Jio.addStorageType('crypt', newCryptedStorage);
 
 }( LocalOrCookieStorage, jQuery, Base64, sjcl, jio ));

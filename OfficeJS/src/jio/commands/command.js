@@ -119,15 +119,27 @@ var command = function(spec, my) {
     };
 
     that.onResponseDo = function (fun) {
-        priv.respond = fun;
+        if (fun) {
+            priv.respond = fun;
+        } else {
+            return priv.respond;
+        }
     };
 
     that.onDoneDo = function (fun) {
-        priv.done = fun;
+        if (fun) {
+            priv.done = fun;
+        } else {
+            return priv.done;
+        }
     };
 
     that.onFailDo = function (fun) {
-        priv.fail = fun;
+        if (fun) {
+            priv.fail = fun;
+        } else {
+            return priv.fail;
+        }
     };
 
     that.onEndDo = function (fun) {
@@ -149,15 +161,38 @@ var command = function(spec, my) {
                 tried:priv.tried,
                 max_retry:priv.max_retry,
                 path:priv.path,
-                option:priv.option};
+                option:that.cloneOption()};
     };
 
+    /**
+     * Is the command can be restored by another JIO : yes.
+     * @method canBeRestored
+     * @return {boolean} true
+     */
     that.canBeRestored = function() {
         return true;
     };
 
+    /**
+     * Clones the command and returns it.
+     * @method clone
+     * @return {object} The cloned command.
+     */
     that.clone = function () {
         return command(that.serialized(), my);
+    };
+
+    /**
+     * Clones the command options and returns the clone version.
+     * @method cloneOption
+     * @return {object} The clone of the command options.
+     */
+    that.cloneOption = function () {
+        var k, o = {};
+        for (k in priv.option) {
+            o[k] = priv.option[k];
+        }
+        return o;
     };
 
     return that;

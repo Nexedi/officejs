@@ -11,7 +11,7 @@ var jobManager = (function(spec, my) {
     priv.job_a = [];
 
     my.jobManager = that;
-    my.jobIdHandler = that;
+    my.jobIdHandler = jobIdHandler;
 
     // Methods //
     /**

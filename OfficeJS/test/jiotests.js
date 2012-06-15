@@ -694,7 +694,6 @@ test ('Document load', function () {
     o.jio = JIO.newJio({type:'replicate',storagelist:[
         {type:'dummyallok',username:'1'},
         {type:'dummyallok',username:'2'}]});
-    console.log (o.jio.getId());
     o.mytest('DummyStorageAllOK,OK: load same file',{
         name:'file',content:'content',
         last_modified:15000,
@@ -704,7 +703,6 @@ test ('Document load', function () {
     o.jio = JIO.newJio({type:'replicate',storagelist:[
         {type:'dummyall3tries'},
         {type:'dummyallok'}]});
-    console.log (o.jio.getId());
     o.mytest('DummyStorageAllOK,3tries: load 2 different files',{
         name:'file',content:'content',
         last_modified:15000,
@@ -713,207 +711,182 @@ test ('Document load', function () {
     o.jio.stop();
 });
 
-// test ('Document save', function () {
-//     // Test if ReplicateStorage can save several documents.
+test ('Document save', function () {
+    // Test if ReplicateStorage can save several documents.
 
-//     var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
-//     mytest = function (message,value) {
-//         o.f = function (result) {
-//             deepEqual (result.status,value,message);};
-//         t.spy(o,'f');
-//         o.jio.saveDocument({'name':'file','content':'content',
-//                             'onResponse':o.f,'max_tries':3});
-//         clock.tick(500);
-//         if (!o.f.calledOnce) {
-//             ok(false, 'no response / too much results');
-//         }
-//     };
-//     o.jio=JIO.newJio({'type':'replicate','user_name':'Dummy','storage_array':[
-//         {'type':'dummyallok','user_name':'1'},
-//         {'type':'dummyallok','user_name':'2'}]},
-//         {'ID':'jiotests'});
-//     mytest('DummyStorageAllOK,OK: save a file.','done');
-//     o.jio.stop();
-// });
+    var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.mytest = function (message,value) {
+        o.f = function (result) {
+            deepEqual (result.status.getLabel(),value,message);
+        };
+        o.t.spy(o,'f');
+        o.jio.saveDocument('file','content',{onResponse:o.f,max_retry:3});
+        o.clock.tick(500);
+        if (!o.f.calledOnce) {
+            ok(false, 'no response / too much results');
+        }
+    };
+    o.jio = JIO.newJio({type:'replicate',storagelist:[
+        {type:'dummyallok',username:'1'},
+        {type:'dummyallok',username:'2'}]});
+    o.mytest('DummyStorageAllOK,OK: save a file.','done');
+    o.jio.stop();
 
-// test ('Get Document List', function () {
-//     // Test if ReplicateStorage can get several list.
+    o.jio = JIO.newJio({type:'replicate',storagelist:[
+        {type:'dummyall3tries',username:'1'},
+        {type:'dummyallok',username:'2'}]});
+    o.mytest('DummyStorageAll3Tries,OK: save a file.','done');
+    o.jio.stop();
+});
 
-//     var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
-//     mytest = function (message,value) {
-//         o.f = function (result) {
-//             deepEqual (objectifyDocumentArray(result.return_value),
-//                        objectifyDocumentArray(value),'getting list');
-//         };
-//         t.spy(o,'f');
-//         o.jio.getDocumentList({'onResponse':o.f,'max_tries':3});
-//         clock.tick(100000);
-//         if (!o.f.calledOnce) {
-//             ok(false, 'no response / too much results');
-//         }
-//     };
-//     o.jio=JIO.newJio({'type':'replicate','user_name':'Dummy','storage_array':[
-//         {'type':'dummyallok','user_name':'1'},
-//         {'type':'dummyall3tries','user_name':'2'}]},
-//         {'ID':'jiotests'});
-//     o.doc1 = {'name':'file',
-//               'last_modified':15000,'creation_date':10000};
-//     o.doc2 = {'name':'memo',
-//               'last_modified':25000,'creation_date':20000};
-//     mytest('DummyStorageAllOK,3tries: get document list .',[o.doc1,o.doc2]);
-//     o.jio.stop();
-// });
+test ('Get Document List', function () {
+    // Test if ReplicateStorage can get several list.
 
-// test ('Remove document', function () {
-//     // Test if ReplicateStorage can remove several documents.
+    var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.mytest = function (message,value) {
+        o.f = function (result) {
+            deepEqual (objectifyDocumentArray(result.value),
+                       objectifyDocumentArray(value),'getting list');
+        };
+        o.t.spy(o,'f');
+        o.jio.getDocumentList('.',{onResponse:o.f,max_retry:3});
+        o.clock.tick(100000);
+        if (!o.f.calledOnce) {
+            ok(false, 'no response / too much results');
+        }
+    };
+    o.jio = JIO.newJio({type:'replicate',storagelist:[
+        {type:'dummyall3tries',username:'1'},
+        {type:'dummyallok',username:'2'}]});
+    o.doc1 = {name:'file',
+              last_modified:15000,creation_date:10000};
+    o.doc2 = {name:'memo',
+              last_modified:25000,creation_date:20000};
+    o.mytest('DummyStorageAllOK,3tries: get document list .',[o.doc1,o.doc2]);
+    o.jio.stop();
+});
 
-//     var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
-//     mytest = function (message,value) {
-//         o.f = function (result) {
-//             deepEqual (result.status,value,message);};
-//         t.spy(o,'f');
-//         o.jio.removeDocument({'name':'file','onResponse':o.f,'max_tries':3});
-//         clock.tick(100000);
-//         if (!o.f.calledOnce) {
-//             ok(false, 'no response / too much results');
-//         }
-//     };
-//     o.jio=JIO.newJio({'type':'replicate','user_name':'Dummy','storage_array':[
-//         {'type':'dummyallok','user_name':'1'},
-//         {'type':'dummyall3tries','user_name':'2'}]},
-//         {'ID':'jiotests'});
-//     mytest('DummyStorageAllOK,3tries: remove document.','done');
-//     o.jio.stop();
-// });
+test ('Remove document', function () {
+    // Test if ReplicateStorage can remove several documents.
 
-// module ('Jio IndexedStorage');
+    var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.mytest = function (message,value) {
+        o.f = function (result) {
+            deepEqual (result.status.getLabel(),value,message);
+        };
+        o.t.spy(o,'f');
+        o.jio.removeDocument('file',{onResponse:o.f,max_retry:3});
+        o.clock.tick(100000);
+        if (!o.f.calledOnce) {
+            ok(false, 'no response / too much results');
+        }
+    };
+    o.jio = JIO.newJio({type:'replicate',storagelist:[
+        {type:'dummyallok',username:'1'},
+        {type:'dummyall3tries',username:'2'}]});
+    o.mytest('DummyStorageAllOK,3tries: remove document.','done');
+    o.jio.stop();
+});
 
-// test ('Check name availability', function () {
-//     var o = {}, clock = this.sandbox.useFakeTimers(), t = this,
-//     mytest = function (message,value) {
-//         o.f = function (result) {
-//             deepEqual (result.return_value,value,message);};
-//         t.spy(o,'f');
-//         o.jio.checkNameAvailability({user_name:'MrIndexedCheck',
-//                                      onResponse:o.f,max_tries:3});
-//         clock.tick(100000);
-//         if (!o.f.calledOnce) {
-//             ok(false, 'no response / too much results');
-//         }
-//     };
-//     o.jio=JIO.newJio({type:'indexed',
-//                          storage:{type:'dummyall3tries',
-//                                   user_name:'indexedcheck'}},
-//                         {ID:'jiotests'});
-//     mytest('dummy ok : name must be available', true);
-//     o.jio.stop();
-// });
+module ('Jio IndexedStorage');
 
-// test ('Document load', function () {
-//     var o = {}, clock = this.sandbox.useFakeTimers();
-//     o.jio=JIO.newJio({type:'indexed',
-//                          storage:{type:'dummyall3tries',
-//                                   user_name:'indexedload'}},
-//                         {ID:'jiotests'});
-//     // loading must take long time with dummyall3tries
-//     o.f = function () {};
-//     this.spy(o,'f');
-//     o.jio.loadDocument({name:'memo',max_tries:3,onResponse:o.f,
-//                         options:{metadata_only:true}});
-//     clock.tick(500);
-//     ok(!o.f.calledOnce,'Callback must not be called');
-//     // wait long time too retreive list
-//     clock.tick(100000);
-//     // now we can test if the document metadata are loaded faster.
-//     o.doc = {name:'memo',last_modified:25000,creation_date:20000};
-//     o.f2 = function (result) {
-//         deepEqual (result.return_value,o.doc,'Document metadata retrieved');
-//     };
-//     this.spy(o,'f2');
-//     o.jio.loadDocument({name:'memo',max_tries:3,onResponse:o.f2,
-//                         options:{metadata_only:true}});
-//     clock.tick(500);
-//     if (!o.f2.calledOnce) {
-//         ok (false, 'no response / too much results');
-//     }
-//     // test a simple document loading
-//     o.doc2 = {name:'file',last_modified:17000,
-//               creation_date:11000,content:'content2'};
-//     o.f3 = function (result) {
-//         deepEqual (result.return_value,o.doc2,'Simple document loading');
-//     };
-//     this.spy(o,'f3');
-//     o.jio.loadDocument({name:'file',max_tries:3,onResponse:o.f3});
-//     clock.tick(100000);
-//     if (!o.f3.calledOnce) {
-//         ok (false, 'no response / too much results');
-//     }
-//     o.jio.stop();
-// });
+test ('Document load', function () {
+    var o = {}; o.clock = this.sandbox.useFakeTimers();
+    o.jio = JIO.newJio({type:'indexed',storage:{type:'dummyall3tries'}});
+    // loading must take long time with dummyall3tries
+    o.f = this.spy();
+    o.jio.loadDocument('memo',{max_retry:3,onResponse:o.f,metadata_only:true});
+    o.clock.tick(1000);
+    ok(!o.f.called,'Callback must not be called');
+    // wait long time too retreive list
+    o.clock.tick(100000);
 
-// test ('Document save', function () {
-//     var o = {}, clock = this.sandbox.useFakeTimers();
-//     o.jio=JIO.newJio({type:'indexed',
-//                          storage:{type:'dummyall3tries',
-//                                   user_name:'indexedsave'}},
-//                         {ID:'jiotests'});
-//     o.f = function (result) {
-//         deepEqual (result.status,'done','document save');
-//     };
-//     this.spy(o,'f');
-//     o.jio.saveDocument({name:'file',max_tries:3,onResponse:o.f});
-//     clock.tick(100000);
-//     if (!o.f.calledOnce){
-//         ok (false, 'no response / too much results');
-//     }
-//     o.jio.stop();
-// });
+    // now we can test if the document metadata are loaded faster.
+    o.doc = {name:'memo',last_modified:25000,creation_date:20000};
+    o.f2 = function (result) {
+        deepEqual (result.value,o.doc,'Document metadata retrieved');
+    };
+    this.spy(o,'f2');
+    o.jio.loadDocument('memo',{max_retry:3,onResponse:o.f2,metadata_only:true});
+    o.clock.tick(1000);
+    if (!o.f2.calledOnce) {
+        ok (false, 'no response / too much results');
+    }
 
-// test ('Get document list', function () {
-//     var o = {}, clock = this.sandbox.useFakeTimers();
-//     o.jio=JIO.newJio({type:'indexed',
-//                          storage:{type:'dummyall3tries',
-//                                   user_name:'indexedgetlist'}},
-//                         {ID:'jiotests'});
-//     o.doc1 = {name:'file',last_modified:15000,creation_date:10000};
-//     o.doc2 = {name:'memo',last_modified:25000,creation_date:20000};
-//     // getting list must take long time with dummyall3tries
-//     o.f = function () {};
-//     this.spy(o,'f');
-//     o.jio.getDocumentList({max_tries:3,onResponse:o.f});
-//     clock.tick(500);
-//     ok(!o.f.calledOnce,'Callback must not be called');
-//     // wail long time too retreive list
-//     clock.tick(100000);
-//     // now we can test if the document list is loaded faster
-//     o.f2 = function (result) {
-//         deepEqual (result.return_value,[o.doc1,o.doc2],'get document list');
-//     };
-//     this.spy(o,'f2');
-//     o.jio.getDocumentList({max_tries:3,onResponse:o.f2});
-//     clock.tick(500);
-//     if (!o.f2.calledOnce) {
-//         ok (false, 'no response / too much results');
-//     }
-// });
+    // test a simple document loading
+    o.doc2 = {name:'file',last_modified:17000,
+              creation_date:11000,content:'content2'};
+    o.f3 = function (result) {
+        deepEqual (result.value,o.doc2,'Simple document loading');
+    };
+    this.spy(o,'f3');
+    o.jio.loadDocument('file',{max_retry:3,onResponse:o.f3});
+    o.clock.tick(100000);
+    if (!o.f3.calledOnce) {
+        ok (false, 'no response / too much results');
+    }
+    o.jio.stop();
+});
 
-// test ('Remove document', function () {
-//     var o = {}, clock = this.sandbox.useFakeTimers();
-//     o.jio=JIO.newJio({type:'indexed',
-//                          storage:{type:'dummyall3tries',
-//                                   user_name:'indexedsave'}},
-//                         {ID:'jiotests'});
-//     o.f = function (result) {
-//         deepEqual (result.status,'done','document remove');
-//     };
-//     this.spy(o,'f');
-//     o.jio.removeDocument({name:'file',max_tries:3,onResponse:o.f});
-//     clock.tick(100000);
-//     if (!o.f.calledOnce){
-//         ok (false, 'no response / too much results');
-//     }
-//     o.jio.stop();
-// });
+test ('Document save', function () {
+    var o = {}; o.clock = this.sandbox.useFakeTimers();
+    o.jio = JIO.newJio({type:'indexed',
+                        storage:{type:'dummyall3tries',
+                                 username:'indexsave'}});
+    o.f = function (result) {
+        deepEqual (result.status.getLabel(),'done','document save');
+    };
+    this.spy(o,'f');
+    o.jio.saveDocument('file','content',{max_retry:3,onResponse:o.f});
+    o.clock.tick(100000);
+    if (!o.f.calledOnce){
+        ok (false, 'no response / too much results');
+    }
+    o.jio.stop();
+});
+
+test ('Get document list', function () {
+    var o = {}; o.clock = this.sandbox.useFakeTimers();
+    o.jio = JIO.newJio({type:'indexed',
+                        storage:{type:'dummyall3tries',
+                                 username:'indexgetlist'}});
+    o.doc1 = {name:'file',last_modified:15000,creation_date:10000};
+    o.doc2 = {name:'memo',last_modified:25000,creation_date:20000};
+    // getting list must take long time with dummyall3tries
+    o.f = this.spy();
+    o.jio.getDocumentList('.',{max_retry:3,onResponse:o.f});
+    o.clock.tick(1000);
+    ok(!o.f.called,'Callback must not be called');
+    // wail long time too retreive list
+    o.clock.tick(100000);
+    // now we can test if the document list is loaded faster
+    o.f2 = function (result) {
+        deepEqual (result.value,[o.doc1,o.doc2],'get document list');
+    };
+    this.spy(o,'f2');
+    o.jio.getDocumentList('.',{max_retry:3,onResponse:o.f2});
+    o.clock.tick(1000)
+    if (!o.f2.calledOnce) {
+        ok (false, 'no response / too much results');
+    }
+});
+
+test ('Remove document', function () {
+    var o = {}; o.clock = this.sandbox.useFakeTimers();
+    o.jio = JIO.newJio({type:'indexed',
+                        storage:{type:'dummyall3tries',
+                                 username:'indexremove'}});
+    o.f = function (result) {
+        deepEqual (result.status.getLabel(),'done','document remove');
+    };
+    this.spy(o,'f');
+    o.jio.removeDocument('file',{max_retry:3,onResponse:o.f});
+    o.clock.tick(100000);
+    if (!o.f.calledOnce){
+        ok (false, 'no response / too much results');
+    }
+    o.jio.stop();
+});
 
 // module ('Jio CryptedStorage');
 

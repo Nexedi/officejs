@@ -14,5 +14,9 @@ var doneStatus = function(spec, my) {
     that.canRestart = function() {
         return false;
     };
+
+    that.isDone = function() {
+        return true;
+    };
     return that;
 };

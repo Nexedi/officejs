@@ -19,5 +19,9 @@ var jobStatus = function(spec, my) {
         return false;
     };
 
+    that.isDone = function() {
+        return false;
+    };
+
     return that;
 };

@@ -20,6 +20,7 @@ var jioNamespace = (function(spec, my) {
      */
     that.storage = function(spec, my, forcetype) {
         spec = spec || {};
+        my = my || {};
         var type = forcetype || spec.type || 'base';
         if (!storage_type_o[type]) {
             throw invalidStorageType({type:type,

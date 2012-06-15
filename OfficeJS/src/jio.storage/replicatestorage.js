@@ -5,6 +5,21 @@ var newReplicateStorage = function ( spec, my ) {
     priv.storagelist = spec.storagelist || [];
     priv.nb_storage = priv.storagelist.length;
 
+    var super_serialized = that.serialized;
+    that.serialized = function () {
+        var o = super_serialized();
+        o.storagelist = priv.storagelist;
+        return o;
+    };
+
+    that.validateState = function () {
+        if (priv.storagelist.length === 0) {
+            return 'Need at least one parameter: "storagelist" '+
+                'containing at least one storage.';
+        }
+        return '';
+    };
+
     priv.isTheLast = function () {
         return (priv.return_value_array.length === priv.nb_storage);
     };
@@ -12,12 +27,10 @@ var newReplicateStorage = function ( spec, my ) {
     priv.doJob = function (command,errormessage) {
         var done = false, error_array = [], i,
         onResponseDo = function (result) {
-            console.log ('respond');
             priv.return_value_array.push(result);
         },
         onFailDo = function (result) {
             if (!done) {
-                console.log ('fail');
                 error_array.push(result);
                 if (priv.isTheLast()) {
                     that.fail (
@@ -30,7 +43,6 @@ var newReplicateStorage = function ( spec, my ) {
         },
         onDoneDo = function (result) {
             if (!done) {
-                console.log ('done');
                 done = true;
                 that.done (result);
             }
@@ -38,7 +50,7 @@ var newReplicateStorage = function ( spec, my ) {
         command.setMaxRetry (1);
         for (i = 0; i < priv.nb_storage; i+= 1) {
             var newcommand = command.clone();
-            var newstorage = Jio.storage(priv.storagelist[i], my);
+            var newstorage = that.newStorage(priv.storagelist[i]);
             newcommand.onResponseDo (onResponseDo);
             newcommand.onFailDo (onFailDo);
             newcommand.onDoneDo (onDoneDo);
