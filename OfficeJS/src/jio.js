@@ -3,6 +3,7 @@
  * @namespace JIO
  * @module JIO
  */
+var foo = something
 var JIO =
 (function () { var jioLoaderFunction = function ( localOrCookieStorage, $ ) {
 
