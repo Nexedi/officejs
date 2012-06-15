@@ -263,7 +263,7 @@ $(document).ready(function(){
     //Configure the dialog to add a slide
     addSlideIframe = $("<iframe>");
     addSlideIframe.attr('id','iframe_add_slide');
-    addSlideIframe.attr('src','/lib/powerpoint/TestPage_viewSlideCreator');
+    addSlideIframe.attr('src','/lib/presentation/TestPage_viewSlideCreator');
 
     addSlideIframe.load(function() {
       function initFrame(){ 
@@ -348,7 +348,7 @@ $(document).ready(function(){
     //Configure the dialog to edit a slide
     editSlideIframe = $("<iframe>");
     editSlideIframe.attr('id','iframe_edit_slide');
-    editSlideIframe.attr('src','lib/powerpoint/TestPage_viewSlideEditor');
+    editSlideIframe.attr('src','lib/presentation/TestPage_viewSlideEditor');
 
     editSlideIframe.load(function() {
       function initFrame(){ 
