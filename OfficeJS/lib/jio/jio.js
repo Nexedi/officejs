@@ -1049,7 +1049,7 @@ var jobManager = (function(spec, my) {
     priv.id = spec.id;
     priv.interval_id = null;
     priv.interval = 200;
-    priv.job_a = [];
+    priv.job_array = [];
 
     my.jobManager = that;
     my.jobIdHandler = jobIdHandler;
@@ -1079,8 +1079,8 @@ var jobManager = (function(spec, my) {
      */
     priv.copyJobArrayToLocal = function() {
         var new_a = [], i;
-        for (i = 0; i < priv.job_a.length; i+= 1) {
-            new_a.push(priv.job_a[i].serialized());
+        for (i = 0; i < priv.job_array.length; i+= 1) {
+            new_a.push(priv.job_array[i].serialized());
         }
         LocalOrCookieStorage.setItem(priv.getJobArrayName(),new_a);
     };
@@ -1091,13 +1091,13 @@ var jobManager = (function(spec, my) {
      * @param  {object} job The job object.
      */
     priv.removeJob = function(job) {
-        var i, tmp_job_a = [];
-        for (i = 0; i < priv.job_a.length; i+= 1) {
-            if (priv.job_a[i] !== job) {
-                tmp_job_a.push(priv.job_a[i]);
+        var i, tmp_job_array = [];
+        for (i = 0; i < priv.job_array.length; i+= 1) {
+            if (priv.job_array[i] !== job) {
+                tmp_job_array.push(priv.job_array[i]);
             }
         }
-        priv.job_a = tmp_job_a;
+        priv.job_array = tmp_job_array;
         priv.copyJobArrayToLocal();
     };
 
@@ -1119,8 +1119,8 @@ var jobManager = (function(spec, my) {
         if (priv.interval_id === null) {
             priv.interval_id = setInterval (function() {
                 priv.restoreOldJio();
-                for (i = 0; i < priv.job_a.length; i+= 1) {
-                    that.execute(priv.job_a[i]);
+                for (i = 0; i < priv.job_array.length; i+= 1) {
+                    that.execute(priv.job_array[i]);
                 }
             },priv.interval);
         }
@@ -1134,7 +1134,7 @@ var jobManager = (function(spec, my) {
         if (priv.interval_id !== null) {
             clearInterval(priv.interval_id);
             priv.interval_id = null;
-            if (priv.job_a.length === 0) {
+            if (priv.job_array.length === 0) {
                 LocalOrCookieStorage.deleteItem(priv.getJobArrayName());
             }
         }
@@ -1242,8 +1242,8 @@ var jobManager = (function(spec, my) {
      */
     that.jobIdExists = function(id) {
         var i;
-        for (i = 0; i < priv.job_a.length; i+= 1) {
-            if (priv.job_a[i].getId() === id) {
+        for (i = 0; i < priv.job_array.length; i+= 1) {
+            if (priv.job_array[i].getId() === id) {
                 return true;
             }
         }
@@ -1265,21 +1265,21 @@ var jobManager = (function(spec, my) {
      * @param  {object} job The new job.
      */
     that.addJob = function(job) {
-        var result_a = that.validateJobAccordingToJobList (priv.job_a,job);
+        var result_a = that.validateJobAccordingToJobList (priv.job_array,job);
         priv.appendJob (job,result_a);
     };
 
     /**
      * Generate a result array containing action string to do with the good job.
      * @method validateJobAccordingToJobList
-     * @param  {array} job_a A job array.
+     * @param  {array} job_array A job array.
      * @param  {object} job The new job to compare with.
      * @return {array} A result array.
      */
-    that.validateJobAccordingToJobList = function(job_a,job) {
+    that.validateJobAccordingToJobList = function(job_array,job) {
         var i, result_a = [];
-        for (i = 0; i < job_a.length; i+= 1) {
-            result_a.push(jobRules.validateJobAccordingToJob (job_a[i],job));
+        for (i = 0; i < job_array.length; i+= 1) {
+            result_a.push(jobRules.validateJobAccordingToJob (job_array[i],job));
         }
         return result_a;
     };
@@ -1295,7 +1295,7 @@ var jobManager = (function(spec, my) {
      */
     priv.appendJob = function(job,result_a) {
         var i;
-        if (priv.job_a.length !== result_a.length) {
+        if (priv.job_array.length !== result_a.length) {
             throw new RangeError("Array out of bound");
         }
         for (i = 0; i < result_a.length; i+= 1) {
@@ -1318,8 +1318,16 @@ var jobManager = (function(spec, my) {
             default: break;
             }
         }
-        priv.job_a.push(job);
+        priv.job_array.push(job);
         priv.copyJobArrayToLocal();
+    };
+
+    that.serialized = function () {
+        var a = [], i, job_array = priv.job_array || [];
+        for (i = 0; i < job_array.length; i+= 1) {
+            a.push(job_array[i].serialized());
+        }
+        return a;
     };
 
     return that;
@@ -1588,6 +1596,10 @@ var jobRules = (function(spec, my) {
      */
     that.validateStorageDescription = function(description) {
         return jioNamespace.storage(description, my).isValid();
+    };
+
+    that.getJobArray = function () {
+        return jobManager.serialized();
     };
 
     /**

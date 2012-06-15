@@ -74,6 +74,10 @@
         return jioNamespace.storage(description, my).isValid();
     };
 
+    that.getJobArray = function () {
+        return jobManager.serialized();
+    };
+
     /**
      * Save a document.
      * @method saveDocument
