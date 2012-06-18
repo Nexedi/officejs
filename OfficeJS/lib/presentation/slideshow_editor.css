@@ -91,7 +91,7 @@
 }
 
 #add_slide_button{
-  background-image: url("lib/presentation/images/filenew.png");
+  background-image: url("images/filenew.png");
   background-repeat:no-repeat;
   background-position:center;
   -moz-user-select: -moz-none;
@@ -102,11 +102,11 @@
 }
 
 .remove_slide_button{
-  background-image: url("lib/presentation/images/editdelete.png");
+  background-image: url("images/editdelete.png");
 }
 
 .edit_slide_button{
-  background-image: url("lib/presentation/images/exec.png");
+  background-image: url("images/exec.png");
 }
 
 .slide_dialog iframe{

@@ -45,7 +45,7 @@
              placeholder="File name here" />&nbsp;
    	   <button type="submit"
               class="btn btn-primary"
-              onclick="clickSaveButton('Base_edit');OfficeJS.save($('#input_file_name').attr('value'));">
+              onclick="OfficeJS.save($('#input_file_name').attr('value'));">
      	   <i class="icon-download-alt icon-white"></i>
       		  Save
       	   </button>&nbsp;
@@ -97,7 +97,7 @@
 		</div>
           
           	<p class="clear"></p>
-	      <div class="field hidden"
+	      <div class="field hidden" id=precontent
 		   title="Content of the web page">
 		  <div class="input"><textarea class="hidden" rows="40" cols="120" name="field_my_text_content" >
     

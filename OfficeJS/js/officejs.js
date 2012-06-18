@@ -175,12 +175,13 @@
                 ext:'ppt',
                 frameid:'svg_edit_frame',
                 getContent: function () {
-                    return document.getElementById (this.frameid).
-                        contentWindow.svgCanvas.getSvgString();
+
+			return document.getElementById("precontent").textContent;
+                    
                 },
                 setContent: function (content) {
-                    document.getElementById (this.frameid).
-                        contentWindow.svgCanvas.setSvgString(content);
+			document.getElementById ("list").innerHTML=content;
+
                 },
                 onload: function (param) {
                     var waitForInit = function (fun) {
