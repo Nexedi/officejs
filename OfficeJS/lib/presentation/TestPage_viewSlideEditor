@@ -5,7 +5,7 @@
               
     <input type="hidden" value="" name="update_method">
 <input type="hidden" value="TestPage_viewSlideEditor" name="dialog_id">
-<input type="hidden" value="lib/presentation/TestPage_viewSlideEditor" name="cancel_url">
+<input type="hidden" value="https://www.tiolive.com/nexedi/TestPage_viewSlideEditor" name="cancel_url">
 <input type="hidden" value="TestPage_uploadImage" name="dialog_method">
 <input type="hidden" value="None" name="dialog_category">
 <input type="hidden" value="/nexedi" name="object_path">
