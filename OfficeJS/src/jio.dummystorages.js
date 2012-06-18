@@ -169,6 +169,17 @@
 
         that.setType('dummyall3tries');
 
+        // this serialized method is used to make simple difference between
+        // two dummyall3tries storages:
+        // so  {type:'dummyall3tries',a:'b'} differs from
+        //     {type:'dummyall3tries',c:'d'}.
+        var super_serialized = that.serialized;
+        that.serialized = function () {
+            var o = super_serialized();
+            o.spec = spec;
+            return o;
+        };
+
         priv.doJob = function (command,if_ok_return) {
             // wait a little in order to simulate asynchronous operation
             setTimeout(function () {

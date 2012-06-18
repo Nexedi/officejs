@@ -1,4 +1,4 @@
-/*! JIO Storage - v0.1.0 - 2012-06-15
+/*! JIO Storage - v0.1.0 - 2012-06-18
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 (function(LocalOrCookieStorage, $, Base64, sjcl, Jio) {
@@ -506,7 +506,6 @@ var newReplicateStorage = function ( spec, my ) {
                 that.done (result);
             }
         };
-        command.setMaxRetry (1);
         for (i = 0; i < priv.nb_storage; i+= 1) {
             var newcommand = command.clone();
             var newstorage = that.newStorage(priv.storagelist[i]);
@@ -515,6 +514,7 @@ var newReplicateStorage = function ( spec, my ) {
             newcommand.onDoneDo (onDoneDo);
             that.addJob (newstorage, newcommand);
         }
+        command.setMaxRetry (1);
     };
 
     /**
@@ -523,8 +523,9 @@ var newReplicateStorage = function ( spec, my ) {
      */
     that.saveDocument = function (command) {
         priv.doJob (
-            command.clone(),
+            command,
             'All save "'+ command.getPath() +'" requests have failed.');
+        that.end();
     };
 
     /**
@@ -534,8 +535,9 @@ var newReplicateStorage = function ( spec, my ) {
      */
     that.loadDocument = function (command) {
         priv.doJob (
-            command.clone(),
+            command,
             'All load "'+ command.getPath() +'" requests have failed.');
+        that.end();
     };
 
     /**
@@ -545,8 +547,9 @@ var newReplicateStorage = function ( spec, my ) {
      */
     that.getDocumentList = function (command) {
         priv.doJob (
-            command.clone(),
+            command,
             'All get document list requests have failed.');
+        that.end();
     };
 
     /**
@@ -555,8 +558,9 @@ var newReplicateStorage = function ( spec, my ) {
      */
     that.removeDocument = function (command) {
         priv.doJob (
-            command.clone(),
+            command,
             'All remove "' + command.getPath() + '" requests have failed.');
+        that.end();
     };
 
     return that;

@@ -746,7 +746,7 @@ test ('Get Document List', function () {
     o.mytest = function (message,value) {
         o.f = function (result) {
             deepEqual (objectifyDocumentArray(result.value),
-                       objectifyDocumentArray(value),'getting list');
+                       objectifyDocumentArray(value),message);
         };
         o.t.spy(o,'f');
         o.jio.getDocumentList('.',{onResponse:o.f,max_retry:3});
@@ -762,7 +762,15 @@ test ('Get Document List', function () {
               last_modified:15000,creation_date:10000};
     o.doc2 = {name:'memo',
               last_modified:25000,creation_date:20000};
-    o.mytest('DummyStorageAllOK,3tries: get document list .',[o.doc1,o.doc2]);
+    o.mytest('DummyStorageAllOK,3tries: get document list.',
+             [o.doc1,o.doc2]);
+    o.jio.stop();
+
+    o.jio = JIO.newJio({type:'replicate',storagelist:[
+        {type:'dummyall3tries',username:'3'},
+        {type:'dummyall3tries',username:'4'}]});
+    o.mytest('DummyStorageAll3tries,3tries: get document list.',
+             [o.doc1,o.doc2]);
     o.jio.stop();
 });
 
@@ -776,7 +784,7 @@ test ('Remove document', function () {
         };
         o.t.spy(o,'f');
         o.jio.removeDocument('file',{onResponse:o.f,max_retry:3});
-        o.clock.tick(100000);
+        o.clock.tick(10000);
         if (!o.f.calledOnce) {
             ok(false, 'no response / too much results');
         }
@@ -786,6 +794,31 @@ test ('Remove document', function () {
         {type:'dummyall3tries',username:'2'}]});
     o.mytest('DummyStorageAllOK,3tries: remove document.','done');
     o.jio.stop();
+
+    o.jio = JIO.newJio({type:'replicate',storagelist:[
+        {type:'dummyall3tries',username:'a'},
+        {type:'dummyall3tries',username:'b'}]});
+    o.f = function (result) {
+        if (!result.status.isDone()) {
+            ok (false, 'Remove failed!');
+        }
+    };
+    o.f2 = function (result) {
+        if (!result.status.isDone()) {
+            ok (false, 'Remove failed!');
+        }
+    };
+    o.t.spy(o,'f');
+    o.t.spy(o,'f2');
+    o.jio.removeDocument('file',{onResponse:o.f,max_retry:3});
+    o.jio.removeDocument('memo',{onResponse:o.f2,max_retry:3});
+    o.clock.tick(5000);
+    ok (o.f.calledOnce && o.f2.calledOnce,
+        'DummyStorageAll3tries,3tries: remove document 2 times at once');
+    if (!(o.f.calledOnce && o.f2.calledOnce)) {
+        ok (o.f.calledOnce, 'first callback called once');
+        ok (o.f2.calledOnce, 'second callback called once');
+    }
 });
 
 module ('Jio IndexedStorage');

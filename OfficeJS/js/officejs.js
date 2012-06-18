@@ -212,7 +212,9 @@
             documentList:[],
             gadget_object:{}, // contains current gadgets id with their location
             currentFile:null,
-            currentEditor:null
+            currentEditor:null,
+            currentApp:null,
+            currentActivity:null
         };
         priv.loading_object = {
             spinstate: 0,
@@ -324,6 +326,7 @@
                     priv.data_object.currentEditor = null;
                     break;
                 }
+                priv.data_object.currentApp = realapp;
             }
             // onload call
             if (typeof realapp.onload !== 'undefined') {
@@ -442,7 +445,7 @@
                         console.error (result.error.message);
                     }
                     priv.loading_object.end_getlist();
-                    if (typeof callback !== 'undefined') {
+                    if (typeof callback === 'function') {
                         callback();
                     }
                 }
@@ -551,7 +554,13 @@
                         cpt += 1;
                         if (cpt === l) {
                             if (typeof current_editor.update !== 'undefined') {
-                                that.getList(current_editor.update);
+                                if (priv.data_object.currentEditor !== null &&
+                                    current_editor.path ===
+                                    priv.data_object.currentEditor.path) {
+                                    that.getList(current_editor.update);
+                                } else {
+                                    that.getList();
+                                }
                             }
                         }
                         priv.loading_object.end_remove();
@@ -566,16 +575,20 @@
             for (i = 0; i < activity.length; i+= 1) {
                 switch (activity[i].command.label) {
                 case 'saveDocument':
-                    res.push('Saving "' + activity[i].command.path + '",');
+                    res.push(activity[i].storage.type+
+                             ': Saving "' + activity[i].command.path + '".');
                     break;
                 case 'loadDocument':
-                    res.push('Loading "' + activity[i].command.path + '".');
+                    res.push(activity[i].storage.type+
+                             ': Loading "' + activity[i].command.path + '".');
                     break;
                 case 'removeDocument':
-                    res.push('Removing "' + activity[i].command.path + '".');
+                    res.push(activity[i].storage.type+
+                             ': Removing "' + activity[i].command.path + '".');
                     break;
                 case 'getDocumentList':
-                    res.push('Get document list' +
+                    res.push(activity[i].storage.type+
+                             ': Get document list' +
                              ' at "' + activity[i].command.path + '".');
                     break;
                 default:
@@ -599,7 +612,7 @@
                     break;
                 case 'getDocumentList':
                     res.push('<span style="color:red;">LastFailure: '+
-                             'Fail to retreive list from ' +
+                             'Fail to retreive list ' +
                              ' at "' + lastfailure.path + '"</span>');
                     break;
                 default:

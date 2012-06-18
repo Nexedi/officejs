@@ -1,7 +1,9 @@
-/*! JIO - v0.1.0 - 2012-06-15
+/*! JIO - v0.1.0 - 2012-06-18
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
+var log = function(){};
+// var log = console.log;
 
 var jioException = function(spec, my) {
     var that = {};
@@ -75,6 +77,7 @@ var storage = function(spec, my) {
     // Attributes //
     var priv = {};
     priv.type = spec.type || '';
+    log ('new storage spec: ' + JSON.stringify (spec));
 
     // Methods //
     that.getType = function() {
@@ -90,9 +93,12 @@ var storage = function(spec, my) {
      * @param  {object} command The command
      */
     that.execute = function(command) {
+        log ('storage '+that.getType()+' execute(command): ' +
+             JSON.stringify (command.serialized()));
         that.validate(command);
         that.done = command.done;
         that.fail = command.fail;
+        that.end  = command.end;
         command.executeOn(that);
     };
 
@@ -135,12 +141,18 @@ var storage = function(spec, my) {
         that.saveDocument();
     };
 
+    /**
+     * Validate the storage state. It returns a empty string all is ok.
+     * @method validateState
+     * @return {string} empty: ok, else error message.
+     */
     that.validateState = function() {
         return '';
     };
 
     that.done = function() {};
     that.fail = function() {};
+    that.end  = function() {};  // terminate the current job.
 
     return that;
 };
@@ -149,6 +161,7 @@ var storageHandler = function(spec, my) {
     spec = spec || {};
     my = my || {};
     var that = storage( spec, my );
+    log ('new storageHandler spec: '+JSON.stringify (spec));
 
     that.newCommand = function (method, spec) {
         var o = spec || {};
@@ -162,6 +175,10 @@ var storageHandler = function(spec, my) {
     };
 
     that.addJob = function (storage,command) {
+        log ('storageHandler ' + that.getType() +
+             ' addJob (storage, command): ' +
+             JSON.stringify (storage.serialized()) + ', ' +
+             JSON.stringify (command.serialized()));
         my.jobManager.addJob ( job({storage:storage, command:command}, my) );
     };
 
@@ -273,19 +290,25 @@ var command = function(spec, my) {
     };
 
     that.done = function(return_value) {
+        log ('command done: ' + JSON.stringify (return_value));
         priv.respond({status:doneStatus(),value:return_value});
         priv.done(return_value);
-        priv.end();
+        priv.end(doneStatus());
     };
 
     that.fail = function(return_error) {
+        log ('command fail: ' + JSON.stringify (return_error));
         if (priv.option.max_retry === 0 || priv.tried < priv.option.max_retry) {
             priv.retry();
         } else {
             priv.respond({status:failStatus(),error:return_error});
             priv.fail(return_error);
-            priv.end();
+            priv.end(failStatus());
         }
+    };
+
+    that.end = function () {
+        priv.end(doneStatus());
     };
 
     that.onResponseDo = function (fun) {
@@ -358,10 +381,12 @@ var command = function(spec, my) {
      * @return {object} The clone of the command options.
      */
     that.cloneOption = function () {
+        // log ('command cloneOption(): ' + JSON.stringify (priv.option));
         var k, o = {};
         for (k in priv.option) {
             o[k] = priv.option[k];
         }
+        // log ('cloneOption result: ' + JSON.stringify (o));
         return o;
     };
 
@@ -722,16 +747,16 @@ var job = function(spec, my) {
     priv.storage   = spec.storage;
     priv.status    = initialStatus();
     priv.date      = new Date();
+    log ('new job spec: ' + JSON.stringify (spec) + ', priv: ' +
+         JSON.stringify (priv));
 
     // Initialize //
-    (function() {
-        if (!priv.storage){
-            throw invalidJobException({job:that,message:'No storage set'});
-        }
-        if (!priv.command){
-            throw invalidJobException({job:that,message:'No command set'});
-        }
-    }());
+    if (!priv.storage){
+        throw invalidJobException({job:that,message:'No storage set'});
+    }
+    if (!priv.command){
+        throw invalidJobException({job:that,message:'No command set'});
+    }
     // Methods //
     /**
      * Returns the job command.
@@ -790,6 +815,7 @@ var job = function(spec, my) {
      * @param  {object} job The job to wait for.
      */
     that.waitForJob = function(job) {
+        log ('job waitForJob(job): ' + JSON.stringify (job.serialized()));
         if (priv.status.getLabel() !== 'wait') {
             priv.status = waitStatus({},my);
         }
@@ -813,6 +839,7 @@ var job = function(spec, my) {
      * @param  {number} ms Time to wait in millisecond.
      */
     that.waitForTime = function(ms) {
+        log ('job waitForTime(ms): ' + ms);
         if (priv.status.getLabel() !== 'wait') {
             priv.status = waitStatus({},my);
         }
@@ -829,13 +856,35 @@ var job = function(spec, my) {
         }
     };
 
+    that.eliminated = function () {
+        priv.command.setMaxRetry(-1);
+        log ('job eliminated(): '+JSON.stringify (that.serialized()));
+        priv.command.fail({status:0,statusText:'Stoped',
+                           message:'This job has been stoped by another one.'});
+    };
+
+    that.notAccepted = function () {
+        log ('job notAccepted(): '+JSON.stringify (that.serialized()));
+        priv.command.setMaxRetry(-1);
+        priv.command.onEndDo (function () {
+            priv.status = failStatus();
+            my.jobManager.terminateJob (that);
+        });
+        priv.command.fail ({status:0,statusText:'Not Accepted',
+                            message:'This job is already running.'});
+    };
+
     /**
      * Updates the date of the job with the another one.
      * @method update
      * @param  {object} job The other job.
      */
     that.update = function(job) {
+        log ('job update(job): ' + JSON.stringify (job.serialized()));
         priv.command.setMaxRetry(-1);
+        priv.command.onEndDo(function (status) {
+            console.log ('job update on end' + status.getLabel());
+        });
         priv.command.fail({status:0,statusText:'Replaced',
                            message:'Job has been replaced by another one.'});
         priv.date = job.getDate();
@@ -844,6 +893,7 @@ var job = function(spec, my) {
     };
 
     that.execute = function() {
+        log ('job execute(): ' + JSON.stringify (that.serialized()));
         if (priv.max_retry !== 0 && priv.tried >= priv.max_retry) {
             throw tooMuchTriesJobException(
                 {job:that,message:'The job was invoked too much time.'});
@@ -853,6 +903,7 @@ var job = function(spec, my) {
         }
         priv.status = onGoingStatus();
         priv.command.onRetryDo (function() {
+            log ('command.retry job:' + JSON.stringify (that.serialized()));
             var ms = priv.command.getTried();
             ms = ms*ms*200;
             if (ms>10000){
@@ -860,7 +911,9 @@ var job = function(spec, my) {
             }
             that.waitForTime(ms);
         });
-        priv.command.onEndDo (function() {
+        priv.command.onEndDo (function(status) {
+            priv.status = status;
+            log ('command.end job:' + JSON.stringify (that.serialized()));
             my.jobManager.terminateJob (that);
         });
         priv.command.execute (priv.storage);
@@ -1181,11 +1234,11 @@ var jobManager = (function(spec, my) {
         var i, jio_job_array;
         jio_job_array = LocalOrCookieStorage.getItem('jio/job_array/'+id)||[];
         for (i = 0; i < jio_job_array.length; i+= 1) {
-            var command_o = command(jio_job_array[i].command, my);
-            if (command_o.canBeRestored()) {
+            var command_object = command(jio_job_array[i].command, my);
+            if (command_object.canBeRestored()) {
                 that.addJob ( job(
                     {storage:jioNamespace.storage(jio_job_array[i].storage,my),
-                     command:command_o}, my));
+                     command:command_object}, my));
             }
         }
     };
@@ -1300,12 +1353,13 @@ var jobManager = (function(spec, my) {
         }
         for (i = 0; i < result_a.length; i+= 1) {
             if (result_a[i].action === 'dont accept') {
-                return;
+                return job.notAccepted();
             }
         }
         for (i = 0; i < result_a.length; i+= 1) {
             switch (result_a[i].action) {
             case 'eliminate':
+                result_a[i].job.eliminated();
                 priv.removeJob(result_a[i].job);
                 break;
             case 'update':
@@ -1347,6 +1401,14 @@ var jobRules = (function(spec, my) {
     that.none = function() { return 'none'; };
     that.default_action = that.none;
     that.default_compare = function(job1,job2) {
+        if (job1.getCommand().getPath() === job2.getCommand().getPath() &&
+            JSON.stringify(job1.getStorage().serialized()) ===
+            JSON.stringify(job2.getStorage().serialized())) {
+            console.log ('same ! ' + job1.getCommand().getPath() + ', ' +
+                         job2.getCommand().getPath() + ', ' +
+                         JSON.stringify (job1.getStorage().serialized())+', '+
+                         JSON.stringify (job2.getStorage().serialized()));
+        }
         return (job1.getCommand().getPath() === job2.getCommand().getPath() &&
                 JSON.stringify(job1.getStorage().serialized()) ===
                 JSON.stringify(job2.getStorage().serialized()));

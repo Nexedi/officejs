@@ -140,11 +140,11 @@ var jobManager = (function(spec, my) {
         var i, jio_job_array;
         jio_job_array = LocalOrCookieStorage.getItem('jio/job_array/'+id)||[];
         for (i = 0; i < jio_job_array.length; i+= 1) {
-            var command_o = command(jio_job_array[i].command, my);
-            if (command_o.canBeRestored()) {
+            var command_object = command(jio_job_array[i].command, my);
+            if (command_object.canBeRestored()) {
                 that.addJob ( job(
                     {storage:jioNamespace.storage(jio_job_array[i].storage,my),
-                     command:command_o}, my));
+                     command:command_object}, my));
             }
         }
     };
@@ -259,12 +259,13 @@ var jobManager = (function(spec, my) {
         }
         for (i = 0; i < result_a.length; i+= 1) {
             if (result_a[i].action === 'dont accept') {
-                return;
+                return job.notAccepted();
             }
         }
         for (i = 0; i < result_a.length; i+= 1) {
             switch (result_a[i].action) {
             case 'eliminate':
+                result_a[i].job.eliminated();
                 priv.removeJob(result_a[i].job);
                 break;
             case 'update':

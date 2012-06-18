@@ -12,6 +12,14 @@ var jobRules = (function(spec, my) {
     that.none = function() { return 'none'; };
     that.default_action = that.none;
     that.default_compare = function(job1,job2) {
+        if (job1.getCommand().getPath() === job2.getCommand().getPath() &&
+            JSON.stringify(job1.getStorage().serialized()) ===
+            JSON.stringify(job2.getStorage().serialized())) {
+            console.log ('same ! ' + job1.getCommand().getPath() + ', ' +
+                         job2.getCommand().getPath() + ', ' +
+                         JSON.stringify (job1.getStorage().serialized())+', '+
+                         JSON.stringify (job2.getStorage().serialized()));
+        }
         return (job1.getCommand().getPath() === job2.getCommand().getPath() &&
                 JSON.stringify(job1.getStorage().serialized()) ===
                 JSON.stringify(job2.getStorage().serialized()));

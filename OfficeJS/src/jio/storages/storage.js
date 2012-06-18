@@ -5,6 +5,7 @@ var storage = function(spec, my) {
     // Attributes //
     var priv = {};
     priv.type = spec.type || '';
+    log ('new storage spec: ' + JSON.stringify (spec));
 
     // Methods //
     that.getType = function() {
@@ -20,9 +21,12 @@ var storage = function(spec, my) {
      * @param  {object} command The command
      */
     that.execute = function(command) {
+        log ('storage '+that.getType()+' execute(command): ' +
+             JSON.stringify (command.serialized()));
         that.validate(command);
         that.done = command.done;
         that.fail = command.fail;
+        that.end  = command.end;
         command.executeOn(that);
     };
 
@@ -65,12 +69,18 @@ var storage = function(spec, my) {
         that.saveDocument();
     };
 
+    /**
+     * Validate the storage state. It returns a empty string all is ok.
+     * @method validateState
+     * @return {string} empty: ok, else error message.
+     */
     that.validateState = function() {
         return '';
     };
 
     that.done = function() {};
     that.fail = function() {};
+    that.end  = function() {};  // terminate the current job.
 
     return that;
 };

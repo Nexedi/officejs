@@ -103,19 +103,25 @@ var command = function(spec, my) {
     };
 
     that.done = function(return_value) {
+        log ('command done: ' + JSON.stringify (return_value));
         priv.respond({status:doneStatus(),value:return_value});
         priv.done(return_value);
-        priv.end();
+        priv.end(doneStatus());
     };
 
     that.fail = function(return_error) {
+        log ('command fail: ' + JSON.stringify (return_error));
         if (priv.option.max_retry === 0 || priv.tried < priv.option.max_retry) {
             priv.retry();
         } else {
             priv.respond({status:failStatus(),error:return_error});
             priv.fail(return_error);
-            priv.end();
+            priv.end(failStatus());
         }
+    };
+
+    that.end = function () {
+        priv.end(doneStatus());
     };
 
     that.onResponseDo = function (fun) {
@@ -188,10 +194,12 @@ var command = function(spec, my) {
      * @return {object} The clone of the command options.
      */
     that.cloneOption = function () {
+        // log ('command cloneOption(): ' + JSON.stringify (priv.option));
         var k, o = {};
         for (k in priv.option) {
             o[k] = priv.option[k];
         }
+        // log ('cloneOption result: ' + JSON.stringify (o));
         return o;
     };
 
