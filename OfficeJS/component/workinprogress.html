@@ -1,17 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-</head>
-<body>
-  <h2>Activities</h2>
-  <div id="workinprogress"></div>
-  <script type="text/javascript">
-    <!--
+<h2>Activities</h2>
+<div id="activities"></div>
+<script type="text/javascript">
+  <!--
 (function() {
     var id;
-    if (!window.workinprogress) {
+    if (typeof work_in_progress !== 'object') {
         id = null;
-        window.workinprogress = {
+        work_in_progress = {
             start:function(){
                 if (id === null) {
                     var update = function () {
@@ -20,9 +15,9 @@
                             str += act[i] + '<br />';
                         }
                         if (str === '') {
-                            str = 'There is no on going tasks.';
+                            str = 'There is no on going tasks.<br />';
                         }
-                        document.querySelector('#workinprogress').innerHTML=str;
+                        document.getElementById('activities').innerHTML = str;
                     };
                     update();
                     id = setInterval (update, 200);
@@ -38,6 +33,4 @@
     }
 }());
 //-->
-  </script>
-</body>
-</html>
+</script>

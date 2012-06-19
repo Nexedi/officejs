@@ -183,15 +183,15 @@
                 onload: function () {
                     var i = null, wait = function() {
                         // wait for workinprogress initialization end.
-                        if (window.workinprogress) {
-                            window.workinprogress.start();
+                        if (window.work_in_progress) {
+                            window.work_in_progress.start();
                             clearInterval(i);
                         }
                     }
                     i = setInterval (wait,100);
                 },
                 onunload: function () {
-                    window.workinprogress.stop();
+                    window.work_in_progress.stop();
                     return true;
                 }
             }
