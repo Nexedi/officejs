@@ -22,7 +22,8 @@
             edit_preferences:'simplepreferenceeditor',
             text_editor:'elrte',
             img_editor:'svg-edit',
-            spreadsheet:'jquery-sheet'
+            spreadsheet:'jquery-sheet',
+	    power_point:'power-point'
         };
         priv.app_object = {
             topnavbar: {
@@ -168,6 +169,37 @@
                     });
                 }
             },
+	    'power-point': {
+                type:'editor',
+                path:'component/slideshow.html',
+                gadget_id:'page-content',
+                ext:'ppt',
+                frameid:'svg_edit_frame',
+                getContent: function () {
+			return document.getElementById("list").innerHTML;
+                    
+                },
+                setContent: function (content) {
+			document.getElementById ("list").innerHTML=content;
+
+                },
+                onload: function (param) {
+                    var waitForInit = function (fun) {
+                        // FIXME : wait for init end
+                        setTimeout(fun,1000);
+                    }
+                    waitForInit(function () {
+                        if (typeof param.file_name !== 'undefined') {
+                            $('#input_file_name').attr('value',
+                                                  baseName(param.file_name));
+                            that.load(baseName(param.file_name));
+                        } else {
+                            $('#input_file_name').attr(
+                                'value','untitled');
+                        }
+                    });
+                }
+            },
             slickgrid: {
                 type:'editor',
                 path:'component/slickgrid_document_lister.html',
@@ -205,6 +237,8 @@
                   icon:'<i class="icon-font"></i>'},
             svg:{pref:'img_editor',app:'svg-edit',
                  icon:'<i class="icon-pencil"></i>'},
+            ppt:{pref:'power_point',app:'power-point',
+                 icon:'<i class="icon-facetime-video"></i>'},
             jqs:{app:'jquery-sheet',
                  icon:'<i class="icon-signal"></i>'}
         };

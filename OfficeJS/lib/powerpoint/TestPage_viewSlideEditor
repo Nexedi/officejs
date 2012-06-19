@@ -1,0 +1,287 @@
+<body>
+          <form enctype="multipart/form-data" method="post" action="https://www.tiolive.com/nexedi" onsubmit="changed=false; return true" class="main_form" id="main_form">
+            <fieldset class="hidden_fieldset" id="hidden_fieldset">
+              <input type="submit" name="Base_callDialogMethod:method" value="dummy" class="hidden_button" id="hidden_button">
+              
+    <input type="hidden" value="" name="update_method">
+<input type="hidden" value="TestPage_viewSlideEditor" name="dialog_id">
+<input type="hidden" value="lib/powerpoint/TestPage_viewSlideEditor" name="cancel_url">
+<input type="hidden" value="TestPage_uploadImage" name="dialog_method">
+<input type="hidden" value="None" name="dialog_category">
+<input type="hidden" value="/nexedi" name="object_path">
+<input type="hidden" value="view" name="form_id">
+  
+            </fieldset>
+            
+              <div class="status" id="status">
+                
+                <div class="transition_message" id="transition_message"></div>
+                
+              </div>
+              <div class="master" id="master">
+                
+          
+          <div class="list_dialog">
+            
+            
+        
+          
+
+          <div class="dialog_box">
+            
+
+          
+            <div class="content">
+              
+                
+                  <fieldset class="center">
+                    <legend class="group_title"></legend>
+                    
+                      
+    
+      <div title="The name of this chapter" class="field required">
+        
+          <label>
+            Chapter Name
+            
+            
+          </label>
+          <div class="input"><input type="text" size="40" value="" name="field_your_chapter_title"></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                    
+                      
+    
+      <div title="Choose the type of slide you want." class="field">
+        
+          <label>
+            Type of slide
+            
+            
+          </label>
+          <div class="input"><select name="field_your_slide_type" size="1">
+<option value="" selected="selected">
+</option>
+<option value="Chapter">
+Chapter</option>
+<option value="Screenshot">
+Screenshot</option>
+<option value="Illustration">
+Illustration</option>
+<option value="Code">
+Code</option>
+<option value="Master">
+Master</option></select>
+<input type="hidden" value="0" name="default_field_your_slide_type:int"></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                    
+                      
+    
+      <div title="Caption of the image that will be used when generate Books." class="field">
+        
+          <label>
+            Image Caption
+            
+            
+          </label>
+          <div class="input"><input type="text" size="30" value="" name="field_your_image_caption"></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                    
+                      
+    
+      <div title="Don't modify it manually." class="field hidden">
+        
+          <label>
+            Embedded Image ID (Read Only)
+            
+            
+          </label>
+          <div class="input"><input type="text" readonly="readonly" size="30" value="" name="field_your_image_id" class="hidden"></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                    
+                      
+    
+      <div title="Check it if you want to upload an image to this chapter." class="field">
+        
+          <label>
+            Upload an Image
+            
+            
+          </label>
+          <div class="input"><input type="file" size="30" value="" name="field_your_file"></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                    
+                      
+    
+      <div title="The URL to the image, you can use relative urls or image reference." class="field">
+        
+          <label>
+            Image URL
+            
+            
+          </label>
+          <div class="input"><input type="text" size="30" value="" name="field_your_image_url"></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                    
+                      
+    
+      <div title="Text to appear on the slide (appear in the documentation as well)" class="field">
+        
+          <label>
+            Slide text
+            
+            
+          </label>
+          <div class="input"><textarea name="field_your_slide_content" cols="50" rows="4"></textarea></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                    
+                      
+    
+      <div title="Text (&lt;details&gt; tags will be automatically added at the beginning and at the end of this text)" class="field">
+        
+          <label>
+            Text
+            
+            
+          </label>
+          <div class="input"><textarea name="field_your_text_content" cols="50" rows="4"></textarea></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                    
+                      
+    
+      <div title="Check it if you want to remove the current test from this chapter." class="field">
+        
+          <label>
+            Remove test?
+            
+            
+          </label>
+          <div class="input"><input type="hidden" value="0" name="default_field_your_not_tested:int"><input type="checkbox" name="field_your_not_tested"></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                    
+                      
+    
+      <div title="Check it if you are currently editing a slide." class="field hidden">
+        
+          <label>
+            Are you editing a slide?
+            
+            
+          </label>
+          <div class="input"><input type="hidden" value="0" name="default_field_your_edit_mode:int"><input type="checkbox" checked="checked" name="field_your_edit_mode" class="hidden"></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                    
+                      
+    
+      <div title="Do you want to upload a new image on ERP5?" class="field">
+        
+          <label>
+            Upload New Image?
+            
+            
+          </label>
+          <div class="input"><input type="hidden" value="0" name="default_field_your_upload_image:int"><input type="checkbox" name="field_your_upload_image"></div>
+          
+          <p class="clear"></p>
+        
+      </div>
+    
+  
+                    
+                  </fieldset>
+                
+              
+              <p class="clear"></p>
+            </div>
+           
+
+          </div>
+        
+      
+            
+        
+          
+        
+       
+          </div>
+          <div class="bottom_actions">
+            
+            
+            <button class="bt-med dialog_submit_button" type="submit" name="Base_callDialogMethod:method" id="dialog_submit_button" accesskey="V">
+              <span>Edit Slide</span>
+            </button>
+          </div>
+        
+        
+              </div>
+            
+          </form>
+        
+      
+    
+  
+    
+  
+    
+  
+  
+</body>
