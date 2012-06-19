@@ -3,13 +3,22 @@ var idx = 1;
 var slides;
 
 /* main() */
-
+setContent=function(){
+	document.getElementsByTagName('body')[0].Editable=true;
+	document.getElementsByTagName('body')[0].innerHTML=getContent();
+console.log(document.getElementsByTagName("body").innerHTML);
+}
+ChangeStyle=function(){
+slides = document.querySelectorAll("body > section");
+  	onhashchange();
+  	setSlide();
+  	document.body.className = "loaded";
+  	onresize();
+}
 window.onload = function() {
-  slides = document.querySelectorAll("body > section");
-  onhashchange();
-  setSlide();
-  document.body.className = "loaded";
-  onresize();
+setContent();
+ChangeStyle();
+  	
 }
 
 /* Handle keys */
