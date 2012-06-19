@@ -95,9 +95,6 @@
                             $('#input_file_name').attr('value',
                                                   baseName(param.file_name));
                             that.load(baseName(param.file_name));
-                        } else {
-                            $('#input_file_name').attr(
-                                'value','untitled');
                         }
                     },1000);
                 }
@@ -130,9 +127,6 @@
                             $('#input_file_name').attr('value',
                                                   baseName(param.file_name));
                             that.load(baseName(param.file_name));
-                        } else {
-                            $('#input_file_name').attr(
-                                'value','untitled');
                         }
                     },1000);
                 }
@@ -161,9 +155,6 @@
                             $('#input_file_name').attr('value',
                                                   baseName(param.file_name));
                             that.load(baseName(param.file_name));
-                        } else {
-                            $('#input_file_name').attr(
-                                'value','untitled');
                         }
                     });
                 }
