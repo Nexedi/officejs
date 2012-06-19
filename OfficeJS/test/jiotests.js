@@ -137,20 +137,26 @@ test ('All tests', function () {
     // for sync operation.
 
     var o = {}; o.t = this; o.clock = o.t.sandbox.useFakeTimers();
-    o.spy = function(res,value,message) {
-        o.f = function(result) {
+    o.spy = function(res,value,message,fun) {
+        fun = fun || 'f';
+        o[fun] = function(result) {
             if (res === 'status') {
                 deepEqual (result.status.getLabel(),value,message);
             } else {
                 deepEqual (result.value,value,message);
             }
         };
-        o.t.spy(o,'f');
+        o.t.spy(o,fun);
     };
-    o.tick = function (tick) {
+    o.tick = function (tick,fun) {
+        fun = fun || 'f';
         o.clock.tick(tick || 1000);
-        if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+        if (!o[fun].calledOnce) {
+            if (o[fun].called) {
+                ok(false, 'too much results (o.' + fun +')');
+            } else {
+                ok(false, 'no response (o.' + fun +')');
+            }
         }
     };
     // All Ok Dummy Storage
@@ -176,6 +182,37 @@ test ('All tests', function () {
     o.jio.getDocumentList('.',{onResponse:o.f,metadata_only:false,max_retry:1});
     o.tick();
     o.jio.stop();
+
+
+    o.jio = JIO.newJio({'type':'dummyallok'});
+    // save
+    o.spy('status','done','dummyallok saving','f');
+    o.spy('status','done','dummyallok saving','f2');
+    o.spy('status','done','dummyallok saving','f3');
+    o.jio.saveDocument('file','content',{onResponse:o.f,max_retry:1});
+    o.jio.saveDocument('file2','content2',{onResponse:o.f2,max_retry:1});
+    o.jio.saveDocument('file3','content3',{onResponse:o.f3,max_retry:1});
+    o.tick(undefined, 'f');
+    o.tick(0, 'f2');
+    o.tick(0, 'f3');
+    // load
+    o.spy('value',{name:'file',content:'content',last_modified:15000,
+                   creation_date:10000},'dummyallok loading');
+    o.jio.loadDocument('file',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // remove
+    o.spy('status','done','dummyallok removing');
+    o.jio.removeDocument('file',{onResponse:o.f,max_retry:1});
+    o.tick();
+    // get list
+    o.spy ('value',[{name:'file',content:'filecontent',last_modified:15000,
+                     creation_date:10000},
+                    {name:'memo',content:'memocontent',last_modified:25000,
+                     creation_date:20000}],'dummyallok getting list');
+    o.jio.getDocumentList('.',{onResponse:o.f,metadata_only:false,max_retry:1});
+    o.tick();
+    o.jio.stop();
+
 
     // All Fail Dummy Storage
     o.jio = JIO.newJio({'type':'dummyallfail'});
@@ -358,7 +395,18 @@ test ('Document save', function () {
     o.tick = function (value, tick) {
         o.clock.tick(tick || 1000);
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
+        }
+        if (!o.f.calledOnce) {
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
         o.tmp =
             LocalOrCookieStorage.getItem ('jio/local/MrSaveName/jiotests/file');
@@ -406,7 +454,11 @@ test ('Document load', function () {
     o.tick = function (value, tick) {
         o.clock.tick(tick || 1000);
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
     };
 
@@ -444,7 +496,11 @@ test ('Get document list', function () {
         o.jio.getDocumentList('.',{onResponse: o.f,max_retry:1});
         o.clock.tick(1000);
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
     };
     o.jio = JIO.newJio({type:'local',username:'MrListName',
@@ -519,7 +575,11 @@ test ('Document load', function () {
         o.clock.tick(1000);
         server.respond();
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
     };
     o.jio = JIO.newJio({type:'dav',username:'davload',
@@ -579,7 +639,11 @@ test ('Document save', function () {
         o.clock.tick(1000);
         server.respond();
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
     };
     o.jio = JIO.newJio({type:'dav',username:'davsave',
@@ -630,7 +694,11 @@ test ('Get Document List', function () {
         o.clock.tick(1000);
         server.respond();
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
     };
     o.jio = JIO.newJio({type:'dav',username:'davlist',
@@ -662,7 +730,11 @@ test ('Remove document', function () {
         o.clock.tick(1000);
         server.respond();
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
     };
     o.jio = JIO.newJio({type:'dav',username:'davremove',
@@ -688,7 +760,11 @@ test ('Document load', function () {
         o.jio.loadDocument('file',{onResponse:o.f,max_retry:3});
         o.clock.tick(100000);
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
     };
     o.jio = JIO.newJio({type:'replicate',storagelist:[
@@ -723,7 +799,11 @@ test ('Document save', function () {
         o.jio.saveDocument('file','content',{onResponse:o.f,max_retry:3});
         o.clock.tick(500);
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
     };
     o.jio = JIO.newJio({type:'replicate',storagelist:[
@@ -752,7 +832,11 @@ test ('Get Document List', function () {
         o.jio.getDocumentList('.',{onResponse:o.f,max_retry:3});
         o.clock.tick(100000);
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
     };
     o.jio = JIO.newJio({type:'replicate',storagelist:[
@@ -786,7 +870,11 @@ test ('Remove document', function () {
         o.jio.removeDocument('file',{onResponse:o.f,max_retry:3});
         o.clock.tick(10000);
         if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
         }
     };
     o.jio = JIO.newJio({type:'replicate',storagelist:[
