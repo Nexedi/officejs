@@ -175,7 +175,7 @@
                 ext:'ppt',
                 frameid:'svg_edit_frame',
                 getContent: function () {
-			return document.getElementById("precontent").textContent;
+			return document.getElementById("list").innerHTML;
                     
                 },
                 setContent: function (content) {

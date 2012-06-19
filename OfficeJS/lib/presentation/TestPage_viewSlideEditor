@@ -1,3 +1,41 @@
+<head>
+          <meta content="ERP5 - Copyright (C) 2001 - 2008. All rights reserved." name="generator">
+          <meta content="Add a new Slide" name="description">
+          <meta content="" name="keywords">
+          <meta content="index, follow" name="robots">
+          <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+          <meta content="text/javascript" http-equiv="Content-Script-Type">
+          <meta content="text/css" http-equiv="Content-Style-Type">
+          <title>Add a new Slide | Nexedi ERP5</title>
+          
+            <link href="erp5_knowledge_box.css" rel="stylesheet" type="text/css">
+          
+          
+            <link href="erp5.css" rel="stylesheet" type="text/css">
+          
+          
+            <link href="erp5_listbox.css" rel="stylesheet" type="text/css">
+          
+            <script src="jquery.js" type="text/javascript"></script>
+          
+          
+            <script src="jquery-ui.js" type="text/javascript"></script>
+          
+          
+            <script src="erp5.js" type="text/javascript"></script>
+          
+          
+            <script src="erp5_knowledge_box.js" type="text/javascript"></script>
+          
+          
+            <script src="erp5_xhtml_appearance.js" type="text/javascript"></script>
+          
+          <link href="https://www.tiolive.com/nexedi/favicon.ico" type="image/x-icon" rel="icon">
+          <link href="https://www.tiolive.com/nexedi/favicon.ico" type="image/x-icon" rel="shortcut icon">
+          
+            <!-- this is a placeholder for different extensions to head which could be required by web themes -->
+          
+        </head>
 <body>
           <form enctype="multipart/form-data" method="post" action="https://www.tiolive.com/nexedi" onsubmit="changed=false; return true" class="main_form" id="main_form">
             <fieldset class="hidden_fieldset" id="hidden_fieldset">
