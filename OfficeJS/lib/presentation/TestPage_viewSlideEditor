@@ -30,9 +30,6 @@
           
             <script src="erp5_xhtml_appearance.js" type="text/javascript"></script>
           
-          <link href="https://www.tiolive.com/nexedi/favicon.ico" type="image/x-icon" rel="icon">
-          <link href="https://www.tiolive.com/nexedi/favicon.ico" type="image/x-icon" rel="shortcut icon">
-          
             <!-- this is a placeholder for different extensions to head which could be required by web themes -->
           
         </head>

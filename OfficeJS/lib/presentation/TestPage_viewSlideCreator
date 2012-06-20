@@ -29,10 +29,7 @@
           
           
             <script src="erp5_xhtml_appearance.js" type="text/javascript"></script>
-          
-          <link href="https://www.tiolive.com/nexedi/favicon.ico" type="image/x-icon" rel="icon">
-          <link href="https://www.tiolive.com/nexedi/favicon.ico" type="image/x-icon" rel="shortcut icon">
-          
+
             <!-- this is a placeholder for different extensions to head which could be required by web themes -->
           
         </head>
@@ -43,7 +40,7 @@
               
     <input type="hidden" value="" name="update_method">
 <input type="hidden" value="TestPage_viewSlideCreator" name="dialog_id">
-<input type="hidden" value="https://www.tiolive.com/nexedi/TestPage_viewSlideCreator" name="cancel_url">
+<input type="hidden" value="TestPage_viewSlideCreator" name="cancel_url">
 <input type="hidden" value="TestPage_uploadImage" name="dialog_method">
 <input type="hidden" value="None" name="dialog_category">
 <input type="hidden" value="/nexedi" name="object_path">
