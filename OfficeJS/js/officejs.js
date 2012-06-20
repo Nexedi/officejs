@@ -180,7 +180,15 @@
                 },
                 setContent: function (content) {
 			document.getElementById ("list").innerHTML=content;
+			//re initial the edit frame for the new page
+			 $dialogEdit.append(editSlideIframe);
+			    $('.edit_slide_button').click(function() {
+			      editClick(this);
+			    });
 
+			    $('.remove_slide_button').click(function() {
+			      removeClick(this);
+			    });
                 },
                 onload: function (param) {
                     var waitForInit = function (fun) {
