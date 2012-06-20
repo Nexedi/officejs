@@ -189,6 +189,15 @@
 			    $('.remove_slide_button').click(function() {
 			      removeClick(this);
 			    });
+			    $('section').hover(function() {
+			      slideHover(this);
+			    }, function(){
+				slideOut(this);
+			    });
+
+			    $('section').mousedown(function() {
+			      slideOut(this);
+			    });  
                 },
                 onload: function (param) {
                     var waitForInit = function (fun) {
