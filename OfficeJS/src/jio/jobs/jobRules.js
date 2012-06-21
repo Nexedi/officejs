@@ -15,7 +15,7 @@ var jobRules = (function(spec, my) {
         if (job1.getCommand().getPath() === job2.getCommand().getPath() &&
             JSON.stringify(job1.getStorage().serialized()) ===
             JSON.stringify(job2.getStorage().serialized())) {
-            console.log ('same ! ' + job1.getCommand().getPath() + ', ' +
+            log ('same ! ' + job1.getCommand().getPath() + ', ' +
                          job2.getCommand().getPath() + ', ' +
                          JSON.stringify (job1.getStorage().serialized())+', '+
                          JSON.stringify (job2.getStorage().serialized()));

@@ -1,4 +1,4 @@
-/*! JIO - v0.1.0 - 2012-06-18
+/*! JIO - v0.1.0 - 2012-06-20
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
@@ -883,7 +883,7 @@ var job = function(spec, my) {
         log ('job update(job): ' + JSON.stringify (job.serialized()));
         priv.command.setMaxRetry(-1);
         priv.command.onEndDo(function (status) {
-            console.log ('job update on end' + status.getLabel());
+            log ('job update on end' + status.getLabel());
         });
         priv.command.fail({status:0,statusText:'Replaced',
                            message:'Job has been replaced by another one.'});
@@ -1404,7 +1404,7 @@ var jobRules = (function(spec, my) {
         if (job1.getCommand().getPath() === job2.getCommand().getPath() &&
             JSON.stringify(job1.getStorage().serialized()) ===
             JSON.stringify(job2.getStorage().serialized())) {
-            console.log ('same ! ' + job1.getCommand().getPath() + ', ' +
+            log ('same ! ' + job1.getCommand().getPath() + ', ' +
                          job2.getCommand().getPath() + ', ' +
                          JSON.stringify (job1.getStorage().serialized())+', '+
                          JSON.stringify (job2.getStorage().serialized()));

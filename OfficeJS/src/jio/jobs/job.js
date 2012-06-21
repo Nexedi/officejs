@@ -145,7 +145,7 @@ var job = function(spec, my) {
         log ('job update(job): ' + JSON.stringify (job.serialized()));
         priv.command.setMaxRetry(-1);
         priv.command.onEndDo(function (status) {
-            console.log ('job update on end' + status.getLabel());
+            log ('job update on end' + status.getLabel());
         });
         priv.command.fail({status:0,statusText:'Replaced',
                            message:'Job has been replaced by another one.'});
