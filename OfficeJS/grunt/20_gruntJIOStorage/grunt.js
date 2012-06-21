@@ -20,6 +20,7 @@ module.exports = function(grunt) {
                       '<file_strip_banner:../../src/<%= pkg.name %>/replicatestorage.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/indexstorage.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/cryptstorage.js>',
+                      '<file_strip_banner:../../src/<%= pkg.name %>/conflictmanagerstorage.js>',
                       '<file_strip_banner:../../src/<%= pkg.name %>/outro.js>'],
                 dest: '../../lib/jio/<%= pkg.name %>.js'
             }
@@ -59,6 +60,7 @@ module.exports = function(grunt) {
                 sjcl: true,
                 LocalOrCookieStorage: true,
                 Base64: true,
+                MD5: true,
                 jio: true,
                 console: true,
                 unescape: true,

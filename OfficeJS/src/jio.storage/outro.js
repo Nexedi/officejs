@@ -1,1 +1,1 @@
-}( LocalOrCookieStorage, jQuery, Base64, sjcl, jio ));
+}( LocalOrCookieStorage, jQuery, Base64, sjcl, MD5, jio ));

@@ -1,6 +1,7 @@
 var newIndexStorage = function ( spec, my ) {
     var that = Jio.storage( spec, my, 'handler' ), priv = {};
 
+    var validatestate_secondstorage = spec.storage || false;
     priv.secondstorage_spec = spec.storage || {type:'base'};
     priv.secondstorage_string = JSON.stringify (priv.secondstorage_spec);
 
@@ -16,7 +17,7 @@ var newIndexStorage = function ( spec, my ) {
     };
 
     that.validateState = function () {
-        if (priv.secondstorage_string === JSON.stringify ({type:'base'})) {
+        if (!validatestate_secondstorage) {
             return 'Need at least one parameter: "storage" '+
                 'containing storage specifications.';
         }
