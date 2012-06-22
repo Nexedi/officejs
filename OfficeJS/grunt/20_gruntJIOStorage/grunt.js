@@ -61,6 +61,7 @@ module.exports = function(grunt) {
                 LocalOrCookieStorage: true,
                 Base64: true,
                 MD5: true,
+                hex_sha256: true,
                 jio: true,
                 console: true,
                 unescape: true,
