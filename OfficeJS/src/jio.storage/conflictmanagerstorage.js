@@ -34,6 +34,12 @@ var newConflictManagerStorage = function ( spec, my ) {
         return newarray;
     };
 
+    var super_fail = that.fail;
+    that.fail = function (command,error) {
+        command.setMaxRetry(1);
+        super_fail(error);
+    };
+
     /**
      * Save a document and can manage conflicts.
      * @method saveDocument
@@ -91,7 +97,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                         } else {
                             run_index = (-10);
                             end = true;
-                            that.fail(error);
+                            that.fail(command,error);
                         }
                     };
                     cloned_option.onDone = function (result) {
@@ -201,7 +207,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                     end = true;
                     run (6);    // save metadata
                     run (7);    // save document revision
-                    that.fail(); // TODO
+                    that.fail(command); // TODO
                     command.getOption('onConflict')(conflict_object);
                 }
                 break;
@@ -212,7 +218,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                     cloned_option.onFail = function (error) {
                         run_index = (-10);
                         end = true;
-                        that.fail(error);
+                        that.fail(command,error);
                     };
                     cloned_option.onDone = function () {
                         run_index ++; run (run_index);
@@ -234,7 +240,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                     cloned_option.onFail = function (error) {
                         run_index = (-10);
                         end = true;
-                        that.fail(error);
+                        that.fail(command,error);
                     };
                     cloned_option.onDone = function () {
                         run (8);
@@ -259,7 +265,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                         cloned_option.onFail = function (error) {
                             run_index = (-10);
                             end = true;
-                            that.fail(error);
+                            that.fail(command,error);
                         };
                         cloned_option.onDone = function () {
                             run_index ++; run (run_index);
@@ -289,7 +295,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             }
         };
         run (0);
-        command.setMaxRetry (1);
     };
 
     /**
@@ -312,7 +317,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                     cloned_option.onFail = function (error) {
                         run_index = (-10);
                         end = true;
-                        that.fail(error);
+                        that.fail(command,error);
                     };
                     cloned_option.onDone = function (result) {
                         command_file_metadata = JSON.parse (result.content);
@@ -331,7 +336,6 @@ var newConflictManagerStorage = function ( spec, my ) {
                         'loadDocument',
                         {path:metadata_file_name,
                          option:cloned_option});
-                    newcommand.setMaxRetry (0); // inf
                     that.addJob ( that.newStorage (priv.secondstorage_spec),
                                   newcommand );
                 }());
@@ -348,10 +352,11 @@ var newConflictManagerStorage = function ( spec, my ) {
                     cloned_option.onFail = function (error) {
                         run_index = (-10);
                         end = true;
-                        that.fail(error);
+                        that.fail(command,error);
                     };
                     cloned_option.onDone = function (result) {
                         loaded_file = result;
+                        loaded_file.name = command.getPath();
                         run_index ++; run (run_index);
                     };
                     var newcommand = that.newCommand(
@@ -360,7 +365,6 @@ var newConflictManagerStorage = function ( spec, my ) {
                          command_file_metadata.winner.revision +
                          '.' + command_file_metadata.winner.owner,
                          option:cloned_option});
-                    newcommand.setMaxRetry (0); // inf
                     that.addJob ( that.newStorage (priv.secondstorage_spec),
                                   newcommand );
                 }());
@@ -372,10 +376,11 @@ var newConflictManagerStorage = function ( spec, my ) {
                     cloned_option.onFail = function (error) {
                         run_index = (-10);
                         end = true;
-                        that.fail(error);
+                        that.fail(command,error);
                     };
                     cloned_option.onDone = function (result) {
                         loaded_file = result;
+                        loaded_file.name = command.getPath();
                         run_index ++; run (run_index);
                     };
                     if (!command_file_metadata.owner[owner]) {
@@ -390,7 +395,6 @@ var newConflictManagerStorage = function ( spec, my ) {
                          command_file_metadata.owner[owner].revision +
                          '.' + owner,
                          option:cloned_option});
-                    newcommand.setMaxRetry (0); // inf
                     that.addJob ( that.newStorage (priv.secondstorage_spec),
                                   newcommand );
                 }());
@@ -414,7 +418,82 @@ var newConflictManagerStorage = function ( spec, my ) {
      * @method getDocumentList
      */
     that.getDocumentList = function (command) {
-        that.fail({message:'NIY'});
+        var command_file_metadata_list = [], // distant files metadata
+        result_list = [],
+        end = false, nb_loaded_file = 0,
+        _1 = function () {
+            var cloned_option = command.cloneOption ();
+            cloned_option.onResponse = function () {};
+            cloned_option.onFail = function (error) {
+                that.fail(command,error);
+            };
+            cloned_option.onDone = function (result) {
+                var i;
+                // log (blue + 'result ' + JSON.stringify (result) + endblue);
+                // log (green + 'distantstorage ' + JSON.stringify (distantstorage) + endgreen);
+                for (i = 0; i < result.length; i+= 1) {
+                    var splitname = result[i].name.split('.') || [];
+                    var content_object;
+                    var doc = {};
+                    if (splitname[splitname.length-1] === 'metadata') {
+                        content_object = JSON.parse (result[i].content);
+                        result_list.push(content_object);
+                        splitname.length --;
+                        doc.name = splitname.join('.');
+                        doc.creation_date = content_object.owner[
+                            content_object.winner.owner].creation_date;
+                        doc.last_modified = content_object.owner[
+                            content_object.winner.owner].last_modified;
+                        command_file_metadata_list.push(doc);
+                    }
+                }
+                if (command.getOption('metadata_only')) {
+                    that.done(command_file_metadata_list);
+                } else {
+                    if (result.length === 0) {
+                        return that.done([]);
+                    };
+                    for (i = 0; i < command_file_metadata_list.length; i+= 1) {
+                        loadFile(command_file_metadata_list[i],
+                                 result_list[i].winner.revision,
+                                 result_list[i].winner.owner);
+                    }
+                    that.end();
+                }
+            };
+            var newcommand = that.newCommand(
+                'getDocumentList',
+                {path:command.getPath(),
+                 option:cloned_option});
+            that.addJob ( that.newStorage (priv.secondstorage_spec),
+                          newcommand );
+        }, loadFile = function (doc,revision,owner) {
+            var cloned_option = command.cloneOption ();
+            cloned_option.onResponse = function () {};
+            cloned_option.onFail = function (error) {
+                if (!end) {
+                    end = true;
+                    that.fail(command,error);
+                }
+            };
+            cloned_option.onDone = function (result) {
+                if (!end) {
+                    doc.content = result.content;
+                    nb_loaded_file ++;
+                    if (command_file_metadata_list.length === nb_loaded_file) {
+                        end = true;
+                        that.done(command_file_metadata_list);
+                    }
+                }
+            };
+            var newcommand = that.newCommand(
+                'loadDocument',
+                {path:doc.name + '.' + revision + '.' + owner,
+                 option:cloned_option});
+            that.addJob ( that.newStorage (priv.secondstorage_spec),
+                          newcommand );
+        };
+        _1();
     };
 
     /**
@@ -422,7 +501,7 @@ var newConflictManagerStorage = function ( spec, my ) {
      * @method removeDocument
      */
     that.removeDocument = function (command) {
-        that.fail({message:'NIY'});
+        that.fail(command,{message:'NIY'});
     };
 
     return that;
