@@ -33,22 +33,53 @@
 					type="text">
 			        </fieldset>
 			    </div>
-			    <a href="#list" data-role="button" data-transition="slideup" data-theme="b">Go Docs </a>
+			    <a href="#tools" data-role="button" data-transition="slideup" data-theme="b">Go Docs </a>
 		     </div>
 		</div>
 			 
-		 
-		<div data-role="page" id="list">
+		<!--Tools Page-->
+		<div data-role="page" id="tools">
 		 
 		     <div data-role="header">
-			  <h1>About This App</h1>
+			  <h1>Your list of Docs</h1>
 		     </div>
 			 
-		     <div data-role="content">
-		         <p>This app rocks! <a href="#home">Go home</a></p>   
-		     </div>
+		     <div data-role="content" style="padding: 15px">
+			<ul data-role="listview" data-divider-theme="b" data-inset="true">
+			    <li data-role="list-divider" role="heading">
+				Tools
+			    </li>
+			    <li data-theme="c">
+				<a href="#list" data-transition="slide">
+				    Document list
+				</a>
+			    </li>
+			    <li data-theme="c">
+				<a href="#text" data-transition="slide">
+				    New Text Document
+				</a>
+			    </li>
+			    <li data-theme="c">
+				<a href="#image" data-transition="slide">
+				    New Image
+				</a>
+			    </li>
+			    <li data-theme="c">
+				<a href="#spreadsheet" data-transition="slide">
+				    New Spreadsheet
+				</a>
+			    </li>
+			    <li data-theme="c">
+				<a href="#presentation" data-transition="slide">
+				    New Presentation
+				</a>
+			    </li>
+			</ul>
+		    </div>
 		 
 		</div>
+		
+
 	 
 	</body>
 </html>
