@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	  <title>jQuery Mobile: Pages within Pages</title>
+	  <link rel="stylesheet"  href="css/themes/default/jquery.mobile-1.1.0.css" />
+	<script src="js/jquery.js"></script>
+	<script src="js/jquery.mobile-1.1.0.js"></script>
+	</head>
+	<body>
+	 
+		<div data-role="page" id="home">
+		 
+			<div data-role="header">
+			    <h1>Home</h1>
+			</div>
+			 
+			<div data-role="content">
+			    <p><a href="#about">About this app</a></p>   
+			</div>
+		 
+		</div>
+			<div data-role="content">
+			    <p><a href="#about">About this app</a></p>   
+			</div>
+		 
+		</div>
+		 
+			<div data-role="page" id="about">
+			 
+			<div data-role="header">
+			    <h1>About This App</h1>
+			</div>
+			 
+			<div data-role="content">
+			    <p>This app rocks! <a href="#home">Go home</a></p>   
+			 </div>
+		 
+		</div>
+	 
+	</body>
+</html>
