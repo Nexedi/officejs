@@ -6,7 +6,7 @@ var newConflictManagerStorage = function ( spec, my ) {
     priv.username = spec.username || '';
     var storage_exists = (spec.storage?true:false);
     priv.secondstorage_spec = spec.storage || {type:'base'};
-    priv.secondstorage_string = JSON.stringify (priv.secondstorage_spec)
+    priv.secondstorage_string = JSON.stringify (priv.secondstorage_spec);
 
     var local_namespace = 'jio/conflictmanager/'+priv.secondstorage_string+'/';
 
@@ -462,7 +462,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                 } else {
                     if (result.length === 0) {
                         return that.done([]);
-                    };
+                    }
                     for (i = 0; i < command_file_metadata_list.length; i+= 1) {
                         LocalOrCookieStorage.setItem (
                             command_file_metadata_list[i].name + '.metadata',
@@ -516,6 +516,7 @@ var newConflictManagerStorage = function ( spec, my ) {
     that.removeDocument = function (command) {
         var metadata_file_name = command.getPath() + '.metadata',
         local_metadata_file_name = local_namespace + metadata_file_name,
+        local_file_metadata = {},
         command_file_metadata = {}, // distant file.metadata
         run_index = 0, previous_revision = 0,
         end = false, is_a_new_file = false,
@@ -705,4 +706,4 @@ var newConflictManagerStorage = function ( spec, my ) {
 
     return that;
 };
-Jio.addStorageType('replicate', newReplicateStorage);
+Jio.addStorageType('conflictmanager', newConflictManagerStorage);

@@ -9,4 +9,4 @@
  *
  * @module JIOStorages
  */
-(function(LocalOrCookieStorage, $, Base64, sjcl, MD5, Jio) {
+(function(LocalOrCookieStorage, $, Base64, sjcl, hex_sha256, Jio) {
