@@ -472,9 +472,7 @@ test ('Document load', function () {
     o.jio.loadDocument('file',{onResponse:o.f,max_retry:1});
     o.tick();
 
-    LocalOrCookieStorage.setItem (
-        'jio/local_file_name_array/MrLoadName/jiotests',['file']);
-    LocalOrCookieStorage.setItem ('jio/local/MrLoadName/jiotests/file',o.doc);
+    addFileToLocalStorage('MrLoadName','jiotests',o.doc);
     o.spy('value',o.doc,'loading document success');
     o.jio.loadDocument('file',{onResponse:o.f,max_retry:1});
     o.tick();
@@ -543,7 +541,7 @@ test ('Document remove', function () {
     o.jio = JIO.newJio({type:'local',username:'MrRemoveName',
                         applicationname:'jiotests'});
     // test removing a file
-    LocalOrCookieStorage.setItem ('jio/local/MrRemoveName/jiotests/file',{});
+    addFileToLocalStorage ('MrRemoveName','jiotests',{name:'file'});
     o.mytest ();
 
     o.jio.stop();
@@ -1188,7 +1186,7 @@ if (window.requirejs) {
         paths: {
             jiotestsloader: './jiotests.loader',
 
-            LocalOrCookieStorage: '../lib/jio/localorcookiestorage.min',
+            LocalOrCookieStorage: './testlocalorcookiestorage',
             jQueryAPI: '../lib/jquery/jquery',
             jQuery: '../js/jquery.requirejs_module',
             JIO: '../src/jio',
