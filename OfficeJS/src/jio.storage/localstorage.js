@@ -159,9 +159,9 @@ var newLocalStorage = function ( spec, my ) {
                 'jio/local/'+priv.username+'/'+
                     priv.applicationname+'/'+command.getPath());
             if (!doc) {
-                that.fail(command,{status:404,statusText:'Not Found.',
-                                   message:'Document "'+ command.getPath() +
-                                   '" not found in localStorage.'});
+                that.fail({status:404,statusText:'Not Found.',
+                           message:'Document "'+ command.getPath() +
+                           '" not found in localStorage.'});
             } else {
                 if (command.getOption('metadata_only')) {
                     delete doc.content;
