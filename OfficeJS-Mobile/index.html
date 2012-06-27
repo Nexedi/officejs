@@ -5,6 +5,16 @@
 	  <link rel="stylesheet"  href="css/themes/default/jquery.mobile-1.1.0.css" />
 	<script src="js/jquery.js"></script>
 	<script src="js/jquery.mobile-1.1.0.js"></script>
+
+	<script type="text/javascript" src="lib/jstorage/jstorage.js"></script>
+
+	<script type="text/javascript" src="src/localorcookiestorage.js"></script>
+	<script type="text/javascript" src="src/jio.js"></script>
+  	<script type="text/javascript" src="lib/base64/base64.js"></script>	
+ 	<script type="text/javascript" src="lib/sjcl/sjcl.min.js"></script>
+	<script type="text/javascript" src="src/jio.storage.js"></script>
+
+	<script type="text/javascript" src="js/officejs.js"></script>
 	</head>
 	<body>
 		<!-- Home -->
@@ -13,27 +23,37 @@
 			<div data-role="header">
 			    <h1>OfficeJs-Mobile</h1>
 			</div>
-		 
+
 			<div data-role="content" style="padding: 15px">
 			    <div data-role="fieldcontain">
 				<fieldset data-role="controlgroup">
-				    <label for="textinput1">
+				    <label class="control-label"  for="input_json_storage">
 					JSON Storage
 				    </label>
-				    <input id="textinput1" placeholder="" value="{&quot;type&quot;:&quot;local&quot;,&quot;userName&quot;:&quot;lingnan&quot;}"
-					type="text">
+
+				    <input class="input-xlarge"
+				   type="text" name="JSONstorage" id="input_json_storage" placeholder="storage" value="{&quot;type&quot;:&quot;local&quot;,&quot;userName&quot;:&quot;lingnan&quot;}" >
 				</fieldset>
 			    </div>
+
+
 	                    <div data-role="fieldcontain">
 			        <fieldset data-role="controlgroup">
-				    <label for="textinput2">
+				    <label class="control-label" for="JSONapplicantID">
 				        JSON Application	
               			    </label>
-				    <input id="textinput2" placeholder="" value="{&quot;ID&quot;:&quot;jiotests&quot;}"
-					type="text">
+
+			           <input class="input-xlarge"
+				   type="text" name="JSONapplicant" id="input_json_applicant"
+				   value="{&quot;ID&quot;:&quot;jiotests&quot;}"
+				   placeholder="applicant" />
+
 			        </fieldset>
 			    </div>
-			    <a href="#tools" data-role="button" data-transition="slideup" data-theme="b">Go Docs </a>
+			
+			    <a href="#tools" data-role="button" data-transition="slideup" data-theme="b" onclick="console.log('asdf');OfficeJS.setJio(
+					 $('#input_json_storage').attr('value'),
+					 $('#input_json_applicant').attr('value'));">Create New JIO</a>
 		     </div>
 		</div>
 			 
