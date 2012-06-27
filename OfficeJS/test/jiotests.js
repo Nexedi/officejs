@@ -1007,177 +1007,322 @@ test ('Remove document', function () {
     o.jio.stop();
 });
 
-// module ('Jio CryptedStorage');
+module ('Jio CryptedStorage');
 
-// test ('Check name availability' , function () {
-//     var o = {}, clock = this.sandbox.useFakeTimers();
-//     o.jio=JIO.newJio({type:'crypted',
-//                          storage:{type:'local',
-//                                   user_name:'cryptcheck'}},
-//                         {ID:'jiotests'});
-//     o.f = function (result) {
-//         deepEqual (result.return_value,true,'name must be available');
-//     };
-//     this.spy(o,'f');
-//     o.jio.checkNameAvailability({user_name:'cryptcheck',
-//                                  max_tries:1,onResponse:o.f});
-//     clock.tick(1000);
-//     if (!o.f.calledOnce) {
-//         ok (false, 'no response / too much results');
-//     }
-//     o.jio.stop();
-// });
+test ('Document save' , function () {
+    var o = {}, clock = this.sandbox.useFakeTimers();
+    o.jio=JIO.newJio({type:'crypt',
+                      username:'cryptsave',
+                      password:'mypwd',
+                      storage:{type:'local',
+                               username:'cryptsavelocal',
+                               applicationname:'jiotests'}});
+    o.f = function (result) {
+        deepEqual (result.status.getLabel(),'done','save ok');
+    };
+    this.spy(o,'f');
+    o.jio.saveDocument('testsave','contentoftest',{
+        max_retry:1,onResponse:o.f});
+    clock.tick(1000);
+    if (!o.f.calledOnce) {
+        ok (false, 'no response / too much results');
+    }
+    // encrypt 'testsave' with 'cryptsave:mypwd' password
+    o.tmp = LocalOrCookieStorage.getItem(
+        'jio/local/cryptsavelocal/jiotests/rZx5PJxttlf9QpZER/5x354bfX54QFa1');
+    if (o.tmp) {
+        delete o.tmp.last_modified;
+        delete o.tmp.creation_date;
+    }
+    deepEqual (o.tmp,
+               {name:'rZx5PJxttlf9QpZER/5x354bfX54QFa1',
+                content:'upZkPIpitF3QMT/DU5jM3gP0SEbwo1n81rMOfLE'},
+               'Check if the document is realy encrypted');
+    o.jio.stop();
+});
 
-// test ('Document save' , function () {
-//     var o = {}, clock = this.sandbox.useFakeTimers();
-//     o.jio=JIO.newJio({type:'crypted',
-//                       user_name:'cryptsave',
-//                       password:'mypwd',
-//                       storage:{type:'local',
-//                                user_name:'cryptsavelocal'}},
-//                      {ID:'jiotests'});
-//     o.f = function (result) {
-//         deepEqual (result.status,'done','save ok');
-//     };
-//     this.spy(o,'f');
-//     o.jio.saveDocument({name:'testsave',content:'contentoftest',
-//                         max_tries:1,onResponse:o.f});
-//     clock.tick(1000);
-//     if (!o.f.calledOnce) {
-//         ok (false, 'no response / too much results');
-//     }
-//     // encrypt 'testsave' with 'cryptsave:mypwd' password
-//     o.tmp = LocalOrCookieStorage.getItem(
-//         'jio/local/cryptsavelocal/jiotests/rZx5PJxttlf9QpZER/5x354bfX54QFa1');
-//     if (o.tmp) {
-//         delete o.tmp.last_modified;
-//         delete o.tmp.creation_date;
-//     }
-//     deepEqual (o.tmp,
-//                {name:'rZx5PJxttlf9QpZER/5x354bfX54QFa1',
-//                 content:'upZkPIpitF3QMT/DU5jM3gP0SEbwo1n81rMOfLE'},
-//                'Check if the document is realy crypted');
-//     o.jio.stop();
-// });
+test ('Document Load' , function () {
+    var o = {}, clock = this.sandbox.useFakeTimers();
+    o.jio=JIO.newJio({type:'crypt',
+                      username:'cryptload',
+                      password:'mypwd',
+                      storage:{type:'local',
+                               username:'cryptloadlocal',
+                               applicationname:'jiotests'}});
+    o.f = function (result) {
+        if (result.status.isDone()) {
+            deepEqual (result.value,
+                       {name:'testload',
+                        content:'contentoftest',
+                        last_modified:500,
+                        creation_date:500},
+                       'load ok');
+        } else {
+            ok (false ,'cannot load');
+        }
+    };
+    this.spy(o,'f');
+    // encrypt 'testload' with 'cryptload:mypwd' password
+    // and 'contentoftest' with 'cryptload:mypwd'
+    o.doc = {name:'hiG4H80pwkXCCrlLl1X0BD0BfWLZwDUX',
+             content:'kSulH8Qo105dSKHcY2hEBXWXC9b+3PCEFSm1k7k',
+             last_modified:500,creation_date:500};
+    addFileToLocalStorage('cryptloadlocal','jiotests',o.doc);
+    o.jio.loadDocument('testload',{
+        max_retry:1,onResponse:o.f});
+    clock.tick(1000);
+    if (!o.f.calledOnce) {
+        ok (false, 'no response / too much results');
+    }
+    o.jio.stop();
+});
 
-// test ('Document Load' , function () {
-//     var o = {}, clock = this.sandbox.useFakeTimers();
-//     o.jio=JIO.newJio({type:'crypted',
-//                       user_name:'cryptload',
-//                       password:'mypwd',
-//                       storage:{type:'local',
-//                                user_name:'cryptloadlocal'}},
-//                      {ID:'jiotests'});
-//     o.f = function (result) {
-//         if (result.status === 'done') {
-//             deepEqual (result.return_value,
-//                        {name:'testload',
-//                         content:'contentoftest',
-//                         last_modified:500,
-//                         creation_date:500},
-//                        'load ok');
-//         } else {
-//             ok (false ,'cannot load');
-//         }
-//     };
-//     this.spy(o,'f');
-//     // encrypt 'testload' with 'cryptload:mypwd' password
-//     // and 'contentoftest' with 'cryptload:mypwd'
-//     LocalOrCookieStorage.setItem(
-//         'jio/local/cryptloadlocal/jiotests/hiG4H80pwkXCCrlLl1X0BD0BfWLZwDUX',
-//         {name:'mRyQFcUvUKq6tLGUjBo34P3oc2LPxEju',
-//          content:'kSulH8Qo105dSKHcY2hEBXWXC9b+3PCEFSm1k7k',
-//          last_modified:500,creation_date:500});
-//     o.jio.loadDocument({name:'testload',
-//                         max_tries:1,onResponse:o.f});
-//     clock.tick(1000);
-//     if (!o.f.calledOnce) {
-//         ok (false, 'no response / too much results');
-//     }
-//     o.jio.stop();
-//     LocalOrCookieStorage.deleteItem(
-//         'jio/local/cryptloadlocal/jiotests/hiG4H80pwkXCCrlLl1X0BD0BfWLZwDUX');
-// });
+test ('Get Document List', function () {
+    var o = {}, clock = this.sandbox.useFakeTimers();
+    o.jio=JIO.newJio({type:'crypt',
+                      username:'cryptgetlist',
+                      password:'mypwd',
+                      storage:{type:'local',
+                               username:'cryptgetlistlocal',
+                               applicationname:'jiotests'}});
+    o.f = function (result) {
+        if (result.status.isDone()) {
+            deepEqual (objectifyDocumentArray(result.return_value),
+                       objectifyDocumentArray(o.doc_list),'Getting list');
+        } else {
+            console.warn (result);
+            ok (false, 'Cannot get list');
+        }
+    };
+    this.spy(o,'f');
+    o.doc_list = [
+        {name:'testgetlist1',last_modified:500,creation_date:200},
+        {name:'testgetlist2',last_modified:300,creation_date:300}
+    ];
+    o.doc_encrypt_list = [
+        {name:'541eX0WTMDw7rqIP7Ofxd1nXlPOtejxGnwOzMw',
+         content:'/4dBPUdmLolLfUaDxPPrhjRPdA',
+         last_modified:500,creation_date:200},
+        {name:'541eX0WTMDw7rqIMyJ5tx4YHWSyxJ5UjYvmtqw',
+         content:'/4FBALhweuyjxxD53eFQDSm4VA',
+         last_modified:300,creation_date:300}
+    ];
+    // encrypt with 'cryptgetlist:mypwd' as password
+    LocalOrCookieStorage.setItem(
+        'jio/local_file_name_array/cryptgetlistlocal/jiotests',
+        [o.doc_encrypt_list[0].name,o.doc_encrypt_list[1].name]);
+    LocalOrCookieStorage.setItem(
+        'jio/local/cryptgetlistlocal/jiotests/'+o.doc_encrypt_list[0].name,
+        o.doc_encrypt_list[0]);
+    LocalOrCookieStorage.setItem(
+        'jio/local/cryptgetlistlocal/jiotests/'+o.doc_encrypt_list[1].name,
+        o.doc_encrypt_list[1]);
+    o.jio.getDocumentList({max_retry:1,onResponse:o.f});
+    clock.tick (3000);
+    if (!o.f.calledOnce) {
+        if (o.f.called) {
+            ok (false, 'too much results');
+        } else {
+            ok (false, 'no response');
+        }
+    }
+    clock.tick(1000);
+    o.jio.stop();
+});
 
-// test ('Get Document List', function () {
-//     var o = {}, clock = this.sandbox.useFakeTimers();
-//     o.jio=JIO.newJio({type:'crypted',
-//                       user_name:'cryptgetlist',
-//                       password:'mypwd',
-//                       storage:{type:'local',
-//                                user_name:'cryptgetlistlocal'}},
-//                      {ID:'jiotests'});
-//     o.f = function (result) {
-//         if (result.status === 'done') {
-//             deepEqual (objectifyDocumentArray(result.return_value),
-//                        objectifyDocumentArray(o.doc_list),'Getting list');
-//         } else {
-//             console.warn (result);
-//             ok (false, 'Cannot get list');
-//         }
-//     };
-//     this.spy(o,'f');
-//     o.doc_list = [
-//         {name:'testgetlist1',last_modified:500,creation_date:200},
-//         {name:'testgetlist2',last_modified:300,creation_date:300}
-//     ];
-//     o.doc_encrypt_list = [
-//         {name:'541eX0WTMDw7rqIP7Ofxd1nXlPOtejxGnwOzMw',
-//          content:'/4dBPUdmLolLfUaDxPPrhjRPdA',
-//          last_modified:500,creation_date:200},
-//         {name:'541eX0WTMDw7rqIMyJ5tx4YHWSyxJ5UjYvmtqw',
-//          content:'/4FBALhweuyjxxD53eFQDSm4VA',
-//          last_modified:300,creation_date:300}
-//     ];
-//     // encrypt with 'cryptgetlist:mypwd' as password
-//     LocalOrCookieStorage.setItem(
-//         'jio/local_file_name_array/cryptgetlistlocal/jiotests',
-//         [o.doc_encrypt_list[0].name,o.doc_encrypt_list[1].name]);
-//     LocalOrCookieStorage.setItem(
-//         'jio/local/cryptgetlistlocal/jiotests/'+o.doc_encrypt_list[0].name,
-//         o.doc_encrypt_list[0]);
-//     LocalOrCookieStorage.setItem(
-//         'jio/local/cryptgetlistlocal/jiotests/'+o.doc_encrypt_list[1].name,
-//         o.doc_encrypt_list[1]);
-//     o.jio.getDocumentList({max_tries:1,onResponse:o.f});
-//     clock.tick (2000);
-//     if (!o.f.calledOnce) {
-//         ok (false, 'no response / too much results');
-//     }
-//     clock.tick(1000);
-//     o.jio.stop();
-// });
+test ('Remove document', function () {
+    var o = {}, clock = this.sandbox.useFakeTimers();
+    o.jio=JIO.newJio({type:'crypt',
+                      username:'cryptremove',
+                      password:'mypwd',
+                      storage:{type:'local',
+                               username:'cryptremovelocal',
+                               applicationname:'jiotests'}});
+    o.f = function (result) {
+        deepEqual (result.status.getLabel(),'done','Document remove');
+    };
+    this.spy(o,'f');
+    // encrypt with 'cryptremove:mypwd' as password
+    o.doc = {name:'JqCLTjyxQqO9jwfxD/lyfGIX+qA',
+             content:'LKaLZopWgML6IxERqoJ2mUyyO',
+             last_modified:500,creation_date:500};
+    o.jio.removeDocument('file',{max_retry:1,onResponse:o.f});
+    clock.tick(1000);
+    if (!o.f.calledOnce){
+        ok (false, 'no response / too much results');
+    }
+    o.jio.stop();
+});
 
 
-// test ('Remove document', function () {
-//     var o = {}, clock = this.sandbox.useFakeTimers();
-//     o.jio=JIO.newJio({type:'crypted',
-//                       user_name:'cryptremove',
-//                       password:'mypwd',
-//                       storage:{type:'local',
-//                                user_name:'cryptremovelocal'}},
-//                      {ID:'jiotests'});
-//     o.f = function (result) {
-//         deepEqual (result.status,'done','Document remove');
-//     };
-//     this.spy(o,'f');
-//     // encrypt with 'cryptremove:mypwd' as password
-//     LocalOrCookieStorage.setItem(
-//         'jio/local_file_name_array/cryptremovelocal/jiotests',
-//         ["JqCLTjyxQqO9jwfxD/lyfGIX+qA"]);
-//     LocalOrCookieStorage.setItem(
-//         'jio/local/cryptremovelocal/jiotests/JqCLTjyxQqO9jwfxD/lyfGIX+qA',
-//         {"name":"JqCLTjyxQqO9jwfxD/lyfGIX+qA",
-//          "content":"LKaLZopWgML6IxERqoJ2mUyyO",
-//          "creation_date":500,
-//          "last_modified":500});
-//     o.jio.removeDocument({name:'file',max_tries:1,onResponse:o.f});
-//     clock.tick(1000);
-//     if (!o.f.calledOnce){
-//         ok (false, 'no response / too much results');
-//     }
-//     o.jio.stop();
-// });
+module ('Jio ConflictManagerStorage');
+
+test ('Simple methods', function () {
+    var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.spy = function(res,value,message,before) {
+        o.f = function(result) {
+            if (res === 'status') {
+                deepEqual (result.status.getLabel(),value,message);
+            } else {
+                if (before) { before (result[res]); }
+                deepEqual (result[res],value,message);
+            }
+        };
+        o.t.spy(o,'f');
+    };
+    o.tick = function (value, tick) {
+        o.clock.tick(tick || 1000);
+        if (!o.f.calledOnce) {
+            if (o.f.called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
+        }
+    };
+    o.jio = JIO.newJio({type:'conflictmanager',
+                        username:'methods',
+                        storage:{type:'local',
+                                 username:'conflictmethods',
+                                 applicationname:'jiotests'}});
+    o.spy('status','done','saving "file.doc" with owner "methods".');
+    o.jio.saveDocument('file.doc','content1methods',
+                       {onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('value',{name:'file.doc',content:'content1methods'},
+          'loading document.',function (o) {
+              if (!o) { return; }
+              if (o.last_modified) {
+                  delete o.last_modified;
+                  delete o.creation_date;
+              }
+          });
+    o.jio.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('value',[{name:'file.doc'}],
+          'getting list.',function (a) {
+              var i;
+              if (!a) { return; }
+              for (i = 0; i < a.length; i+= 1) {
+                  delete a[i].last_modified;
+                  delete a[i].creation_date;
+              }
+          });
+    o.jio.getDocumentList('.',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','done','removing document');
+    o.jio.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','fail','loading document fail.');
+    o.jio.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.jio.stop();
+});
+
+test ('Revision Conflicts' , function () {
+    var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.spy = function(res,value,message,function_name) {
+        function_name = function_name || 'f';
+        o[function_name] = function(result) {
+            if (res === 'true') {
+                return ok(true,message);
+            }
+            if (res === 'status') {
+                deepEqual (result.status.getLabel(),value,message);
+            } else {
+                deepEqual (result[res],value,message);
+            }
+        };
+        o.t.spy(o,function_name);
+    };
+    o.tick = function (tick, function_name) {
+        function_name = function_name || 'f'
+        o.clock.tick(tick || 1000);
+        if (!o[function_name].calledOnce) {
+            if (o[function_name].called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
+        }
+    };
+    o.jio_me = JIO.newJio({type:'conflictmanager',
+                           username:'me',
+                           storage:{type:'local',
+                                    username:'conflictrevision',
+                                    applicationname:'jiotests'}});
+    o.jio_him = JIO.newJio({type:'conflictmanager',
+                            username:'him',
+                            storage:{type:'local',
+                                     username:'conflictrevision',
+                                     applicationname:'jiotests'}});
+
+    o.spy('status','done','saving "file.doc" with owner "me",'+
+          ' first revision, no conflict.');
+    o.jio_me.saveDocument('file.doc','content1me',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','done','saving "file.doc" with owner "me",'+
+          ' second revision, no conflict.');
+    o.jio_me.saveDocument('file.doc','content2me',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','done','loading "file.doc" with owner "him",'+
+          ' last revision, no conflict.');
+    o.jio_him.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','done','saving "file.doc" with owner "him",'+
+          ' next revision, no conflict.');
+    o.jio_him.saveDocument('file.doc','content1him',
+                           {onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','fail','saving "file.doc" with owner "me",'+
+          ' third revision, conflict!');
+    o.c = function (conflict_object) {
+        o.co = conflict_object;
+        ok (true,'onConflict callback called once');
+    };
+    o.t.spy(o,'c');
+    o.jio_me.saveDocument('file.doc','content3me',{
+        onResponse:o.f,max_retry:1,onConflict:o.c});
+    o.tick(undefined,'f');
+    o.tick(0,'c');
+
+    if (!o.co) { ok(false,'impossible to continue the tests'); }
+
+    o.spy('status','done','solving conflict and save "file.doc" with owner'+
+          ' "me", forth revision, no conflict.');
+    o.jio_me.saveDocument('file.doc','content4me',{
+        onResponse:o.f,max_retry:1,known_conflict_list:[o.co]});
+    o.tick();
+
+    o.spy('status','done','removing "file.doc" with owner "me",'+
+          ' no conflict.');
+    o.jio_me.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','fail','saving "file.doc" with owner "him",'+
+          ' any revision, conflict!');
+    o.c = function (conflict_object) {
+        o.co = conflict_object;
+        ok (true,'onConflict callback called once');
+    };
+    o.t.spy(o,'c');
+    o.jio_him.saveDocument('file.doc','content4him',{
+        onResponse:o.f,max_retry:1,onConflict:o.c});
+    o.tick(undefined,'f');
+    o.tick(0,'c');
+
+    o.jio_me.stop();
+    o.jio_him.stop();
+});
 
 };                              // end thisfun
 
