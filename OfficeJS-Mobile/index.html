@@ -14,10 +14,10 @@
  	<script type="text/javascript" src="lib/sjcl/sjcl.min.js"></script>
 	<script type="text/javascript" src="src/jio.storage.js"></script>
 
-	<script type="text/javascript" src="js/officejs.js"></script>
+	<script type="text/javascript" src="js/officejs-mobile.js"></script>
 	</head>
 	<body>
-		<!-- Home -->
+		<!---------------------------------------------------------- Home --------------------------------------------------------------->
 		<div data-role="page" id="home">
 
 			<div data-role="header">
@@ -27,7 +27,7 @@
 			<div data-role="content" style="padding: 15px">
 			    <div data-role="fieldcontain">
 				<fieldset data-role="controlgroup">
-				    <label class="control-label"  for="input_json_storage">
+				    <label class="control-label ui-input-text"  for="input_json_storage">
 					JSON Storage
 				    </label>
 
@@ -39,7 +39,7 @@
 
 	                    <div data-role="fieldcontain">
 			        <fieldset data-role="controlgroup">
-				    <label class="control-label" for="JSONapplicantID">
+				    <label class="control-label ui-input-text" for="JSONapplicantID">
 				        JSON Application	
               			    </label>
 
@@ -51,13 +51,13 @@
 			        </fieldset>
 			    </div>
 			
-			    <a href="#tools" data-role="button" data-transition="slideup" data-theme="b" onclick="console.log('asdf');OfficeJS.setJio(
+			    <a href="#tools" data-role="button" data-transition="slideup" data-theme="b" onclick="OfficeJS.setJio(
 					 $('#input_json_storage').attr('value'),
 					 $('#input_json_applicant').attr('value'));">Create New JIO</a>
 		     </div>
 		</div>
 			 
-		<!--Tools Page-->
+		<!-----------------------------------------------------Tools Page-------------------------------------------------------------->
 		<div data-role="page" id="tools">
 		   
 		     <div data-role="header">
@@ -81,7 +81,7 @@
 				</a>
 			    </li>
 			    <li data-theme="c">
-				<a href="#text" data-transition="slide">
+				<a href="#text" data-transition="slide" onclick=" OfficeJS.open({app:'text_editor'}); return false;">
 				    New Text Document
 				</a>
 			    </li>
@@ -105,7 +105,7 @@
 		</div>
 		
 
-	 	<!--List Page-->
+	 	<!-------------------------------------------------------List Page------------------------------------------------------------->
 		<div data-role="page" id="list">
 		 
 		     <div data-role="header">
@@ -119,11 +119,11 @@
 		     </div>
 			 
 		     <div data-role="content" style="padding: 15px">
-			   <ul class="ui-listview" data-role="listview">
+			   <ul class="ui-listview" data-role="listview" id="textlist">
 				<li class="ui-btn ui-btn-icon-right ui-li-has-arrow ui-li ui-btn-up-c" data-corners="false" data-shadow="false" data-iconshadow="true" data-wrapperels="div" data-icon="arrow-r" data-iconpos="right" data-theme="c">
 				<div class="ui-btn-inner ui-li">
 				<div class="ui-btn-text">
-				<a class="ui-link-inherit" href="#text">
+				<a class="ui-link-inherit" href="#text" onclick="console.log('name is '+OfficeJS.list[0].title+' text is '+OfficeJS.list[0].text)">
 				<h3 class="ui-li-heading">name</h3>
 				<p class="ui-li-desc">Text Editor</p>
 				</a>
@@ -132,12 +132,64 @@
 				</div>
 				</li>
 			   </ul>
+			     <script type="text/javascript">
+				NewList = function (listname,listtype){
+						//get the main list
+					    var mainList = document.getElementById("textlist");
+						//set the new element
+					    newElement = document.createElement("li");
+					    newElement.setAttribute("class","ui-btn ui-btn-icon-right ui-li-has-arrow ui-li ui-btn-up-c");
+					    newElement.setAttribute("data-theme","c");	
+					    newElement.setAttribute("data-iconpos","right");	
+					    newElement.setAttribute("data-icon","arrow-r");
+					    newElement.setAttribute("data-wrapperels","div");
+					    newElement.setAttribute("data-iconshadow","true");
+					    newElement.setAttribute("data-shadow","false");
+					    newElement.setAttribute("data-corners","false");
+					    mainList.appendChild(newElement);	
+						//set firstdiv
+					    newFirstdiv = document.createElement("div");
+					    newFirstdiv.setAttribute("class","ui-btn-inner ui-li");
+					    newElement.appendChild(newFirstdiv);
+						//set seconddiv
+					    newSeconddiv = document.createElement("div");
+					    newSeconddiv.setAttribute("class","ui-btn-text");
+					    newFirstdiv.appendChild(newSeconddiv);
+						//set a tag
+					    newa = document.createElement("a");
+					    newa.setAttribute("class","ui-link-inherit");
+					    newa.setAttribute("href","#text");
+					    newa.setAttribute("onclick","console.log('name is '+OfficeJS.list[0].title+' text is '+OfficeJS.list[0].text)");
+	 				    newSeconddiv.appendChild(newa);
+						//set head 
+					    newhead = document.createElement("h3");
+					    newhead.setAttribute("class","ui-li-heading");
+	 				    newa.appendChild(newhead);
+					    
+					    newHeadtext = document.createTextNode(listname);
+					    newhead.appendChild(newHeadtext);
+
+					   	//set type
+					    newtype = document.createElement("p");
+					    newtype.setAttribute("class","ui-li-desc");
+	 				    newa.appendChild(newtype);
+					    
+					    newTypetext = document.createTextNode(listtype);
+					    newtype.appendChild(newTypetext);
+		
+						//set shadow
+					    newshadow = document.createElement("span");
+					    newshadow.setAttribute("class","ui-icon ui-icon-arrow-r ui-icon-shadow");
+					    newFirstdiv.appendChild(newshadow);
+				}
+				NewList("name","Text Editor");
+			    </script>
 		    </div>
 		 
 		</div>
 
 
-		<!--Text Page-->
+		<!---------------------------------------------------------Text Page------------------------------------------------------------->
 		<div data-role="page" id="text">
 		     
 		     <div data-role="header">
@@ -154,22 +206,22 @@
 			 <div data-role="content" style="padding: 15px">
 				<div data-role="fieldcontain">
 				    <fieldset data-role="controlgroup">
-					<label for="textinput6">
+					<label for="input_file_name">
 					    Name
 					</label>
-					<input id="textinput6" placeholder="" value="" type="text">
+					<input id="input_file_name" placeholder="" value="" type="text">
 				    </fieldset>
 				</div>
 				<div data-role="fieldcontain">
 				    <fieldset data-role="controlgroup">
-					<label for="textarea2">
+					<label for="input_file_content">
 					    Content
 					</label>
-					<textarea id="textarea2" placeholder="">
+					<textarea id="input_file_content" placeholder="">
 					</textarea>
 				    </fieldset>
 				</div>
-				<a data-role="button" data-transition="fade" data-theme="b" href="#page1">
+				<a data-role="button" data-transition="fade" data-theme="b" class="btn btn-primary" onclick="OfficeJS.save($('#input_file_name').attr('value'),$('#input_file_content').attr('value'));" type="submit">
 				    Save
 				</a>
 			    </div>

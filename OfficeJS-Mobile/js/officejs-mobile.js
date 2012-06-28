@@ -9,13 +9,19 @@
             return file_name;
         }
     };
-
     /**
      * OfficeJS Object
      */
+
+;
     window.OfficeJS = (function () {
+
+
         var that = {}, priv = {};
         // Attributes //
+that.list=new Array();//数组
+
+
         priv.preference_object = {
             document_lister:'slickgrid',
             edit_preferences:'simplepreferenceeditor',
@@ -432,7 +438,7 @@
         that.setJio = function (storage,applicant) {
             var leftnavbar;
             if (priv.isJioSet()) {
-                alert ('Jio already set.');
+             //   alert ('Jio already set.');
                 return;
             }
             // if there is not any jio created
@@ -442,7 +448,8 @@
             if (typeof leftnavbar.update !== 'undefined') {
                 leftnavbar.update();
             }*/
-            that.getList();
+//Forbid the list to avoid error   
+//         that.getList();
         };
 
         /**
@@ -488,8 +495,8 @@
          * @method save
          * @param  {string} basename The document name without ext.
          */
-        that.save = function (basename) {
-            var current_editor = priv.data_object.currentEditor;
+        that.save = function (basename,content) {
+        /*    var current_editor = priv.data_object.currentEditor;
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
@@ -505,7 +512,16 @@
                     priv.loading_object.end_save();
                     that.getList();
                 }
-            });
+            });*/
+var obj=new Object();//new object
+
+obj.title=basename;//object title and text
+obj.text=content;
+
+that.list.push(obj);//save in the list
+
+
+		
         };
 
         /**
@@ -590,8 +606,4 @@
         return that;
     }());                       // end OfficeJS
 
-    // show gadgets
-    OfficeJS.open({app:'topnavbar'});
-    OfficeJS.open({app:'leftnavbar'});
-    OfficeJS.open({app:'login'});
 }());
