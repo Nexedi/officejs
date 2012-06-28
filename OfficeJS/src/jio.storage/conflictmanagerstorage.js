@@ -35,6 +35,24 @@ var newConflictManagerStorage = function ( spec, my ) {
         }
         return newarray;
     };
+    priv.removeConflict = function (conflict_array,conflict_hash) {
+        var i,tmp = priv.removeValuesFromArrayWhere(
+            conflict_array,
+            function (v) { return (v.hash === conflict_hash); });
+        for (i = 0; i < tmp.length; i+= 1) {
+            conflict_array[i] = tmp[i];
+        }
+        conflict_array.length = tmp.length;
+    };
+    priv.addConflict = function (conflict_array,conflict_object) {
+        var i;
+        for (i = 0; i < conflict_array.length; i+= 1) {
+            if (conflict_object.hash === conflict_array[i].hash) {
+                return;
+            }
+        }
+        conflict_array.push(conflict_object);
+    };
 
     priv.loadMetadataFromDistant = function (command,path,onDone,onFail) {
         var cloned_option = command.cloneOption ();
@@ -58,7 +76,7 @@ var newConflictManagerStorage = function ( spec, my ) {
             'saveDocument',{path:path,
                             content:JSON.stringify (content),
                             option:cloned_option});
-        newcommand.setMaxRetry (0); // inf
+        // newcommand.setMaxRetry (0); // inf
         that.addJob ( that.newStorage (priv.secondstorage_spec),
                       newcommand );
     };
@@ -146,6 +164,21 @@ var newConflictManagerStorage = function ( spec, my ) {
                 });
         };
         o.checkForConflicts = function () {
+            var saveAndDone = function () {
+                LocalOrCookieStorage.setItem (local_metadata_file_name,
+                                              command_file_metadata);
+                am.wait(o,'done',1);
+                am.call(o,'saveMetadata');
+                am.call(o,'saveRevision');
+            };
+            var saveAndFail = function (error) {
+                LocalOrCookieStorage.setItem (local_metadata_file_name,
+                                              command_file_metadata);
+                am.neverCall(o,'done');
+                am.call(o,'saveMetadata');
+                am.call(o,'saveRevision');
+                am.call(o,'fail',[error]);
+            };
             var updateMetadataCommon = function () {
                 var original_creation_date;
 
@@ -186,25 +219,21 @@ var newConflictManagerStorage = function ( spec, my ) {
             // if this is a new file
             if (is_a_new_file) {
                 updateCommandMetadataNotOnConflict();
-                LocalOrCookieStorage.setItem (local_metadata_file_name,
-                                              command_file_metadata);
-                am.wait(o,'done',1);
-                am.call(o,'saveMetadata');
-                am.call(o,'saveRevision');
+                saveAndDone();
                 return;
             }
             // if no conflict
             if (local_file_metadata.winner.revision ===
                 command_file_metadata.winner.revision &&
                 local_file_metadata.winner.hash ===
-                command_file_metadata.winner.hash) {
-                // OK! Now, update distant metadata, store them and save
+                command_file_metadata.winner.hash && (
+                    !command_file_metadata.owner[priv.username] || (
+                        priv.username === command_file_metadata.winner.owner ||
+                            command_file_metadata.owner[priv.username].
+                            revision < command_file_metadata.owner[
+                                command_file_metadata.winner.owner].revison))) {
                 updateCommandMetadataNotOnConflict();
-                LocalOrCookieStorage.setItem (local_metadata_file_name,
-                                              command_file_metadata);
-                am.wait(o,'done',1);
-                am.call(o,'saveMetadata');
-                am.call(o,'saveRevision');
+                saveAndDone();
             } else {
                 // if conflict
                 var conflict_object = {
@@ -222,38 +251,44 @@ var newConflictManagerStorage = function ( spec, my ) {
                     conflict_object));
                 conflict_object.hash = conflict_hash;
                 // browse known conflict list
-                var i, known_conflict_list =
+                var i,j, done = false, known_conflict_list =
                     command.getOption('known_conflict_list') || [];
-                var compare_fun = function (v) {
-                    return (v.hash === conflict_hash);
-                };
                 for (i = 0; i < known_conflict_list.length; i+= 1) {
                     // if known conflict
                     if (known_conflict_list[i].hash ===
                         conflict_hash) {
-                        command_file_metadata.conflict_list =
-                            priv.removeValuesFromArrayWhere(
-                                command_file_metadata.conflict_list,
-                                compare_fun);
+                        priv.removeConflict(
+                            command_file_metadata.conflict_list,
+                            conflict_hash);
                         updateCommandMetadataNotOnConflict();
-                        am.wait(o,'done',1);
-                        am.call(o,'saveMetadata');
-                        am.call(o,'saveRevision');
-                        return;
+                        saveAndDone();
+                        done = true;
+                    }
+                    for (j = 0; j < command_file_metadata.conflict_list.length;
+                         j+= 1) {
+                        if (known_conflict_list[i].hash ===
+                            command_file_metadata.conflict_list[j].hash) {
+                            // if known other conflict
+                            // it is solved but the current conflict is
+                            // different than this one.
+                            priv.removeConflict(
+                                command_file_metadata.conflict_list,
+                                known_conflict_list[i].hash);
+                        }
                     }
                 }
-                updateCommandMetadataOnConflict();
-                // if unknown conflict
-                command_file_metadata.conflict_list.push (conflict_object);
-                am.neverCall(o,'done');
-                am.call(o,'saveMetadata');
-                am.call(o,'saveRevision');
-                am.call(o,'fail',[
-                    {status:0,statusText:'Revision Conflict',
-                     message:'Someone has already modified this document.'}]);
-                var onConflict = command.getOption('onConflict') ||
-                    function (){};
-                onConflict(conflict_object);
+                if (!done) {
+                    updateCommandMetadataOnConflict();
+                    // if unknown conflict
+                    priv.addConflict (command_file_metadata.conflict_list,
+                                      conflict_object);
+                    saveAndFail({status:0,statusText:'Revision Conflict',
+                                 message:'Someone has already'+
+                                 ' modified this document.'});
+                    var onConflict = command.getOption('onConflict') ||
+                        function (){};
+                    onConflict(conflict_object);
+                }
             }
         };
         o.saveMetadata = function () {
@@ -281,7 +316,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                  '.' + priv.username,
                  content:command.getContent(),
                  option:cloned_option});
-            newcommand.setMaxRetry (0); // inf
+            // newcommand.setMaxRetry (0); // inf
             that.addJob ( that.newStorage (priv.secondstorage_spec),
                           newcommand );
         };
@@ -304,7 +339,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                     {path:command.getPath() + '.' +
                      previous_revision + '.' + priv.username,
                      option:cloned_option});
-                newcommand.setMaxRetry (0); // inf
+                // newcommand.setMaxRetry (0); // inf
                 that.addJob ( that.newStorage (priv.secondstorage_spec),
                               newcommand );
             } else {
@@ -534,6 +569,7 @@ var newConflictManagerStorage = function ( spec, my ) {
         local_file_metadata = {},
         command_file_metadata = {}, // distant file.metadata
         previous_revision = 0,
+        metadata_object_known = true,
         is_a_new_file = false;
 
         o.updateLocalMetadata = function () {
@@ -549,6 +585,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                         new_owner_object;
                 }
             } else {
+                metadata_object_known = false;
                 local_file_metadata = {
                     winner: {},
                     owner: {},
@@ -579,6 +616,13 @@ var newConflictManagerStorage = function ( spec, my ) {
                 });
         };
         o.checkForConflicts = function () {
+            var removeAndDone = function () {
+                LocalOrCookieStorage.setItem (local_metadata_file_name,
+                                              command_file_metadata);
+                am.wait(o,'done',1);
+                am.call(o,'saveMetadata');
+                am.call(o,'removeRevision');
+            };
             var updateMetadataCommon = function () {
                 if (command_file_metadata.owner[priv.username]) {
                     previous_revision = command_file_metadata.owner[
@@ -595,6 +639,12 @@ var newConflictManagerStorage = function ( spec, my ) {
             var updateCommandMetadataOnConflict = function () {
                 updateMetadataCommon ();
             };
+            // if we don't known what is will be removed fail.
+            if (!metadata_object_known) {
+                return am.call(o,'fail',[{
+                    status:0,statusText:'Unknown Document',
+                    message:'You must load the document before delete it.'}]);
+            }
             // if this is a new file
             if (is_a_new_file) {
                 LocalOrCookieStorage.deleteItem (local_metadata_file_name);
@@ -604,14 +654,15 @@ var newConflictManagerStorage = function ( spec, my ) {
             if (local_file_metadata.winner.revision ===
                 command_file_metadata.winner.revision &&
                 local_file_metadata.winner.hash ===
-                command_file_metadata.winner.hash) {
+                command_file_metadata.winner.hash && (
+                    !command_file_metadata.owner[priv.username] || (
+                        priv.username === command_file_metadata.winner.owner ||
+                            command_file_metadata.owner[priv.username].
+                            revision < command_file_metadata.owner[
+                                command_file_metadata.winner.owner].revison))) {
                 // OK! Now, update distant metadata, store them and remove
                 updateCommandMetadataNotOnConflict();
-                LocalOrCookieStorage.setItem (local_metadata_file_name,
-                                              command_file_metadata);
-                am.wait(o,'done',1);
-                am.call(o,'saveMetadata');
-                am.call(o,'removeRevision');
+                removeAndDone();
             } else {
                 // if conflict
                 var conflict_object = {
@@ -629,38 +680,52 @@ var newConflictManagerStorage = function ( spec, my ) {
                     conflict_object));
                 conflict_object.hash = conflict_hash;
                 // browse known conflict list
-                var i, known_conflict_list =
+                var i,j, done = false, known_conflict_list =
                     command.getOption('known_conflict_list') || [];
-                var compare_fun = function (v) {
-                    return (v.hash === conflict_hash);
-                };
+                console.log ('1 ' + JSON.stringify (known_conflict_list));
                 for (i = 0; i < known_conflict_list.length; i+= 1) {
+                    console.log ('2');
                     // if known conflict
                     if (known_conflict_list[i].hash ===
                         conflict_hash) {
-                        command_file_metadata.conflict_list =
-                            priv.removeValuesFromArrayWhere(
-                                command_file_metadata.conflict_list,
-                                compare_fun);
+                        priv.removeConflict(
+                            command_file_metadata.conflict_list,
+                            conflict_hash);
                         updateCommandMetadataNotOnConflict();
-                        am.wait(o,'done',1);
-                        am.call(o,'saveMetadata');
-                        am.call(o,'removeRevision');
-                        return;
+                        removeAndDone();
+                        done = true;
+                    }
+                    for (j = 0; j < command_file_metadata.conflict_list.length;
+                         j+= 1) {
+                        console.log ('3');
+                        if (known_conflict_list[i].hash ===
+                            command_file_metadata.conflict_list[j].hash) {
+                            // if known other conflict
+                            // it is solved but the current conflict is
+                            // different than this one.
+                            priv.removeConflict(
+                                command_file_metadata.conflict_list,
+                                known_conflict_list[i].hash);
+                        }
                     }
                 }
-                updateCommandMetadataOnConflict();
-                // if unknown conflict
-                command_file_metadata.conflict_list.push (conflict_object);
-                am.neverCall(o,'done');
-                am.call(o,'saveMetadata');
-                // am.call(o,'removeRevision');
-                am.call(o,'fail',[
-                    {status:0,statusText:'Revision Conflict',
-                     message:'Someone has already modified this document.'}]);
-                var onConflict = command.getOption('onConflict') ||
-                    function (){};
-                onConflict(conflict_object);
+                if (!done) {
+                    updateCommandMetadataOnConflict();
+                    // if unknown conflict
+                    priv.addConflict (command_file_metadata.conflict_list,
+                                      conflict_object);
+                    am.neverCall(o,'done');
+                    LocalOrCookieStorage.setItem (local_metadata_file_name,
+                                                  command_file_metadata);
+                    am.call(o,'saveMetadata');
+                    // am.call(o,'removeRevision');
+                    am.call(o,'fail',[{status:0,statusText:'Revision Conflict',
+                                       message:'Someone has already'+
+                                       ' modified this document.'}]);
+                    var onConflict = command.getOption('onConflict') ||
+                        function (){};
+                    onConflict(conflict_object);
+                }
             }
         };
         o.saveMetadata = function () {
@@ -693,7 +758,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                     {path:command.getPath() + '.' +
                      previous_revision + '.' + priv.username,
                      option:cloned_option});
-                newcommand.setMaxRetry (0); // inf
+                // newcommand.setMaxRetry (0); // inf
                 that.addJob ( that.newStorage (priv.secondstorage_spec),
                               newcommand );
             } else {

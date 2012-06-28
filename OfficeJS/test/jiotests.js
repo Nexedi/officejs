@@ -880,31 +880,6 @@ test ('Remove document', function () {
         {type:'dummyall3tries',username:'2'}]});
     o.mytest('DummyStorageAllOK,3tries: remove document.','done');
     o.jio.stop();
-
-    o.jio = JIO.newJio({type:'replicate',storagelist:[
-        {type:'dummyall3tries',username:'a'},
-        {type:'dummyall3tries',username:'b'}]});
-    o.f = function (result) {
-        if (!result.status.isDone()) {
-            ok (false, 'Remove failed!');
-        }
-    };
-    o.f2 = function (result) {
-        if (!result.status.isDone()) {
-            ok (false, 'Remove failed!');
-        }
-    };
-    o.t.spy(o,'f');
-    o.t.spy(o,'f2');
-    o.jio.removeDocument('file',{onResponse:o.f,max_retry:3});
-    o.jio.removeDocument('memo',{onResponse:o.f2,max_retry:3});
-    o.clock.tick(5000);
-    ok (o.f.calledOnce && o.f2.calledOnce,
-        'DummyStorageAll3tries,3tries: remove document 2 times at once');
-    if (!(o.f.calledOnce && o.f2.calledOnce)) {
-        ok (o.f.calledOnce, 'first callback called once');
-        ok (o.f2.calledOnce, 'second callback called once');
-    }
 });
 
 module ('Jio IndexedStorage');
@@ -1224,14 +1199,89 @@ test ('Simple methods', function () {
     o.jio.stop();
 });
 
+test ('Remove Errors', function () {
+    var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.spy = function(res,value,message,function_name) {
+        function_name = function_name || 'f';
+        o[function_name] = function(result) {
+            if (res === 'status') {
+                deepEqual (result.status.getLabel(),value,message);
+            } else {
+                deepEqual (result[res],value,message);
+            }
+        };
+        o.t.spy(o,function_name);
+    };
+    o.tick = function (tick, function_name) {
+        function_name = function_name || 'f'
+        o.clock.tick(tick || 1000);
+        if (!o[function_name].calledOnce) {
+            if (o[function_name].called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
+        }
+    };
+    o.jio_1 = JIO.newJio({type:'conflictmanager',
+                          username:'1',
+                          storage:{type:'local',
+                                   username:'conflictrevision',
+                                   applicationname:'jiotests'}});
+    o.jio_2 = JIO.newJio({type:'conflictmanager',
+                          username:'2',
+                          storage:{type:'local',
+                                   username:'conflictrevision',
+                                   applicationname:'jiotests'}});
+    o.spy ('status','fail','removing unexistant "file.doc" owner "1",'+
+           ' error');
+    o.jio_1.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy ('status','done','saving "file.doc" owner "1",'+
+           ' ok');
+    o.jio_1.saveDocument('file.doc','content1',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy ('status','fail','removing existant "file.doc" owner "2",'+
+           ' error');
+    o.jio_2.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy ('status','fail','removing existant "file.doc" owner "2",'+
+           ' error');
+    o.jio_2.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy ('status','done','removing existant "file.doc" owner "1",'+
+           ' error');
+    o.jio_1.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy ('status','done','saving "file.doc" owner "2",'+
+           ' ok');
+    o.jio_2.saveDocument('file.doc','content1',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy ('status','done','loading "file.doc" owner "1",'+
+           ' ok');
+    o.jio_1.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy ('status','done','removing "file.doc" owner "1",'+
+           ' ok');
+    o.jio_1.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.jio_2.stop();
+    o.jio_1.stop();
+});
+
 test ('Revision Conflicts' , function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.spy = function(res,value,message,function_name) {
         function_name = function_name || 'f';
         o[function_name] = function(result) {
-            if (res === 'true') {
-                return ok(true,message);
-            }
             if (res === 'status') {
                 deepEqual (result.status.getLabel(),value,message);
             } else {
@@ -1294,8 +1344,21 @@ test ('Revision Conflicts' , function () {
         onResponse:o.f,max_retry:1,onConflict:o.c});
     o.tick(undefined,'f');
     o.tick(0,'c');
+    if (!o.co) { return ok(false,'impossible to continue the tests'); }
+    o.co = undefined;
 
-    if (!o.co) { ok(false,'impossible to continue the tests'); }
+    o.spy('status','fail',"don't solve anything,"+
+          ' save "file.doc" with owner "me", forth revision, conflict!');
+    o.c = function (conflict_object) {
+        o.co = conflict_object;
+        ok (true,'onConflict callback called once');
+    };
+    o.t.spy(o,'c');
+    o.jio_me.saveDocument('file.doc','content4me',{
+        onResponse:o.f,max_retry:1,onConflict:o.c});
+    o.tick();
+    o.tick(0,'c');
+    if (!o.co) { return ok(false,'impossible to continue the tests'); }
 
     o.spy('status','done','solving conflict and save "file.doc" with owner'+
           ' "me", forth revision, no conflict.');
@@ -1305,8 +1368,11 @@ test ('Revision Conflicts' , function () {
 
     o.spy('status','done','removing "file.doc" with owner "me",'+
           ' no conflict.');
-    o.jio_me.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.c = o.t.spy();
+    o.jio_me.removeDocument('file.doc',{onResponse:o.f,max_retry:1,
+                                        onConflict:o.c});
     o.tick();
+    if (o.c.called) { ok(false, 'conflict callback called!'); }
 
     o.spy('status','fail','saving "file.doc" with owner "him",'+
           ' any revision, conflict!');
@@ -1317,11 +1383,106 @@ test ('Revision Conflicts' , function () {
     o.t.spy(o,'c');
     o.jio_him.saveDocument('file.doc','content4him',{
         onResponse:o.f,max_retry:1,onConflict:o.c});
-    o.tick(undefined,'f');
+    o.tick();
     o.tick(0,'c');
 
     o.jio_me.stop();
     o.jio_him.stop();
+});
+
+test ('Solving Conflict Conflicts' , function () {
+    var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.spy = function(res,value,message,function_name) {
+        function_name = function_name || 'f';
+        o[function_name] = function(result) {
+            if (res === 'status') {
+                deepEqual (result.status.getLabel(),value,message);
+            } else {
+                deepEqual (result[res],value,message);
+            }
+        };
+        o.t.spy(o,function_name);
+    };
+    o.tick = function (tick, function_name) {
+        function_name = function_name || 'f'
+        o.clock.tick(tick || 1000);
+        if (!o[function_name].calledOnce) {
+            if (o[function_name].called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
+        }
+    };
+    o.jio_you = JIO.newJio({type:'conflictmanager',
+                            username:'you',
+                            storage:{type:'local',
+                                     username:'conflictrevision',
+                                     applicationname:'jiotests'}});
+    o.jio_her = JIO.newJio({type:'conflictmanager',
+                            username:'her',
+                            storage:{type:'local',
+                                     username:'conflictrevision',
+                                     applicationname:'jiotests'}});
+
+    o.spy('status','done','saving "file.doc" with owner "you",'+
+          ' first revision, no conflict.');
+    o.jio_you.saveDocument('file.doc','content1you',
+                           {onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','done','loading "file.doc" with owner "her",'+
+          ' last revision, no conflict.');
+    o.jio_her.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','done','saving "file.doc" with owner "her",'+
+          ' next revision, no conflict.');
+    o.jio_her.saveDocument('file.doc','content1her',
+                           {onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','fail','saving "file.doc" with owner "you",'+
+          ' second revision, conflict!');
+    o.c = function (conflict_object) {
+        o.co = conflict_object;
+        ok (true,'onConflict callback called once');
+    };
+    o.t.spy(o,'c');
+    o.jio_you.saveDocument('file.doc','content3you',{
+        onResponse:o.f,max_retry:1,onConflict:o.c});
+    o.tick();
+    o.tick(0,'c');
+    if (!o.co) { return ok(false,'impossible to continue the tests'); }
+
+    o.spy('status','done','saving "file.doc" with owner "her",'+
+          ' next revision, no conflict.');
+    o.jio_her.saveDocument('file.doc','content2her',
+                           {onResponse:o.f,max_retry:1});
+    o.tick();
+
+    o.spy('status','fail','solving conflict and save "file.doc" with owner'+
+          ' "you", fith revision, conflict!');
+    o.c = function (conflict_object) {
+        o.co = conflict_object;
+        ok (true, 'onConflict callback called once');
+    };
+    o.t.spy(o,'c');
+    o.jio_you.saveDocument('file.doc','content4you',{
+        onResponse:o.f,max_retry:1,known_conflict_list:[o.co],onConflict:o.c});
+    o.co = undefined;
+    o.tick();
+    o.tick(0,'c');
+    if (!o.co) { return ok(false,'impossible to continue the tests'); }
+
+    o.spy('status','done','solving conflict and save "file.doc" with owner'+
+          ' "you", forth revision, no conflict.');
+    o.jio_you.saveDocument('file.doc','content5you',{
+        onResponse:o.f,max_retry:1,known_conflict_list:[o.co]});
+    o.tick();
+
+    o.jio_you.stop();
+    o.jio_her.stop();
 });
 
 };                              // end thisfun
