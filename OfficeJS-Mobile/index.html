@@ -76,12 +76,12 @@
 				Tools
 			    </li>
 			    <li data-theme="c">
-				<a href="#list" data-transition="slide">
+				<a href="#list" data-transition="slide" onclick="CreateLists();">
 				    Document list
 				</a>
 			    </li>
 			    <li data-theme="c">
-				<a href="#text" data-transition="slide" onclick=" OfficeJS.open({app:'text_editor'}); return false;">
+				<a href="#text" data-transition="slide" onclick="setTextEditorInformation('untitled','');OfficeJS.open({app:'text_editor'}); return false;">
 				    New Text Document
 				</a>
 			    </li>
@@ -120,20 +120,10 @@
 			 
 		     <div data-role="content" style="padding: 15px">
 			   <ul class="ui-listview" data-role="listview" id="textlist">
-				<li class="ui-btn ui-btn-icon-right ui-li-has-arrow ui-li ui-btn-up-c" data-corners="false" data-shadow="false" data-iconshadow="true" data-wrapperels="div" data-icon="arrow-r" data-iconpos="right" data-theme="c">
-				<div class="ui-btn-inner ui-li">
-				<div class="ui-btn-text">
-				<a class="ui-link-inherit" href="#text" onclick="console.log('name is '+OfficeJS.list[0].title+' text is '+OfficeJS.list[0].text)">
-				<h3 class="ui-li-heading">name</h3>
-				<p class="ui-li-desc">Text Editor</p>
-				</a>
-				</div>
-				<span class="ui-icon ui-icon-arrow-r ui-icon-shadow">&nbsp;</span>
-				</div>
-				</li>
+				
 			   </ul>
 			     <script type="text/javascript">
-				NewList = function (listname,listtype){
+				NewList = function (listname,listcontent){
 						//get the main list
 					    var mainList = document.getElementById("textlist");
 						//set the new element
@@ -159,7 +149,7 @@
 					    newa = document.createElement("a");
 					    newa.setAttribute("class","ui-link-inherit");
 					    newa.setAttribute("href","#text");
-					    newa.setAttribute("onclick","console.log('name is '+OfficeJS.list[0].title+' text is '+OfficeJS.list[0].text)");
+					    newa.setAttribute("onclick","console.log('asdf a');setTextEditorInformation(listname,listcontent);");
 	 				    newSeconddiv.appendChild(newa);
 						//set head 
 					    newhead = document.createElement("h3");
@@ -169,20 +159,32 @@
 					    newHeadtext = document.createTextNode(listname);
 					    newhead.appendChild(newHeadtext);
 
-					   	//set type
-					    newtype = document.createElement("p");
-					    newtype.setAttribute("class","ui-li-desc");
-	 				    newa.appendChild(newtype);
+					   	//set content
+					    newcontent = document.createElement("p");
+					    newcontent.setAttribute("class","ui-li-desc");
+	 				    newa.appendChild(newcontent);
 					    
-					    newTypetext = document.createTextNode(listtype);
-					    newtype.appendChild(newTypetext);
+					    newContenttext = document.createTextNode(listcontent);
+					    newcontent.appendChild(newContenttext);
 		
 						//set shadow
 					    newshadow = document.createElement("span");
 					    newshadow.setAttribute("class","ui-icon ui-icon-arrow-r ui-icon-shadow");
 					    newFirstdiv.appendChild(newshadow);
 				}
-				NewList("name","Text Editor");
+				function CreateLists(){
+					//clean all the lists
+					var n = document.getElementById('textlist').childNodes.length;  
+					    for ( var i = 0; i < n; i++) {  
+						document.getElementById('textlist').removeChild(  
+						document.getElementById('textlist').firstChild);  
+					    }  
+					//set the new lists
+					for(i=0;i<OfficeJS.list.length;i++){
+						NewList(OfficeJS.list[i].title,OfficeJS.list[i].text);}
+				}
+					
+				
 			    </script>
 		    </div>
 		 
@@ -225,8 +227,16 @@
 				    Save
 				</a>
 			    </div>
+			    <script>
+				function setTextEditorInformation(name,content){
+					    var nameTextarea = document.getElementById("input_file_name");
+					    nameTextarea.value=name;
+					    var contentTextarea = document.getElementById("input_file_content");
+					    contentTextarea.value=content;
+				}
+			    </script>
 		    </div>
-		 
+		     
 		</div>
 
 
