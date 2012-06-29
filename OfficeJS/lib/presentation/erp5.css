@@ -72,21 +72,7 @@ button.sort_button span {
   text-decoration: underline;
 }
 
-img {
-  border: 0;
-}
 
-body, div, span, fieldset {
-  color: #001730;
-}
-
-div, span, fieldset {
-  background-color: inherit;
-}
-
-body {
-  background-color: #DAE6F6;
-}
 
 #main_form, /* BBB */
 .main_form,  {
@@ -456,28 +442,6 @@ span.search {
   float: left;
 }
 
-#favourites button .image, /* BBB */
-span.favourites button .image {
-  background-image: url('images/favourite.png');
-}
-
-#modules button .image, /* BBB */
-span.modules button .image {
-  background-image: url('images/appearance.png');
-}
-
-#language button .image, /* BBB */
-span.language button .image {
-  background-image: url('images/language.png');
-}
-
-.quick_search_field { color: #777777; }
-.quick_search_field:focus { color: #000000; }
-
-#search button .image, /* BBB */
-span.search button .image {
-  background-image: url('images/search.png');
-}
 
 #status, /* BBB */
 .status,
@@ -523,16 +487,6 @@ span.search button .image {
   float: left;
 }
 
-#main_bar .separator, /* BBB */
-.main_bar .separator {
-  background-image: url('images/sepafon.png');
-}
-
-#context_bar .separator, /* BBB */
-.context_bar .separator {
-  background-image: url('images/sepacla.png');
-}
-
 #context_bar .tool_buttons a .image, /* BBB */
 .context_bar .tool_buttons a .image,
 #context_bar .tool_buttons button .image, /* BBB */
@@ -547,136 +501,6 @@ span.search button .image {
   background-repeat: no-repeat;
 }
 
-#context_bar #jump button .image, /* BBB */
-.context_bar .jump button .image {
-  background-image: url('images/jump22.png');
-}
-
-#context_bar #action button .image, /* BBB */
-.context_bar .action button .image {
-  background-image: url('images/exec.png');
-}
-
-#context_bar .tool_buttons .list_mode .image, /* BBB */
-.context_bar .tool_buttons .list_mode .image {
-  background-image: url('images/text_block.png');
-}
-
-#context_bar .tool_buttons .new .image, /* BBB */
-.context_bar .tool_buttons .new .image {
-  background-image: url('images/filenew.png');
-}
-
-#context_bar .tool_buttons .clone .image, /* BBB */
-.context_bar .tool_buttons .clone .image {
-  background-image: url('images/fileclone.png');
-}
-
-#context_bar .tool_buttons .jump_first .image, /* BBB */
-.context_bar .tool_buttons .jump_first .image {
-  background-image: url('images/2leftarrowb.png');
-}
-
-#context_bar .tool_buttons .jump_previous .image, /* BBB */
-.context_bar .tool_buttons .jump_previous .image {
-  background-image: url('images/1leftarrowb.png');
-}
-
-#context_bar .tool_buttons .jump_next .image, /* BBB */
-.context_bar .tool_buttons .jump_next .image {
-  background-image: url('images/1rightarrowb.png');
-}
-
-#context_bar .tool_buttons .jump_last .image, /* BBB */
-.context_bar .tool_buttons .jump_last .image {
-  background-image: url('images/2rightarrowb.png');
-}
-
-#context_bar .tool_buttons .import_export .image, /* BBB */
-.context_bar .tool_buttons .import_export .image {
-  background-image: url('images/imp-exp.png');
-}
-
-#context_bar .tool_buttons .jump_help .image, /* BBB */
-.context_bar .tool_buttons .jump_help .image {
-  background-image: url('images/userhelp.png');
-}
-
-#context_bar .tool_buttons .find .image, /* BBB */
-.context_bar .tool_buttons .find .image {
-  background-image: url('images/find.png');
-}
-
-#context_bar .tool_buttons .print .image, /* BBB */
-.context_bar .tool_buttons .print .image {
-  background-image: url('images/print.png');
-}
-
-#context_bar .tool_buttons .report .image, /* BBB */
-.context_bar .tool_buttons .report .image {
-  background-image: url('images/report.png');
-}
-
-#context_bar .tool_buttons .fast_input .image, /* BBB */
-.context_bar .tool_buttons .fast_input .image {
-  background-image: url('images/fast_input.png');
-}
-
-#context_bar .tool_buttons .cut .image, /* BBB */
-.context_bar .tool_buttons .cut .image {
-  background-image: url('images/editcut.png');
-}
-
-#context_bar .tool_buttons .copy .image, /* BBB */
-.context_bar .tool_buttons .copy .image {
-  background-image: url('images/editcopy.png');
-}
-
-#context_bar .tool_buttons .paste .image, /* BBB */
-.context_bar .tool_buttons .paste .image {
-  background-image: url('images/editpaste.png');
-}
-
-#context_bar .tool_buttons .delete .image, /* BBB */
-.context_bar .tool_buttons .delete .image {
-  background-image: url('images/editdelete.png');
-}
-
-#context_bar .tool_buttons .show_all .image, /* BBB */
-.context_bar .tool_buttons .show_all .image {
-  background-image: url('images/showall.png');
-}
-
-#context_bar .tool_buttons .filter .image, /* BBB */
-.context_bar .tool_buttons .filter .image {
-  background-image: url('images/filter.png');
-}
-
-#context_bar .tool_buttons .filter_on .image, /* BBB */
-.context_bar .tool_buttons .filter_on .image {
-  background-image: url('images/filter_on.png');
-}
-
-#context_bar .tool_buttons .sort .image, /* BBB */
-.context_bar .tool_buttons .sort .image {
-  background-image: url('images/sort.png');
-}
-
-#context_bar .tool_buttons .configure .image, /* BBB */
-.context_bar .tool_buttons .configure .image {
-  background-image: url('images/configure.png');
-}
-
-#context_bar .tool_buttons .activity_pending .image, /* BBB */
-.context_bar .tool_buttons .activity_pending .image {
-  width: 26px;
-  background-image: url('images/activity_busy.png');
-}
-
-#context_bar .tool_buttons .inspect_object .image, /* BBB */
-.context_bar .tool_buttons .inspect_object .image {
-  background-image: url('images/inspect.png');
-}
 
 /* Status */
 
