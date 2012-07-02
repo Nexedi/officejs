@@ -2,6 +2,7 @@
       <!DOCTYPE HTML>
       <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
         <head>
+	  <title>slide show editor</title>
           <script type="text/javascript"
             src="lib/presentation/jquery.js"></script>
           <script type="text/javascript"
@@ -29,7 +30,7 @@
      	    <i class="icon-download-alt icon-white"></i>
       	      Save
       	    </button>&nbsp;   
-	    <img src="lib/presentation/images/slide_icon.png" onclick=window.open("lib/presentation/slides.html"); alt="See slideshow" title="See slideshow" />
+	    <img src="lib/presentation/images/slide_icon.png" onclick="window.open('lib/presentation/slides.html');" alt="See slideshow" title="See slideshow" />
             <img src="lib/presentation/images/questionmark.png" alt="see Instruction" title="Drag and drop to modify the order of the slides.
 Click on the top left corner of a slide to modify it or on the top right corner to delete it." />
     	  </div>
@@ -39,17 +40,20 @@ Click on the top left corner of a slide to modify it or on the top right corner 
 	      <label>
 	        Page Content
 	      </label>
-	      <div class="input"><div  >
-              <link rel="stylesheet" type="text/css" href="lib/presentation/jquery-ui.css">
-	      <link rel="stylesheet" type="text/css" href="lib/presentation/slideshow_editor.css">
-	      <script language="javascript" src="lib/presentation/slideshow_editor.js"></script>
-	      <script language="javascript" src="lib/presentation/erp5_run_my_docs.js"></script>
-	      <div id="list"></div>
-	      <div id="add_slide">
-	        <section id="add_slide_button"> Add Slide </section>
+	      <div class="input">
+                <link rel="stylesheet" type="text/css" href="lib/presentation/jquery-ui.css"/>
+	        <link rel="stylesheet" type="text/css" href="lib/presentation/slideshow_editor.css"/>
+	        <script type="text/javascript" 
+		   src="lib/presentation/slideshow_editor.js"></script>
+	        <script type="text/javascript" 
+		   src="lib/presentation/erp5_run_my_docs.js"></script>
+	        <div id="list"></div>
+	        <div id="add_slide">
+	          <section id="add_slide_button"> Add Slide </section>
+	        </div>
+	        <div id="dialog_add_slide" class="slide_dialog"></div>
+	        <div id="dialog_edit_slide" class="slide_dialog"></div>
 	      </div>
-	      <div id="dialog_add_slide" class="slide_dialog"></div>
-	      <div id="dialog_edit_slide" class="slide_dialog"></div>
       	    </div>
           
             <p class="clear"></p>
@@ -92,12 +96,12 @@ Click on the top left corner of a slide to modify it or on the top right corner 
            		</tbody>
                       </table>
         	    </test>
-    		  </textarea>
-		</div>
+		  </div>
+    		</textarea>
 	      </div>
-    	    </fieldset>
-            <p class="clear"></p>
- 	  </form>
+	    </div>
+    	  </fieldset>
+          <p class="clear"></p>
         </body>
       </html>
     
