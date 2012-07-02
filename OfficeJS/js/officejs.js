@@ -22,7 +22,7 @@
             text_editor:'elrte',
             img_editor:'svg-edit',
             spreadsheet:'jquery-sheet',
-	    power_point:'power-point'
+	    present_slides:'present-slides'
         };
         priv.app_object = {
             topnavbar: {
@@ -168,11 +168,11 @@
                     });
                 }
             },
-	    'power-point': {
+	    'present-slides': {
                 type:'editor',
                 path:'component/slideshow.html',
                 gadget_id:'page-content',
-                ext:'ppt',
+                ext:'prs',
                 frameid:'svg_edit_frame',
                 getContent: function () {
 	            return getSlidesContent();
@@ -215,7 +215,7 @@
                   icon:'<i class="icon-font"></i>'},
             svg:{pref:'img_editor',app:'svg-edit',
                  icon:'<i class="icon-pencil"></i>'},
-            ppt:{pref:'power_point',app:'power-point',
+            prs:{pref:'present_slides',app:'present-slides',
                  icon:'<i class="icon-facetime-video"></i>'},
             jqs:{app:'jquery-sheet',
                  icon:'<i class="icon-signal"></i>'}
