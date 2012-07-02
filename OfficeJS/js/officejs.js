@@ -175,29 +175,10 @@
                 ext:'ppt',
                 frameid:'svg_edit_frame',
                 getContent: function () {
-			return document.getElementById("list").innerHTML;
-                    
+	            return getSlidesContent();
                 },
                 setContent: function (content) {
-			document.getElementById ("list").innerHTML=content;
-			//re initial the edit frame for the new page
-			 $dialogEdit.append(editSlideIframe);
-			    $('.edit_slide_button').click(function() {
-			      editClick(this);
-			    });
-
-			    $('.remove_slide_button').click(function() {
-			      removeClick(this);
-			    });
-			    $('section').hover(function() {
-			      slideHover(this);
-			    }, function(){
-				slideOut(this);
-			    });
-
-			    $('section').mousedown(function() {
-			      slideOut(this);
-			    });  
+			setSlidesContent(content);
                 },
                 onload: function (param) {
                     var waitForInit = function (fun) {

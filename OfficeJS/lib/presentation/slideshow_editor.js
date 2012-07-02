@@ -230,6 +230,32 @@ function appendSlideButtons(element, index){
   $(element).after(button);
 }
 
+function getSlidesContent(){
+  return document.getElementById("list").innerHTML;
+}
+
+function setSlidesContent(content){
+  document.getElementById ("list").innerHTML=content;
+  reinitialSlides();
+}
+
+function reinitialSlides(){
+  $dialogEdit.append(editSlideIframe);
+  $('.edit_slide_button').click(function() {
+    editClick(this);
+  });
+  $('.remove_slide_button').click(function() {
+    removeClick(this);
+  });
+  $('section').hover(function() {
+    slideHover(this);
+  }, function(){
+    slideOut(this);
+  });
+  $('section').mousedown(function() {
+    slideOut(this);
+  });  
+}
 $(document).ready(function(){
   $(function() {
     //Extract the slides
