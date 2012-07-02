@@ -168,17 +168,16 @@
                     });
                 }
             },
-	    'present-slides': {
+            'present-slides': {
                 type:'editor',
                 path:'component/slideshow.html',
                 gadget_id:'page-content',
                 ext:'prs',
-                frameid:'svg_edit_frame',
                 getContent: function () {
-	            return getSlidesContent();
+                    return getSlidesContent();
                 },
                 setContent: function (content) {
-			setSlidesContent(content);
+                    setSlidesContent(content);
                 },
                 onload: function (param) {
                     var waitForInit = function (fun) {
