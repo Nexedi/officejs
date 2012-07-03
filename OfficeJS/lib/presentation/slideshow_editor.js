@@ -247,6 +247,16 @@ function reinitialSlides(){
   $('.remove_slide_button').click(function() {
     removeClick(this);
   });
+  $('.edit_slide_button').hover(function() {
+    buttonHover(this);
+  }, function(){
+    slideOut(this);
+  });
+  $('.remove_slide_button').hover(function() {
+    buttonHover(this);
+  }, function(){
+    slideOut(this);
+  });
   $('section').hover(function() {
     slideHover(this);
   }, function(){
@@ -255,6 +265,7 @@ function reinitialSlides(){
   $('section').mousedown(function() {
     slideOut(this);
   });  
+
 }
 $(document).ready(function(){
   $(function() {
