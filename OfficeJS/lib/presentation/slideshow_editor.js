@@ -359,6 +359,9 @@ $(document).ready(function(){
             $(section).append(image);
           }
           appendSection();
+          //close the iframe after adding.
+          var iframe=window.parent.document.getElementById('iframe_add_slide');
+          iframe.parentNode.removeChild(iframe);
         });
       }
       setTimeout(initFrame, 0);
