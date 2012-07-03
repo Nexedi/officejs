@@ -141,6 +141,10 @@
           <button class="bt-med dialog_submit_button" type="submit" name="Base_callDialogMethod:method" id="dialog_submit_button" accesskey="V">
             <span>Add a new Slide</span>
           </button>
+          <button class="bt-med dialog_submit_button" type="button" id="dialog_cancel_button" onclick="var iframe=window.parent.document.getElementById('iframe_add_slide');
+iframe.parentNode.removeChild(iframe);">
+            <span>Close</span>
+          </button>
         </div>
       </div>
     </form>

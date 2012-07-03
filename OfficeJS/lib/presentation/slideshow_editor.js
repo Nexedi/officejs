@@ -38,7 +38,8 @@ function removeClick(trigger){
 //Edit a slide
 function editClick(trigger){
   slideNumber = parseInt($(trigger).attr('id').split('_')[2]);
-  $dialogEdit.dialog('open');
+  $("#tools_content").append(editSlideIframe);
+  //$dialogEdit.dialog('open');
   return false;
 }
 
@@ -301,6 +302,8 @@ $(document).ready(function(){
     addSlideIframe = $("<iframe>");
     addSlideIframe.attr('id','iframe_add_slide');
     addSlideIframe.attr('src','/lib/presentation/TestPage_viewSlideCreator');
+    addSlideIframe.attr('width','700xp');
+    addSlideIframe.attr('height','365xp');
 
     addSlideIframe.load(function() {
       function initFrame(){ 
@@ -361,7 +364,7 @@ $(document).ready(function(){
       setTimeout(initFrame, 0);
     });
 
-    var $dialog = $("#dialog_add_slide")
+ /*   var $dialog = $("#dialog_add_slide")
       .dialog({
         title: "Add new slide",
         autoOpen: false,
@@ -376,9 +379,10 @@ $(document).ready(function(){
         position: 'center'
       });
 
-    $dialog.append(addSlideIframe);
+    $dialog.append(addSlideIframe);*/
     $('#add_slide_button').click(function() {
-      $dialog.dialog('open');
+      //$dialog.dialog('open');
+      $("#tools_content").append(addSlideIframe);
       return false;
     });
 
@@ -386,6 +390,8 @@ $(document).ready(function(){
     editSlideIframe = $("<iframe>");
     editSlideIframe.attr('id','iframe_edit_slide');
     editSlideIframe.attr('src','lib/presentation/TestPage_viewSlideEditor');
+    editSlideIframe.attr('width','700xp');
+    editSlideIframe.attr('height','365xp');
 
     editSlideIframe.load(function() {
       function initFrame(){ 
@@ -486,13 +492,16 @@ $(document).ready(function(){
             }
           } 
           appendSection();
+          //close the iframe after editing.
+          var iframe=window.parent.document.getElementById('iframe_edit_slide');
+          iframe.parentNode.removeChild(iframe);
         });
       }
         
       setTimeout(initFrame, 0);
     });
 
-    $dialogEdit = $("#dialog_edit_slide")
+   /* $dialogEdit = $("#dialog_edit_slide")
       .dialog({
         title: "Edit slide",
         autoOpen: false,
@@ -505,9 +514,9 @@ $(document).ready(function(){
         width: "50%",
         height: "auto",
         position: 'center'
-      });
+      });*/
 
-    $dialogEdit.append(editSlideIframe);
+//    $dialogEdit.append(editSlideIframe);
     $('.edit_slide_button').click(function() {
       editClick(this);
     });
