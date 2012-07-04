@@ -517,7 +517,7 @@
            newlist.title=basename;//object title and text
            newlist.text=content;
            newlist.number=that.list.length;
-           that.list.push(obj);//save in the list
+           that.list.push(newlist);//save in the list
         };
 
         /**

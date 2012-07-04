@@ -1,7 +1,6 @@
 
 //automatically build the list
 NewList = function (listnumber,listname,listcontent){
-  var listNumber=listnumber;
   //get the main list
   var mainList = document.getElementById("textlist");
   //set the new element
@@ -25,11 +24,10 @@ NewList = function (listnumber,listname,listcontent){
   newFirstdiv.appendChild(newSeconddiv);
   //set a tag
   newa = document.createElement("a");
+  newa.setAttribute("id",listnumber);
   newa.setAttribute("class","ui-link-inherit");
   newa.setAttribute("href","#text");
-    //set the listnumber to control
-  newa.setAttribute("value",listNumber);
-  newa.setAttribute("onclick","setTextEditorInformation(OfficeJS.list[i].title,OfficeJS.list[i].title,OfficeJS.list[i].title,OfficeJS.list[i].text);");
+  newa.setAttribute("onclick","setTextEditorInformation(OfficeJS.list[this.id].title,OfficeJS.list[this.id].text);");
   newSeconddiv.appendChild(newa);
   //set head 
   newhead = document.createElement("h3");
@@ -60,5 +58,12 @@ function CreateLists(){
   for(i=0;i<OfficeJS.list.length;i++){
     NewList(i,OfficeJS.list[i].title,OfficeJS.list[i].text);
   }
+}
+
+function get_list_value(element){
+  tr=document.all.para.value;
+  document.all.para.value=element.value;
+  var trid = element.value;
+  alert(trid);
 }
 
