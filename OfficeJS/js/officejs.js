@@ -465,6 +465,7 @@
                 'onResponse':function (result) {
                     if (result.status === 'done') {
                         priv.data_object.documentList = result.return_value;
+console.log(result.return_value);
                         priv.showDocumentListInsideLeftNavBar();
                     } else {
                         console.error (result.message);

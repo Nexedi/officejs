@@ -24,10 +24,10 @@ NewList = function (listnumber,listname,listcontent){
   newFirstdiv.appendChild(newSeconddiv);
   //set a tag
   newa = document.createElement("a");
-  newa.setAttribute("id",listnumber);
+  newa.setAttribute("id",listname);
   newa.setAttribute("class","ui-link-inherit");
   newa.setAttribute("href","#text");
-  newa.setAttribute("onclick","setTextEditorInformation(OfficeJS.list[this.id].title,OfficeJS.list[this.id].text);");
+  newa.setAttribute("onclick","OfficeJS.load(this.id);");
   newSeconddiv.appendChild(newa);
   //set head 
   newhead = document.createElement("h3");
