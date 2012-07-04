@@ -15,7 +15,6 @@
     <!-- this is a placeholder for different extensions to head which could be required by web themes -->
   </head>
   <body>
-    <form enctype="multipart/form-data" method="post" action="https://www.tiolive.com/nexedi" onsubmit="changed=false; return true" class="main_form" id="main_form">
       <fieldset class="hidden_fieldset" id="hidden_fieldset">
         <input type="submit" name="Base_callDialogMethod:method" value="dummy" class="hidden_button" id="hidden_button"/>
         <input type="hidden" value="" name="update_method"/>
@@ -150,6 +149,5 @@ iframe.parentNode.removeChild(iframe);">
           </button>
         </div>
       </div>
-    </form>
   </body>
 </html>
