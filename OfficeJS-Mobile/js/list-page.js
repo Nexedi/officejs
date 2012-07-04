@@ -5,7 +5,7 @@ NewList = function (listnumber,listname,listcontent){
   var mainList = document.getElementById("textlist");
   //set the new element
   newElement = document.createElement("li");
-  newElement.setAttribute("class","ui-btn ui-btn-icon-right ui-li-has-arrow ui-li ui-btn-up-c");
+  newElement.setAttribute("class","ui-btn ui-btn-icon-right ui-li-has-arrow ui-li ui-li-static ui-body-c ui-btn-up-c");
   newElement.setAttribute("data-theme","c");	
   newElement.setAttribute("data-iconpos","right");	
   newElement.setAttribute("data-icon","arrow-r");
@@ -16,7 +16,7 @@ NewList = function (listnumber,listname,listcontent){
   mainList.appendChild(newElement);	
   //set firstdiv
   newFirstdiv = document.createElement("div");
-  newFirstdiv.setAttribute("class","ui-btn-inner ui-li");
+  newFirstdiv.setAttribute("class","ui-btn-inner ui-li ui-li-static ui-body-c");
   newElement.appendChild(newFirstdiv);
   //set seconddiv
   newSeconddiv = document.createElement("div");
