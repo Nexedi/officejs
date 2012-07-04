@@ -513,11 +513,20 @@
                     that.getList();
                 }
             });*/
-           var newlist=new Object();//new object
-           newlist.title=basename;//object title and text
-           newlist.text=content;
-           newlist.number=that.list.length;
-           that.list.push(newlist);//save in the list
+           var newone=true;
+           for(var i=0;i<that.list.length;i++){
+             if(basename==that.list[i].title){
+               newone=false;
+               that.list[i].text=content;
+             }
+           }
+           if(newone){
+             var newlist=new Object();//new object
+             newlist.title=basename;//object title and text
+             newlist.text=content;
+             newlist.number=that.list.length;
+             that.list.push(newlist);//save in the list
+           }
         };
 
         /**
