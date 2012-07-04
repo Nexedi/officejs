@@ -19,7 +19,7 @@
 
         var that = {}, priv = {};
         // Attributes //
-that.list=new Array();//数组
+        that.list=new Array();//List for ListPage
 
 
         priv.preference_object = {
@@ -513,15 +513,11 @@ that.list=new Array();//数组
                     that.getList();
                 }
             });*/
-var obj=new Object();//new object
-
-obj.title=basename;//object title and text
-obj.text=content;
-
-that.list.push(obj);//save in the list
-
-
-		
+           var newlist=new Object();//new object
+           newlist.title=basename;//object title and text
+           newlist.text=content;
+           newlist.number=that.list.length;
+           that.list.push(obj);//save in the list
         };
 
         /**
