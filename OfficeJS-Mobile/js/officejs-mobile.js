@@ -19,9 +19,7 @@
 
         var that = {}, priv = {};
         // Attributes //
-        that.list=new Array();//List for ListPage
-that.currentContent="";
-
+        
         priv.preference_object = {
             document_lister:'slickgrid',
             edit_preferences:'simplepreferenceeditor',
@@ -444,12 +442,12 @@ that.currentContent="";
             // if there is not any jio created
             priv.jio = JIO.newJio (storage,applicant);
             // update left nav bar
-     /*       leftnavbar = priv.getRealApplication ('leftnavbar');
+          /*leftnavbar = priv.getRealApplication ('leftnavbar');
             if (typeof leftnavbar.update !== 'undefined') {
                 leftnavbar.update();
             }*/
-//Forbid the list to avoid error   
-//         that.getList();
+            //Forbid the list to avoid error   
+            //that.getList();
         };
 
         /**
@@ -463,7 +461,7 @@ that.currentContent="";
                 console.error ('No Jio set yet.');
                 return;
             }
-      //      priv.loading_object.getlist();
+            //priv.loading_object.getlist();
             priv.jio.getDocumentList({
                 'sort':{'last_modified':'descending',
                         'name':'ascending'},
@@ -473,16 +471,15 @@ that.currentContent="";
                 'onResponse':function (result) {
                     if (result.status === 'done') {
                         priv.data_object.documentList = result.return_value;
-console.log(result.return_value.length);
-console.log(result.return_value[0]);
-for(var i=0;i<result.return_value.length;i++){
-    NewList(i,result.return_value[i].name,"text-Editor");
-}
-            //            priv.showDocumentListInsideLeftNavBar();
+                       //set the List
+                       for(var i=0;i<result.return_value.length;i++){
+                       NewList(i,result.return_value[i].name,"text-Editor");
+                    }
+                    //priv.showDocumentListInsideLeftNavBar();
                     } else {
                         console.error (result.message);
                     }
-              //      priv.loading_object.end_getlist();
+                    //priv.loading_object.end_getlist();
                     if (typeof callback !== 'undefined') {
                         callback();
                     }
@@ -518,20 +515,7 @@ for(var i=0;i<result.return_value.length;i++){
                     that.getList();
                 }
             });*/
-           var newone=true;
-           for(var i=0;i<that.list.length;i++){
-             if(basename==that.list[i].title){
-               newone=false;
-               that.list[i].text=content;
-             }
-           }
-           if(newone){
-             var newlist=new Object();//new object
-             newlist.title=basename;//object title and text
-             newlist.text=content;
-             newlist.number=that.list.length;
-             that.list.push(newlist);//save in the list
-           }
+           
            if (!priv.isJioSet()) {
                console.error ('No Jio set yet.');
                return;
@@ -549,25 +533,26 @@ for(var i=0;i<result.return_value.length;i++){
          * @param  {string} basename The document name without ext.
          */
         that.load = function (basename) {
-      //      var current_editor = priv.data_object.currentEditor;
+          //var current_editor = priv.data_object.currentEditor;
 
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
             }
-     //       priv.loading_object.load();
+          //priv.loading_object.load();
             priv.jio.loadDocument({
                 'name':basename,
                 'maxtries':3,
                 'onResponse':function (result) {
                     if (result.status === 'fail') {
                         console.error (result.message);
-                    } else {console.log("content is :"+result.return_value.content);
-			setTextEditorInformation(basename,result.return_value.content);
-                    //    current_editor.setContent(
-                          //  result.return_value.content);
+                    } else {
+                        //set the content for the editor
+                        setTextEditorInformation(basename,result.return_value.content);
+                        //current_editor.setContent(
+                        //result.return_value.content);
                     }
-            //        priv.loading_object.end_load();
+                  //priv.loading_object.end_load();
                 }
             });
 

@@ -47,23 +47,3 @@ NewList = function (listnumber,listname,listcontent){
   newFirstdiv.appendChild(newshadow);
 }
 
-function CreateLists(){
-  //clean all the lists
-  var n = document.getElementById('textlist').childNodes.length;  
-  for ( var i = 0; i < n; i++) {  
-    document.getElementById('textlist').removeChild(  
-    document.getElementById('textlist').firstChild);  
-  }  
-  //set the new lists
-  for(i=0;i<OfficeJS.list.length;i++){
-    NewList(i,OfficeJS.list[i].title,OfficeJS.list[i].text);
-  }
-}
-
-function get_list_value(element){
-  tr=document.all.para.value;
-  document.all.para.value=element.value;
-  var trid = element.value;
-  alert(trid);
-}
-
