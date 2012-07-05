@@ -25,7 +25,7 @@ NewList = function (listnumber,listname,listcontent){
   //set a tag
   newa = document.createElement("a");
   newa.setAttribute("id",listname);
-  newa.setAttribute("class","ui-link-inherit");
+  newa.setAttribute("class","listcontent ui-link-inherit");
   newa.setAttribute("href","#text");
   newa.setAttribute("onclick","OfficeJS.load(this.id);");
   newSeconddiv.appendChild(newa);
@@ -47,3 +47,54 @@ NewList = function (listnumber,listname,listcontent){
   newFirstdiv.appendChild(newshadow);
 }
 
+//set the List
+setList = function (result_return_value){
+  removeLists();
+  //set all the list
+  for(var i=0;i<result_return_value.length;i++){
+    NewList(i,result_return_value[i].name,"text-Editor");
+  }
+}
+
+//remove all lists
+removeLists = function(){
+  var n = document.getElementById('textlist').childNodes.length;  
+  for ( var i = 0; i < n; i++) {  
+    document.getElementById('textlist').removeChild(  
+    document.getElementById('textlist').firstChild);  
+  }  
+}
+
+//set the popup dialog for remove all button
+$(document).delegate('#removeall', 'click', function() {
+  $('<div>').simpledialog2({
+    mode: 'button',
+    headerText: 'Are you sure?',
+    headerClose: true,
+    buttonPrompt: 'Can not be retrieved',
+    buttons : {
+      'OK': {
+        click: function () { 
+          RemoveAllDocument();
+          removeLists();
+        }
+      },
+      'Cancel': {
+        click: function () { 
+        },
+        icon: "delete",
+        theme: "c"
+      }
+    }
+  })
+})
+
+//remove all
+RemoveAllDocument = function(){
+  var document_name_array = [];
+  var document_list=document.getElementsByClassName('listcontent');
+  for (var i = 0; i < document_list.length; i++) {
+    document_name_array.push(document_list[i].id);
+  }
+  OfficeJS.removeSeveralFromArray (document_name_array);
+}

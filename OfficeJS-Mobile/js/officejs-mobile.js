@@ -471,10 +471,7 @@
                 'onResponse':function (result) {
                     if (result.status === 'done') {
                         priv.data_object.documentList = result.return_value;
-                       //set the List
-                       for(var i=0;i<result.return_value.length;i++){
-                       NewList(i,result.return_value[i].name,"text-Editor");
-                    }
+                        setList(result.return_value);
                     //priv.showDocumentListInsideLeftNavBar();
                     } else {
                         console.error (result.message);
@@ -587,23 +584,23 @@
          * @param  {array} documentarray Contains all file names ({string}).
          */
         that.removeSeveralFromArray = function (documentarray) {
-            var i, l, cpt = 0, current_editor = priv.data_object.currentEditor;
+            var i, l, cpt = 0;//current_editor = priv.data_object.currentEditor;
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
             }
             for (i = 0, l = documentarray.length; i < l; i+= 1) {
-                priv.loading_object.remove();
+             //   priv.loading_object.remove();
                 priv.jio.removeDocument({
                     name:documentarray[i],
                     onResponse:function (result) {
                         cpt += 1;
                         if (cpt === l) {
-                            if (typeof current_editor.update !== 'undefined') {
-                                that.getList(current_editor.update);
-                            }
+                          //  if (typeof current_editor.update !== 'undefined') {
+                            //    that.getList(current_editor.update);
+                           // }
                         }
-                        priv.loading_object.end_remove();
+                //        priv.loading_object.end_remove();
                     }});
             }
         };

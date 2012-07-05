@@ -3,6 +3,7 @@
   <head>
     <title>OfficeJS-Mobile</title>
     <link rel="stylesheet"  href="css/themes/default/jquery.mobile-1.1.0.css" />
+    <link rel="stylesheet"  href="css/simpledialog.min.css" />
     <script src="js/jquery.js"></script>
     <script src="js/jquery.mobile-1.1.0.js"></script>
     <script type="text/javascript" src="lib/jstorage/jstorage.js"></script>
@@ -11,6 +12,8 @@
     <script type="text/javascript" src="lib/base64/base64.js"></script>	
     <script type="text/javascript" src="lib/sjcl/sjcl.min.js"></script>
     <script type="text/javascript" src="src/jio.storage.js"></script>
+    <script type="text/javascript" src="js/simpledialog2.min.js"></script>
+
     <script type="text/javascript" src="js/officejs-mobile.js"></script>
     <script type="text/javascript" src="js/list-page.js"></script>
     <script type="text/javascript" src="js/text-editor.js"></script>
@@ -104,6 +107,9 @@ $('#input_json_applicant').attr('value'));">
       <div data-role="content" style="padding: 15px">
         <ul class="ui-listview" data-role="listview" id="textlist">
         </ul>
+        <div>
+          <a href="#" id="removeall" data-role="button" data-theme="a">Remove All</a>
+        </div>
       </div>
     </div>
 
