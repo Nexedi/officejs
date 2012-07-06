@@ -89,6 +89,22 @@ $(document).delegate('#removeall', 'click', function() {
   })
 })
 
+$(document).delegate('#savetext', 'click', function() {
+  $('<div>').simpledialog2({
+    mode: 'button',
+    headerText: 'Saved',
+    headerClose: true,
+    buttonPrompt: 'Your document has been saved',
+    buttons : {
+      'OK': {
+        click: function () { 
+          
+        }
+      },
+    }
+  })
+})
+
 //remove all
 RemoveAllDocument = function(){
   var document_name_array = [];
