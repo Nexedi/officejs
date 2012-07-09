@@ -17,6 +17,35 @@
     <script type="text/javascript" src="js/officejs-mobile.js"></script>
     <script type="text/javascript" src="js/list-page.js"></script>
     <script type="text/javascript" src="js/text-editor.js"></script>
+
+<!--------------Elrte editor required -------------------------------->
+<!-- jQuery and jQuery UI -->
+  <!--      <script src="lib/elrte/js/jquery-1.6.1.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="lib/elrte/js/jquery-ui-1.8.13.custom.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" href="lib/elrte/css/smoothness/jquery-ui-1.8.13.custom.css" type="text/css" media="screen" charset="utf-8" />
+    <!-- elRTE -->
+    <script src="lib/elrte/js/elrte.min.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" href="lib/elrte/css/elrte.min.css" type="text/css" media="screen" charset="utf-8" />
+    <!-- elRTE translation messages -->
+    <script src="lib/elrte/js/i18n/elrte.en.js" type="text/javascript" charset="utf-8"></script>
+<script>
+$(document).ready(function(){
+
+ var opts = {
+        cssClass : 'el-rte',
+        lang     : 'en',
+        height   : 450,
+        toolbar  : 'complete',
+        cssfiles : ['lib/elrte/css/elrte-inner.css']
+    }
+    $('#elrte_editor').elrte(opts);
+});
+
+
+
+
+</script>
+<!--------------/Elrte editor required-------------------------------->
   </head>
   <body>
 <!---------------------------------------------------------- Home --------------------------------------------------------------->
@@ -45,6 +74,9 @@
 $('#input_json_applicant').attr('value'));">
           Create New JIO
         </a>
+<div id="elrte_editor">
+          <h1>OfficeJS elRTE texteditor</h1><p>This is a new document.<br></p>
+        </div>
       </div>
     </div>
 			 
@@ -75,8 +107,8 @@ $('#input_json_applicant').attr('value'));">
 	    </a>
 	  </li>
 	  <li data-theme="c">
-	    <a href="#image" data-transition="slide">
-	      New Image
+	    <a href="#elrte" data-transition="slide" onclick="">
+	      New Elrte Text Document
 	    </a>
           </li>
 	  <li data-theme="c">
@@ -148,6 +180,26 @@ $('#input_json_applicant').attr('value'));">
             Save
           </a>
         </div>
+      </div>
+    </div>
+<!---------------------------------------------------------ELrte Page------------------------------------------------------------->
+    <div data-role="page" id="elrte">
+      <div data-role="header">
+        <a class="ui-btn-left ui-btn ui-btn-icon-left ui-btn-corner-all ui-shadow ui-btn-up-a" data-icon="arrow-l" data-rel="back" data-theme="a">
+          <span class="ui-btn-inner ui-btn-corner-all">
+            <span class="ui-icon ui-icon-arrow-l ui-icon-shadow"></span>
+            <span class="ui-btn-text">Back</span>
+          </span>
+        </a>
+        <h1>Elrte Text Editor</h1>
+      </div>
+      <div data-role="content" style="padding: 15px">
+	<div id="elrte_editor">
+          <h1>OfficeJS elRTE texteditor</h1><p>This is a new document.<br></p>
+        </div>
+        <a data-role="button" id="savetext" data-transition="fade" data-theme="b" class="btn btn-primary" onclick="" type="submit">
+          Save
+        </a>
       </div>
     </div>
   </body>
