@@ -1265,7 +1265,7 @@ test ('Remove Errors', function () {
     o.tick();
 
     o.spy ('status','done','removing existant "file.doc" owner "1",'+
-           ' error');
+           ' ok');
     o.jio_1.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
     o.tick();
 
@@ -1366,7 +1366,7 @@ test ('Revision Conflicts' , function () {
     o.spy('status','fail','saving "file.doc" with owner "me",'+
           ' third revision, conflict!');
     o.c = function (conflict_object) {
-        o.co = conflict_object;
+        o.conflict_object = conflict_object;
         ok (true,'onConflict callback called once');
     };
     o.t.spy(o,'c');
@@ -1374,14 +1374,14 @@ test ('Revision Conflicts' , function () {
         onResponse:o.f,max_retry:1,onConflict:o.c});
     o.tick(undefined,'f');
     o.tick(0,'c');
-    if (!o.co) { return ok(false,'impossible to continue the tests'); }
-    o.co = undefined;
+    if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
+    o.conflict_object = undefined;
 
     // me tries to save again but does not solve anything
     o.spy('status','fail',"don't solve anything,"+
           ' save "file.doc" with owner "me", forth revision, conflict!');
     o.c = function (conflict_object) {
-        o.co = conflict_object;
+        o.conflict_object = conflict_object;
         ok (true,'onConflict callback called once');
     };
     o.t.spy(o,'c');
@@ -1389,17 +1389,17 @@ test ('Revision Conflicts' , function () {
         onResponse:o.f,max_retry:1,onConflict:o.c});
     o.tick();
     o.tick(0,'c');
-    if (!o.co) { return ok(false,'impossible to continue the tests'); }
+    if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
 
     // me saves the revision created by solving the conflict
     o.spy('status','done','solving conflict and save "file.doc" with owner'+
           ' "me", forth revision, no conflict.');
     o.jio_me.saveDocument('file.doc','content4me',{
-        onResponse:o.f,max_retry:1,known_conflict_list:[o.co]});
+        onResponse:o.f,max_retry:1,known_conflict_list:[o.conflict_object]});
     o.tick();
 
-    o.spy('status','done','removing "file.doc" with owner "me",'+
     // me removes the document
+    o.spy('status','done','removing "file.doc" with owner "me",'+
           ' no conflict.');
     o.c = o.t.spy();
     o.jio_me.removeDocument('file.doc',{onResponse:o.f,max_retry:1,
@@ -1411,7 +1411,7 @@ test ('Revision Conflicts' , function () {
     o.spy('status','fail','saving "file.doc" with owner "him",'+
           ' any revision, conflict!');
     o.c = function (conflict_object) {
-        o.co = conflict_object;
+        o.conflict_object = conflict_object;
         ok (true,'onConflict callback called once');
     };
     o.t.spy(o,'c');
@@ -1488,7 +1488,7 @@ test ('Solving Conflict Conflicts' , function () {
     o.spy('status','fail','saving "file.doc" with owner "you",'+
           ' second revision, conflict!');
     o.c = function (conflict_object) {
-        o.co = conflict_object;
+        o.conflict_object = conflict_object;
         ok (true,'onConflict callback called once');
     };
     o.t.spy(o,'c');
@@ -1496,7 +1496,7 @@ test ('Solving Conflict Conflicts' , function () {
         onResponse:o.f,max_retry:1,onConflict:o.c});
     o.tick();
     o.tick(0,'c');
-    if (!o.co) { return ok(false,'impossible to continue the tests'); }
+    if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
 
     o.spy('status','done','saving "file.doc" with owner "her",'+
           ' next revision, no conflict.');
@@ -1507,21 +1507,22 @@ test ('Solving Conflict Conflicts' , function () {
     o.spy('status','fail','solving conflict and save "file.doc" with owner'+
           ' "you", fith revision, conflict!');
     o.c = function (conflict_object) {
-        o.co = conflict_object;
+        o.conflict_object = conflict_object;
         ok (true, 'onConflict callback called once');
     };
     o.t.spy(o,'c');
     o.jio_you.saveDocument('file.doc','content4you',{
-        onResponse:o.f,max_retry:1,known_conflict_list:[o.co],onConflict:o.c});
-    o.co = undefined;
+        onResponse:o.f,max_retry:1,known_conflict_list:[o.conflict_object],
+        onConflict:o.c});
+    o.conflict_object = undefined;
     o.tick();
     o.tick(0,'c');
-    if (!o.co) { return ok(false,'impossible to continue the tests'); }
+    if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
 
     o.spy('status','done','solving conflict and save "file.doc" with owner'+
           ' "you", forth revision, no conflict.');
     o.jio_you.saveDocument('file.doc','content5you',{
-        onResponse:o.f,max_retry:1,known_conflict_list:[o.co]});
+        onResponse:o.f,max_retry:1,known_conflict_list:[o.conflict_object]});
     o.tick();
 
     o.jio_you.stop();
