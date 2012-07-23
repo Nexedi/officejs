@@ -1133,6 +1133,9 @@ test ('Remove document', function () {
 module ('Jio ConflictManagerStorage');
 
 test ('Simple methods', function () {
+    // Try all the simple methods like saving, loading, removing a document and
+    // getting a list of document without testing conflicts
+
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.spy = function(res,value,message,before) {
         o.f = function(result) {
@@ -1200,6 +1203,14 @@ test ('Simple methods', function () {
 });
 
 test ('Remove Errors', function () {
+    // Test of all errors that can occur when trying to remove a document
+    // - Remove an unexistant document -> error
+    // - Remove an existant document by another owner that does not have the
+    // latest revision -> error
+    // - bis -> error
+    // - Remove by the good owner -> ok
+    // - Remove by another owner that have the latest revision -> ok
+
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.spy = function(res,value,message,function_name) {
         function_name = function_name || 'f';
@@ -1278,6 +1289,20 @@ test ('Remove Errors', function () {
 });
 
 test ('Revision Conflicts' , function () {
+    // Try to solve a revision conflict
+    // - "me" saves a document
+    // - "me" saves a new revision of this document
+    // - "him" loads the document, so they have the same revision in both sides
+    // - "him" saves a new revision of this document, now they don't have the
+    // same revision
+    // - "me" tries to save a new revision but there's a revision conflict
+    // - "me" tries to save again without solving conflict, and of course,
+    // the same conflict occurs
+    // - "me" solves the conflict and saves
+    // - "me" removes the document
+    // - "him" tries to save a new revision, but the document must not exist,
+    // so there's a conflict.
+
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.spy = function(res,value,message,function_name) {
         function_name = function_name || 'f';
@@ -1312,27 +1337,32 @@ test ('Revision Conflicts' , function () {
                                      username:'conflictrevision',
                                      applicationname:'jiotests'}});
 
+    // me creates the document
     o.spy('status','done','saving "file.doc" with owner "me",'+
           ' first revision, no conflict.');
     o.jio_me.saveDocument('file.doc','content1me',{onResponse:o.f,max_retry:1});
     o.tick();
 
+    // me saves a new revision
     o.spy('status','done','saving "file.doc" with owner "me",'+
           ' second revision, no conflict.');
     o.jio_me.saveDocument('file.doc','content2me',{onResponse:o.f,max_retry:1});
     o.tick();
 
+    // him loads the document
     o.spy('status','done','loading "file.doc" with owner "him",'+
           ' last revision, no conflict.');
     o.jio_him.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
     o.tick();
 
+    // him saves a new revision
     o.spy('status','done','saving "file.doc" with owner "him",'+
           ' next revision, no conflict.');
     o.jio_him.saveDocument('file.doc','content1him',
                            {onResponse:o.f,max_retry:1});
     o.tick();
 
+    // me tries to save his new revision
     o.spy('status','fail','saving "file.doc" with owner "me",'+
           ' third revision, conflict!');
     o.c = function (conflict_object) {
@@ -1347,6 +1377,7 @@ test ('Revision Conflicts' , function () {
     if (!o.co) { return ok(false,'impossible to continue the tests'); }
     o.co = undefined;
 
+    // me tries to save again but does not solve anything
     o.spy('status','fail',"don't solve anything,"+
           ' save "file.doc" with owner "me", forth revision, conflict!');
     o.c = function (conflict_object) {
@@ -1360,6 +1391,7 @@ test ('Revision Conflicts' , function () {
     o.tick(0,'c');
     if (!o.co) { return ok(false,'impossible to continue the tests'); }
 
+    // me saves the revision created by solving the conflict
     o.spy('status','done','solving conflict and save "file.doc" with owner'+
           ' "me", forth revision, no conflict.');
     o.jio_me.saveDocument('file.doc','content4me',{
@@ -1367,6 +1399,7 @@ test ('Revision Conflicts' , function () {
     o.tick();
 
     o.spy('status','done','removing "file.doc" with owner "me",'+
+    // me removes the document
           ' no conflict.');
     o.c = o.t.spy();
     o.jio_me.removeDocument('file.doc',{onResponse:o.f,max_retry:1,
@@ -1374,6 +1407,7 @@ test ('Revision Conflicts' , function () {
     o.tick();
     if (o.c.called) { ok(false, 'conflict callback called!'); }
 
+    // him tries to save a new revision but the document does not exist anymore
     o.spy('status','fail','saving "file.doc" with owner "him",'+
           ' any revision, conflict!');
     o.c = function (conflict_object) {
@@ -1391,6 +1425,15 @@ test ('Revision Conflicts' , function () {
 });
 
 test ('Solving Conflict Conflicts' , function () {
+    // Try to solve an obsolete conflict.
+    // - "you" saves a document
+    // - "her" loads this document, so they have the same revision
+    // - "her" saves a new revision of this document
+    // - "you" tries to save a new revision but there's a revision conflict
+    // - "you" tries to solve this conflict while "her" is saving a new revision
+    // - When "you" posts this solved conflict, there's a conflict conflict
+    // because "you" tried to solve an obsolete conflict
+
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.spy = function(res,value,message,function_name) {
         function_name = function_name || 'f';
