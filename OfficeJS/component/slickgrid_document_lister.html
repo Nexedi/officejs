@@ -76,7 +76,7 @@
                 array[i].app = 'text_editor';
             } else {
                 array[i].icon = mime.icon;
-                array[i].app = mime.pref || mime.app;
+                array[i].app = mime.preferred_application || mime.application;
             }
             // dates
             // FIXME : we can have 2012/1/1 12:5

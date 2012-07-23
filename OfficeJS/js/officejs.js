@@ -188,15 +188,17 @@
             }
         };
         priv.mime_object = {
-            // <pref> if the name of the app set in preferences.
-            // If pref does not exist it means that the extension is very
-            // specific, so <app> is called instead of the default editor.
+            // <preferred_application> if the name of the app set in
+            // preferences.
+            // If <preferred_application> does not exist it means that the
+            // extension is very specific, so <application> is called instead of
+            // the default editor.
             // NOTE : the icon may be set in the app in app_object.
-            html:{pref:'text_editor',app:'elrte',
+            html:{preferred_application:'text_editor',application:'elrte',
                   icon:'<i class="icon-font"></i>'},
-            svg:{pref:'img_editor',app:'svg-edit',
+            svg:{preferred_application:'img_editor',application:'svg-edit',
                  icon:'<i class="icon-pencil"></i>'},
-            jqs:{app:'jquery-sheet',
+            jqs:{application:'jquery-sheet',
                  icon:'<i class="icon-signal"></i>'}
         };
         priv.data_object = {
@@ -559,6 +561,11 @@
             }
         };
 
+        /**
+         * Get current activity.
+         * @method getActivity
+         * @return {array} A list of current states for each current activities.
+         */
         that.getActivity = function () {
             var activity = priv.jio.getJobArray ();
             var lastfailure = that.getLastFailure();
@@ -613,6 +620,11 @@
             return res;
         };
 
+        /**
+         * Returns the last job failure.
+         * @method getLastFailure
+         * @return {object} The last failure.
+         */
         that.getLastFailure = function () {
             return priv.lastfailure;
         };
