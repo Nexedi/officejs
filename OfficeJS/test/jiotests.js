@@ -186,15 +186,15 @@ test ('All tests', function () {
 
     o.jio = JIO.newJio({'type':'dummyallok'});
     // save
-    o.spy('status','done','dummyallok saving','f');
-    o.spy('status','done','dummyallok saving','f2');
-    o.spy('status','done','dummyallok saving','f3');
+    o.spy('status','done','dummyallok saving1','f');
+    o.spy('status','done','dummyallok saving2','f2');
+    o.spy('status','done','dummyallok saving3','f3');
     o.jio.saveDocument('file','content',{onResponse:o.f,max_retry:1});
     o.jio.saveDocument('file2','content2',{onResponse:o.f2,max_retry:1});
     o.jio.saveDocument('file3','content3',{onResponse:o.f3,max_retry:1});
-    o.tick(undefined, 'f');
-    o.tick(0, 'f2');
-    o.tick(0, 'f3');
+    o.tick(1000, 'f');
+    o.tick(1, 'f2');
+    o.tick(1, 'f3');
     // load
     o.spy('value',{name:'file',content:'content',last_modified:15000,
                    creation_date:10000},'dummyallok loading');
@@ -352,7 +352,6 @@ test ('Restore old Jio', function() {
     o.f = function(result) {
         ok(false,'must never be called!');
     };
-    o.clock.tick(0);
     this.spy(o,'f');
     o.jio = JIO.newJio({type:'dummyall3tries',applicationname:'jiotests'});
     o.id = o.jio.getId();
@@ -1373,8 +1372,8 @@ test ('Revision Conflicts' , function () {
     o.t.spy(o,'c');
     o.jio_me.saveDocument('file.doc','content3me',{
         onResponse:o.f,max_retry:1,onConflict:o.c});
-    o.tick(undefined,'f');
-    o.tick(0,'c');
+    o.tick(null,'f');
+    o.tick(1,'c');
     if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
     o.conflict_object = undefined;
 
@@ -1386,7 +1385,7 @@ test ('Revision Conflicts' , function () {
     o.jio_me.saveDocument('file.doc','content4me',{
         onResponse:o.f,max_retry:1,onConflict:o.c});
     o.tick();
-    o.tick(0,'c');
+    o.tick(1,'c');
     if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
 
     o.spy('status','done','get a document list');
@@ -1417,7 +1416,7 @@ test ('Revision Conflicts' , function () {
     o.jio_him.saveDocument('file.doc','content4him',{
         onResponse:o.f,max_retry:1,onConflict:o.c});
     o.tick();
-    o.tick(0,'c');
+    o.tick(1,'c');
 
     o.jio_me.stop();
     o.jio_him.stop();
@@ -1495,7 +1494,7 @@ test ('Solving Conflict Conflicts' , function () {
     o.jio_you.saveDocument('file.doc','content3you',{
         onResponse:o.f,max_retry:1,onConflict:o.c});
     o.tick();
-    o.tick(0,'c');
+    o.tick(1,'c');
     if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
 
     o.spy('status','done','saving "file.doc" with owner "her",'+
@@ -1513,7 +1512,7 @@ test ('Solving Conflict Conflicts' , function () {
         onConflict:o.c});
     o.conflict_object = undefined;
     o.tick();
-    o.tick(0,'c');
+    o.tick(1,'c');
     if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
 
     o.spy('status','done','solving conflict and save "file.doc" with owner'+
