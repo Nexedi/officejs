@@ -1,4 +1,4 @@
-/*! JIO - v0.1.0 - 2012-06-20
+/*! JIO - v0.1.0 - 2012-07-24
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
@@ -1595,7 +1595,7 @@ var jobRules = (function(spec, my) {
 
     my.jobManager = jobManager;
     my.jobIdHandler = jobIdHandler;
-    priv.storage = jioNamespace.storage(spec, my);
+    priv.storage_spec = spec;
 
     // initialize //
     priv.init = function() {
@@ -1686,7 +1686,7 @@ var jobRules = (function(spec, my) {
         jobManager.addJob(
             job({storage:(specificstorage?
                           jioNamespace.storage(specificstorage,my):
-                          priv.storage),
+                          jioNamespace.storage(priv.storage_spec,my)),
                  command:saveDocument(
                      {path:path,content:content,option:option},my)},my));
     };
@@ -1715,7 +1715,7 @@ var jobRules = (function(spec, my) {
         jobManager.addJob(
             job({storage:(specificstorage?
                           jioNamespace.storage(specificstorage,my):
-                          priv.storage),
+                          jioNamespace.storage(priv.storage_spec,my)),
                  command:loadDocument(
                      {path:path,option:option},my)},my));
     };
@@ -1741,7 +1741,7 @@ var jobRules = (function(spec, my) {
         jobManager.addJob(
             job({storage:(specificstorage?
                           jioNamespace.storage(specificstorage,my):
-                          priv.storage),
+                          jioNamespace.storage(priv.storage_spec,my)),
                  command:removeDocument(
                      {path:path,option:option},my)},my));
     };
@@ -1770,7 +1770,7 @@ var jobRules = (function(spec, my) {
         jobManager.addJob(
             job({storage:(specificstorage?
                           jioNamespace.storage(specificstorage,my):
-                          priv.storage),
+                          jioNamespace.storage(priv.storage_spec,my)),
                  command:getDocumentList(
                      {path:path,option:option},my)},my));
     };

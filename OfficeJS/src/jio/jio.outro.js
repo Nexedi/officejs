@@ -9,7 +9,7 @@
 
     my.jobManager = jobManager;
     my.jobIdHandler = jobIdHandler;
-    priv.storage = jioNamespace.storage(spec, my);
+    priv.storage_spec = spec;
 
     // initialize //
     priv.init = function() {
@@ -100,7 +100,7 @@
         jobManager.addJob(
             job({storage:(specificstorage?
                           jioNamespace.storage(specificstorage,my):
-                          priv.storage),
+                          jioNamespace.storage(priv.storage_spec,my)),
                  command:saveDocument(
                      {path:path,content:content,option:option},my)},my));
     };
@@ -129,7 +129,7 @@
         jobManager.addJob(
             job({storage:(specificstorage?
                           jioNamespace.storage(specificstorage,my):
-                          priv.storage),
+                          jioNamespace.storage(priv.storage_spec,my)),
                  command:loadDocument(
                      {path:path,option:option},my)},my));
     };
@@ -155,7 +155,7 @@
         jobManager.addJob(
             job({storage:(specificstorage?
                           jioNamespace.storage(specificstorage,my):
-                          priv.storage),
+                          jioNamespace.storage(priv.storage_spec,my)),
                  command:removeDocument(
                      {path:path,option:option},my)},my));
     };
@@ -184,7 +184,7 @@
         jobManager.addJob(
             job({storage:(specificstorage?
                           jioNamespace.storage(specificstorage,my):
-                          priv.storage),
+                          jioNamespace.storage(priv.storage_spec,my)),
                  command:getDocumentList(
                      {path:path,option:option},my)},my));
     };
