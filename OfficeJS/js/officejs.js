@@ -24,6 +24,11 @@
             img_editor:'svg-edit',
             spreadsheet:'jquery-sheet'
         };
+        priv.conflict_solver_object = {
+            // ext: "solver_name"
+            // default: "basic_conflict_solver"
+            // ...
+        };
         priv.app_object = {
             topnavbar: {
                 type:'nav',
@@ -72,7 +77,7 @@
             simplepreferenceeditor: {
                 // NOTE
                 type:'editor',
-                path:'',
+                path:''
                 // ...
             },
             elrte: {
@@ -185,6 +190,35 @@
                     window.work_in_progress.stop();
                     return true;
                 }
+            },
+            basic_conflict_solver: {
+                type:'solver',
+                path:'component/basic_conflict_solver.html',
+                gadget_id:'page-conflict',
+                onload: function (param) {
+                    priv.jio.loadDocument(
+                        param.name,
+                        {max_retry:3,
+                         onResponse:function (result) {
+                             if (!result.status.isDone()) {
+                                 console.error (result.error.message);
+                             } else {
+                                 document.querySelector (
+                                     '#basic_conflict_solver_div ' +
+                                         '#conflicting_revision ').textContent =
+                                     result.value.content;
+                             }
+                         }});
+                    // TODO : add owner, revision, ...
+                    setTimeout(function() {
+                        window.basic_conflict_solver.conflict_object =
+                            param.conflict_object;
+                        document.querySelector (
+                            '#basic_conflict_solver_div ' + '#local_revision ').
+                            textContent =
+                            param.local_content;
+                    },500);
+                }
             }
         };
         priv.mime_object = {
@@ -206,6 +240,7 @@
             gadget_object:{}, // contains current gadgets id with their location
             currentFile:null,
             currentEditor:null,
+            currentSolver:null,
             currentApp:null,
             currentActivity:null
         };
@@ -288,13 +323,17 @@
          */
         that.open = function (option) {
             var realapp, realgadgetid, realpath, acientapp;
+            if (!option) {
+                console.error ('open: This function needs a parameter');
+                return null;
+            };
             realapp = priv.getRealApplication (option.app);
             if (!realapp) {
                 // cannot get real app
                 console.error ('Unknown application: ' + option.app);
                 return null;
             }
-            realgadgetid = realapp.gadget_id;
+            realgadgetid = option.gadget_id || realapp.gadget_id;
             realpath = realapp.path;
             if (option.force || priv.data_object.currentEditor !== realapp) {
                 ancientapp = priv.data_object.gadget_object[realgadgetid];
@@ -314,6 +353,9 @@
                 switch (realapp.type) {
                 case 'editor':
                     priv.data_object.currentEditor = realapp;
+                    break;
+                case 'solver':
+                    priv.data_object.currentSolver = realapp;
                     break;
                 default:
                     priv.data_object.currentEditor = null;
@@ -456,7 +498,8 @@
          * @param  {string} basename The document name without ext.
          */
         that.save = function (basename) {
-            var current_editor = priv.data_object.currentEditor;
+            var current_editor = priv.data_object.currentEditor,
+            current_content = current_editor.getContent();
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
@@ -464,7 +507,7 @@
             priv.loading_object.save();
             priv.jio.saveDocument(
                 basename+'.'+current_editor.ext,
-                current_editor.getContent(),
+                current_content,
                 {onResponse:function (result) {
                     if (!result.status.isDone()) {
                         priv.lastfailure.path = basename;
@@ -473,6 +516,13 @@
                     }
                     priv.loading_object.end_save();
                     that.getList();
+                },
+                onConflict:function (conflict_object) {
+                    priv.onConflict ({name:basename,
+                                      content:current_content},
+                                     current_editor.ext,
+                                     conflict_object);
+                    // TODO : same for remove method
                 }});
         };
 
@@ -559,6 +609,57 @@
                         priv.loading_object.end_remove();
                     }});
             }
+        };
+
+        /**
+         * Called when there is conflict
+         * @method onConflict
+         * @param  {object} doc The document object
+         * @param  {object} conflict_object The conflict object
+         */
+        priv.onConflict = function (document, ext, conflict_object) {
+            ext = ext || '';
+            // TODO : load other revision
+            // get the good conflict solver and load it
+            if (ext && priv.conflict_solver_object[ext]) {
+                that.open({app:priv.conflict_solver_object[ext],
+                           name:conflict_object.path,
+                           local_content:document.content,
+                           conflict_object:conflict_object});
+            } else {
+                that.open({app:'basic_conflict_solver',
+                           name:conflict_object.path,
+                           local_content:document.content,
+                           conflict_object:conflict_object});
+            }
+        };
+
+        
+        that.solveConflict = function (conflict_object, data) {
+            var current_solver = priv.data_object.currentSolver;
+            priv.loading_object.save();
+            priv.jio.saveDocument(
+                conflict_object.path,
+                data,
+                {onResponse:function (result) {
+                    if (!result.status.isDone()) {
+                        priv.lastfailure.path = basename(path);
+                        priv.lastfailure.method = 'saveDocument';
+                        console.error (result.error.message);
+                    }
+                    priv.loading_object.end_save();
+                    that.getList();
+                    document.querySelector ('#basic_conflict_solver_div').
+                        style.display = 'none';
+                    priv.data_object.currentSolver = null;
+                },
+                onConflict:function (conflict_object) {
+                    priv.onConflict ({name:basename,
+                                      content:current_content},
+                                     current_editor.ext,
+                                     conflict_object);
+                },
+                known_conflict_list:[conflict_object]});
         };
 
         /**
