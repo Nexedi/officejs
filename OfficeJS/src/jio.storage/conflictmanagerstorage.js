@@ -57,6 +57,7 @@ var newConflictManagerStorage = function ( spec, my ) {
     priv.loadMetadataFromDistant = function (command,path,onDone,onFail) {
         var cloned_option = command.cloneOption ();
         cloned_option.metadata_only = false;
+        cloned_option.max_retry = 1; // FIXME : wrong ! (redesign jio & storage)
         cloned_option.onResponse = function () {};
         cloned_option.onFail = onFail;
         cloned_option.onDone = onDone;

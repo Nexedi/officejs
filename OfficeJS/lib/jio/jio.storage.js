@@ -1,4 +1,4 @@
-/*! JIO Storage - v0.1.0 - 2012-06-28
+/*! JIO Storage - v0.1.0 - 2012-07-24
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 (function(LocalOrCookieStorage, $, Base64, sjcl, hex_sha256, Jio) {
@@ -1199,6 +1199,7 @@ var newConflictManagerStorage = function ( spec, my ) {
     priv.loadMetadataFromDistant = function (command,path,onDone,onFail) {
         var cloned_option = command.cloneOption ();
         cloned_option.metadata_only = false;
+        cloned_option.max_retry = 1; // FIXME : wrong ! (redesign jio & storage)
         cloned_option.onResponse = function () {};
         cloned_option.onFail = onFail;
         cloned_option.onDone = onDone;
