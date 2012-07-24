@@ -1148,7 +1148,7 @@ test ('Simple methods', function () {
         };
         o.t.spy(o,'f');
     };
-    o.tick = function (value, tick) {
+    o.tick = function (tick) {
         o.clock.tick(tick || 1000);
         if (!o.f.calledOnce) {
             if (o.f.called) {
@@ -1165,7 +1165,7 @@ test ('Simple methods', function () {
                                  applicationname:'jiotests'}});
     o.spy('status','done','saving "file.doc" with owner "methods".');
     o.jio.saveDocument('file.doc','content1methods',
-                       {onResponse:o.f,max_retry:1});
+                       {onResponse:o.f});
     o.tick();
 
     o.spy('value',{name:'file.doc',content:'content1methods'},
@@ -1362,13 +1362,14 @@ test ('Revision Conflicts' , function () {
                            {onResponse:o.f,max_retry:1});
     o.tick();
 
-    // me tries to save his new revision
-    o.spy('status','fail','saving "file.doc" with owner "me",'+
-          ' third revision, conflict!');
-    o.c = function (conflict_object) {
+    o.conflict_callback = function (conflict_object) {
         o.conflict_object = conflict_object;
         ok (true,'onConflict callback called once');
     };
+    // me tries to save his new revision
+    o.spy('status','fail','saving "file.doc" with owner "me",'+
+          ' third revision, conflict!');
+    o.c = o.conflict_callback;
     o.t.spy(o,'c');
     o.jio_me.saveDocument('file.doc','content3me',{
         onResponse:o.f,max_retry:1,onConflict:o.c});
@@ -1380,16 +1381,17 @@ test ('Revision Conflicts' , function () {
     // me tries to save again but does not solve anything
     o.spy('status','fail',"don't solve anything,"+
           ' save "file.doc" with owner "me", forth revision, conflict!');
-    o.c = function (conflict_object) {
-        o.conflict_object = conflict_object;
-        ok (true,'onConflict callback called once');
-    };
+    o.c = o.conflict_callback;
     o.t.spy(o,'c');
     o.jio_me.saveDocument('file.doc','content4me',{
         onResponse:o.f,max_retry:1,onConflict:o.c});
     o.tick();
     o.tick(0,'c');
     if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
+
+    o.spy('status','done','get a document list');
+    o.jio_me.getDocumentList('.',{onResponse:o.f,max_retry:1});
+    o.tick();
 
     // me saves the revision created by solving the conflict
     o.spy('status','done','solving conflict and save "file.doc" with owner'+
@@ -1410,10 +1412,7 @@ test ('Revision Conflicts' , function () {
     // him tries to save a new revision but the document does not exist anymore
     o.spy('status','fail','saving "file.doc" with owner "him",'+
           ' any revision, conflict!');
-    o.c = function (conflict_object) {
-        o.conflict_object = conflict_object;
-        ok (true,'onConflict callback called once');
-    };
+    o.c = o.conflict_callback;
     o.t.spy(o,'c');
     o.jio_him.saveDocument('file.doc','content4him',{
         onResponse:o.f,max_retry:1,onConflict:o.c});
@@ -1457,6 +1456,10 @@ test ('Solving Conflict Conflicts' , function () {
             }
         }
     };
+    o.conflict_callback = function (conflict_object) {
+        o.conflict_object = conflict_object;
+        ok (true,'onConflict callback called once');
+    };
     o.jio_you = JIO.newJio({type:'conflictmanager',
                             username:'you',
                             storage:{type:'local',
@@ -1487,10 +1490,7 @@ test ('Solving Conflict Conflicts' , function () {
 
     o.spy('status','fail','saving "file.doc" with owner "you",'+
           ' second revision, conflict!');
-    o.c = function (conflict_object) {
-        o.conflict_object = conflict_object;
-        ok (true,'onConflict callback called once');
-    };
+    o.c = o.conflict_callback;
     o.t.spy(o,'c');
     o.jio_you.saveDocument('file.doc','content3you',{
         onResponse:o.f,max_retry:1,onConflict:o.c});
@@ -1506,10 +1506,7 @@ test ('Solving Conflict Conflicts' , function () {
 
     o.spy('status','fail','solving conflict and save "file.doc" with owner'+
           ' "you", fith revision, conflict!');
-    o.c = function (conflict_object) {
-        o.conflict_object = conflict_object;
-        ok (true, 'onConflict callback called once');
-    };
+    o.c = o.conflict_callback;
     o.t.spy(o,'c');
     o.jio_you.saveDocument('file.doc','content4you',{
         onResponse:o.f,max_retry:1,known_conflict_list:[o.conflict_object],
