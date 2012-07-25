@@ -703,6 +703,7 @@ test ('Get Document List', function () {
                         url:'https://ca-davstorage:8080',
                         applicationname:'jiotests'});
     o.mytest('fail to get list',undefined,404);
+    // FIXME : setTimeout does not pass !??
     o.mytest('getting list',[{name:'file',creation_date:1335962911000,
                               last_modified:1335962907000},
                              {name:'memo',creation_date:1335894073000,

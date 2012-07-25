@@ -482,6 +482,11 @@ var newConflictManagerStorage = function ( spec, my ) {
             cloned_option.onDone = function (result) {
                 var i;
                 for (i = 0; i < result.length; i+= 1) {
+                    if (typeof result[i].content !== 'string') {
+                        return am.call(o,'fail',[{
+                            status:0, statusText:'Invalid content',
+                            message:'Invalid file content, aborting job.'}]);
+                    }
                     var splitname = result[i].name.split('.') || [];
                     var content_object;
                     var doc = {};
@@ -494,11 +499,15 @@ var newConflictManagerStorage = function ( spec, my ) {
                         result_list.push(content_object);
                         splitname.length --;
                         doc.name = splitname.join('.');
-                        doc.creation_date = content_object.owner[
-                            content_object.winner.owner].creation_date;
-                        doc.last_modified = content_object.owner[
-                            content_object.winner.owner].last_modified;
-                        command_file_metadata_list.push(doc);
+                        try {
+                            doc.creation_date = content_object.owner[
+                                content_object.winner.owner].creation_date;
+                            doc.last_modified = content_object.owner[
+                                content_object.winner.owner].last_modified;
+                            command_file_metadata_list.push(doc);
+                        } catch (e) {
+                            continue;
+                        }
                     }
                 }
                 if (command.getOption('metadata_only')) {

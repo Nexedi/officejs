@@ -1,4 +1,4 @@
-/*! JIO Storage - v0.1.0 - 2012-07-24
+/*! JIO Storage - v0.1.0 - 2012-07-25
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 (function(LocalOrCookieStorage, $, Base64, sjcl, hex_sha256, Jio) {
@@ -385,6 +385,35 @@ var newDAVStorage = function ( spec, my ) {
             headers: {'Authorization': 'Basic '+Base64.encode(
                 priv.username + ':' + priv.password ), Depth: '1'},
             success: function (xmlData) {
+                var wait_for_me = 0;
+                var getContent = function (file) {
+                    wait_for_me ++;
+                    $.ajax ( {
+                        url: priv.url + '/dav/' +
+                            priv.username + '/' +
+                            priv.applicationname + '/' +
+                            file.name,
+                        type: "GET",
+                        async: true,
+                        dataType: 'text', // TODO : is it necessary ?
+                        headers: {'Authorization':'Basic '+
+                                  Base64.encode(priv.username +':'+
+                                                priv.password)},
+                        success: function (content) {
+                            file.content = content;
+                            // WARNING : files can be disordered because
+                            // of asynchronous action
+                            document_array.push (file);
+                            wait_for_me --;
+                        },
+                        error: function (type) {
+                            type.message = 'Cannot get a document '+
+                                'content from DAVStorage.';
+                            that.fail(type);
+                            wait_for_me --;
+                        }
+                    });
+                };
                 $(xmlData).find(
                     'D\\:response, response'
                 ).each( function(i,data){
@@ -409,10 +438,24 @@ var newDAVStorage = function ( spec, my ) {
                         ).each(function () {
                             file.creation_date = $(this).text();
                         });
-                        document_array.push (file);
+                        if (!command.getOption ('metadata_only')) {
+                            getContent(file);
+                        } else {
+                            document_array.push (file);
+                        }
                     }
                 });
-                that.done(document_array);
+                // wait until all getContent are ended, only if needed
+                var tmpfun = function () {
+                    setTimeout(function() {
+                        if (wait_for_me) {
+                            tmpfun();
+                        } else {
+                            that.done(document_array);
+                        }
+                    },200);
+                };
+                tmpfun();
             },
             error: function (type) {
                 type.message =
@@ -1384,10 +1427,16 @@ var newConflictManagerStorage = function ( spec, my ) {
                     path: command.getPath(),
                     method: 'saveDocument',
                     owner: priv.username,
-                    conflict_owner: {
+                    conflict_owner1: {
                         name: command_file_metadata.winner.owner,
                         revision: command_file_metadata.winner.revision,
-                        hash: command_file_metadata.winner.hash}
+                        hash: command_file_metadata.winner.hash
+                    },
+                    conflict_owner2: {
+                        name: priv.username,
+                        revision: 1, // TODO : change it !
+                        hash: local_file_hash
+                    }
                 },
                 // gen hash
                 conflict_hash = hex_sha256 (JSON.stringify (
@@ -1624,6 +1673,11 @@ var newConflictManagerStorage = function ( spec, my ) {
             cloned_option.onDone = function (result) {
                 var i;
                 for (i = 0; i < result.length; i+= 1) {
+                    if (typeof result[i].content !== 'string') {
+                        return am.call(o,'fail',[{
+                            status:0, statusText:'Invalid content',
+                            message:'Invalid file content, aborting job.'}]);
+                    }
                     var splitname = result[i].name.split('.') || [];
                     var content_object;
                     var doc = {};
@@ -1636,11 +1690,15 @@ var newConflictManagerStorage = function ( spec, my ) {
                         result_list.push(content_object);
                         splitname.length --;
                         doc.name = splitname.join('.');
-                        doc.creation_date = content_object.owner[
-                            content_object.winner.owner].creation_date;
-                        doc.last_modified = content_object.owner[
-                            content_object.winner.owner].last_modified;
-                        command_file_metadata_list.push(doc);
+                        try {
+                            doc.creation_date = content_object.owner[
+                                content_object.winner.owner].creation_date;
+                            doc.last_modified = content_object.owner[
+                                content_object.winner.owner].last_modified;
+                            command_file_metadata_list.push(doc);
+                        } catch (e) {
+                            continue;
+                        }
                     }
                 }
                 if (command.getOption('metadata_only')) {
@@ -1825,9 +1883,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                 // browse known conflict list
                 var i,j, done = false, known_conflict_list =
                     command.getOption('known_conflict_list') || [];
-                console.log ('1 ' + JSON.stringify (known_conflict_list));
                 for (i = 0; i < known_conflict_list.length; i+= 1) {
-                    console.log ('2');
                     // if known conflict
                     if (known_conflict_list[i].hash ===
                         conflict_hash) {
@@ -1840,7 +1896,6 @@ var newConflictManagerStorage = function ( spec, my ) {
                     }
                     for (j = 0; j < command_file_metadata.conflict_list.length;
                          j+= 1) {
-                        console.log ('3');
                         if (known_conflict_list[i].hash ===
                             command_file_metadata.conflict_list[j].hash) {
                             // if known other conflict

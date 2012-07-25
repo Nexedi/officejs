@@ -168,8 +168,23 @@
                 type:'editor',
                 path:'component/slickgrid_document_lister.html',
                 gadget_id:'page-content',
+                interval_id:null,
+                onload: function () {
+                    if (this.interval_id === null) {
+                        this.interval_id = setInterval (function() {
+                            that.getList(this.update);
+                        }, 5000);
+                    }
+                },
                 update: function () {
                     OfficeJS.open({app:'document_lister',force:true});
+                },
+                onunload: function () {
+                    if (this.interval_id !== null) {
+                        clearInterval (this.interval_id);
+                        this.interval_id = null;
+                    }
+                    return true;
                 }
             },
             workinprogress: {

@@ -152,6 +152,35 @@ var newDAVStorage = function ( spec, my ) {
             headers: {'Authorization': 'Basic '+Base64.encode(
                 priv.username + ':' + priv.password ), Depth: '1'},
             success: function (xmlData) {
+                var wait_for_me = 0;
+                var getContent = function (file) {
+                    wait_for_me ++;
+                    $.ajax ( {
+                        url: priv.url + '/dav/' +
+                            priv.username + '/' +
+                            priv.applicationname + '/' +
+                            file.name,
+                        type: "GET",
+                        async: true,
+                        dataType: 'text', // TODO : is it necessary ?
+                        headers: {'Authorization':'Basic '+
+                                  Base64.encode(priv.username +':'+
+                                                priv.password)},
+                        success: function (content) {
+                            file.content = content;
+                            // WARNING : files can be disordered because
+                            // of asynchronous action
+                            document_array.push (file);
+                            wait_for_me --;
+                        },
+                        error: function (type) {
+                            type.message = 'Cannot get a document '+
+                                'content from DAVStorage.';
+                            that.fail(type);
+                            wait_for_me --;
+                        }
+                    });
+                };
                 $(xmlData).find(
                     'D\\:response, response'
                 ).each( function(i,data){
@@ -176,10 +205,24 @@ var newDAVStorage = function ( spec, my ) {
                         ).each(function () {
                             file.creation_date = $(this).text();
                         });
-                        document_array.push (file);
+                        if (!command.getOption ('metadata_only')) {
+                            getContent(file);
+                        } else {
+                            document_array.push (file);
+                        }
                     }
                 });
-                that.done(document_array);
+                // wait until all getContent are ended, only if needed
+                var tmpfun = function () {
+                    setTimeout(function() {
+                        if (wait_for_me) {
+                            tmpfun();
+                        } else {
+                            that.done(document_array);
+                        }
+                    },200);
+                };
+                tmpfun();
             },
             error: function (type) {
                 type.message =
