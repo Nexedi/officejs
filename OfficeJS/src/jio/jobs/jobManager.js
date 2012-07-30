@@ -155,14 +155,14 @@ var jobManager = (function(spec, my) {
      * @param  {number} id The jio id.
      */
     priv.removeOldJioId = function(id) {
-        var i, jio_id_a, new_a = [];
-        jio_id_a = LocalOrCookieStorage.getItem('jio/id_array')||[];
-        for (i = 0; i < jio_id_a.length; i+= 1) {
-            if (jio_id_a[i] !== id) {
-                new_a.push(jio_id_a[i]);
+        var i, jio_id_array, new_array = [];
+        jio_id_array = LocalOrCookieStorage.getItem('jio/id_array')||[];
+        for (i = 0; i < jio_id_array.length; i+= 1) {
+            if (jio_id_array[i] !== id) {
+                new_array.push(jio_id_array[i]);
             }
         }
-        LocalOrCookieStorage.setItem('jio/id_array',new_a);
+        LocalOrCookieStorage.setItem('jio/id_array',new_array);
         LocalOrCookieStorage.deleteItem('jio/id/'+id);
     };
 

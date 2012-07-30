@@ -4,7 +4,7 @@ var waitStatus = function(spec, my) {
     my = my || {};
     // Attributes //
     var priv = {};
-    priv.job_id_a = spec.job_id_array || [];
+    priv.job_id_array = spec.job_id_array || [];
     priv.threshold = 0;
 
     // Methods //
@@ -22,13 +22,13 @@ var waitStatus = function(spec, my) {
      * @method refreshJobIdArray
      */
     priv.refreshJobIdArray = function() {
-        var tmp_job_id_a = [], i;
-        for (i = 0; i < priv.job_id_a.length; i+= 1) {
-            if (my.jobManager.jobIdExists(priv.job_id_a[i])) {
-                tmp_job_id_a.push(priv.job_id_a[i]);
+        var tmp_job_id_array = [], i;
+        for (i = 0; i < priv.job_id_array.length; i+= 1) {
+            if (my.jobManager.jobIdExists(priv.job_id_array[i])) {
+                tmp_job_id_array.push(priv.job_id_array[i]);
             }
         }
-        priv.job_id_a = tmp_job_id_a;
+        priv.job_id_array = tmp_job_id_array;
     };
 
     /**
@@ -38,12 +38,12 @@ var waitStatus = function(spec, my) {
      */
     that.waitForJob = function(job) {
         var i;
-        for (i = 0; i < priv.job_id_a.length; i+= 1) {
-            if (priv.job_id_a[i] === job.getId()) {
+        for (i = 0; i < priv.job_id_array.length; i+= 1) {
+            if (priv.job_id_array[i] === job.getId()) {
                 return;
             }
         }
-        priv.job_id_a.push(job.getId());
+        priv.job_id_array.push(job.getId());
     };
 
     /**
@@ -52,13 +52,13 @@ var waitStatus = function(spec, my) {
      * @param  {object} job The job to stop waiting for.
      */
     that.dontWaitForJob = function(job) {
-        var i, tmp_job_id_a = [];
-        for (i = 0; i < priv.job_id_a.length; i+= 1) {
-            if (priv.job_id_a[i] !== job.getId()){
-                tmp_job_id_a.push(priv.job_id_a[i]);
+        var i, tmp_job_id_array = [];
+        for (i = 0; i < priv.job_id_array.length; i+= 1) {
+            if (priv.job_id_array[i] !== job.getId()){
+                tmp_job_id_array.push(priv.job_id_array[i]);
             }
         }
-        priv.job_id_a = tmp_job_id_a;
+        priv.job_id_array = tmp_job_id_array;
     };
 
     /**
@@ -80,7 +80,7 @@ var waitStatus = function(spec, my) {
 
     that.canStart = function() {
         priv.refreshJobIdArray();
-        return (priv.job_id_a.length === 0 && Date.now() >= priv.threshold);
+        return (priv.job_id_array.length === 0 && Date.now() >= priv.threshold);
     };
     that.canRestart = function() {
         return that.canStart();
@@ -89,7 +89,7 @@ var waitStatus = function(spec, my) {
     that.serialized = function() {
         return {label:that.getLabel(),
                 waitfortime:priv.threshold,
-                waitforjob:priv.job_id_a};
+                waitforjob:priv.job_id_array};
     };
 
     /**
