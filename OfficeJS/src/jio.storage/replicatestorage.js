@@ -26,14 +26,12 @@ var newReplicateStorage = function ( spec, my ) {
 
     priv.doJob = function (command,errormessage) {
         var done = false, error_array = [], i,
-        onResponseDo = function (result) {
+        onErrorDo = function (result) {
             priv.return_value_array.push(result);
-        },
-        onFailDo = function (result) {
             if (!done) {
                 error_array.push(result);
                 if (priv.isTheLast()) {
-                    that.fail (
+                    that.error (
                         {status:207,
                          statusText:'Multi-Status',
                          message:errormessage,
@@ -41,21 +39,20 @@ var newReplicateStorage = function ( spec, my ) {
                 }
             }
         },
-        onDoneDo = function (result) {
+        onSuccessDo = function (result) {
+            priv.return_value_array.push(result);
             if (!done) {
                 done = true;
-                that.done (result);
+                that.success (result);
             }
         };
         for (i = 0; i < priv.nb_storage; i+= 1) {
             var newcommand = command.clone();
             var newstorage = that.newStorage(priv.storagelist[i]);
-            newcommand.onResponseDo (onResponseDo);
-            newcommand.onFailDo (onFailDo);
-            newcommand.onDoneDo (onDoneDo);
+            newcommand.onErrorDo (onErrorDo);
+            newcommand.onSuccessDo (onSuccessDo);
             that.addJob (newstorage, newcommand);
         }
-        command.setMaxRetry (1);
     };
 
     /**
