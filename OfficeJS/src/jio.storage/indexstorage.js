@@ -159,7 +159,7 @@ var newIndexStorage = function ( spec, my ) {
      */
     priv.update = function () {
         // retreive list before, and then retreive all files
-        var getlist_onDone = function (result) {
+        var getlist_onSuccess = function (result) {
             if (!priv.isAnIndexedStorage(priv.secondstorage_string)) {
                 priv.indexStorage(priv.secondstorage_string);
             }
@@ -168,7 +168,7 @@ var newIndexStorage = function ( spec, my ) {
         that.addJob ( that.newStorage (priv.secondstorage_spec),
                       that.newCommand ('getDocumentList',
                                        {path:'.',
-                                        option:{onDone:getlist_onDone,
+                                        option:{success:getlist_onSuccess,
                                                 max_retry: 3}}) );
     };
 
@@ -178,17 +178,16 @@ var newIndexStorage = function ( spec, my ) {
      */
     that.saveDocument = function (command) {
         var newcommand = command.clone();
-        newcommand.onResponseDo (function(){});
-        newcommand.onDoneDo (function (result) {
+        newcommand.onSuccessDo (function (result) {
             if (!priv.isFileIndexed(command.getPath())) {
                 priv.addFile({name:command.getPath(),
                               last_modified:0,creation_date:0});
             }
             priv.update();
-            that.done();
+            that.success();
         });
-        newcommand.onFailDo (function (result) {
-            that.fail(result);
+        newcommand.onErrorDo (function (result) {
+            that.error(result);
         });
         that.addJob ( that.newStorage(priv.secondstorage_spec),
                       newcommand );
@@ -200,7 +199,7 @@ var newIndexStorage = function ( spec, my ) {
      */
     that.loadDocument = function (command) {
         var file_array, i, l, new_job,
-        loadOnDone = function (result) {
+        loadOnSuccess = function (result) {
             // if (file_array[i].last_modified !==
             //     result.return_value.last_modified ||
             //     file_array[i].creation_date !==
@@ -209,16 +208,15 @@ var newIndexStorage = function ( spec, my ) {
             //     // the one in the second storage. priv.update will
             //     // take care of refresh the indexed storage
             // }
-            that.done(result);
+            that.success(result);
         },
-        loadOnFail = function (result) {
-            that.fail(result);
+        loadOnError = function (result) {
+            that.error(result);
         },
         secondLoadDocument = function () {
             var newcommand = command.clone();
-            newcommand.onResponseDo (function(){});
-            newcommand.onFailDo (loadOnFail);
-            newcommand.onDoneDo (loadOnDone);
+            newcommand.onErrorDo (loadOnError);
+            newcommand.onSuccessDo (loadOnSuccess);
             that.addJob ( that.newStorage(priv.secondstorage_spec),
                           newcommand );
         };
@@ -229,7 +227,7 @@ var newIndexStorage = function ( spec, my ) {
                     file_array = priv.getFileArray();
                     for (i = 0, l = file_array.length; i < l; i+= 1) {
                         if (file_array[i].name === command.getPath()) {
-                            return that.done(file_array[i]);
+                            return that.success(file_array[i]);
                         }
                     }
                 } else {
@@ -251,12 +249,12 @@ var newIndexStorage = function ( spec, my ) {
         if (command.getOption('metadata_only')) {
             id = setInterval(function () {
                 if (timeout) {
-                    that.fail({status:0,statusText:'Timeout',
-                               message:'The request has timed out.'});
+                    that.error({status:0,statusText:'Timeout',
+                                message:'The request has timed out.'});
                     clearInterval(id);
                 }
                 if (priv.fileArrayExists()) {
-                    that.done(priv.getFileArray());
+                    that.success(priv.getFileArray());
                     clearInterval(id);
                 }
             },100);
@@ -265,11 +263,11 @@ var newIndexStorage = function ( spec, my ) {
             }, 10000);           // 10 sec
         } else {
             newcommand = command.clone();
-            newcommand.onDoneDo (function (result) {
-                that.done(result);
+            newcommand.onSuccessDo (function (result) {
+                that.success(result);
             });
-            newcommand.onFailDo (function (result) {
-                that.fail(result);
+            newcommand.onErrorDo (function (result) {
+                that.error(result);
             });
             that.addJob ( that.newStorage (priv.secondstorage_spec),
                           newcommand );
@@ -282,14 +280,13 @@ var newIndexStorage = function ( spec, my ) {
      */
     that.removeDocument = function (command) {
         var newcommand = command.clone();
-        newcommand.onResponseDo (function(){});
-        newcommand.onDoneDo (function (result) {
+        newcommand.onSuccessDo (function (result) {
             priv.removeFile(command.getPath());
             priv.update();
-            that.done();
+            that.success();
         });
-        newcommand.onFailDo (function (result) {
-            that.fail(result);
+        newcommand.onErrorDo (function (result) {
+            that.error(result);
         });
         that.addJob( that.newStorage(priv.secondstorage_spec),
                      newcommand );
