@@ -136,8 +136,8 @@ var newLocalStorage = function ( spec, my ) {
                 doc.content = command.getContent();
             }
             LocalOrCookieStorage.setItem(path, doc);
-            that.done();
-        }, 100);
+            that.success ();
+        });
     }; // end saveDocument
 
     /**
@@ -159,16 +159,16 @@ var newLocalStorage = function ( spec, my ) {
                 'jio/local/'+priv.username+'/'+
                     priv.applicationname+'/'+command.getPath());
             if (!doc) {
-                that.fail({status:404,statusText:'Not Found.',
-                           message:'Document "'+ command.getPath() +
-                           '" not found in localStorage.'});
+                that.error ({status:404,statusText:'Not Found.',
+                             message:'Document "'+ command.getPath() +
+                             '" not found in localStorage.'});
             } else {
                 if (command.getOption('metadata_only')) {
                     delete doc.content;
                 }
-                that.done(doc);
+                that.success (doc);
             }
-        }, 100);
+        });
     }; // end loadDocument
 
     /**
@@ -205,8 +205,8 @@ var newLocalStorage = function ( spec, my ) {
                     }
                 }
             }
-            that.done(new_array);
-        }, 100);
+            that.success (new_array);
+        });
     }; // end getDocumentList
 
     /**
@@ -223,8 +223,8 @@ var newLocalStorage = function ( spec, my ) {
             // deleting
             LocalOrCookieStorage.deleteItem(path);
             priv.removeFileName(command.getPath());
-            that.done();
-        }, 100);
+            that.success ();
+        });
     };
     return that;
 };
