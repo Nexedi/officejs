@@ -16,8 +16,8 @@
             // Tells us that the document is saved.
 
             setTimeout (function () {
-                that.done();
-            }, 100);
+                that.success ();
+            }, 100);            // 100 ms, for jiotests simple job waiting
         }; // end saveDocument
 
         that.loadDocument = function (command) {
@@ -30,7 +30,7 @@
                     'content': 'content',
                     'creation_date': 10000,
                     'last_modified': 15000};
-                that.done(doc);
+                that.success (doc);
             }, 100);
         }; // end loadDocument
 
@@ -53,7 +53,7 @@
                     delete list[0].content;
                     delete list[1].content;
                 }
-                that.done(list);
+                that.success (list);
             }, 100);
         }; // end getDocumentList
 
@@ -61,7 +61,7 @@
             // Remove a document from the storage.
 
             setTimeout (function () {
-                that.done();
+                that.success ();
             }, 100);
         };
         return that;
@@ -72,45 +72,30 @@
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 2 : all fail
     newDummyStorageAllFail = function ( spec, my ) {
-        var that = Jio.storage( spec, my, 'base' );
+        var that = Jio.storage( spec, my, 'base' ), priv = {};
 
-        that.setType('dummyallfail');
+        priv.error = function () {
+            setTimeout (function () {
+                that.error ({status:0,statusText:'Unknown Error',
+                             message:'Unknown error.'});
+            });
+        };
 
         that.saveDocument = function (command) {
-            // Tells us that the document is not saved.
-
-            setTimeout (function () {
-                that.fail({status:0,statusText:'Unknown Error',
-                              message:'Unknown error.'});
-            }, 100);
+            priv.error();
         }; // end saveDocument
 
         that.loadDocument = function (command) {
-            // Returns a document object containing nothing.
-
-            setTimeout(function () {
-                that.fail({status:0,statusText:'Unknown Error',
-                              message:'Unknown error.'});
-            }, 100);
+            priv.error();
         }; // end loadDocument
 
         that.getDocumentList = function (command) {
-            // It returns nothing.
-
-            setTimeout(function () {
-                that.fail({status:0,statusText:'Unknown Error',
-                              message:'Unknown error.'});
-            }, 100);
+            priv.error();
         }; // end getDocumentList
 
         that.removeDocument = function (command) {
-            // Remove a document from the storage.
-
-            setTimeout (function () {
-                that.fail({status:0,statusText:'Unknown Error',
-                              message:'Unknown error.'});
-            }, 100);
-        };
+            priv.error();
+        }; // end removeDocument
         return that;
     },
     // end Dummy Storage All Fail
@@ -121,13 +106,11 @@
     newDummyStorageAllNotFound = function ( spec, my ) {
         var that = Jio.storage( spec, my, 'base' );
 
-        that.setType('dummyallnotfound');
-
         that.saveDocument = function (command) {
             // Document does not exists yet, create it.
 
             setTimeout (function () {
-                that.done();
+                that.success ();
             }, 100);
         }; // end saveDocument
 
@@ -135,9 +118,9 @@
             // Returns a document object containing nothing.
 
             setTimeout(function () {
-                that.fail({status:404,statusText:'Not Found',
-                              message:'Document "'+ command.getPath() +
-                              '" not found.'});
+                that.error ({status:404,statusText:'Not Found',
+                             message:'Document "'+ command.getPath() +
+                             '" not found.'});
             }, 100);
         }; // end loadDocument
 
@@ -145,8 +128,8 @@
             // It returns nothing.
 
             setTimeout(function () {
-                that.fail({status:404,statusText:'Not Found',
-                              message:'User list not found.'});
+                that.error ({status:404,statusText:'Not Found',
+                             message:'User list not found.'});
             }, 100);
         }; // end getDocumentList
 
@@ -154,7 +137,7 @@
             // Remove a document from the storage.
 
             setTimeout (function () {
-                that.done();
+                that.success ();
             }, 100);
         };
         return that;
@@ -167,8 +150,6 @@
     newDummyStorageAll3Tries = function ( spec, my ) {
         var that = Jio.storage( spec, my, 'base' ), priv = {};
 
-        that.setType('dummyall3tries');
-
         // this serialized method is used to make simple difference between
         // two dummyall3tries storages:
         // so  {type:'dummyall3tries',a:'b'} differs from
@@ -176,7 +157,7 @@
         var super_serialized = that.serialized;
         that.serialized = function () {
             var o = super_serialized();
-            o.spec = spec;
+            o.applicationname = spec.applicationname;
             return o;
         };
 
@@ -187,15 +168,20 @@
             }, 100);
         };
         priv.Try3OKElseFail = function (tries,if_ok_return) {
-            if ( tries === 3 ) {
-                return that.done(if_ok_return);
+            if ( typeof tries === 'undefined' ) {
+                return that.error ({status:0,statusText:'Unknown Error',
+                                    message:'Cannot get tried'});
             }
             if ( tries < 3 ) {
-                return that.fail(
+                return that.retry (
                     {message:'' + (3 - tries) + ' tries left.'});
             }
+            if ( tries === 3 ) {
+                return that.success (if_ok_return);
+            }
             if ( tries > 3 ) {
-                return that.fail({message:'Too much tries.'});
+                return that.error ({status:0,statusText:'Too Much Tries',
+                                    message:'Too much tries.'});
             }
         };
 
