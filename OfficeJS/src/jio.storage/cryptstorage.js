@@ -64,7 +64,7 @@ var newCryptedStorage = function ( spec, my ) {
                       message:'Unable to decrypt.'});
             return;
         }
-        callback(tmp);
+        callback(undefined,tmp);
     };
 
     priv.newAsyncModule = function () {
@@ -113,9 +113,8 @@ var newCryptedStorage = function ( spec, my ) {
         };
         o.save = function () {
             var settings = command.cloneOption(), newcommand;
-            settings.onResponse = function (){};
-            settings.onDone = function () { that.done(); };
-            settings.onFail = function (r) { that.fail(r); };
+            settings.success = function () { that.success(); };
+            settings.error = function (r) { that.error(r); };
             newcommand = that.newCommand(
                 'saveDocument',
                 {path:new_file_name,content:new_file_content,option:settings});
@@ -142,39 +141,37 @@ var newCryptedStorage = function ( spec, my ) {
         };
         o.loadDocument = function () {
             var settings = command.cloneOption(), newcommand;
-            settings.onResponse = function(){};
-            settings.onFail = o.loadOnFail;
-            settings.onDone = o.loadOnDone;
+            settings.error = o.loadOnError;
+            settings.success = o.loadOnSuccess;
             newcommand = that.newCommand (
                 'loadDocument',
                 {path:new_file_name,option:settings});
             that.addJob (
                 that.newStorage ( priv.secondstorage_spec ), newcommand );
         };
-        o.loadOnDone = function (result) {
+        o.loadOnSuccess = function (result) {
             result.name = command.getPath();
             if (command.getOption('metadata_only')) {
-                that.done(result);
+                that.success(result);
             } else {
-                priv.decrypt (result.content, function(res){
-                    if (typeof res === 'object') {
-                        that.fail({status:0,statusText:'Decrypt Fail',
-                                   message:'Unable to decrypt'});
+                priv.decrypt (result.content, function(err,res){
+                    if (err) {
+                        that.error(err);
                     } else {
                         result.content = res;
                         // content only: the second storage should
                         // manage content_only option, so it is not
                         // necessary to manage it.
-                        that.done(result);
+                        that.success(result);
                     }
                 });
             }
         };
-        o.loadOnFail = function (error) {
+        o.loadOnError = function (error) {
             // NOTE : we can re create an error object instead of
             // keep the old ex:status=404,message="document 1y59gyl8g
             // not found in localStorage"...
-            that.fail(error);
+            that.error(error);
         };
         am.call(o,'encryptFilePath');
     }; // end loadDocument
@@ -186,51 +183,57 @@ var newCryptedStorage = function ( spec, my ) {
     that.getDocumentList = function (command) {
         var result_array = [], am = priv.newAsyncModule(), o = {};
         o.getDocumentList = function () {
-            var newcommand = command.clone();
-            newcommand.onResponseDo (function(){});
-            newcommand.onDoneDo (o.getListOnDone);
-            newcommand.onFailDo (o.getListOnFail);
+            var settings = command.cloneOption();
+            settings.success = o.getListOnSuccess;
+            settings.error = o.getListOnError;
             that.addJob (
-                that.newStorage ( priv.secondstorage_spec ), newcommand );
+                that.newStorage ( priv.secondstorage_spec ),
+                that.newCommand ( 'getDocumentList', {path:command.getPath(),
+                                                      option:settings}) );
         };
-        o.getListOnDone = function (result) {
+        o.getListOnSuccess = function (result) {
             result_array = result;
-            var i, fun = function () {
-                var c = i;
-                priv.decrypt (result[c].name,function (res) {
-                    am.call(o,'pushResult',[res,c,'name']);
+            var i, decrypt = function (c) {
+                priv.decrypt (result_array[c].name,function (err,res) {
+                    if (err) {
+                        am.call(o,'error',[err]);
+                    } else {
+                        am.call(o,'pushResult',[res,c,'name']);
+                    }
                 });
                 if (!command.getOption('metadata_only')) {
-                    priv.decrypt (result[c].content,function (res) {
-                        am.call(o,'pushResult',[res,c,'content']);
+                    priv.decrypt (result_array[c].content,function (err,res) {
+                        if (err) {
+                            am.call(o,'error',[err]);
+                        } else {
+                            am.call(o,'pushResult',[res,c,'content']);
+                        }
                     });
                 }
             };
             if (command.getOption('metadata_only')) {
-                am.wait(o,'done',result.length-1);
+                am.wait(o,'success',result.length-1);
             } else {
-                am.wait(o,'done',result.length*2-1);
+                am.wait(o,'success',result.length*2-1);
             }
-            for (i = 0; i < result.length; i+= 1) { fun(); }
+            for (i = 0; i < result_array.length; i+= 1) {
+                decrypt(i);
+            }
         };
-        o.getListOnFail = function (error) {
-            am.call(o,'fail',[error]);
+        o.getListOnError = function (error) {
+            am.call(o,'error',[error]);
         };
         o.pushResult = function (result,index,key) {
-            if (typeof result === 'object') {
-                return am.call(o,'fail',[{status:0,statusText:'Decrypt Fail',
-                                          message:'Unable to decrypt.'}]);
-            }
             result_array[index][key] = result;
-            am.call(o,'done');
+            am.call(o,'success');
         };
-        o.fail = function (error) {
+        o.error = function (error) {
             am.end();
-            that.fail(error);
+            that.error (error);
         };
-        o.done = function () {
+        o.success = function () {
             am.end();
-            that.done(result_array);
+            that.success (result_array);
         };
         am.call(o,'getDocumentList');
     }; // end getDocumentList
@@ -240,32 +243,30 @@ var newCryptedStorage = function ( spec, my ) {
      * @method removeDocument
      */
     that.removeDocument = function (command) {
-        var new_file_name, am = priv.newAsyncModule(), o = {};
+        var new_file_name, o = {};
         o.encryptFilePath = function () {
             priv.encrypt(command.getPath(),function(res) {
                 new_file_name = res;
-                am.call(o,'removeDocument');
+                o.removeDocument();
             });
         };
         o.removeDocument = function () {
             var cloned_option = command.cloneOption();
-            cloned_option.onResponse = o.removeOnResponse;
-            cloned_option.onFail = function () {};
-            cloned_option.onDone = function () {};
+            cloned_option.error = o.removeOnError;
+            cloned_option.success = o.removeOnSuccess;
             that.addJob(that.newStorage(priv.secondstorage_spec),
                         that.newCommand(
                             'removeDocument',
                             {path:new_file_name,
                              option:cloned_option}));
         };
-        o.removeOnResponse = function (result) {
-            if (result.status.isDone()) {
-                that.done();
-            } else {
-                that.fail(result.error);
-            }
+        o.removeOnSuccess = function (result) {
+            that.success();
         };
-        am.call(o,'encryptFilePath');
+        o.removeOnError = function (error) {
+            that.error (error);
+        };
+        o.encryptFilePath();
     };
     return that;
 };
