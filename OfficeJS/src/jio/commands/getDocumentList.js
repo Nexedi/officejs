@@ -16,8 +16,8 @@ var getDocumentList = function(spec, my) {
         return false;
     };
 
-    var super_done = that.done;
-    that.done = function (res) {
+    var super_success = that.success;
+    that.success = function (res) {
         var i;
         if (res) {
             for (i = 0; i < res.length; i+= 1) {
@@ -31,7 +31,7 @@ var getDocumentList = function(spec, my) {
                 }
             }
         }
-        super_done(res);
+        super_success(res);
     };
 
     return that;

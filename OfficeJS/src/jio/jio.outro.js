@@ -84,18 +84,16 @@
      * @param  {string} path The document path name.
      * @param  {string} content The document's content.
      * @param  {object} option (optional) Contains some options:
-     * - {function} onResponse The callback called when the job is terminated.
-     * - {function} onDone The callback called when the job has passed.
-     * - {function} onFail The callback called when the job has fail.
+     * - {function} success The callback called when the job has passed.
+     * - {function} error The callback called when the job has fail.
      * - {number} max_retry The number max of retries, 0 = infinity.
      * @param  {object} specificstorage (optional) A specific storage, only if
      * you want to save this document elsewhere.
      */
     that.saveDocument = function(path, content, option, specificstorage) {
         option            = option            || {};
-        option.onResponse = option.onResponse || function(){};
-        option.onDone     = option.onDone     || function(){};
-        option.onFail     = option.onFail     || function(){};
+        option.success    = option.success    || function(){};
+        option.error      = option.error      || function(){};
         option.max_retry  = option.max_retry  || 0;
         jobManager.addJob(
             job({storage:(specificstorage?
@@ -110,9 +108,8 @@
      * @method loadDocument
      * @param  {string} path The document path name.
      * @param  {object} option (optional) Contains some options:
-     * - {function} onResponse The callback called when the job is terminated.
-     * - {function} onDone The callback called when the job has passed.
-     * - {function} onFail The callback called when the job has fail.
+     * - {function} success The callback called when the job has passed.
+     * - {function} error The callback called when the job has fail.
      * - {number} max_retry The number max of retries, 0 = infinity.
      * - {boolean} metadata_only Load only document metadata.
      * @param  {object} specificstorage (optional) A specific storage, only if
@@ -120,9 +117,8 @@
      */
     that.loadDocument = function(path, option, specificstorage) {
         option               = option               || {};
-        option.onResponse    = option.onResponse    || function(){};
-        option.onDone        = option.onDone        || function(){};
-        option.onFail        = option.onFail        || function(){};
+        option.success       = option.success       || function(){};
+        option.error         = option.error         || function(){};
         option.max_retry     = option.max_retry     || 0;
         option.metadata_only = (option.metadata_only !== undefined?
                                 option.metadata_only:false);
@@ -139,18 +135,16 @@
      * @method removeDocument
      * @param  {string} path The document path name.
      * @param  {object} option (optional) Contains some options:
-     * - {function} onResponse The callback called when the job is terminated.
-     * - {function} onDone The callback called when the job has passed.
-     * - {function} onFail The callback called when the job has fail.
+     * - {function} success The callback called when the job has passed.
+     * - {function} error The callback called when the job has fail.
      * - {number} max_retry The number max of retries, 0 = infinity.
      * @param  {object} specificstorage (optional) A specific storage, only if
      * you want to save this document elsewhere.
      */
     that.removeDocument = function(path, option, specificstorage) {
         option            = option            || {};
-        option.onResponse = option.onResponse || function(){};
-        option.onDone     = option.onDone     || function(){};
-        option.onFail     = option.onFail     || function(){};
+        option.success    = option.success    || function(){};
+        option.error      = option.error      || function(){};
         option.max_retry  = option.max_retry  || 0;
         jobManager.addJob(
             job({storage:(specificstorage?
@@ -165,9 +159,8 @@
      * @method getDocumentList
      * @param  {string} path The folder path.
      * @param  {object} option (optional) Contains some options:
-     * - {function} onResponse The callback called when the job is terminated.
-     * - {function} onDone The callback called when the job has passed.
-     * - {function} onFail The callback called when the job has fail.
+     * - {function} success The callback called when the job has passed.
+     * - {function} error The callback called when the job has fail.
      * - {number} max_retry The number max of retries, 0 = infinity.
      * - {boolean} metadata_only Load only document metadata
      * @param  {object} specificstorage (optional) A specific storage, only if
@@ -175,9 +168,8 @@
      */
     that.getDocumentList = function(path, option, specificstorage) {
         option               = option               || {};
-        option.onResponse    = option.onResponse    || function(){};
-        option.onDone        = option.onDone        || function(){};
-        option.onFail        = option.onFail        || function(){};
+        option.success       = option.success       || function(){};
+        option.error         = option.error         || function(){};
         option.max_retry     = option.max_retry     || 0;
         option.metadata_only = (option.metadata_only !== undefined?
                                 option.metadata_only:true);

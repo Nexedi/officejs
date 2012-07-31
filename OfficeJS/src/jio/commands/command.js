@@ -18,17 +18,30 @@ var command = function(spec, my) {
     priv.path      = spec.path || '';
     priv.tried     = 0;
     priv.option    = spec.option || {};
-    priv.respond   = priv.option.onResponse || function(){};
-    priv.done      = priv.option.onDone || function(){};
-    priv.fail      = priv.option.onFail || function(){};
+    priv.success   = priv.option.success || function (){};
+    priv.error     = priv.option.error || function (){};
     priv.retry     = function() {
-        that.setMaxRetry(-1);
-        that.fail({status:0,statusText:'Fail Retry',
-                   message:'Impossible to retry.'});
+        that.error({status:13,statusText:'Fail Retry',
+                    message:'Impossible to retry.'});
     };
     priv.end       = function() {};
+    priv.on_going  = false;
 
     // Methods //
+    /**
+     * Returns a serialized version of this command.
+     * Override this function.
+     * @method serialized
+     * @return {object} The serialized command.
+     */
+    that.serialized = function() {
+        return {label:that.getLabel(),
+                tried:priv.tried,
+                max_retry:priv.max_retry,
+                path:priv.path,
+                option:that.cloneOption()};
+    };
+
     /**
      * Returns the label of the command.
      * @method getLabel
@@ -66,12 +79,13 @@ var command = function(spec, my) {
         that.validateState();
     };
 
-    that.getTried = function() {
-        return priv.tried;
+    that.canBeRetried = function () {
+        return (priv.option.max_retry === 0 ||
+                priv.tried < priv.option.max_retry);
     };
 
-    that.setMaxRetry = function(max_retry) {
-        priv.option.max_retry = max_retry;
+    that.getTried = function() {
+        return priv.tried;
     };
 
     /**
@@ -79,9 +93,12 @@ var command = function(spec, my) {
      * @param {object} handler The storage handler.
      */
     that.execute = function(handler) {
-        that.validate(handler);
-        priv.tried ++;
-        handler.execute(that);
+        if (!priv.on_going) {
+            that.validate(handler);
+            priv.tried ++;
+            priv.on_going = true;
+            handler.execute(that);
+        }
     };
 
     /**
@@ -102,49 +119,44 @@ var command = function(spec, my) {
         }
     };
 
-    that.done = function(return_value) {
-        log ('command done: ' + JSON.stringify (return_value));
-        priv.respond({status:doneStatus(),value:return_value});
-        priv.done(return_value);
+    that.success = function(return_value) {
+        priv.on_going = false;
+        priv.success (return_value);
         priv.end(doneStatus());
     };
 
-    that.fail = function(return_error) {
-        log ('command fail: ' + JSON.stringify (return_error));
-        if (priv.option.max_retry === 0 || priv.tried < priv.option.max_retry) {
+    that.retry = function (return_error) {
+        priv.on_going = false;
+        if (that.canBeRetried()) {
             priv.retry();
         } else {
-            priv.respond({status:failStatus(),error:return_error});
-            priv.fail(return_error);
-            priv.end(failStatus());
+            that.error (return_error);
         }
+    };
+
+    that.error = function(return_error) {
+        priv.on_going = false;
+        priv.error(return_error);
+        priv.end(failStatus());
     };
 
     that.end = function () {
         priv.end(doneStatus());
     };
 
-    that.onResponseDo = function (fun) {
+    that.onSuccessDo = function (fun) {
         if (fun) {
-            priv.respond = fun;
+            priv.success = fun;
         } else {
-            return priv.respond;
+            return priv.success;
         }
     };
 
-    that.onDoneDo = function (fun) {
+    that.onErrorDo = function (fun) {
         if (fun) {
-            priv.done = fun;
+            priv.error = fun;
         } else {
-            return priv.done;
-        }
-    };
-
-    that.onFailDo = function (fun) {
-        if (fun) {
-            priv.fail = fun;
-        } else {
-            return priv.fail;
+            return priv.error;
         }
     };
 
@@ -154,20 +166,6 @@ var command = function(spec, my) {
 
     that.onRetryDo = function (fun) {
         priv.retry = fun;
-    };
-
-    /**
-     * Returns a serialized version of this command.
-     * Override this function.
-     * @method serialized
-     * @return {object} The serialized command.
-     */
-    that.serialized = function() {
-        return {label:that.getLabel(),
-                tried:priv.tried,
-                max_retry:priv.max_retry,
-                path:priv.path,
-                option:that.cloneOption()};
     };
 
     /**
@@ -194,12 +192,10 @@ var command = function(spec, my) {
      * @return {object} The clone of the command options.
      */
     that.cloneOption = function () {
-        // log ('command cloneOption(): ' + JSON.stringify (priv.option));
         var k, o = {};
         for (k in priv.option) {
             o[k] = priv.option[k];
         }
-        // log ('cloneOption result: ' + JSON.stringify (o));
         return o;
     };
 

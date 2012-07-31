@@ -5,7 +5,6 @@ var storage = function(spec, my) {
     // Attributes //
     var priv = {};
     priv.type = spec.type || '';
-    log ('new storage spec: ' + JSON.stringify (spec));
 
     // Methods //
     that.getType = function() {
@@ -21,12 +20,11 @@ var storage = function(spec, my) {
      * @param  {object} command The command
      */
     that.execute = function(command) {
-        log ('storage '+that.getType()+' execute(command): ' +
-             JSON.stringify (command.serialized()));
         that.validate(command);
-        that.done = command.done;
-        that.fail = command.fail;
-        that.end  = command.end;
+        that.success = command.success;
+        that.error   = command.error;
+        that.retry   = command.retry;
+        that.end     = command.end;
         command.executeOn(that);
     };
 
@@ -78,9 +76,10 @@ var storage = function(spec, my) {
         return '';
     };
 
-    that.done = function() {};
-    that.fail = function() {};
-    that.end  = function() {};  // terminate the current job.
+    that.success = function() {};
+    that.retry   = function() {};
+    that.error   = function() {};
+    that.end     = function() {};  // terminate the current job.
 
     return that;
 };

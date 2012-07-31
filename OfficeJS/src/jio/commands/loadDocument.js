@@ -16,8 +16,8 @@ var loadDocument = function(spec, my) {
         return false;
     };
 
-    var super_done = that.done;
-    that.done = function (res) {
+    var super_success = that.success;
+    that.success = function (res) {
         if (res) {
             if (typeof res.last_modified !== 'number') {
                 res.last_modified=new Date(res.last_modified).getTime();
@@ -26,7 +26,7 @@ var loadDocument = function(spec, my) {
                 res.creation_date=new Date(res.creation_date).getTime();
             }
         }
-        super_done(res);
+        super_success(res);
     };
     return that;
 };

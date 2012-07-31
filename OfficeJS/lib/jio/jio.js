@@ -1,9 +1,7 @@
-/*! JIO - v0.1.0 - 2012-07-24
+/*! JIO - v0.1.0 - 2012-07-31
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
-var log = function(){};
-// var log = console.log;
 
 var jioException = function(spec, my) {
     var that = {};
@@ -77,7 +75,6 @@ var storage = function(spec, my) {
     // Attributes //
     var priv = {};
     priv.type = spec.type || '';
-    log ('new storage spec: ' + JSON.stringify (spec));
 
     // Methods //
     that.getType = function() {
@@ -93,12 +90,11 @@ var storage = function(spec, my) {
      * @param  {object} command The command
      */
     that.execute = function(command) {
-        log ('storage '+that.getType()+' execute(command): ' +
-             JSON.stringify (command.serialized()));
         that.validate(command);
-        that.done = command.done;
-        that.fail = command.fail;
-        that.end  = command.end;
+        that.success = command.success;
+        that.error   = command.error;
+        that.retry   = command.retry;
+        that.end     = command.end;
         command.executeOn(that);
     };
 
@@ -150,9 +146,10 @@ var storage = function(spec, my) {
         return '';
     };
 
-    that.done = function() {};
-    that.fail = function() {};
-    that.end  = function() {};  // terminate the current job.
+    that.success = function() {};
+    that.retry   = function() {};
+    that.error   = function() {};
+    that.end     = function() {};  // terminate the current job.
 
     return that;
 };
@@ -161,7 +158,6 @@ var storageHandler = function(spec, my) {
     spec = spec || {};
     my = my || {};
     var that = storage( spec, my );
-    log ('new storageHandler spec: '+JSON.stringify (spec));
 
     that.newCommand = function (method, spec) {
         var o = spec || {};
@@ -175,10 +171,6 @@ var storageHandler = function(spec, my) {
     };
 
     that.addJob = function (storage,command) {
-        log ('storageHandler ' + that.getType() +
-             ' addJob (storage, command): ' +
-             JSON.stringify (storage.serialized()) + ', ' +
-             JSON.stringify (command.serialized()));
         my.jobManager.addJob ( job({storage:storage, command:command}, my) );
     };
 
@@ -205,17 +197,30 @@ var command = function(spec, my) {
     priv.path      = spec.path || '';
     priv.tried     = 0;
     priv.option    = spec.option || {};
-    priv.respond   = priv.option.onResponse || function(){};
-    priv.done      = priv.option.onDone || function(){};
-    priv.fail      = priv.option.onFail || function(){};
+    priv.success   = priv.option.success || function (){};
+    priv.error     = priv.option.error || function (){};
     priv.retry     = function() {
-        that.setMaxRetry(-1);
-        that.fail({status:0,statusText:'Fail Retry',
-                   message:'Impossible to retry.'});
+        that.error({status:13,statusText:'Fail Retry',
+                    message:'Impossible to retry.'});
     };
     priv.end       = function() {};
+    priv.on_going  = false;
 
     // Methods //
+    /**
+     * Returns a serialized version of this command.
+     * Override this function.
+     * @method serialized
+     * @return {object} The serialized command.
+     */
+    that.serialized = function() {
+        return {label:that.getLabel(),
+                tried:priv.tried,
+                max_retry:priv.max_retry,
+                path:priv.path,
+                option:that.cloneOption()};
+    };
+
     /**
      * Returns the label of the command.
      * @method getLabel
@@ -253,12 +258,13 @@ var command = function(spec, my) {
         that.validateState();
     };
 
-    that.getTried = function() {
-        return priv.tried;
+    that.canBeRetried = function () {
+        return (priv.option.max_retry === 0 ||
+                priv.tried < priv.option.max_retry);
     };
 
-    that.setMaxRetry = function(max_retry) {
-        priv.option.max_retry = max_retry;
+    that.getTried = function() {
+        return priv.tried;
     };
 
     /**
@@ -266,9 +272,12 @@ var command = function(spec, my) {
      * @param {object} handler The storage handler.
      */
     that.execute = function(handler) {
-        that.validate(handler);
-        priv.tried ++;
-        handler.execute(that);
+        if (!priv.on_going) {
+            that.validate(handler);
+            priv.tried ++;
+            priv.on_going = true;
+            handler.execute(that);
+        }
     };
 
     /**
@@ -289,49 +298,44 @@ var command = function(spec, my) {
         }
     };
 
-    that.done = function(return_value) {
-        log ('command done: ' + JSON.stringify (return_value));
-        priv.respond({status:doneStatus(),value:return_value});
-        priv.done(return_value);
+    that.success = function(return_value) {
+        priv.on_going = false;
+        priv.success (return_value);
         priv.end(doneStatus());
     };
 
-    that.fail = function(return_error) {
-        log ('command fail: ' + JSON.stringify (return_error));
-        if (priv.option.max_retry === 0 || priv.tried < priv.option.max_retry) {
+    that.retry = function (return_error) {
+        priv.on_going = false;
+        if (that.canBeRetried()) {
             priv.retry();
         } else {
-            priv.respond({status:failStatus(),error:return_error});
-            priv.fail(return_error);
-            priv.end(failStatus());
+            that.error (return_error);
         }
+    };
+
+    that.error = function(return_error) {
+        priv.on_going = false;
+        priv.error(return_error);
+        priv.end(failStatus());
     };
 
     that.end = function () {
         priv.end(doneStatus());
     };
 
-    that.onResponseDo = function (fun) {
+    that.onSuccessDo = function (fun) {
         if (fun) {
-            priv.respond = fun;
+            priv.success = fun;
         } else {
-            return priv.respond;
+            return priv.success;
         }
     };
 
-    that.onDoneDo = function (fun) {
+    that.onErrorDo = function (fun) {
         if (fun) {
-            priv.done = fun;
+            priv.error = fun;
         } else {
-            return priv.done;
-        }
-    };
-
-    that.onFailDo = function (fun) {
-        if (fun) {
-            priv.fail = fun;
-        } else {
-            return priv.fail;
+            return priv.error;
         }
     };
 
@@ -341,20 +345,6 @@ var command = function(spec, my) {
 
     that.onRetryDo = function (fun) {
         priv.retry = fun;
-    };
-
-    /**
-     * Returns a serialized version of this command.
-     * Override this function.
-     * @method serialized
-     * @return {object} The serialized command.
-     */
-    that.serialized = function() {
-        return {label:that.getLabel(),
-                tried:priv.tried,
-                max_retry:priv.max_retry,
-                path:priv.path,
-                option:that.cloneOption()};
     };
 
     /**
@@ -381,12 +371,10 @@ var command = function(spec, my) {
      * @return {object} The clone of the command options.
      */
     that.cloneOption = function () {
-        // log ('command cloneOption(): ' + JSON.stringify (priv.option));
         var k, o = {};
         for (k in priv.option) {
             o[k] = priv.option[k];
         }
-        // log ('cloneOption result: ' + JSON.stringify (o));
         return o;
     };
 
@@ -411,8 +399,8 @@ var getDocumentList = function(spec, my) {
         return false;
     };
 
-    var super_done = that.done;
-    that.done = function (res) {
+    var super_success = that.success;
+    that.success = function (res) {
         var i;
         if (res) {
             for (i = 0; i < res.length; i+= 1) {
@@ -426,7 +414,7 @@ var getDocumentList = function(spec, my) {
                 }
             }
         }
-        super_done(res);
+        super_success(res);
     };
 
     return that;
@@ -450,8 +438,8 @@ var loadDocument = function(spec, my) {
         return false;
     };
 
-    var super_done = that.done;
-    that.done = function (res) {
+    var super_success = that.success;
+    that.success = function (res) {
         if (res) {
             if (typeof res.last_modified !== 'number') {
                 res.last_modified=new Date(res.last_modified).getTime();
@@ -460,7 +448,7 @@ var loadDocument = function(spec, my) {
                 res.creation_date=new Date(res.creation_date).getTime();
             }
         }
-        super_done(res);
+        super_success(res);
     };
     return that;
 };
@@ -636,7 +624,7 @@ var waitStatus = function(spec, my) {
     my = my || {};
     // Attributes //
     var priv = {};
-    priv.job_id_a = spec.job_id_array || [];
+    priv.job_id_array = spec.job_id_array || [];
     priv.threshold = 0;
 
     // Methods //
@@ -654,13 +642,13 @@ var waitStatus = function(spec, my) {
      * @method refreshJobIdArray
      */
     priv.refreshJobIdArray = function() {
-        var tmp_job_id_a = [], i;
-        for (i = 0; i < priv.job_id_a.length; i+= 1) {
-            if (my.jobManager.jobIdExists(priv.job_id_a[i])) {
-                tmp_job_id_a.push(priv.job_id_a[i]);
+        var tmp_job_id_array = [], i;
+        for (i = 0; i < priv.job_id_array.length; i+= 1) {
+            if (my.jobManager.jobIdExists(priv.job_id_array[i])) {
+                tmp_job_id_array.push(priv.job_id_array[i]);
             }
         }
-        priv.job_id_a = tmp_job_id_a;
+        priv.job_id_array = tmp_job_id_array;
     };
 
     /**
@@ -670,12 +658,12 @@ var waitStatus = function(spec, my) {
      */
     that.waitForJob = function(job) {
         var i;
-        for (i = 0; i < priv.job_id_a.length; i+= 1) {
-            if (priv.job_id_a[i] === job.getId()) {
+        for (i = 0; i < priv.job_id_array.length; i+= 1) {
+            if (priv.job_id_array[i] === job.getId()) {
                 return;
             }
         }
-        priv.job_id_a.push(job.getId());
+        priv.job_id_array.push(job.getId());
     };
 
     /**
@@ -684,13 +672,13 @@ var waitStatus = function(spec, my) {
      * @param  {object} job The job to stop waiting for.
      */
     that.dontWaitForJob = function(job) {
-        var i, tmp_job_id_a = [];
-        for (i = 0; i < priv.job_id_a.length; i+= 1) {
-            if (priv.job_id_a[i] !== job.getId()){
-                tmp_job_id_a.push(priv.job_id_a[i]);
+        var i, tmp_job_id_array = [];
+        for (i = 0; i < priv.job_id_array.length; i+= 1) {
+            if (priv.job_id_array[i] !== job.getId()){
+                tmp_job_id_array.push(priv.job_id_array[i]);
             }
         }
-        priv.job_id_a = tmp_job_id_a;
+        priv.job_id_array = tmp_job_id_array;
     };
 
     /**
@@ -712,7 +700,7 @@ var waitStatus = function(spec, my) {
 
     that.canStart = function() {
         priv.refreshJobIdArray();
-        return (priv.job_id_a.length === 0 && Date.now() >= priv.threshold);
+        return (priv.job_id_array.length === 0 && Date.now() >= priv.threshold);
     };
     that.canRestart = function() {
         return that.canStart();
@@ -721,7 +709,7 @@ var waitStatus = function(spec, my) {
     that.serialized = function() {
         return {label:that.getLabel(),
                 waitfortime:priv.threshold,
-                waitforjob:priv.job_id_a};
+                waitforjob:priv.job_id_array};
     };
 
     /**
@@ -747,8 +735,6 @@ var job = function(spec, my) {
     priv.storage   = spec.storage;
     priv.status    = initialStatus();
     priv.date      = new Date();
-    log ('new job spec: ' + JSON.stringify (spec) + ', priv: ' +
-         JSON.stringify (priv));
 
     // Initialize //
     if (!priv.storage){
@@ -789,7 +775,7 @@ var job = function(spec, my) {
      * @return {boolean} true if ready, else false.
      */
     that.isReady = function() {
-        if (priv.tried === 0) {
+        if (that.getCommand().getTried() === 0) {
             return priv.status.canStart();
         } else {
             return priv.status.canRestart();
@@ -815,7 +801,6 @@ var job = function(spec, my) {
      * @param  {object} job The job to wait for.
      */
     that.waitForJob = function(job) {
-        log ('job waitForJob(job): ' + JSON.stringify (job.serialized()));
         if (priv.status.getLabel() !== 'wait') {
             priv.status = waitStatus({},my);
         }
@@ -839,7 +824,6 @@ var job = function(spec, my) {
      * @param  {number} ms Time to wait in millisecond.
      */
     that.waitForTime = function(ms) {
-        log ('job waitForTime(ms): ' + ms);
         if (priv.status.getLabel() !== 'wait') {
             priv.status = waitStatus({},my);
         }
@@ -857,21 +841,18 @@ var job = function(spec, my) {
     };
 
     that.eliminated = function () {
-        priv.command.setMaxRetry(-1);
-        log ('job eliminated(): '+JSON.stringify (that.serialized()));
-        priv.command.fail({status:0,statusText:'Stoped',
-                           message:'This job has been stoped by another one.'});
+        priv.command.error ({
+            status:10,statusText:'Stoped',
+            message:'This job has been stoped by another one.'});
     };
 
     that.notAccepted = function () {
-        log ('job notAccepted(): '+JSON.stringify (that.serialized()));
-        priv.command.setMaxRetry(-1);
         priv.command.onEndDo (function () {
             priv.status = failStatus();
             my.jobManager.terminateJob (that);
         });
-        priv.command.fail ({status:0,statusText:'Not Accepted',
-                            message:'This job is already running.'});
+        priv.command.error ({status:11,statusText:'Not Accepted',
+                             message:'This job is already running.'});
     };
 
     /**
@@ -880,30 +861,24 @@ var job = function(spec, my) {
      * @param  {object} job The other job.
      */
     that.update = function(job) {
-        log ('job update(job): ' + JSON.stringify (job.serialized()));
-        priv.command.setMaxRetry(-1);
-        priv.command.onEndDo(function (status) {
-            log ('job update on end' + status.getLabel());
-        });
-        priv.command.fail({status:0,statusText:'Replaced',
-                           message:'Job has been replaced by another one.'});
+        priv.command.error ({status:12,statusText:'Replaced',
+                             message:'Job has been replaced by another one.'});
         priv.date = job.getDate();
         priv.command = job.getCommand();
         priv.status = job.getStatus();
     };
 
     that.execute = function() {
-        log ('job execute(): ' + JSON.stringify (that.serialized()));
-        if (priv.max_retry !== 0 && priv.tried >= priv.max_retry) {
+        if (!that.getCommand().canBeRetried()) {
             throw tooMuchTriesJobException(
                 {job:that,message:'The job was invoked too much time.'});
         }
         if (!that.isReady()) {
-            throw jobNotReadyException({message:'Can not execute this job.'});
+            throw jobNotReadyException(
+                {job:that,message:'Can not execute this job.'});
         }
         priv.status = onGoingStatus();
         priv.command.onRetryDo (function() {
-            log ('command.retry job:' + JSON.stringify (that.serialized()));
             var ms = priv.command.getTried();
             ms = ms*ms*200;
             if (ms>10000){
@@ -913,7 +888,6 @@ var job = function(spec, my) {
         });
         priv.command.onEndDo (function(status) {
             priv.status = status;
-            log ('command.end job:' + JSON.stringify (that.serialized()));
             my.jobManager.terminateJob (that);
         });
         priv.command.execute (priv.storage);
@@ -1218,7 +1192,7 @@ var jobManager = (function(spec, my) {
     priv.restoreOldJioId = function(id) {
         var jio_date;
         jio_date = LocalOrCookieStorage.getItem('jio/id/'+id)||0;
-        if (jio_date < Date.now() - 10000) {
+        if (jio_date < (Date.now() - 10000)) { // 10 sec
             priv.restoreOldJobFromJioId(id);
             priv.removeOldJioId(id);
             priv.removeJobArrayFromJioId(id);
@@ -1249,14 +1223,14 @@ var jobManager = (function(spec, my) {
      * @param  {number} id The jio id.
      */
     priv.removeOldJioId = function(id) {
-        var i, jio_id_a, new_a = [];
-        jio_id_a = LocalOrCookieStorage.getItem('jio/id_array')||[];
-        for (i = 0; i < jio_id_a.length; i+= 1) {
-            if (jio_id_a[i] !== id) {
-                new_a.push(jio_id_a[i]);
+        var i, jio_id_array, new_array = [];
+        jio_id_array = LocalOrCookieStorage.getItem('jio/id_array')||[];
+        for (i = 0; i < jio_id_array.length; i+= 1) {
+            if (jio_id_array[i] !== id) {
+                new_array.push(jio_id_array[i]);
             }
         }
-        LocalOrCookieStorage.setItem('jio/id_array',new_a);
+        LocalOrCookieStorage.setItem('jio/id_array',new_array);
         LocalOrCookieStorage.deleteItem('jio/id/'+id);
     };
 
@@ -1401,14 +1375,6 @@ var jobRules = (function(spec, my) {
     that.none = function() { return 'none'; };
     that.default_action = that.none;
     that.default_compare = function(job1,job2) {
-        if (job1.getCommand().getPath() === job2.getCommand().getPath() &&
-            JSON.stringify(job1.getStorage().serialized()) ===
-            JSON.stringify(job2.getStorage().serialized())) {
-            log ('same ! ' + job1.getCommand().getPath() + ', ' +
-                         job2.getCommand().getPath() + ', ' +
-                         JSON.stringify (job1.getStorage().serialized())+', '+
-                         JSON.stringify (job2.getStorage().serialized()));
-        }
         return (job1.getCommand().getPath() === job2.getCommand().getPath() &&
                 JSON.stringify(job1.getStorage().serialized()) ===
                 JSON.stringify(job2.getStorage().serialized()));
@@ -1670,18 +1636,16 @@ var jobRules = (function(spec, my) {
      * @param  {string} path The document path name.
      * @param  {string} content The document's content.
      * @param  {object} option (optional) Contains some options:
-     * - {function} onResponse The callback called when the job is terminated.
-     * - {function} onDone The callback called when the job has passed.
-     * - {function} onFail The callback called when the job has fail.
+     * - {function} success The callback called when the job has passed.
+     * - {function} error The callback called when the job has fail.
      * - {number} max_retry The number max of retries, 0 = infinity.
      * @param  {object} specificstorage (optional) A specific storage, only if
      * you want to save this document elsewhere.
      */
     that.saveDocument = function(path, content, option, specificstorage) {
         option            = option            || {};
-        option.onResponse = option.onResponse || function(){};
-        option.onDone     = option.onDone     || function(){};
-        option.onFail     = option.onFail     || function(){};
+        option.success    = option.success    || function(){};
+        option.error      = option.error      || function(){};
         option.max_retry  = option.max_retry  || 0;
         jobManager.addJob(
             job({storage:(specificstorage?
@@ -1696,9 +1660,8 @@ var jobRules = (function(spec, my) {
      * @method loadDocument
      * @param  {string} path The document path name.
      * @param  {object} option (optional) Contains some options:
-     * - {function} onResponse The callback called when the job is terminated.
-     * - {function} onDone The callback called when the job has passed.
-     * - {function} onFail The callback called when the job has fail.
+     * - {function} success The callback called when the job has passed.
+     * - {function} error The callback called when the job has fail.
      * - {number} max_retry The number max of retries, 0 = infinity.
      * - {boolean} metadata_only Load only document metadata.
      * @param  {object} specificstorage (optional) A specific storage, only if
@@ -1706,9 +1669,8 @@ var jobRules = (function(spec, my) {
      */
     that.loadDocument = function(path, option, specificstorage) {
         option               = option               || {};
-        option.onResponse    = option.onResponse    || function(){};
-        option.onDone        = option.onDone        || function(){};
-        option.onFail        = option.onFail        || function(){};
+        option.success       = option.success       || function(){};
+        option.error         = option.error         || function(){};
         option.max_retry     = option.max_retry     || 0;
         option.metadata_only = (option.metadata_only !== undefined?
                                 option.metadata_only:false);
@@ -1725,18 +1687,16 @@ var jobRules = (function(spec, my) {
      * @method removeDocument
      * @param  {string} path The document path name.
      * @param  {object} option (optional) Contains some options:
-     * - {function} onResponse The callback called when the job is terminated.
-     * - {function} onDone The callback called when the job has passed.
-     * - {function} onFail The callback called when the job has fail.
+     * - {function} success The callback called when the job has passed.
+     * - {function} error The callback called when the job has fail.
      * - {number} max_retry The number max of retries, 0 = infinity.
      * @param  {object} specificstorage (optional) A specific storage, only if
      * you want to save this document elsewhere.
      */
     that.removeDocument = function(path, option, specificstorage) {
         option            = option            || {};
-        option.onResponse = option.onResponse || function(){};
-        option.onDone     = option.onDone     || function(){};
-        option.onFail     = option.onFail     || function(){};
+        option.success    = option.success    || function(){};
+        option.error      = option.error      || function(){};
         option.max_retry  = option.max_retry  || 0;
         jobManager.addJob(
             job({storage:(specificstorage?
@@ -1751,9 +1711,8 @@ var jobRules = (function(spec, my) {
      * @method getDocumentList
      * @param  {string} path The folder path.
      * @param  {object} option (optional) Contains some options:
-     * - {function} onResponse The callback called when the job is terminated.
-     * - {function} onDone The callback called when the job has passed.
-     * - {function} onFail The callback called when the job has fail.
+     * - {function} success The callback called when the job has passed.
+     * - {function} error The callback called when the job has fail.
      * - {number} max_retry The number max of retries, 0 = infinity.
      * - {boolean} metadata_only Load only document metadata
      * @param  {object} specificstorage (optional) A specific storage, only if
@@ -1761,9 +1720,8 @@ var jobRules = (function(spec, my) {
      */
     that.getDocumentList = function(path, option, specificstorage) {
         option               = option               || {};
-        option.onResponse    = option.onResponse    || function(){};
-        option.onDone        = option.onDone        || function(){};
-        option.onFail        = option.onFail        || function(){};
+        option.success       = option.success       || function(){};
+        option.error         = option.error         || function(){};
         option.max_retry     = option.max_retry     || 0;
         option.metadata_only = (option.metadata_only !== undefined?
                                 option.metadata_only:true);

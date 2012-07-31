@@ -124,7 +124,7 @@ var jobManager = (function(spec, my) {
     priv.restoreOldJioId = function(id) {
         var jio_date;
         jio_date = LocalOrCookieStorage.getItem('jio/id/'+id)||0;
-        if (jio_date < Date.now() - 10000) {
+        if (jio_date < (Date.now() - 10000)) { // 10 sec
             priv.restoreOldJobFromJioId(id);
             priv.removeOldJioId(id);
             priv.removeJobArrayFromJioId(id);
