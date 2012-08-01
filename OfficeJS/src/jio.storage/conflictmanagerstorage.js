@@ -3,64 +3,35 @@ var newConflictManagerStorage = function ( spec, my ) {
     spec = spec || {};
     my = my || {};
 
-    priv.username = spec.username || '';
     var storage_exists = (spec.storage?true:false);
     priv.secondstorage_spec = spec.storage || {type:'base'};
     priv.secondstorage_string = JSON.stringify (priv.secondstorage_spec);
 
-    var local_namespace = 'jio/conflictmanager/'+priv.username+'/'+
+    var local_namespace = 'jio/conflictmanager/'+
         priv.secondstorage_string+'/';
+
+    var empty_fun = function (){};
 
     var super_serialized = that.serialized;
     that.serialized = function () {
         var o = super_serialized();
-        o.username = priv.username;
         o.storage = priv.secondstorage_spec;
         return o;
     };
 
     that.validateState = function () {
-        if (priv.username && storage_exists) {
+        if (storage_exists) {
             return '';
         }
-        return 'Need at least two parameter: "username" and "storage".';
+        return 'Need at least one parameter: "storage".';
     };
 
-    priv.removeValuesFromArrayWhere = function (array,fun) {
-        var i, newarray = [];
-        for (i = 0; i < array.length; i+= 1) {
-            if (!fun(array[i])) {
-                newarray.push(array[i]);
-            }
-        }
-        return newarray;
-    };
-    priv.removeConflict = function (conflict_array,conflict_hash) {
-        var i,tmp = priv.removeValuesFromArrayWhere(
-            conflict_array,
-            function (v) { return (v.hash === conflict_hash); });
-        for (i = 0; i < tmp.length; i+= 1) {
-            conflict_array[i] = tmp[i];
-        }
-        conflict_array.length = tmp.length;
-    };
-    priv.addConflict = function (conflict_array,conflict_object) {
-        var i;
-        for (i = 0; i < conflict_array.length; i+= 1) {
-            if (conflict_object.hash === conflict_array[i].hash) {
-                return;
-            }
-        }
-        conflict_array.push(conflict_object);
-    };
-
-    priv.loadMetadataFromDistant = function (command,path,onDone,onFail) {
+    priv.getDistantMetadata = function (command,path,success,error) {
         var cloned_option = command.cloneOption ();
         cloned_option.metadata_only = false;
-        cloned_option.max_retry = 1; // FIXME : wrong ! (redesign jio & storage)
-        cloned_option.onResponse = function () {};
-        cloned_option.onFail = onFail;
-        cloned_option.onDone = onDone;
+        cloned_option.max_retry = command.getOption('max_retry') || 3;
+        cloned_option.error = error;
+        cloned_option.success = success;
         var newcommand = that.newCommand(
             'loadDocument',{path:path,
                             option:cloned_option});
@@ -68,11 +39,10 @@ var newConflictManagerStorage = function ( spec, my ) {
                       newcommand );
     };
 
-    priv.saveMetadataToDistant = function (command,path,content,onDone,onFail) {
+    priv.saveMetadataToDistant = function (command,path,content,success,error) {
         var cloned_option = command.cloneOption ();
-        cloned_option.onResponse = function () {};
-        cloned_option.onFail = onFail;
-        cloned_option.onDone = onDone;
+        cloned_option.error = error;
+        cloned_option.success = success;
         var newcommand = that.newCommand(
             'saveDocument',{path:path,
                             content:JSON.stringify (content),
@@ -82,17 +52,204 @@ var newConflictManagerStorage = function ( spec, my ) {
                       newcommand );
     };
 
+    priv.saveNewRevision = function (command,path,content,success,error) {
+        var cloned_option = command.cloneOption ();
+        cloned_option.error = error;
+        cloned_option.success = success;
+        var newcommand = that.newCommand(
+            'saveDocument',{path:path,
+                            content:content,
+                            option:cloned_option});
+        that.addJob ( that.newStorage (priv.secondstorage_spec),
+                      newcommand );
+    };
+
+    priv.loadRevision = function (command,path,success,error) {
+        var cloned_option = command.cloneOption ();
+        cloned_option.error = error;
+        cloned_option.success = success;
+        var newcommand = that.newCommand (
+            'loadDocument',{path:path,
+                            option:cloned_option});
+        that.addJob ( that.newStorage (priv.secondstorage_spec),
+                      newcommand );
+    };
+
+    priv.deleteAFile = function (command,path,success,error) {
+        var cloned_option = command.cloneOption();
+        cloned_option.max_retry = 0; // inf
+        cloned_option.error = error;
+        cloned_option.success = success;
+        var newcommand = that.newCommand(
+            'removeDocument',{path:path,
+                              option:cloned_option});
+        that.addJob ( that.newStorage (priv.secondstorage_spec),
+                      newcommand );
+    };
+
+    priv.solveConflict = function (path,content,option) {
+        var o = {}, am = priv.newAsyncModule(),
+
+        command = option.command,
+        metadata_file_path = path + '.metadata',
+        current_revision = '',
+        current_revision_file_path = '',
+        metadata_file_content = null,
+        on_conflict = false, conflict_object = {},
+        previous_revision = option.previous_revision,
+        previous_revision_object = option.revision_remove_object || {},
+        previous_revision_content_object = previous_revision_object[
+            previous_revision] || {},
+        now = new Date(),
+        failerror;
+
+         o.getDistantMetadata = function (){
+            console.log ('c getDistantMetadata');
+            priv.getDistantMetadata (
+                command, metadata_file_path,
+                function (result) {
+                    var previous_revision_number =
+                        parseInt(previous_revision.split('-')[0],10);
+                    metadata_file_content = JSON.parse (result.content);
+                    // set current revision
+                    current_revision = (previous_revision_number + 1) + '-' +
+                        hex_sha256 ('' + content +
+                                    previous_revision +
+                                    JSON.stringify (metadata_file_content));
+                    current_revision_file_path = path + '.' +
+                        current_revision;
+                    am.wait(o,'saveMetadataOnDistant',1);
+                    am.call(o,'saveNewRevision');
+                    am.call(o,'previousUpdateMetadata');
+                },function (error) {
+                    am.call(o,'error',[error]);
+                }
+            );
+        };
+        o.saveNewRevision = function (){
+            console.log ('c saveNewRevision ' + current_revision);
+            priv.saveNewRevision (
+                command, current_revision_file_path, content,
+                function (result) {
+                    am.call(o,'saveMetadataOnDistant');
+                }, function (error) {
+                    am.call(o,'error',[error]);
+                }
+            );
+        };
+        o.previousUpdateMetadata = function () {
+            console.log ('c previousUpdateMetadata');
+            for (var prev_rev in previous_revision_object) {
+                delete metadata_file_content[prev_rev];
+            }
+            am.call(o,'checkForConflicts');
+        };
+        o.checkForConflicts = function () {
+            console.log ('c checkForConflicts');
+            for (var rev in metadata_file_content) {
+                var revision_index;
+                on_conflict = true;
+                conflict_object =
+                    priv.createConflictObject(
+                        command, metadata_file_content, current_revision
+                    );
+                failerror = {
+                    status:20,
+                    statusText:'Conflict',
+                    message:'There is one or more conflicts'
+                };
+                break;
+            }
+            am.call(o,'updateMetadata');
+        };
+        o.updateMetadata = function (){
+            console.log ('c updateMetadata');
+            metadata_file_content[current_revision] = {
+                creation_date: previous_revision_content_object.creation_date ||
+                    now.getTime(),
+                last_modified: now.getTime(),
+                conflict: on_conflict,
+                deleted: false
+            };
+            am.call(o,'saveMetadataOnDistant');
+        };
+        o.saveMetadataOnDistant = function (){
+            console.log ('c saveMetadataOnDistant on_conflict ' + on_conflict);
+            priv.saveMetadataToDistant(
+                command, metadata_file_path,metadata_file_content,
+                function (result) {
+                    am.call(o,'deleteAllConflictingRevision');
+                    if (on_conflict) {
+                        am.call(o,'error');
+                    } else {
+                        am.call(o,'success');
+                    }
+                },function (error) {
+                    am.call(o,'error',[error]);
+                }
+            );
+        };
+        o.deleteAllConflictingRevision = function (){
+            console.log ('c deleteAllConflictingRevision');
+            for (var prev_rev in previous_revision_object) {
+                priv.deleteAFile (
+                    command, path+'.'+prev_rev, empty_fun, empty_fun );
+            }
+        };
+        o.success = function (){
+            console.log ('c success');
+            am.neverCall(o,'error');
+            am.neverCall(o,'success');
+            if (option.success) {option.success(current_revision);}
+        };
+        o.error = function (error){
+            var gooderror = error || failerror || {};
+            console.log ('c error ' + JSON.stringify (gooderror));
+            if (on_conflict) {
+                gooderror.conflict_object = conflict_object;
+            }
+            am.neverCall(o,'error');
+            am.neverCall(o,'success');
+            if (option.error) {option.error(gooderror);}
+        };
+        am.call(o,'getDistantMetadata');
+    };
+
+    priv.createConflictObject = function (command, metadata, revision) {
+        var cloned_command = command.clone();
+        var conflict_object = {
+            path: command.getPath(),
+            revision: revision,
+            revision_object: metadata,
+            getConflictRevisionList: function () {
+                return this.revision_object;
+            },
+            solveConflict: function (content,option) {
+                option = option || {};
+                option.previous_revision = this.revision;
+                option.revision_remove_object = this.revision_object;
+                option.command = cloned_command;
+                return priv.solveConflict (
+                    this.path, content, option
+                );
+            }
+        };
+        return conflict_object;
+    };
+
     priv.newAsyncModule = function () {
         var async = {};
         async.call = function (obj,function_name,arglist) {
             obj._wait = obj._wait || {};
             if (obj._wait[function_name]) {
                 obj._wait[function_name]--;
-                return function () {};
+                return empty_fun;
             }
             // ok if undef or 0
             arglist = arglist || [];
-            return obj[function_name].apply(obj[function_name],arglist);
+            setTimeout(function(){
+                obj[function_name].apply(obj[function_name],arglist);
+            });
         };
         async.neverCall = function (obj,function_name) {
             obj._wait = obj._wait || {};
@@ -103,7 +260,7 @@ var newConflictManagerStorage = function ( spec, my ) {
             obj._wait[function_name] = times;
         };
         async.end = function () {
-            async.call = function(){};
+            async.call = empty_fun;
         };
         return async;
     };
@@ -114,253 +271,162 @@ var newConflictManagerStorage = function ( spec, my ) {
      */
     that.saveDocument = function (command) {
         var o = {}, am = priv.newAsyncModule(),
-        metadata_file_name = command.getPath() + '.metadata',
-        local_metadata_file_name = local_namespace + metadata_file_name,
-        local_file_metadata = {}, // local file.metadata
-        command_file_metadata = {}, // distant file.metadata
-        previous_revision = 0,
-        is_a_new_file = false,
-        local_file_hash = hex_sha256 (command.getContent()),
-        now = new Date();
 
-        o.updateLocalMetadata = function () {
-            var new_owner_object = {revision:0,hash:'',
-                                    last_modified:0,
-                                    creation_date:now.getTime()};
-            local_file_metadata =
-                LocalOrCookieStorage.getItem (local_metadata_file_name);
-            if ( local_file_metadata ) {
-                // if metadata already exists
-                if ( !local_file_metadata.owner[priv.username] ) {
-                    local_file_metadata.owner[priv.username] =
-                        new_owner_object;
-                }
-            } else {
-                local_file_metadata = {
-                    winner: {},
-                    owner: {},
-                    conflict_list: []
-                };
-                local_file_metadata.winner = {
-                    revision:0,owner:priv.username,hash:''};
-                local_file_metadata.owner[priv.username] =
-                    new_owner_object;
-            }
-            am.call(o,'checkForConflicts');
-        };
-        o.loadMetadataFromDistant = function () {
-            priv.loadMetadataFromDistant (
-                command,metadata_file_name,
+        metadata_file_path = command.getPath() + '.metadata',
+        current_revision = '',
+        current_revision_file_path = '',
+        metadata_file_content = null,
+        on_conflict = false, conflict_object = {},
+        previous_revision = command.getOption('previous_revision'),
+        previous_revision_file_path = command.getPath() + '.' +
+            previous_revision,
+        now = new Date(),
+        failerror;
+
+        if (!previous_revision) {
+            console.log ('here');
+            return setTimeout(function () {
+                that.error({status:0,statusText:'Parameter missing',
+                            message:'Need a previous revision.'});
+            });
+        }
+
+        o.getDistantMetadata = function (){
+            console.log ('s getDistantMetadata');
+            priv.getDistantMetadata (
+                command,metadata_file_path,
                 function (result) {
-                    command_file_metadata = JSON.parse (result.content);
+                    var previous_revision_number =
+                        parseInt(previous_revision.split('-')[0],10);
+                    metadata_file_content = JSON.parse (result.content);
+                    // set current revision
+                    current_revision = (previous_revision_number + 1) + '-' +
+                        hex_sha256 ('' + command.getContent() +
+                                    previous_revision +
+                                    JSON.stringify (metadata_file_content));
+                    current_revision_file_path = command.getPath() + '.' +
+                        current_revision;
+                    am.wait(o,'saveMetadataOnDistant',1);
+                    am.call(o,'saveNewRevision');
                     am.call(o,'checkForConflicts');
                 },function (error) {
                     if (error.status === 404) {
-                        command_file_metadata = local_file_metadata;
-                        is_a_new_file = true;
-                        am.call(o,'checkForConflicts');
+                        current_revision = '1-' +
+                            hex_sha256 (command.getContent());
+                        current_revision_file_path = command.getPath() + '.' +
+                            current_revision;
+                        am.wait(o,'saveMetadataOnDistant',1);
+                        am.call(o,'saveNewRevision');
+                        am.call(o,'createMetadata');
                     } else {
-                        am.call(o,'fail',[error]);
+                        am.call(o,'error',[error]);
                     }
-                });
+                }
+            );
+        };
+        o.saveNewRevision = function (){
+            console.log ('s saveNewRevision ' + current_revision);
+            priv.saveNewRevision (
+                command,current_revision_file_path,command.getContent(),
+                function (result) {
+                    am.call(o,'saveMetadataOnDistant');
+                }, function (error) {
+                    am.call(o,'error',[error]);
+                }
+            );
         };
         o.checkForConflicts = function () {
-            var saveAndDone = function () {
-                LocalOrCookieStorage.setItem (local_metadata_file_name,
-                                              command_file_metadata);
-                am.wait(o,'done',1);
-                am.call(o,'saveMetadata');
-                am.call(o,'saveRevision');
-            };
-            var saveAndFail = function (error) {
-                LocalOrCookieStorage.setItem (local_metadata_file_name,
-                                              command_file_metadata);
-                am.neverCall(o,'done');
-                am.call(o,'saveMetadata');
-                am.call(o,'saveRevision');
-                am.call(o,'fail',[error]);
-            };
-            var updateMetadataCommon = function () {
-                var original_creation_date;
-
-                if (is_a_new_file || !command_file_metadata.owner[
-                    command_file_metadata.winner.owner]) {
-                    original_creation_date = now.getTime();
-                } else {
-                    original_creation_date = command_file_metadata.owner[
-                        command_file_metadata.winner.owner].
-                        creation_date || now.getTime();
-                }
-
-                if (command_file_metadata.owner[priv.username]) {
-                    previous_revision = command_file_metadata.owner[
-                        priv.username].revision;
-                } else {
-                    command_file_metadata.owner[priv.username] = {};
-                }
-                command_file_metadata.owner[priv.username].
-                    last_modified = now.getTime();
-                command_file_metadata.owner[priv.username].
-                    creation_date = original_creation_date;
-                command_file_metadata.owner[priv.username].hash =
-                    local_file_hash;
-            };
-            var updateCommandMetadataNotOnConflict = function () {
-                updateMetadataCommon ();
-                command_file_metadata.winner.owner = priv.username;
-                command_file_metadata.winner.revision ++;
-                command_file_metadata.winner.hash = local_file_hash;
-                command_file_metadata.owner[priv.username].revision =
-                    command_file_metadata.winner.revision;
-            };
-            var updateCommandMetadataOnConflict = function () {
-                updateMetadataCommon ();
-                command_file_metadata.owner[priv.username].revision ++;
-            };
-            // if this is a new file
-            if (is_a_new_file) {
-                updateCommandMetadataNotOnConflict();
-                saveAndDone();
-                return;
-            }
-            // if no conflict
-            if (local_file_metadata.winner.revision ===
-                command_file_metadata.winner.revision &&
-                local_file_metadata.winner.hash ===
-                command_file_metadata.winner.hash && (
-                    !command_file_metadata.owner[priv.username] || (
-                        priv.username === command_file_metadata.winner.owner ||
-                            command_file_metadata.owner[priv.username].
-                            revision < command_file_metadata.owner[
-                                command_file_metadata.winner.owner].revison))) {
-                updateCommandMetadataNotOnConflict();
-                saveAndDone();
-            } else {
-                // if conflict
-                var conflict_object = {
-                    label: 'revision',
-                    path: command.getPath(),
-                    method: 'saveDocument',
-                    owner: priv.username,
-                    conflict_owner: {
-                        name: command_file_metadata.winner.owner,
-                        revision: command_file_metadata.winner.revision,
-                        hash: command_file_metadata.winner.hash}
-                },
-                // gen hash
-                conflict_hash = hex_sha256 (JSON.stringify (
-                    conflict_object));
-                conflict_object.hash = conflict_hash;
-                // browse known conflict list
-                var i,j, done = false, known_conflict_list =
-                    command.getOption('known_conflict_list') || [];
-                for (i = 0; i < known_conflict_list.length; i+= 1) {
-                    // if known conflict
-                    if (known_conflict_list[i].hash ===
-                        conflict_hash) {
-                        priv.removeConflict(
-                            command_file_metadata.conflict_list,
-                            conflict_hash);
-                        updateCommandMetadataNotOnConflict();
-                        saveAndDone();
-                        done = true;
-                    }
-                    for (j = 0; j < command_file_metadata.conflict_list.length;
-                         j+= 1) {
-                        if (known_conflict_list[i].hash ===
-                            command_file_metadata.conflict_list[j].hash) {
-                            // if known other conflict
-                            // it is solved but the current conflict is
-                            // different than this one.
-                            priv.removeConflict(
-                                command_file_metadata.conflict_list,
-                                known_conflict_list[i].hash);
-                        }
-                    }
-                }
-                if (!done) {
-                    updateCommandMetadataOnConflict();
-                    // if unknown conflict
-                    priv.addConflict (command_file_metadata.conflict_list,
-                                      conflict_object);
-                    saveAndFail({status:0,statusText:'Revision Conflict',
-                                 message:'Someone has already'+
-                                 ' modified this document.'});
-                    var onConflict = command.getOption('onConflict') ||
-                        function (){};
-                    onConflict(conflict_object);
+            for (var rev in metadata_file_content) {
+                if (rev !== previous_revision) {
+                    on_conflict = true;
+                    failerror = {
+                        status:20,
+                        statusText:'Conflict',
+                        message:'There is one or more conflicts'
+                    };
+                    break;
                 }
             }
+            am.call(o,'updateMetadata');
         };
-        o.saveMetadata = function () {
-            priv.saveMetadataToDistant (
-                command,metadata_file_name,command_file_metadata,
-                function () {
-                    am.call(o,'done');
+        o.createMetadata = function (){
+            console.log ('s createMetadata');
+            metadata_file_content = {};
+            metadata_file_content[current_revision] = {
+                creation_date: now.getTime(),
+                last_modified: now.getTime(),
+                conflict: false,
+                deleted: false
+            };
+            am.call(o,'saveMetadataOnDistant');
+        };
+        o.updateMetadata = function (){
+            console.log ('s updateMetadata');
+            var previous_creation_date;
+            if (metadata_file_content[previous_revision]) {
+                previous_creation_date = metadata_file_content[
+                    previous_revision].creation_date;
+                delete metadata_file_content[previous_revision];
+            }
+            metadata_file_content[current_revision] = {
+                creation_date: previous_creation_date || now.getTime(),
+                last_modified: now.getTime(),
+                conflict: on_conflict,
+                deleted: false
+            };
+            if (on_conflict) {
+                conflict_object =
+                    priv.createConflictObject(
+                        command,
+                        metadata_file_content,
+                        current_revision
+                    );
+            }
+            am.call(o,'saveMetadataOnDistant');
+        };
+        o.saveMetadataOnDistant = function (){
+            console.log ('s saveMetadataOnDistant on_conflict ' + on_conflict);
+            priv.saveMetadataToDistant(
+                command,metadata_file_path,metadata_file_content,
+                function (result) {
+                    am.call(o,'deletePreviousRevision');
+                    if (on_conflict) {
+                        am.call(o,'error');
+                    } else {
+                        am.call(o,'success');
+                    }
                 },function (error) {
-                    am.call(o,'fail',[error]);
-                });
+                    am.call(o,'error',[error]);
+                }
+            );
         };
-        o.saveRevision = function () {
-            var cloned_option = command.cloneOption ();
-            cloned_option.onResponse = function () {};
-            cloned_option.onFail = function (error) {
-                am.call(o,'fail',[error]);
-            };
-            cloned_option.onDone = function () {
-                am.call(o,'deletePreviousRevision');
-            };
-            var newcommand = that.newCommand(
-                'saveDocument',
-                {path:command.getPath() + '.' +
-                 command_file_metadata.owner[priv.username].revision +
-                 '.' + priv.username,
-                 content:command.getContent(),
-                 option:cloned_option});
-            // newcommand.setMaxRetry (0); // inf
-            that.addJob ( that.newStorage (priv.secondstorage_spec),
-                          newcommand );
-        };
-        o.deletePreviousRevision = function () {
-            if ( previous_revision !== 0 && (
-                !command_file_metadata.owner[priv.username] ||
-                    previous_revision !==
-                    command_file_metadata.owner[
-                        priv.username].revision ) ) {
-                var cloned_option = command.cloneOption ();
-                cloned_option.onResponse = function () {};
-                cloned_option.onFail = function (error) {
-                    am.call(o,'fail',[error]);
-                };
-                cloned_option.onDone = function () {
-                    am.call(o,'done');
-                };
-                var newcommand = that.newCommand(
-                    'removeDocument',
-                    {path:command.getPath() + '.' +
-                     previous_revision + '.' + priv.username,
-                     option:cloned_option});
-                // newcommand.setMaxRetry (0); // inf
-                that.addJob ( that.newStorage (priv.secondstorage_spec),
-                              newcommand );
-            } else {
-                am.call(o,'done');
+        o.deletePreviousRevision = function (){
+            if (previous_revision !== '0' && !on_conflict) {
+                console.log ('s deletePreviousRevision ' + previous_revision);
+                priv.deleteAFile (
+                    command, previous_revision_file_path,
+                    empty_fun,empty_fun);
             }
         };
-        o.fail = function (error) {
-            am.neverCall(o,'fail');
-            am.neverCall(o,'done');
-            command.setMaxRetry(1);
-            that.fail(error);
+        o.success = function (){
+            console.log ('s success');
+            am.neverCall(o,'error');
+            am.neverCall(o,'success');
+            that.success(current_revision);
         };
-        o.done = function () {
-            am.neverCall(o,'done');
-            am.neverCall(o,'fail');
-            that.done();
+        o.error = function (error){
+            var gooderror = error || failerror ||
+                {status:0,statusText:'Unknown',
+                 message:'Unknown error.'};
+            console.log ('s error ' + JSON.stringify (gooderror));
+            if (on_conflict) {
+                gooderror.conflict_object = conflict_object;
+            }
+            am.neverCall(o,'error');
+            am.neverCall(o,'success');
+            that.error(gooderror);
         };
-        am.wait(o,'checkForConflicts',1);
-        am.call(o,'loadMetadataFromDistant');
-        am.call(o,'updateLocalMetadata');
+        am.call(o,'getDistantMetadata');
     };
 
     /**
@@ -370,96 +436,114 @@ var newConflictManagerStorage = function ( spec, my ) {
      */
     that.loadDocument = function (command) {
         var o = {}, am = priv.newAsyncModule(),
-        metadata_file_name = command.getPath() + '.metadata',
-        local_metadata_file_name = local_namespace + metadata_file_name,
-        command_file_metadata = {}, // distant file.metadata
-        owner = '', loaded_file;
 
-        o.loadMetadataFromDistant = function () {
-            priv.loadMetadataFromDistant (
-                command,metadata_file_name,
+        metadata_file_path = command.getPath() + '.metadata',
+        current_revision = command.getOption('revision') || '',
+        metadata_file_content = null,
+        metadata_only = command.getOption('metadata_only'),
+        on_conflict = false, conflict_object = {},
+        now = new Date(),
+        doc = {name:command.getPath()},
+        call404 = function (message) {
+            am.call(o,'error',[{
+                status:404,statusText:'Not Found',
+                message:message
+            }]);
+        };
+
+        o.getDistantMetadata = function (){
+            console.log ('l getDistantMetadata');
+            priv.getDistantMetadata (
+                command,metadata_file_path,
                 function (result) {
-                    command_file_metadata = JSON.parse (result.content);
-                    owner = command.getOption('owner');
-                    am.wait(o,'done',1);
-                    // if owner
-                    if (owner) {
-                        am.call(o,'loadOwner');
-                    } else {
-                        // if no owner
-                        am.call(o,'loadWinner');
+                    metadata_file_content = JSON.parse (result.content);
+                    if (!metadata_only) {
+                        am.wait(o,'success',1);
                     }
-                    am.call(o,'updateLocalMetadata');
+                    am.call(o,'affectMetadata');
+                    am.call(o,'checkForConflicts');
                 },function (error) {
-                    am.end();
-                    am.call(o,'fail',[error]);
-                });
+                    am.call(o,'error',[error]);
+                }
+            );
         };
-        o.updateLocalMetadata = function () {
-            LocalOrCookieStorage.setItem (local_metadata_file_name,
-                                          command_file_metadata);
-            am.call(o,'done');
-        };
-        o.loadWinner = function () {
-            var cloned_option = command.cloneOption ();
-            cloned_option.onResponse = function () {};
-            cloned_option.onFail = function (error) {
-                am.call(o,'fail',[error]);
-                am.end();
-            };
-            cloned_option.onDone = function (result) {
-                loaded_file = result;
-                loaded_file.name = command.getPath();
-                am.call(o,'done');
-            };
-            var newcommand = that.newCommand(
-                'loadDocument',
-                {path:command.getPath() + '.' +
-                 command_file_metadata.winner.revision +
-                 '.' + command_file_metadata.winner.owner,
-                 option:cloned_option});
-            that.addJob ( that.newStorage (priv.secondstorage_spec),
-                          newcommand );
-        };
-        o.loadOwner = function () {
-            var cloned_option = command.cloneOption ();
-            cloned_option.onResponse = function () {};
-            cloned_option.onFail = function (error) {
-                am.end();
-                am.call(o,'fail',[error]);
-            };
-            cloned_option.onDone = function (result) {
-                loaded_file = result;
-                loaded_file.name = command.getPath();
-                am.call(o,'done');
-            };
-            if (!command_file_metadata.owner[owner]) {
-                cloned_option.onFail ({status:404,
-                                       statusText:'Not Found',
-                                       message:'Document not found.'});
-                return;
+        o.affectMetadata = function () {
+            console.log ('l affectMetadata');
+            var tmp_last_modified = 0;
+            if (current_revision) {
+                if (!metadata_file_content[current_revision]) {
+                    return call404('Document revision does not exists.');
+                }
+            } else {
+                for (var rev in metadata_file_content) {
+                    if (tmp_last_modified <
+                        metadata_file_content[rev].last_modified) {
+                        tmp_last_modified =
+                            metadata_file_content[rev].last_modified;
+                        current_revision = rev;
+                    }
+                }
             }
-            var newcommand = that.newCommand(
-                'loadDocument',
-                {path:command.getPath() + '.' +
-                 command_file_metadata.owner[owner].revision +
-                 '.' + owner,
-                 option:cloned_option});
-            that.addJob ( that.newStorage (priv.secondstorage_spec),
-                          newcommand );
+            doc.last_modified =
+                metadata_file_content[current_revision].last_modified;
+            doc.creation_date =
+                metadata_file_content[current_revision].creation_date;
+            doc.revision = current_revision;
+            doc.revision_object = metadata_file_content;
+            if (metadata_only) {
+                am.call(o,'success');
+            } else {
+                am.call(o,'loadRevision');
+            }
         };
-        o.fail = function (error) {
-            am.neverCall(o,'fail');
-            am.neverCall(o,'done');
-            command.setMaxRetry(1);
-            that.fail(error);
+        o.loadRevision = function (){
+            console.log ('l loadRevision ' + current_revision);
+            if (!current_revision ||
+                metadata_file_content[current_revision].deleted) {
+                return call404('Document has been removed.');
+            }
+            priv.loadRevision (
+                command, doc.name+'.'+current_revision,
+                function (result) {
+                    doc.content = result.content;
+                    am.call(o,'success');
+                }, function (error) {
+                    am.call(o,'error',[error]);
+                }
+            );
         };
-        o.done = function () {
-            am.neverCall(o,'done');
-            am.neverCall(o,'fail');
-            that.done(loaded_file);
+        o.checkForConflicts = function () {
+            console.log ('l checkForConflicts');
+            if (metadata_file_content[current_revision].conflict) {
+                on_conflict = true;
+                conflict_object =
+                    priv.createConflictObject(
+                        command,
+                        metadata_file_content,
+                        current_revision
+                    );
+                doc.conflict_object = conflict_object;
+            }
+            am.call(o,'success');
         };
-        am.call(o,'loadMetadataFromDistant');
+        o.success = function (){
+            console.log ('l success');
+            am.neverCall(o,'error');
+            am.neverCall(o,'success');
+            that.success(doc);
+        };
+        o.error = function (error){
+            var gooderror = error || {status:0,statusText:'Unknown',
+                                      message:'Unknown error.'};
+            console.log ('l error ' + JSON.stringify (gooderror));
+            if (on_conflict) {
+                gooderror.conflict_object = conflict_object;
+            }
+            am.neverCall(o,'error');
+            am.neverCall(o,'success');
+            that.error(gooderror);
+        };
+        am.call(o,'getDistantMetadata');
     };
 
     /**
@@ -469,103 +553,100 @@ var newConflictManagerStorage = function ( spec, my ) {
      */
     that.getDocumentList = function (command) {
         var o = {}, am = priv.newAsyncModule(),
-        command_file_metadata_list = [], // distant files metadata
+        metadata_file_list = [], // distant files metadata
         result_list = [],
         nb_loaded_file = 0;
         o.retreiveList = function () {
             var cloned_option = command.cloneOption ();
-            cloned_option.metadata_only = false;
-            cloned_option.onResponse = function () {};
-            cloned_option.onFail = function (error) {
+            cloned_option.metadata_only = true;
+            cloned_option.error = function (error) {
                 am.call(o,'fail',[error]);
             };
-            cloned_option.onDone = function (result) {
-                var i;
-                for (i = 0; i < result.length; i+= 1) {
-                    if (typeof result[i].content !== 'string') {
-                        return am.call(o,'fail',[{
-                            status:0, statusText:'Invalid content',
-                            message:'Invalid file content, aborting job.'}]);
-                    }
-                    var splitname = result[i].name.split('.') || [];
-                    var content_object;
-                    var doc = {};
-                    if (splitname[splitname.length-1] === 'metadata') {
-                        try {
-                            content_object = JSON.parse (result[i].content);
-                        } catch (e) {
-                            continue;
-                        }
-                        result_list.push(content_object);
-                        splitname.length --;
-                        doc.name = splitname.join('.');
-                        try {
-                            doc.creation_date = content_object.owner[
-                                content_object.winner.owner].creation_date;
-                            doc.last_modified = content_object.owner[
-                                content_object.winner.owner].last_modified;
-                            command_file_metadata_list.push(doc);
-                        } catch (e) {
-                            continue;
-                        }
-                    }
-                }
-                if (command.getOption('metadata_only')) {
-                    am.call(o,'done',[command_file_metadata_list]);
-                } else {
-                    if (result.length === 0) {
-                        return that.done([]);
-                    }
-                    am.wait(o,'done',command_file_metadata_list.length-1);
-                    for (i = 0; i < command_file_metadata_list.length; i+= 1) {
-                        LocalOrCookieStorage.setItem (
-                            command_file_metadata_list[i].name + '.metadata',
-                            result_list[i]);
-                        am.call(o,'loadFile',[
-                            command_file_metadata_list[i],
-                            result_list[i].winner.revision,
-                            result_list[i].winner.owner]);
-                    }
-                    that.end();
-                }
+            cloned_option.success = function (result) {
+                am.call(o,'filterTheList',[result]);
             };
             var newcommand = that.newCommand(
-                'getDocumentList',
-                {path:command.getPath(),
-                 option:cloned_option});
+                'getDocumentList',{
+                    path:command.getPath(),option:cloned_option
+                });
             that.addJob ( that.newStorage (priv.secondstorage_spec),
                           newcommand );
         };
-        o.loadFile = function (doc,revision,owner) {
-            var cloned_option = command.cloneOption ();
-            cloned_option.onResponse = function () {};
-            cloned_option.onFail = function (error) {
-                am.call(o,'fail',[error]);
-                am.end();
-            };
-            cloned_option.onDone = function (result) {
-                doc.content = result.content;
+        o.filterTheList = function (result) {
+            var i;
+            for (i = 0; i < result.length; i+= 1) {
+                // TODO : finish to check this function
+                var splitname = result[i].name.split('.') || [];
+                var content_object;
+                var doc = {};
+                if (splitname[splitname.length-1] === 'metadata') {
+                    try {
+                        content_object = JSON.parse (result[i].content);
+                    } catch (e) {
+                        continue;
+                    }
+                    result_list.push(content_object);
+                    splitname.length --;
+                    doc.name = splitname.join('.');
+                    try {
+                        doc.creation_date = content_object.owner[
+                            content_object.winner.owner].creation_date;
+                        doc.last_modified = content_object.owner[
+                            content_object.winner.owner].last_modified;
+                        command_file_metadata_list.push(doc);
+                    } catch (e) {
+                        continue;
+                    }
+                }
+            }
+            if (command.getOption('metadata_only')) {
                 am.call(o,'done',[command_file_metadata_list]);
-            };
-            var newcommand = that.newCommand(
-                'loadDocument',
-                {path:doc.name + '.' + revision + '.' + owner,
-                 option:cloned_option});
-            that.addJob ( that.newStorage (priv.secondstorage_spec),
-                          newcommand );
+            } else {
+                if (result.length === 0) {
+                    return that.success([]);
+                }
+                am.wait(o,'done',command_file_metadata_list.length-1);
+                for (i = 0; i < command_file_metadata_list.length; i+= 1) {
+                    LocalOrCookieStorage.setItem (
+                        command_file_metadata_list[i].name + '.metadata',
+                        result_list[i]);
+                    am.call(o,'loadFile',[
+                        command_file_metadata_list[i],
+                        result_list[i].winner.revision,
+                        result_list[i].winner.owner]);
+                }
+                that.end();
+            }
         };
-        o.fail = function (error) {
-            am.neverCall(o,'fail');
-            am.neverCall(o,'done');
-            command.setMaxRetry(1);
-            that.fail(error);
-        };
-        o.done = function (value) {
-            am.neverCall(o,'done');
-            am.neverCall(o,'fail');
-            that.done(value);
-        };
-        am.call(o,'retreiveList');
+        // o.loadFile = function (doc,revision,owner) {
+        //     var cloned_option = command.cloneOption ();
+        //     cloned_option.error = function (error) {
+        //         am.call(o,'fail',[error]);
+        //         am.end();
+        //     };
+        //     cloned_option.success = function (result) {
+        //         doc.content = result.content;
+        //         am.call(o,'done',[command_file_metadata_list]);
+        //     };
+        //     var newcommand = that.newCommand(
+        //         'loadDocument',
+        //         {path:doc.name + '.' + revision + '.' + owner,
+        //          option:cloned_option});
+        //     that.addJob ( that.newStorage (priv.secondstorage_spec),
+        //                   newcommand );
+        // };
+        // o.fail = function (error) {
+        //     am.neverCall(o,'fail');
+        //     am.neverCall(o,'done');
+        //     command.setMaxRetry(1);
+        //     that.error(error);
+        // };
+        // o.done = function (value) {
+        //     am.neverCall(o,'done');
+        //     am.neverCall(o,'fail');
+        //     that.success(value);
+        // };
+        // am.call(o,'retreiveList');
     };
 
     /**
@@ -574,221 +655,130 @@ var newConflictManagerStorage = function ( spec, my ) {
      */
     that.removeDocument = function (command) {
         var o = {}, am = priv.newAsyncModule(),
-        metadata_file_name = command.getPath() + '.metadata',
-        local_metadata_file_name = local_namespace + metadata_file_name,
-        local_file_metadata = {},
-        command_file_metadata = {}, // distant file.metadata
-        previous_revision = 0,
-        metadata_object_known = true,
-        is_a_new_file = false;
 
-        o.updateLocalMetadata = function () {
-            var new_owner_object = {revision:0,hash:'',
-                                    last_modified:0,
-                                    creation_date:0};
-            local_file_metadata =
-                LocalOrCookieStorage.getItem (local_metadata_file_name);
-            if ( local_file_metadata ) {
-                // if metadata already exists
-                if ( !local_file_metadata.owner[priv.username] ) {
-                    local_file_metadata.owner[priv.username] =
-                        new_owner_object;
-                }
-            } else {
-                metadata_object_known = false;
-                local_file_metadata = {
-                    winner: {},
-                    owner: {},
-                    conflict_list: []
-                };
-                local_file_metadata.winner = {
-                    revision:0,owner:priv.username,hash:''};
-                local_file_metadata.owner[priv.username] =
-                    new_owner_object;
-            }
-            am.call(o,'checkForConflicts');
-        };
-        o.loadMetadataFromDistant = function () {
-            priv.loadMetadataFromDistant (
-                command,metadata_file_name,
+        metadata_file_path = command.getPath() + '.metadata',
+        current_revision = '',
+        current_revision_file_path = '',
+        metadata_file_content = null,
+        on_conflict = false, conflict_object = {},
+        previous_revision = command.getOption('revision'),
+        previous_revision_file_path = command.getPath() + '.' +
+            previous_revision,
+        now = new Date(),
+        failerror;
+
+        if (!previous_revision) {
+            return setTimeout(function () {
+                that.error({status:0,statusText:'Parameter missing',
+                            message:'Need a previous revision.'});
+            });
+        }
+
+        o.getDistantMetadata = function (){
+            console.log ('r getDistantMetadata');
+            priv.getDistantMetadata (
+                command,metadata_file_path,
                 function (result) {
-                    command_file_metadata = JSON.parse (result.content);
+                    var previous_revision_number =
+                        parseInt(previous_revision.split('-')[0],10);
+                    metadata_file_content = JSON.parse (result.content);
+                    // set current revision
+                    current_revision = (previous_revision_number + 1) + '-' +
+                        hex_sha256 ('' + previous_revision +
+                                    JSON.stringify (metadata_file_content));
+                    current_revision_file_path = command.getPath() + '.' +
+                        current_revision;
                     am.call(o,'checkForConflicts');
                 },function (error) {
                     if (error.status === 404) {
-                        command_file_metadata = local_file_metadata;
-                        is_a_new_file = true;
-                        am.call(o,'checkForConflicts');
-                        return;
+                        am.call(o,'success',['0']);
+                    } else {
+                        am.call(o,'error',[error]);
                     }
-                    am.call(o,'fail',[error]);
-                    am.end();
-                });
+                }
+            );
         };
         o.checkForConflicts = function () {
-            var removeAndDone = function () {
-                LocalOrCookieStorage.setItem (local_metadata_file_name,
-                                              command_file_metadata);
-                am.wait(o,'done',1);
-                am.call(o,'saveMetadata');
-                am.call(o,'removeRevision');
-            };
-            var updateMetadataCommon = function () {
-                if (command_file_metadata.owner[priv.username]) {
-                    previous_revision = command_file_metadata.owner[
-                        priv.username].revision;
-                    delete command_file_metadata.owner[priv.username];
-                }
-            };
-            var updateCommandMetadataNotOnConflict = function () {
-                updateMetadataCommon();
-                command_file_metadata.winner.owner = priv.username;
-                command_file_metadata.winner.revision = 0;
-                command_file_metadata.winner.hash = '';
-            };
-            var updateCommandMetadataOnConflict = function () {
-                updateMetadataCommon ();
-            };
-            // if we don't known what is will be removed fail.
-            if (!metadata_object_known) {
-                return am.call(o,'fail',[{
-                    status:0,statusText:'Unknown Document',
-                    message:'You must load the document before delete it.'}]);
-            }
-            // if this is a new file
-            if (is_a_new_file) {
-                LocalOrCookieStorage.deleteItem (local_metadata_file_name);
-                return am.call(o,'done');
-            }
-            // if no conflict
-            if (local_file_metadata.winner.revision ===
-                command_file_metadata.winner.revision &&
-                local_file_metadata.winner.hash ===
-                command_file_metadata.winner.hash && (
-                    !command_file_metadata.owner[priv.username] || (
-                        priv.username === command_file_metadata.winner.owner ||
-                            command_file_metadata.owner[priv.username].
-                            revision < command_file_metadata.owner[
-                                command_file_metadata.winner.owner].revison))) {
-                // OK! Now, update distant metadata, store them and remove
-                updateCommandMetadataNotOnConflict();
-                removeAndDone();
-            } else {
-                // if conflict
-                var conflict_object = {
-                    label: 'revision',
-                    path: command.getPath(),
-                    method: 'removeDocument',
-                    owner: priv.username,
-                    conflict_owner: {
-                        name: command_file_metadata.winner.owner,
-                        revision: command_file_metadata.winner.revision,
-                        hash: command_file_metadata.winner.hash}
-                },
-                // gen hash
-                conflict_hash = hex_sha256 (JSON.stringify (
-                    conflict_object));
-                conflict_object.hash = conflict_hash;
-                // browse known conflict list
-                var i,j, done = false, known_conflict_list =
-                    command.getOption('known_conflict_list') || [];
-                console.log ('1 ' + JSON.stringify (known_conflict_list));
-                for (i = 0; i < known_conflict_list.length; i+= 1) {
-                    console.log ('2');
-                    // if known conflict
-                    if (known_conflict_list[i].hash ===
-                        conflict_hash) {
-                        priv.removeConflict(
-                            command_file_metadata.conflict_list,
-                            conflict_hash);
-                        updateCommandMetadataNotOnConflict();
-                        removeAndDone();
-                        done = true;
-                    }
-                    for (j = 0; j < command_file_metadata.conflict_list.length;
-                         j+= 1) {
-                        console.log ('3');
-                        if (known_conflict_list[i].hash ===
-                            command_file_metadata.conflict_list[j].hash) {
-                            // if known other conflict
-                            // it is solved but the current conflict is
-                            // different than this one.
-                            priv.removeConflict(
-                                command_file_metadata.conflict_list,
-                                known_conflict_list[i].hash);
-                        }
-                    }
-                }
-                if (!done) {
-                    updateCommandMetadataOnConflict();
-                    // if unknown conflict
-                    priv.addConflict (command_file_metadata.conflict_list,
-                                      conflict_object);
-                    am.neverCall(o,'done');
-                    LocalOrCookieStorage.setItem (local_metadata_file_name,
-                                                  command_file_metadata);
-                    am.call(o,'saveMetadata');
-                    // am.call(o,'removeRevision');
-                    am.call(o,'fail',[{status:0,statusText:'Revision Conflict',
-                                       message:'Someone has already'+
-                                       ' modified this document.'}]);
-                    var onConflict = command.getOption('onConflict') ||
-                        function (){};
-                    onConflict(conflict_object);
+            for (var rev in metadata_file_content) {
+                if (rev !== previous_revision) {
+                    on_conflict = true;
+                    failerror = {
+                        status:20,
+                        statusText:'Conflict',
+                        message:'There is one or more conflicts'
+                    };
+                    break;
                 }
             }
+            am.call(o,'updateMetadata');
         };
-        o.saveMetadata = function () {
-            priv.saveMetadataToDistant (
-                command,metadata_file_name,command_file_metadata,
-                function () {
-                    am.call(o,'done');
+        o.updateMetadata = function (){
+            console.log ('s updateMetadata');
+            var previous_creation_date;
+            if (metadata_file_content[previous_revision]) {
+                previous_creation_date = metadata_file_content[
+                    previous_revision].creation_date;
+                delete metadata_file_content[previous_revision];
+            }
+            metadata_file_content[current_revision] = {
+                creation_date: previous_creation_date || now.getTime(),
+                last_modified: now.getTime(),
+                conflict: on_conflict,
+                deleted: true
+            };
+            if (on_conflict) {
+                conflict_object =
+                    priv.createConflictObject(
+                        command,
+                        metadata_file_content,
+                        current_revision
+                    );
+            }
+            am.call(o,'saveMetadataOnDistant');
+        };
+        o.saveMetadataOnDistant = function (){
+            console.log ('s saveMetadataOnDistant on_conflict ' + on_conflict);
+            priv.saveMetadataToDistant(
+                command,metadata_file_path,metadata_file_content,
+                function (result) {
+                    am.call(o,'deletePreviousRevision');
+                    if (on_conflict) {
+                        am.call(o,'error');
+                    } else {
+                        am.call(o,'success');
+                    }
                 },function (error) {
-                    am.call(o,'fail',[error]);
-                    am.end();
-                });
+                    am.call(o,'error',[error]);
+                }
+            );
         };
-        o.removeRevision = function () {
-            if ( previous_revision !== 0 && (
-                !command_file_metadata.owner[priv.username] ||
-                    previous_revision !==
-                    command_file_metadata.owner[
-                        priv.username].revision ) ) {
-                var cloned_option = command.cloneOption ();
-                cloned_option.onResponse = function () {};
-                cloned_option.onFail = function (error) {
-                    am.call(o,'fail',[error]);
-                    am.end();
-                };
-                cloned_option.onDone = function () {
-                    am.call(o,'done');
-                };
-                var newcommand = that.newCommand(
-                    'removeDocument',
-                    {path:command.getPath() + '.' +
-                     previous_revision + '.' + priv.username,
-                     option:cloned_option});
-                // newcommand.setMaxRetry (0); // inf
-                that.addJob ( that.newStorage (priv.secondstorage_spec),
-                              newcommand );
-            } else {
-                am.call(o,'done');
+        o.deletePreviousRevision = function (){
+            if (previous_revision !== '0' && !on_conflict) {
+                console.log ('s deletePreviousRevision ' + previous_revision);
+                priv.deleteAFile (
+                    command, previous_revision_file_path,
+                    empty_fun,empty_fun);
             }
         };
-        o.fail = function (error) {
-            am.neverCall(o,'fail');
-            am.neverCall(o,'done');
-            command.setMaxRetry(1);
-            that.fail(error);
+        o.success = function (){
+            console.log ('s success');
+            am.neverCall(o,'error');
+            am.neverCall(o,'success');
+            that.success(current_revision);
         };
-        o.done = function () {
-            am.neverCall(o,'done');
-            am.neverCall(o,'fail');
-            that.done();
+        o.error = function (error){
+            var gooderror = error || failerror ||
+                {status:0,statusText:'Unknown',
+                 message:'Unknown error.'};
+            console.log ('s error ' + JSON.stringify (gooderror));
+            if (on_conflict) {
+                gooderror.conflict_object = conflict_object;
+            }
+            am.neverCall(o,'error');
+            am.neverCall(o,'success');
+            that.error(gooderror);
         };
-        am.wait(o,'checkForConflicts',1);
-        am.call(o,'loadMetadataFromDistant');
-        am.call(o,'updateLocalMetadata');
+        am.call(o,'getDistantMetadata');
     };
 
     return that;
