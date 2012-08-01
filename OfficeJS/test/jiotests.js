@@ -14,10 +14,17 @@
             LocalOrCookieStorage.deleteItem(k);
         }
     }
+    var d = document.createElement ('div');
+    d.setAttribute('id','log');
+    document.querySelector ('body').appendChild(d);
 }());
 //// end clear jio localstorage
-var base_tick = 10000;
-
+var base_tick = 30000;
+// debug function to show custumized log at the bottom of the page
+var my_log = function (html_string) {
+    document.querySelector ('div#log').innerHTML += html_string + '<hr/>';
+};
+var empty_fun = function (){};
 //// Tools
 var getXML = function (url) {
     var tmp = '';
@@ -95,7 +102,7 @@ test ( "Jio simple methods", function () {
     o.jio2 = JIO.newJio();
     ok ( o.jio2, 'another new jio -> 2');
 
-    JIO.addStorageType('qunit', function(){});
+    JIO.addStorageType('qunit', empty_fun);
 
     ok ( o.jio2.getId() !== o.jio.getId(), '1 and 2 must be different');
 
@@ -1279,14 +1286,20 @@ test ('Simple methods', function () {
     // getting a list of document without testing conflicts
 
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.clock.tick(base_tick);
     o.spy = function(res,value,message,before) {
         o.f = function(result) {
             if (res === 'status') {
-                deepEqual (result.status.getLabel(),value,message);
-            } else {
-                if (before) { before (result[res]); }
-                deepEqual (result[res],value,message);
+                if (result && result.conflict_object) {
+                    result = 'conflict';
+                } else if (result && typeof result.status !== 'undefined') {
+                    result = 'fail';
+                } else {
+                    result = 'done';
+                }
             }
+            if (before) { before (result); }
+            deepEqual (result,value,message);
         };
         o.t.spy(o,'f');
     };
@@ -1305,20 +1318,29 @@ test ('Simple methods', function () {
                         storage:{type:'local',
                                  username:'conflictmethods',
                                  applicationname:'jiotests'}});
-    o.spy('status','done','saving "file.doc" with owner "methods".');
-    o.jio.saveDocument('file.doc','content1methods',
-                       {onResponse:o.f});
+    o.spy('status','done','saving "file.doc".');
+    o.jio.saveDocument('file.doc','content1',{
+        previous_revision: '0',
+        success:function (revision) {
+            o.new_rev = revision;
+            o.f (revision);
+        },
+        error:o.f
+    });
     o.tick();
 
-    o.spy('value',{name:'file.doc',content:'content1methods'},
-          'loading document.',function (o) {
+    o.spy('value',{name:'file.doc',content:'content1',revision:'rev'},
+          'loading "file.doc".',function (o) {
               if (!o) { return; }
-              if (o.last_modified) {
-                  delete o.last_modified;
-                  delete o.creation_date;
-              }
+              if (o.revision) { o.revision = 'rev'; }
+              if (o.creation_date) { delete o.creation_date; }
+              else { ok(false, 'creation date missing!'); }
+              if (o.last_modified) { delete o.last_modified; }
+              else { ok(false, 'last modified missing!'); }
+              if (o.revision_object) { delete o.revision_object; }
+              else { ok(false, 'revision object missing!'); }
           });
-    o.jio.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.jio.loadDocument('file.doc',{success:o.f,error:o.f});
     o.tick();
 
     o.spy('value',[{name:'file.doc'}],
@@ -1330,38 +1352,48 @@ test ('Simple methods', function () {
                   delete a[i].creation_date;
               }
           });
-    o.jio.getDocumentList('.',{onResponse:o.f,max_retry:1});
+    o.jio.getDocumentList('.',{success:o.f,error:o.f});
     o.tick();
 
-    o.spy('status','done','removing document');
-    o.jio.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.spy('status','done','removing "file.doc"');
+    o.jio.removeDocument('file.doc',{
+        success:o.f,error:o.f,revision:o.new_rev
+    });
     o.tick();
 
     o.spy('status','fail','loading document fail.');
-    o.jio.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.jio.loadDocument('file.doc',{
+        success:o.f,error:function (error) {
+            if (error.status === 404) {
+                o.f(error);
+            } else {
+                deepEqual (error, '{}', 'An 404 error was expected.');
+            }
+        }
+    });
     o.tick();
 
     o.jio.stop();
 });
 
-test ('Remove Errors', function () {
-    // Test of all errors that can occur when trying to remove a document
-    // - Remove an unexistant document -> error
-    // - Remove an existant document by another owner that does not have the
-    // latest revision -> error
-    // - bis -> error
-    // - Remove by the good owner -> ok
-    // - Remove by another owner that have the latest revision -> ok
+test ('Revision Conflict', function() {
+    // Try to tests all revision conflict possibility
 
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.clock.tick (base_tick);
     o.spy = function(res,value,message,function_name) {
         function_name = function_name || 'f';
         o[function_name] = function(result) {
             if (res === 'status') {
-                deepEqual (result.status.getLabel(),value,message);
-            } else {
-                deepEqual (result[res],value,message);
+                if (result && result.conflict_object) {
+                    result = 'conflict';
+                } else if (result && typeof result.status !== 'undefined') {
+                    result = 'fail';
+                } else {
+                    result = 'done';
+                }
             }
+            deepEqual (result,value,message);
         };
         o.t.spy(o,function_name);
     };
@@ -1376,84 +1408,90 @@ test ('Remove Errors', function () {
             }
         }
     };
-    o.jio_1 = JIO.newJio({type:'conflictmanager',
-                          username:'1',
-                          storage:{type:'local',
-                                   username:'conflictrevision',
-                                   applicationname:'jiotests'}});
-    o.jio_2 = JIO.newJio({type:'conflictmanager',
-                          username:'2',
-                          storage:{type:'local',
-                                   username:'conflictrevision',
-                                   applicationname:'jiotests'}});
-    o.spy ('status','fail','removing unexistant "file.doc" owner "1",'+
-           ' error');
-    o.jio_1.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
+    o.secondstorage_spec = {type:'local',
+                            username:'revisionconflict',
+                            applicationname:'jiotests'}
+    //////////////////////////////////////////////////////////////////////
+    o.jio = JIO.newJio({type:'conflictmanager',
+                        storage:o.secondstorage_spec});
+    // create a new file
+    o.conflict_must_be_called = false;
+    o.spy('status','done','new file "file.doc", revision: "0".');
+    o.jio.saveDocument(
+        'file.doc','content1',{
+            previous_revision:'0',
+            error:o.f,
+            success:function(value){
+                o.new_rev = value;
+                o.f(value);
+            }
+        });
+    o.tick();
+    // modify the file
+    o.spy('status','done','modify "file.doc", revision: "'+
+          o.new_rev+'".');
+    o.jio.saveDocument(
+        'file.doc','content2',{
+            previous_revision:o.new_rev,
+            error:o.f,
+            success:o.f
+        });
+    o.tick();
+    // modify the file from the second revision instead of the third
+    o.spy('status','conflict','modify "file.doc", revision: "'+
+          o.new_rev+'" -> conflict!');
+    o.jio.saveDocument(
+        'file.doc','content3',{
+            previous_revision:o.new_rev,
+            success:o.f,
+            error: function (error) {
+                o.conflict_object = error.conflict_object;
+                o.f(error);
+                ok (!o.conflict_object.revision_object[o.new_rev],
+                    'check if the first revision is not include to '+
+                    'the conflict list.');
+                ok (o.conflict_object.revision_object[
+                    o.conflict_object.revision],
+                    'check if the new revision is include to '+
+                    'the conflict list.');
+            }
+        });
+    o.tick();
+    // loading test
+    o.spy('status','conflict','loading "file.doc" -> conflict!');
+    o.jio.loadDocument('file.doc',{
+        success:o.f,error:o.f
+    });
+    o.tick();
+    if (!o.conflict_object) { ok(false,'Impossible to continue the tests'); }
+    // solving conflict
+    o.spy('status','done','solve conflict "file.doc".');
+    o.conflict_object.solveConflict(
+        'content4',{
+            success:o.f,
+            error:o.f
+        });
     o.tick();
 
-    o.spy ('status','done','saving "file.doc" owner "1",'+
-           ' ok');
-    o.jio_1.saveDocument('file.doc','content1',{onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.spy ('status','fail','removing existant "file.doc" owner "2",'+
-           ' error');
-    o.jio_2.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.spy ('status','fail','removing existant "file.doc" owner "2",'+
-           ' error');
-    o.jio_2.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.spy ('status','done','removing existant "file.doc" owner "1",'+
-           ' ok');
-    o.jio_1.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.spy ('status','done','saving "file.doc" owner "2",'+
-           ' ok');
-    o.jio_2.saveDocument('file.doc','content1',{onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.spy ('status','done','loading "file.doc" owner "1",'+
-           ' ok');
-    o.jio_1.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.spy ('status','done','removing "file.doc" owner "1",'+
-           ' ok');
-    o.jio_1.removeDocument('file.doc',{onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.jio_2.stop();
-    o.jio_1.stop();
+    o.jio.stop();
 });
 
-test ('Revision Conflicts' , function () {
-    // Try to solve a revision conflict
-    // - "me" saves a document
-    // - "me" saves a new revision of this document
-    // - "him" loads the document, so they have the same revision in both sides
-    // - "him" saves a new revision of this document, now they don't have the
-    // same revision
-    // - "me" tries to save a new revision but there's a revision conflict
-    // - "me" tries to save again without solving conflict, and of course,
-    // the same conflict occurs
-    // - "me" solves the conflict and saves
-    // - "me" removes the document
-    // - "him" tries to save a new revision, but the document must not exist,
-    // so there's a conflict.
-
+test ('Conflict in a conflict solving', function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.clock.tick (base_tick);
     o.spy = function(res,value,message,function_name) {
         function_name = function_name || 'f';
         o[function_name] = function(result) {
             if (res === 'status') {
-                deepEqual (result.status.getLabel(),value,message);
-            } else {
-                deepEqual (result[res],value,message);
+                if (result && result.conflict_object) {
+                    result = 'conflict';
+                } else if (result && typeof result.status !== 'undefined') {
+                    result = 'fail';
+                } else {
+                    result = 'done';
+                }
             }
+            deepEqual (result,value,message);
         };
         o.t.spy(o,function_name);
     };
@@ -1468,204 +1506,70 @@ test ('Revision Conflicts' , function () {
             }
         }
     };
-    o.jio_me = JIO.newJio({type:'conflictmanager',
-                           username:'me',
-                           storage:{type:'local',
-                                    username:'conflictrevision',
-                                    applicationname:'jiotests'}});
-    o.jio_him = JIO.newJio({type:'conflictmanager',
-                            username:'him',
-                            storage:{type:'local',
-                                     username:'conflictrevision',
-                                     applicationname:'jiotests'}});
-
-    // me creates the document
-    o.spy('status','done','saving "file.doc" with owner "me",'+
-          ' first revision, no conflict.');
-    o.jio_me.saveDocument('file.doc','content1me',{onResponse:o.f,max_retry:1});
+    o.secondstorage_spec = {type:'local',
+                            username:'conflictconflict',
+                            applicationname:'jiotests'}
+    //////////////////////////////////////////////////////////////////////
+    o.jio = JIO.newJio({type:'conflictmanager',
+                        storage:o.secondstorage_spec});
+    // create a new file
+    o.conflict_must_be_called = false;
+    o.spy('status','done','new file "file.doc", revision: "0".');
+    o.jio.saveDocument(
+        'file.doc','content1',{
+            previous_revision:'0',
+            error:o.f,
+            success:function(value){
+                o.new_rev = value;
+                o.f(value);
+            }
+        });
     o.tick();
-
-    // me saves a new revision
-    o.spy('status','done','saving "file.doc" with owner "me",'+
-          ' second revision, no conflict.');
-    o.jio_me.saveDocument('file.doc','content2me',{onResponse:o.f,max_retry:1});
+    // modify the file from the second revision instead of the third
+    o.spy('status','conflict','modify "file.doc", revision: "0" -> conflict!');
+    o.jio.saveDocument(
+        'file.doc','content2',{
+            previous_revision:"0",
+            success:o.f,
+            error: function (error) {
+                o.conflict_object = error.conflict_object;
+                o.f(error);
+            }
+        });
     o.tick();
-
-    // him loads the document
-    o.spy('status','done','loading "file.doc" with owner "him",'+
-          ' last revision, no conflict.');
-    o.jio_him.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
+    if (!o.conflict_object) { ok(false,'Impossible to continue the tests'); }
+    // saving another time and solve the last conflict
+    o.spy('status','conflict','modify "file.doc" when solving, revision: "'+
+          o.new_rev+'" -> conflict!');
+    o.jio.saveDocument('file.doc','content3',{
+        previous_revision:o.new_rev,
+        error:o.f,
+        success:o.f
+    });
     o.tick();
-
-    // him saves a new revision
-    o.spy('status','done','saving "file.doc" with owner "him",'+
-          ' next revision, no conflict.');
-    o.jio_him.saveDocument('file.doc','content1him',
-                           {onResponse:o.f,max_retry:1});
+    // solving first conflict
+    o.spy('status','conflict','solving conflict "file.doc" -> conflict!');
+    o.conflict_object.solveConflict('content4',{
+        success: o.f,
+        error: function (error) {
+            if (error.conflict_object) {
+                o.conflict_object = error.conflict_object;
+            }
+            o.f(error);
+        }
+    })
     o.tick();
-
-    o.conflict_callback = function (conflict_object) {
-        o.conflict_object = conflict_object;
-        ok (true,'onConflict callback called once');
-    };
-    // me tries to save his new revision
-    o.spy('status','fail','saving "file.doc" with owner "me",'+
-          ' third revision, conflict!');
-    o.c = o.conflict_callback;
-    o.t.spy(o,'c');
-    o.jio_me.saveDocument('file.doc','content3me',{
-        onResponse:o.f,max_retry:1,onConflict:o.c});
-    o.tick(null,'f');
-    o.tick(1,'c');
-    if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
-    o.conflict_object = undefined;
-
-    // me tries to save again but does not solve anything
-    o.spy('status','fail',"don't solve anything,"+
-          ' save "file.doc" with owner "me", forth revision, conflict!');
-    o.c = o.conflict_callback;
-    o.t.spy(o,'c');
-    o.jio_me.saveDocument('file.doc','content4me',{
-        onResponse:o.f,max_retry:1,onConflict:o.c});
+    // solving last conflict
+    o.spy('status','done','solving last conflict "file.doc".');
+    o.conflict_object.solveConflict('content5',{
+        success: o.f,error:o.f
+    });
     o.tick();
-    o.tick(1,'c');
-    if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
-
-    o.spy('status','done','get a document list');
-    o.jio_me.getDocumentList('.',{onResponse:o.f,max_retry:1});
-    o.tick();
-
-    // me saves the revision created by solving the conflict
-    o.spy('status','done','solving conflict and save "file.doc" with owner'+
-          ' "me", forth revision, no conflict.');
-    o.jio_me.saveDocument('file.doc','content4me',{
-        onResponse:o.f,max_retry:1,known_conflict_list:[o.conflict_object]});
-    o.tick();
-
-    // me removes the document
-    o.spy('status','done','removing "file.doc" with owner "me",'+
-          ' no conflict.');
-    o.c = o.t.spy();
-    o.jio_me.removeDocument('file.doc',{onResponse:o.f,max_retry:1,
-                                        onConflict:o.c});
-    o.tick();
-    if (o.c.called) { ok(false, 'conflict callback called!'); }
-
-    // him tries to save a new revision but the document does not exist anymore
-    o.spy('status','fail','saving "file.doc" with owner "him",'+
-          ' any revision, conflict!');
-    o.c = o.conflict_callback;
-    o.t.spy(o,'c');
-    o.jio_him.saveDocument('file.doc','content4him',{
-        onResponse:o.f,max_retry:1,onConflict:o.c});
-    o.tick();
-    o.tick(1,'c');
-
-    o.jio_me.stop();
-    o.jio_him.stop();
 });
 
-test ('Solving Conflict Conflicts' , function () {
-    // Try to solve an obsolete conflict.
-    // - "you" saves a document
-    // - "her" loads this document, so they have the same revision
-    // - "her" saves a new revision of this document
-    // - "you" tries to save a new revision but there's a revision conflict
-    // - "you" tries to solve this conflict while "her" is saving a new revision
-    // - When "you" posts this solved conflict, there's a conflict conflict
-    // because "you" tried to solve an obsolete conflict
-
+test ('Remove revision conflict', function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
-    o.spy = function(res,value,message,function_name) {
-        function_name = function_name || 'f';
-        o[function_name] = function(result) {
-            if (res === 'status') {
-                deepEqual (result.status.getLabel(),value,message);
-            } else {
-                deepEqual (result[res],value,message);
-            }
-        };
-        o.t.spy(o,function_name);
-    };
-    o.tick = function (tick, function_name) {
-        function_name = function_name || 'f'
-        o.clock.tick(tick || 1000);
-        if (!o[function_name].calledOnce) {
-            if (o[function_name].called) {
-                ok(false, 'too much results');
-            } else {
-                ok(false, 'no response');
-            }
-        }
-    };
-    o.conflict_callback = function (conflict_object) {
-        o.conflict_object = conflict_object;
-        ok (true,'onConflict callback called once');
-    };
-    o.jio_you = JIO.newJio({type:'conflictmanager',
-                            username:'you',
-                            storage:{type:'local',
-                                     username:'conflictrevision',
-                                     applicationname:'jiotests'}});
-    o.jio_her = JIO.newJio({type:'conflictmanager',
-                            username:'her',
-                            storage:{type:'local',
-                                     username:'conflictrevision',
-                                     applicationname:'jiotests'}});
-
-    o.spy('status','done','saving "file.doc" with owner "you",'+
-          ' first revision, no conflict.');
-    o.jio_you.saveDocument('file.doc','content1you',
-                           {onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.spy('status','done','loading "file.doc" with owner "her",'+
-          ' last revision, no conflict.');
-    o.jio_her.loadDocument('file.doc',{onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.spy('status','done','saving "file.doc" with owner "her",'+
-          ' next revision, no conflict.');
-    o.jio_her.saveDocument('file.doc','content1her',
-                           {onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.spy('status','fail','saving "file.doc" with owner "you",'+
-          ' second revision, conflict!');
-    o.c = o.conflict_callback;
-    o.t.spy(o,'c');
-    o.jio_you.saveDocument('file.doc','content3you',{
-        onResponse:o.f,max_retry:1,onConflict:o.c});
-    o.tick();
-    o.tick(1,'c');
-    if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
-
-    o.spy('status','done','saving "file.doc" with owner "her",'+
-          ' next revision, no conflict.');
-    o.jio_her.saveDocument('file.doc','content2her',
-                           {onResponse:o.f,max_retry:1});
-    o.tick();
-
-    o.spy('status','fail','solving conflict and save "file.doc" with owner'+
-          ' "you", fith revision, conflict!');
-    o.c = o.conflict_callback;
-    o.t.spy(o,'c');
-    o.jio_you.saveDocument('file.doc','content4you',{
-        onResponse:o.f,max_retry:1,known_conflict_list:[o.conflict_object],
-        onConflict:o.c});
-    o.conflict_object = undefined;
-    o.tick();
-    o.tick(1,'c');
-    if(!o.conflict_object){return ok(false,'impossible to continue the tests');}
-
-    o.spy('status','done','solving conflict and save "file.doc" with owner'+
-          ' "you", forth revision, no conflict.');
-    o.jio_you.saveDocument('file.doc','content5you',{
-        onResponse:o.f,max_retry:1,known_conflict_list:[o.conflict_object]});
-    o.tick();
-
-    o.jio_you.stop();
-    o.jio_her.stop();
+    o.clock.tick (base_tick);
 });
 
 };                              // end thisfun
