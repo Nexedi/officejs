@@ -1,4 +1,4 @@
-/*! JIO - v0.1.0 - 2012-07-31
+/*! JIO - v0.1.0 - 2012-08-01
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
@@ -1671,7 +1671,7 @@ var jobRules = (function(spec, my) {
         option               = option               || {};
         option.success       = option.success       || function(){};
         option.error         = option.error         || function(){};
-        option.max_retry     = option.max_retry     || 0;
+        option.max_retry     = option.max_retry     || 3;
         option.metadata_only = (option.metadata_only !== undefined?
                                 option.metadata_only:false);
         jobManager.addJob(
@@ -1722,7 +1722,7 @@ var jobRules = (function(spec, my) {
         option               = option               || {};
         option.success       = option.success       || function(){};
         option.error         = option.error         || function(){};
-        option.max_retry     = option.max_retry     || 0;
+        option.max_retry     = option.max_retry     || 3;
         option.metadata_only = (option.metadata_only !== undefined?
                                 option.metadata_only:true);
         jobManager.addJob(

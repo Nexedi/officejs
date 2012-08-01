@@ -119,7 +119,7 @@
         option               = option               || {};
         option.success       = option.success       || function(){};
         option.error         = option.error         || function(){};
-        option.max_retry     = option.max_retry     || 0;
+        option.max_retry     = option.max_retry     || 3;
         option.metadata_only = (option.metadata_only !== undefined?
                                 option.metadata_only:false);
         jobManager.addJob(
@@ -170,7 +170,7 @@
         option               = option               || {};
         option.success       = option.success       || function(){};
         option.error         = option.error         || function(){};
-        option.max_retry     = option.max_retry     || 0;
+        option.max_retry     = option.max_retry     || 3;
         option.metadata_only = (option.metadata_only !== undefined?
                                 option.metadata_only:true);
         jobManager.addJob(
