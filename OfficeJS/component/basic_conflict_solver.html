@@ -1,36 +1,10 @@
-<div id="basic_conflict_solver_div" style="text-align:center;">
+<div id="basic_conflict_solver_div" style="text-align:center;" class="well">
   <div class="row-fluid">
     <div class="span12">
       A conflict occured while saving this document:
     </div>
   </div>
-  <div class="row-fluid">
-    <div class="span6">
-      <div>
-        <strong>local revision</strong>
-      </div>
-      <div>
-        <textarea id="local_revision" style="width:100%;">loading...</textarea>
-      </div>
-      <div>
-        <button onclick="window.basic_conflict_solver.keepLocalRevision();">
-          keep this revision
-        </button>
-      </div>
-    </div>
-    <div class="span6">
-      <div>
-        <strong>conflicting revision</strong>
-      </div>
-      <div>
-        <textarea id="conflicting_revision" style="width:100%;">loading...</textarea>
-      </div>
-      <div>
-        <button onclick="window.basic_conflict_solver.keepOtherRevision();">
-          keep this revision
-        </button>
-      </div>
-    </div>
+  <div id="revisions">
   </div>
   <div class="row-fluid">
     <div class="span12">
@@ -43,21 +17,34 @@
 
 window.basic_conflict_solver = {
     conflict_object:{},
-    keepLocalRevision: function () {
-        // TODO : keep local
-        OfficeJS.solveConflict(
-            this.conflict_object,
-            document.querySelector('#basic_conflict_solver_div '+
-                                   '#local_revision').textContent);
-        delete window.basic_conflict_solver;
+    addRevision: function (revision,content) {
+        document.querySelector ('#basic_conflict_solver_div #revisions').
+            innerHTML += '<div class="row-fluid"><div class="span12">'+
+            '<div><textarea id="'+revision+'">'+content+'</textarea></div>'+
+            '<div><button onclick="console.log('+"'"+revision+"'"+');'+
+            'basic_conflict_solver.keepRevision('+"'"+revision+"'"+');'+
+            '">Save this one</button></div><hr/>'+
+            // window.basic_conflict_solver.keepRevision('+
+            // '<div><button onclick="alert('+"'"+'cobra'+"'"+');'+
+            // "'"+revision+"'"+'); alert("after"); return false;">Save this one</button></div><hr/>'+
+            '</div></div>';
     },
-    keepOtherRevision: function () {
-        // TODO : keep other
+    addRemovedRevision: function (revision) {
+        document.querySelector ('#basic_conflict_solver_div #revisions').
+            innerHTML += '<div class="row-fluid"><div class="span12">'+
+            '<div>Removed</div>'+
+            '<div><button onclick="window.basic_conflict_solver.keepRevision('+
+            "'"+revision+"'"+'); return false;">Save this one</button></div><hr/>'+
+            '</div></div>';
+    },
+    keepRevision: function (revision) {
         OfficeJS.solveConflict(
             this.conflict_object,
-            document.querySelector('#basic_conflict_solver_div '+
-                                   '#local_revision').textContent);
-        delete window.basic_conflict_solver;
+            $('#'+revision).text()
+        );
+    },
+    abort: function () {
+        // TODO : 
     }
 };
 

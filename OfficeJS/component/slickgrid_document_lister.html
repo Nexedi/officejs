@@ -42,7 +42,8 @@
 
 <script type="text/javascript">
     <!--
-(function () {
+window.OfficeJS_slickgrid = {};
+window.OfficeJS_slickgrid.reload = function () {
     var grid, onSortFunction, onClickFunction, check_box_selector,
     onRemoveSeveral, showIconFormatter,
     document_list = OfficeJS.cloneCurrentDocumentList(),
@@ -156,7 +157,8 @@
         grid.onClick.subscribe(onClickFunction);
         grid.onSort.subscribe(onSortFunction);
     });
-}());
+};
+window.OfficeJS_slickgrid.reload();
 //-->
 </script>
 </body>

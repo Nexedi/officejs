@@ -178,12 +178,14 @@
                 },
                 update: function () {
                     OfficeJS.open({app:'document_lister',force:true});
+                    //window.OfficeJS_slickgrid.reload();
                 },
                 onunload: function () {
                     if (this.interval_id !== null) {
                         clearInterval (this.interval_id);
                         this.interval_id = null;
                     }
+                    delete window.OfficeJS_slickgrid;
                     return true;
                 }
             },
@@ -203,6 +205,7 @@
                 },
                 onunload: function () {
                     window.work_in_progress.stop();
+                    delete window.work_in_progress;
                     return true;
                 }
             },
@@ -211,28 +214,46 @@
                 path:'component/basic_conflict_solver.html',
                 gadget_id:'page-conflict',
                 onload: function (param) {
-                    priv.jio.loadDocument(
-                        param.name,
-                        {max_retry:3,
-                         onResponse:function (result) {
-                             if (!result.status.isDone()) {
-                                 console.error (result.error.message);
-                             } else {
-                                 document.querySelector (
-                                     '#basic_conflict_solver_div ' +
-                                         '#conflicting_revision ').textContent =
-                                     result.value.content;
-                             }
-                         }});
-                    // TODO : add owner, revision, ...
-                    setTimeout(function() {
-                        window.basic_conflict_solver.conflict_object =
-                            param.conflict_object;
-                        document.querySelector (
-                            '#basic_conflict_solver_div ' + '#local_revision ').
-                            textContent =
-                            param.local_content;
-                    },500);
+                    var rev_list = [], i;
+                    for (var rev in param.conflict_object.revision_object) {
+                        rev_list.push(rev);
+                    }
+                    // FIXME : load jobs are in conflict ! redesign jio !
+                    var load = function (rev,i) {
+                        if (rev) {
+                            i++;
+                            setTimeout(function() {
+                            priv.jio.loadDocument(
+                                param.conflict_object.path,{
+                                    revision: rev,
+                                    max_retry:3,
+                                    success: function (result) {
+                                        window.basic_conflict_solver.
+                                            conflict_object =
+                                            param.conflict_object;
+                                        window.basic_conflict_solver.
+                                            addRevision(
+                                                rev,result.content);
+                                        load(rev_list[i],i);
+                                    },
+                                    error: function (error) {
+                                        window.basic_conflict_solver.
+                                            conflict_object =
+                                            param.conflict_object;
+                                        if (error.status === 404) {
+                                            window.basic_conflict_solver.
+                                                addRemovedRevision(rev);
+                                        } else {
+                                            console.error (error.message);
+                                        }
+                                        load(rev_list[i],i);
+                                    }
+                                });
+                            });
+                        }
+                    };
+                    load (rev_list[0],0);
+                    // NOTE : improve, don't load already loaded revision
                 }
             }
         };
@@ -257,7 +278,8 @@
             currentEditor:null,
             currentSolver:null,
             currentApp:null,
-            currentActivity:null
+            currentActivity:null,
+            currentRevision:null
         };
         priv.loading_object = {
             spinstate: 0,
@@ -448,9 +470,8 @@
         /**
          * @method setJio
          * @param {object} storage The storage informations
-         * @param {object} applicant The applicant informations
          */
-        that.setJio = function (storage,applicant) {
+        that.setJio = function (storage) {
             var leftnavbar;
             if (priv.isJioSet()) {
                 alert ('Jio already set.');
@@ -479,27 +500,31 @@
             }
             priv.loading_object.getlist();
             priv.jio.getDocumentList(
-                '.',
-                {sort:{last_modified:'descending',
-                       name:'ascending'},
-                limit:{begin:0,end:50},
-                 // search:{name:'a'},
-                max_retry:3,
-                onResponse:function (result) {
-                    if (result.status.isDone()) {
-                        priv.data_object.documentList = result.value;
+                '.',{
+                    sort:{last_modified:'descending',
+                          name:'ascending'},
+                    limit:{begin:0,end:50},
+                    // search:{name:'a'},
+                    max_retry:3,
+                    success: function (result) {
+                        priv.data_object.documentList = result;
                         priv.showDocumentListInsideLeftNavBar();
-                    } else {
+                        priv.loading_object.end_getlist();
+                        // TODO : announce conflicts
+                        if (typeof callback === 'function') {
+                            callback();
+                        }
+                    },
+                    error: function (error) {
                         priv.lastfailure.path = '.';
                         priv.lastfailure.method = 'getDocumentList';
-                        console.error (result.error.message);
+                        console.error (error.message);
+                        priv.loading_object.end_getlist();
+                        if (typeof callback === 'function') {
+                            callback();
+                        }
                     }
-                    priv.loading_object.end_getlist();
-                    if (typeof callback === 'function') {
-                        callback();
-                    }
-                }
-            });
+                });
         };
 
         that.cloneCurrentDocumentList = function () {
@@ -522,23 +547,27 @@
             priv.loading_object.save();
             priv.jio.saveDocument(
                 basename+'.'+current_editor.ext,
-                current_content,
-                {onResponse:function (result) {
-                    if (!result.status.isDone()) {
+                current_content,{
+                    previous_revision: priv.data_object.currentRevision || '0',
+                    success: function (result) {
+                        if (result) {
+                            priv.data_object.currentRevision = result;
+                        }
+                        priv.loading_object.end_save();
+                        that.getList();
+                    },
+                    error: function (error) {
                         priv.lastfailure.path = basename;
                         priv.lastfailure.method = 'saveDocument';
-                        console.error (result.error.message);
+                        console.error (error.message);
+                        priv.loading_object.end_save();
+                        that.getList();
+                        if (error.conflict_object) {
+                            priv.onConflict (error.conflict_object);
+                            // TODO : same for remove method
+                        }
                     }
-                    priv.loading_object.end_save();
-                    that.getList();
-                },
-                onConflict:function (conflict_object) {
-                    priv.onConflict ({name:basename,
-                                      content:current_content},
-                                     current_editor.ext,
-                                     conflict_object);
-                    // TODO : same for remove method
-                }});
+                });
         };
 
         /**
@@ -554,19 +583,25 @@
             }
             priv.loading_object.load();
             priv.jio.loadDocument(
-                basename+'.'+current_editor.ext,
-                {max_retry:3,
-                onResponse:function (result) {
-                    if (!result.status.isDone()) {
-                        console.error (result.error.message);
+                basename+'.'+current_editor.ext,{
+                    max_retry:3,
+                    success: function (result) {
+                        if (result.revision) {
+                            priv.data_object.currentRevision = result.revision;
+                            if (result.conflict_object) {
+                                priv.onConflict(result.conflict_object);
+                            }
+                        }
+                        current_editor.setContent(result.content);
+                        priv.loading_object.end_load();
+                    },
+                    error: function (error) {
                         priv.lastfailure.path = basename;
                         priv.lastfailure.method = 'loadDocument';
-                    } else {
-                        current_editor.setContent(
-                            result.value.content);
+                        console.error (error.message);
+                        priv.loading_object.end_load();
                     }
-                    priv.loading_object.end_load();
-                }});
+                });
         };
 
         /**
@@ -574,23 +609,31 @@
          * @method remove
          * @param  {string} name The document name.
          */
-        that.remove = function (name) {
+        that.remove = function (name,revision) {
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
             }
             priv.loading_object.remove();
             priv.jio.removeDocument(
-                name,
-                {onResponse:function (result) {
-                    if (!result.status.isDone()) {
-                        console.error (result.error.message);
+                name,{
+                    revision: revision,
+                    success: function (result) {
+                        priv.loading_object.end_remove();
+                        that.getList();
+                    },
+                    error: function (error) {
                         priv.lastfailure.path = name;
                         priv.lastfailure.method = 'removeDocument';
+                        console.error (error.message);
+                        priv.loading_object.end_remove();
+                        that.getList();
+                        if (error.conflict_object) {
+                            priv.onConflict (error.conflict_object);
+                            // TODO : same for remove method
+                        }
                     }
-                    priv.loading_object.end_remove();
-                    that.getList();
-                }});
+                });
         };
 
         /**
@@ -632,49 +675,45 @@
          * @param  {object} doc The document object
          * @param  {object} conflict_object The conflict object
          */
-        priv.onConflict = function (document, ext, conflict_object) {
-            ext = ext || '';
-            // TODO : load other revision
+        priv.onConflict = function (conflict_object) {
             // get the good conflict solver and load it
-            if (ext && priv.conflict_solver_object[ext]) {
-                that.open({app:priv.conflict_solver_object[ext],
-                           name:conflict_object.path,
-                           local_content:document.content,
-                           conflict_object:conflict_object});
-            } else {
+            // if (ext && priv.conflict_solver_object[ext]) {
+            //     that.open({app:priv.conflict_solver_object[ext],
+            //                // local_content:document.content,
+            //                conflict_object:conflict_object});
+            // } else {
                 that.open({app:'basic_conflict_solver',
-                           name:conflict_object.path,
-                           local_content:document.content,
+                           // local_content:document.content,
                            conflict_object:conflict_object});
-            }
+            // }
         };
 
         
         that.solveConflict = function (conflict_object, data) {
-            var current_solver = priv.data_object.currentSolver;
+            // TODO : that.close basic_solver
+            priv.data_object.currentEditor.setContent(data);
             priv.loading_object.save();
-            priv.jio.saveDocument(
-                conflict_object.path,
-                data,
-                {onResponse:function (result) {
-                    if (!result.status.isDone()) {
-                        priv.lastfailure.path = basename(path);
+            conflict_object.solveConflict(
+                data,{
+                    success: function (result) {
+                        if (result) {
+                            priv.data_object.currentRevision = result;
+                        }
+                        priv.loading_object.end_save();
+                        that.getList();
+                    },
+                    error: function (error) {
+                        priv.lastfailure.path = basename;
                         priv.lastfailure.method = 'saveDocument';
-                        console.error (result.error.message);
+                        console.error (error.message);
+                        priv.loading_object.end_save();
+                        that.getList();
+                        if (error.conflict_object) {
+                            priv.onConflict (error.conflict_object);
+                            // TODO : same for remove method
+                        }
                     }
-                    priv.loading_object.end_save();
-                    that.getList();
-                    document.querySelector ('#basic_conflict_solver_div').
-                        style.display = 'none';
-                    priv.data_object.currentSolver = null;
-                },
-                onConflict:function (conflict_object) {
-                    priv.onConflict ({name:basename,
-                                      content:current_content},
-                                     current_editor.ext,
-                                     conflict_object);
-                },
-                known_conflict_list:[conflict_object]});
+                });
         };
 
         /**
