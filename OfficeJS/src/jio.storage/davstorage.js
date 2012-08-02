@@ -215,7 +215,11 @@ var newDAVStorage = function ( spec, my ) {
                         'D\\:response, response'
                     );
                     var len = response.length;
-                    am.wait(o,'success',len-2);
+                    if (len === 1) {
+                        return am.call(o,'success');
+                    } else {
+                        am.wait(o,'success',len-2);
+                    }
                     response.each( function(i,data){
                         if(i>0) { // exclude parent folder
                             file = {};

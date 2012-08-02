@@ -566,6 +566,7 @@ var newConflictManagerStorage = function ( spec, my ) {
         };
         o.filterTheList = function (result) {
             var i;
+            success_max ++;
             for (i = 0; i < result.length; i+= 1) {
                 var splitname = result[i].name.split('.') || [];
                 if (splitname.length > 0 &&
@@ -575,6 +576,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                     am.call(o,'loadMetadataFile',[splitname.join('.')]);
                 }
             }
+            am.call(o,'success');
         };
         o.loadMetadataFile = function (path) {
             priv.getDistantMetadata (
