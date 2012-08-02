@@ -1329,6 +1329,15 @@ test ('Simple methods', function () {
     });
     o.tick();
 
+    o.spy('status','done','saving "file2.doc".');
+    o.jio.saveDocument('file2.doc','yes',{
+        previous_revision: '0',
+        success:o.f,
+        error:o.f
+    });
+    o.tick();
+
+
     o.spy('value',{name:'file.doc',content:'content1',revision:'rev'},
           'loading "file.doc".',function (o) {
               if (!o) { return; }
@@ -1343,13 +1352,25 @@ test ('Simple methods', function () {
     o.jio.loadDocument('file.doc',{success:o.f,error:o.f});
     o.tick();
 
-    o.spy('value',[{name:'file.doc'}],
+    o.spy('value',[{name:'file.doc',revision:'rev'},
+                   {name:'file2.doc',revision:'rev'}],
           'getting list.',function (a) {
               var i;
               if (!a) { return; }
               for (i = 0; i < a.length; i+= 1) {
-                  delete a[i].last_modified;
-                  delete a[i].creation_date;
+                  if (a[i].revision) { a[i].revision = 'rev'; }
+                  if (a[i].creation_date) { delete a[i].creation_date; }
+                  else { ok(false, 'creation date missing!'); }
+                  if (a[i].last_modified) { delete a[i].last_modified; }
+                  else { ok(false, 'last modified missing!'); }
+                  if (a[i].revision_object) { delete a[i].revision_object; }
+                  else { ok(false, 'revision object missing!'); }
+              }
+              // because the result can be disordered
+              if (a.length === 2 && a[0].name === 'file2.doc') {
+                  var tmp = a[0];
+                  a[0] = a[1];
+                  a[1] = tmp;
               }
           });
     o.jio.getDocumentList('.',{success:o.f,error:o.f});
@@ -1408,6 +1429,16 @@ test ('Revision Conflict', function() {
             }
         }
     };
+    o.localNamespace = 'jio/local/revisionconflict/jiotests/';
+    o.rev={};
+    o.checkContent = function (string,message) {
+        ok (LocalOrCookieStorage.getItem(o.localNamespace + string),
+            message || '"' + string + '" is saved.');
+    };
+    o.checkNoContent = function (string,message) {
+        ok (!LocalOrCookieStorage.getItem(o.localNamespace + string),
+            message || '"' + string + '" does not exists.');
+    };
     o.secondstorage_spec = {type:'local',
                             username:'revisionconflict',
                             applicationname:'jiotests'}
@@ -1415,64 +1446,79 @@ test ('Revision Conflict', function() {
     o.jio = JIO.newJio({type:'conflictmanager',
                         storage:o.secondstorage_spec});
     // create a new file
-    o.conflict_must_be_called = false;
     o.spy('status','done','new file "file.doc", revision: "0".');
     o.jio.saveDocument(
         'file.doc','content1',{
             previous_revision:'0',
             error:o.f,
             success:function(value){
-                o.new_rev = value;
+                o.rev.first = value;
                 o.f(value);
             }
         });
     o.tick();
+    o.checkContent('file.doc.'+o.rev.first);
     // modify the file
     o.spy('status','done','modify "file.doc", revision: "'+
-          o.new_rev+'".');
+          o.rev.first+'".');
     o.jio.saveDocument(
         'file.doc','content2',{
-            previous_revision:o.new_rev,
+            previous_revision:o.rev.first,
             error:o.f,
-            success:o.f
+            success:function(v) {
+                o.f(v);
+                o.rev.second = v;
+            }
         });
     o.tick();
+    o.checkContent('file.doc.'+o.rev.second);
+    o.checkNoContent('file.doc.'+o.rev.first);
     // modify the file from the second revision instead of the third
     o.spy('status','conflict','modify "file.doc", revision: "'+
-          o.new_rev+'" -> conflict!');
+          o.rev.first+'" -> conflict!');
     o.jio.saveDocument(
         'file.doc','content3',{
-            previous_revision:o.new_rev,
+            previous_revision:o.rev.first,
             success:o.f,
             error: function (error) {
                 o.conflict_object = error.conflict_object;
                 o.f(error);
-                ok (!o.conflict_object.revision_object[o.new_rev],
-                    'check if the first revision is not include to '+
-                    'the conflict list.');
-                ok (o.conflict_object.revision_object[
-                    o.conflict_object.revision],
-                    'check if the new revision is include to '+
-                    'the conflict list.');
+                o.rev.third = '?';
+                if (o.conflict_object) {
+                    o.rev.third = o.conflict_object.revision;
+                    ok (!o.conflict_object.revision_object[o.new_rev],
+                        'check if the first revision is not include to '+
+                        'the conflict list.');
+                    ok (o.conflict_object.revision_object[
+                        o.conflict_object.revision],
+                        'check if the new revision is include to '+
+                        'the conflict list.');
+                }
             }
         });
     o.tick();
+    o.checkContent ('file.doc.'+o.rev.third);
     // loading test
     o.spy('status','conflict','loading "file.doc" -> conflict!');
     o.jio.loadDocument('file.doc',{
         success:o.f,error:o.f
     });
     o.tick();
-    if (!o.conflict_object) { ok(false,'Impossible to continue the tests'); }
+    if (!o.conflict_object) { return ok(false,'Cannot to continue the tests'); }
     // solving conflict
     o.spy('status','done','solve conflict "file.doc".');
     o.conflict_object.solveConflict(
         'content4',{
-            success:o.f,
-            error:o.f
+            error:o.f,
+            success:function (r) {
+                o.f(r);
+                o.rev.forth = r;
+            }
         });
     o.tick();
-
+    o.checkContent('file.doc.'+o.rev.forth);
+    o.checkNoContent('file.doc.'+o.rev.second);
+    o.checkNoContent('file.doc.'+o.rev.third);
     o.jio.stop();
 });
 
@@ -1506,6 +1552,16 @@ test ('Conflict in a conflict solving', function () {
             }
         }
     };
+    o.localNamespace = 'jio/local/conflictconflict/jiotests/';
+    o.rev={};
+    o.checkContent = function (string,message) {
+        ok (LocalOrCookieStorage.getItem(o.localNamespace + string),
+            message || '"' + string + '" is saved.');
+    };
+    o.checkNoContent = function (string,message) {
+        ok (!LocalOrCookieStorage.getItem(o.localNamespace + string),
+            message || '"' + string + '" does not exists.');
+    };
     o.secondstorage_spec = {type:'local',
                             username:'conflictconflict',
                             applicationname:'jiotests'}
@@ -1513,18 +1569,18 @@ test ('Conflict in a conflict solving', function () {
     o.jio = JIO.newJio({type:'conflictmanager',
                         storage:o.secondstorage_spec});
     // create a new file
-    o.conflict_must_be_called = false;
     o.spy('status','done','new file "file.doc", revision: "0".');
     o.jio.saveDocument(
         'file.doc','content1',{
             previous_revision:'0',
             error:o.f,
             success:function(value){
-                o.new_rev = value;
+                o.rev.first = value;
                 o.f(value);
             }
         });
     o.tick();
+    o.checkContent ('file.doc.'+o.rev.first);
     // modify the file from the second revision instead of the third
     o.spy('status','conflict','modify "file.doc", revision: "0" -> conflict!');
     o.jio.saveDocument(
@@ -1532,44 +1588,175 @@ test ('Conflict in a conflict solving', function () {
             previous_revision:"0",
             success:o.f,
             error: function (error) {
-                o.conflict_object = error.conflict_object;
                 o.f(error);
+                o.conflict_object = error.conflict_object;
+                o.rev.second = o.conflict_object?o.conflict_object.revision:'?';
             }
         });
     o.tick();
-    if (!o.conflict_object) { ok(false,'Impossible to continue the tests'); }
-    // saving another time and solve the last conflict
+    o.checkContent ('file.doc.'+o.rev.second);
+    if (!o.conflict_object) { return ok(false,'Cannot to continue the tests'); }
+    // saving another time
     o.spy('status','conflict','modify "file.doc" when solving, revision: "'+
-          o.new_rev+'" -> conflict!');
+          o.rev.first+'" -> conflict!');
     o.jio.saveDocument('file.doc','content3',{
-        previous_revision:o.new_rev,
-        error:o.f,
+        previous_revision: o.rev.first,
+        error:function(e){
+            o.f(e);
+            o.rev.third = o.conflict_object?o.conflict_object.revision:'?';
+        },
         success:o.f
     });
     o.tick();
+    o.checkContent ('file.doc.'+o.rev.third);
+    o.checkNoContent ('file.doc.'+o.rev.first);
     // solving first conflict
     o.spy('status','conflict','solving conflict "file.doc" -> conflict!');
     o.conflict_object.solveConflict('content4',{
         success: o.f,
         error: function (error) {
+            o.rev.forth = '?';
             if (error.conflict_object) {
                 o.conflict_object = error.conflict_object;
+                o.rev.forth = o.conflict_object.revision;
             }
             o.f(error);
         }
     })
     o.tick();
+    o.checkContent ('file.doc.'+o.rev.forth);
+    o.checkNoContent ('file.doc.'+o.rev.second);
     // solving last conflict
     o.spy('status','done','solving last conflict "file.doc".');
     o.conflict_object.solveConflict('content5',{
-        success: o.f,error:o.f
+        error:o.f,
+        success:function (v) {
+            o.f(v);
+            o.rev.fith = v;
+        }
     });
     o.tick();
+    o.checkContent ('file.doc.'+o.rev.fith);
+
+    o.jio.stop();
 });
 
 test ('Remove revision conflict', function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick (base_tick);
+    o.spy = function(res,value,message,function_name) {
+        function_name = function_name || 'f';
+        o[function_name] = function(result) {
+            if (res === 'status') {
+                if (result && result.conflict_object) {
+                    result = 'conflict';
+                } else if (result && typeof result.status !== 'undefined') {
+                    result = 'fail';
+                } else {
+                    result = 'done';
+                }
+            }
+            deepEqual (result,value,message);
+        };
+        o.t.spy(o,function_name);
+    };
+    o.tick = function (tick, function_name) {
+        function_name = function_name || 'f'
+        o.clock.tick(tick || 1000);
+        if (!o[function_name].calledOnce) {
+            if (o[function_name].called) {
+                ok(false, 'too much results');
+            } else {
+                ok(false, 'no response');
+            }
+        }
+    };
+    o.localNamespace = 'jio/local/removeconflict/jiotests/';
+    o.rev={};
+    o.checkContent = function (string,message) {
+        ok (LocalOrCookieStorage.getItem(o.localNamespace + string),
+            message || '"' + string + '" is saved.');
+    };
+    o.checkNoContent = function (string,message) {
+        ok (!LocalOrCookieStorage.getItem(o.localNamespace + string),
+            message || '"' + string + '" does not exists.');
+    };
+    o.secondstorage_spec = {type:'local',
+                            username:'removeconflict',
+                            applicationname:'jiotests'}
+    //////////////////////////////////////////////////////////////////////
+    o.jio = JIO.newJio({type:'conflictmanager',
+                        storage:o.secondstorage_spec});
+
+    o.spy('status','done','new file "file.doc", revision: "0".');
+    o.jio.saveDocument(
+        'file.doc','content1',{
+            previous_revision:'0',
+            error:o.f,
+            success:function(value){
+                o.rev.first = value;
+                o.f(value);
+            }
+        });
+    o.tick();
+    o.checkContent ('file.doc.'+o.rev.first);
+
+    o.spy('status','fail','remove "file.doc", revision: "wrong" -> conflict!');
+    o.jio.removeDocument(
+        'file.doc',{
+            previous_revision:'wrong',
+            success:o.f,
+            error:function (e) {
+                o.f(e);
+            }
+        });
+    o.tick();
+
+    o.spy('status','conflict','new file again "file.doc", revision: "0".');
+    o.jio.saveDocument(
+        'file.doc','content2',{
+            previous_revision:'0',
+            success:o.f,
+            error:function (error) {
+                o.f(error);
+                o.rev.second = error.conflict_object ?
+                    error.conflict_object.revision : '?';
+            }
+        });
+    o.tick();
+    o.checkContent ('file.doc.'+o.rev.second);
+
+    o.spy('status','conflict','remove "file.doc", revision: "'+o.rev.first+
+          '" -> conflict!');
+    o.jio.removeDocument(
+        'file.doc',{
+            revision:o.rev.first,
+            success:o.f,
+            error:function (error) {
+                o.conflict_object = error.conflict_object;
+                o.f(error);
+                o.rev.third = o.conflict_object?o.conflict_object.revision:'?';
+            }
+        });
+    o.tick();
+    o.checkNoContent ('file.doc.'+o.rev.first);
+    o.checkNoContent ('file.doc.'+o.rev.third);
+
+    if (!o.conflict_object) { return ok(false, 'Cannot continue the tests'); }
+    o.spy('status','done','solve "file.doc"');
+    o.conflict_object.solveConflict({
+        error:o.f,
+        success:function (v) {
+            o.f(v);
+            o.rev.forth = v;
+        }
+    });
+    o.tick();
+    o.checkNoContent ('file.doc.'+o.rev.second);
+    o.checkNoContent ('file.doc.'+o.rev.third);
+    o.checkNoContent ('file.doc.'+o.rev.forth);
+
+    o.jio.stop();
 });
 
 };                              // end thisfun
