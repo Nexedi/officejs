@@ -87,6 +87,19 @@ var newConflictManagerStorage = function ( spec, my ) {
                       newcommand );
     };
 
+    priv.chooseARevision = function (metadata) {
+        var tmp_last_modified = 0, ret_rev = '';
+        for (var rev in metadata) {
+            if (tmp_last_modified <
+                metadata[rev].last_modified) {
+                tmp_last_modified =
+                    metadata[rev].last_modified;
+                ret_rev = rev;
+            }
+        }
+        return ret_rev;
+    };
+
     priv.solveConflict = function (path,content,option) {
         var o = {}, am = priv.newAsyncModule(),
 
@@ -96,6 +109,7 @@ var newConflictManagerStorage = function ( spec, my ) {
         current_revision_file_path = '',
         metadata_file_content = null,
         on_conflict = false, conflict_object = {},
+        on_remove = option.deleted,
         previous_revision = option.previous_revision,
         previous_revision_object = option.revision_remove_object || {},
         previous_revision_content_object = previous_revision_object[
@@ -104,7 +118,6 @@ var newConflictManagerStorage = function ( spec, my ) {
         failerror;
 
          o.getDistantMetadata = function (){
-            console.log ('c getDistantMetadata');
             priv.getDistantMetadata (
                 command, metadata_file_path,
                 function (result) {
@@ -118,8 +131,10 @@ var newConflictManagerStorage = function ( spec, my ) {
                                     JSON.stringify (metadata_file_content));
                     current_revision_file_path = path + '.' +
                         current_revision;
-                    am.wait(o,'saveMetadataOnDistant',1);
-                    am.call(o,'saveNewRevision');
+                    if (!on_remove) {
+                        am.wait(o,'saveMetadataOnDistant',1);
+                        am.call(o,'saveNewRevision');
+                    }
                     am.call(o,'previousUpdateMetadata');
                 },function (error) {
                     am.call(o,'error',[error]);
@@ -127,7 +142,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             );
         };
         o.saveNewRevision = function (){
-            console.log ('c saveNewRevision ' + current_revision);
             priv.saveNewRevision (
                 command, current_revision_file_path, content,
                 function (result) {
@@ -138,21 +152,15 @@ var newConflictManagerStorage = function ( spec, my ) {
             );
         };
         o.previousUpdateMetadata = function () {
-            console.log ('c previousUpdateMetadata');
             for (var prev_rev in previous_revision_object) {
                 delete metadata_file_content[prev_rev];
             }
             am.call(o,'checkForConflicts');
         };
         o.checkForConflicts = function () {
-            console.log ('c checkForConflicts');
             for (var rev in metadata_file_content) {
                 var revision_index;
                 on_conflict = true;
-                conflict_object =
-                    priv.createConflictObject(
-                        command, metadata_file_content, current_revision
-                    );
                 failerror = {
                     status:20,
                     statusText:'Conflict',
@@ -163,18 +171,20 @@ var newConflictManagerStorage = function ( spec, my ) {
             am.call(o,'updateMetadata');
         };
         o.updateMetadata = function (){
-            console.log ('c updateMetadata');
             metadata_file_content[current_revision] = {
                 creation_date: previous_revision_content_object.creation_date ||
                     now.getTime(),
                 last_modified: now.getTime(),
                 conflict: on_conflict,
-                deleted: false
+                deleted: on_remove
             };
+            conflict_object =
+                priv.createConflictObject(
+                    command, metadata_file_content, current_revision
+                );
             am.call(o,'saveMetadataOnDistant');
         };
         o.saveMetadataOnDistant = function (){
-            console.log ('c saveMetadataOnDistant on_conflict ' + on_conflict);
             priv.saveMetadataToDistant(
                 command, metadata_file_path,metadata_file_content,
                 function (result) {
@@ -190,21 +200,18 @@ var newConflictManagerStorage = function ( spec, my ) {
             );
         };
         o.deleteAllConflictingRevision = function (){
-            console.log ('c deleteAllConflictingRevision');
             for (var prev_rev in previous_revision_object) {
                 priv.deleteAFile (
                     command, path+'.'+prev_rev, empty_fun, empty_fun );
             }
         };
         o.success = function (){
-            console.log ('c success');
             am.neverCall(o,'error');
             am.neverCall(o,'success');
             if (option.success) {option.success(current_revision);}
         };
         o.error = function (error){
             var gooderror = error || failerror || {};
-            console.log ('c error ' + JSON.stringify (gooderror));
             if (on_conflict) {
                 gooderror.conflict_object = conflict_object;
             }
@@ -225,7 +232,14 @@ var newConflictManagerStorage = function ( spec, my ) {
                 return this.revision_object;
             },
             solveConflict: function (content,option) {
-                option = option || {};
+                if (metadata[revision].deleted) {
+                    option = option || content || {};
+                    option.deleted = true;
+                } else {
+                    option = option || {};
+                    option.deleted = false;
+                    content = content || '';
+                }
                 option.previous_revision = this.revision;
                 option.revision_remove_object = this.revision_object;
                 option.command = cloned_command;
@@ -284,7 +298,6 @@ var newConflictManagerStorage = function ( spec, my ) {
         failerror;
 
         if (!previous_revision) {
-            console.log ('here');
             return setTimeout(function () {
                 that.error({status:0,statusText:'Parameter missing',
                             message:'Need a previous revision.'});
@@ -292,7 +305,6 @@ var newConflictManagerStorage = function ( spec, my ) {
         }
 
         o.getDistantMetadata = function (){
-            console.log ('s getDistantMetadata');
             priv.getDistantMetadata (
                 command,metadata_file_path,
                 function (result) {
@@ -325,7 +337,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             );
         };
         o.saveNewRevision = function (){
-            console.log ('s saveNewRevision ' + current_revision);
             priv.saveNewRevision (
                 command,current_revision_file_path,command.getContent(),
                 function (result) {
@@ -350,7 +361,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             am.call(o,'updateMetadata');
         };
         o.createMetadata = function (){
-            console.log ('s createMetadata');
             metadata_file_content = {};
             metadata_file_content[current_revision] = {
                 creation_date: now.getTime(),
@@ -361,7 +371,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             am.call(o,'saveMetadataOnDistant');
         };
         o.updateMetadata = function (){
-            console.log ('s updateMetadata');
             var previous_creation_date;
             if (metadata_file_content[previous_revision]) {
                 previous_creation_date = metadata_file_content[
@@ -385,7 +394,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             am.call(o,'saveMetadataOnDistant');
         };
         o.saveMetadataOnDistant = function (){
-            console.log ('s saveMetadataOnDistant on_conflict ' + on_conflict);
             priv.saveMetadataToDistant(
                 command,metadata_file_path,metadata_file_content,
                 function (result) {
@@ -401,15 +409,13 @@ var newConflictManagerStorage = function ( spec, my ) {
             );
         };
         o.deletePreviousRevision = function (){
-            if (previous_revision !== '0' && !on_conflict) {
-                console.log ('s deletePreviousRevision ' + previous_revision);
+            if (previous_revision !== '0' /*&& !on_conflict*/) {
                 priv.deleteAFile (
                     command, previous_revision_file_path,
                     empty_fun,empty_fun);
             }
         };
         o.success = function (){
-            console.log ('s success');
             am.neverCall(o,'error');
             am.neverCall(o,'success');
             that.success(current_revision);
@@ -418,7 +424,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             var gooderror = error || failerror ||
                 {status:0,statusText:'Unknown',
                  message:'Unknown error.'};
-            console.log ('s error ' + JSON.stringify (gooderror));
             if (on_conflict) {
                 gooderror.conflict_object = conflict_object;
             }
@@ -452,7 +457,6 @@ var newConflictManagerStorage = function ( spec, my ) {
         };
 
         o.getDistantMetadata = function (){
-            console.log ('l getDistantMetadata');
             priv.getDistantMetadata (
                 command,metadata_file_path,
                 function (result) {
@@ -468,21 +472,12 @@ var newConflictManagerStorage = function ( spec, my ) {
             );
         };
         o.affectMetadata = function () {
-            console.log ('l affectMetadata');
-            var tmp_last_modified = 0;
             if (current_revision) {
                 if (!metadata_file_content[current_revision]) {
                     return call404('Document revision does not exists.');
                 }
             } else {
-                for (var rev in metadata_file_content) {
-                    if (tmp_last_modified <
-                        metadata_file_content[rev].last_modified) {
-                        tmp_last_modified =
-                            metadata_file_content[rev].last_modified;
-                        current_revision = rev;
-                    }
-                }
+                current_revision = priv.chooseARevision(metadata_file_content);
             }
             doc.last_modified =
                 metadata_file_content[current_revision].last_modified;
@@ -497,7 +492,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             }
         };
         o.loadRevision = function (){
-            console.log ('l loadRevision ' + current_revision);
             if (!current_revision ||
                 metadata_file_content[current_revision].deleted) {
                 return call404('Document has been removed.');
@@ -513,7 +507,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             );
         };
         o.checkForConflicts = function () {
-            console.log ('l checkForConflicts');
             if (metadata_file_content[current_revision].conflict) {
                 on_conflict = true;
                 conflict_object =
@@ -527,7 +520,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             am.call(o,'success');
         };
         o.success = function (){
-            console.log ('l success');
             am.neverCall(o,'error');
             am.neverCall(o,'success');
             that.success(doc);
@@ -535,7 +527,6 @@ var newConflictManagerStorage = function ( spec, my ) {
         o.error = function (error){
             var gooderror = error || {status:0,statusText:'Unknown',
                                       message:'Unknown error.'};
-            console.log ('l error ' + JSON.stringify (gooderror));
             if (on_conflict) {
                 gooderror.conflict_object = conflict_object;
             }
@@ -553,9 +544,10 @@ var newConflictManagerStorage = function ( spec, my ) {
      */
     that.getDocumentList = function (command) {
         var o = {}, am = priv.newAsyncModule(),
-        metadata_file_list = [], // distant files metadata
+        metadata_only = command.getOption('metadata_only'),
         result_list = [],
-        nb_loaded_file = 0;
+        nb_loaded_file = 0,
+        success_count = 0, success_max = 0;
         o.retreiveList = function () {
             var cloned_option = command.cloneOption ();
             cloned_option.metadata_only = true;
@@ -575,78 +567,68 @@ var newConflictManagerStorage = function ( spec, my ) {
         o.filterTheList = function (result) {
             var i;
             for (i = 0; i < result.length; i+= 1) {
-                // TODO : finish to check this function
                 var splitname = result[i].name.split('.') || [];
-                var content_object;
-                var doc = {};
-                if (splitname[splitname.length-1] === 'metadata') {
-                    try {
-                        content_object = JSON.parse (result[i].content);
-                    } catch (e) {
-                        continue;
-                    }
-                    result_list.push(content_object);
+                if (splitname.length > 0 &&
+                    splitname[splitname.length-1] === 'metadata') {
+                    success_max ++;
                     splitname.length --;
-                    doc.name = splitname.join('.');
-                    try {
-                        doc.creation_date = content_object.owner[
-                            content_object.winner.owner].creation_date;
-                        doc.last_modified = content_object.owner[
-                            content_object.winner.owner].last_modified;
-                        command_file_metadata_list.push(doc);
-                    } catch (e) {
-                        continue;
-                    }
+                    am.call(o,'loadMetadataFile',[splitname.join('.')]);
                 }
-            }
-            if (command.getOption('metadata_only')) {
-                am.call(o,'done',[command_file_metadata_list]);
-            } else {
-                if (result.length === 0) {
-                    return that.success([]);
-                }
-                am.wait(o,'done',command_file_metadata_list.length-1);
-                for (i = 0; i < command_file_metadata_list.length; i+= 1) {
-                    LocalOrCookieStorage.setItem (
-                        command_file_metadata_list[i].name + '.metadata',
-                        result_list[i]);
-                    am.call(o,'loadFile',[
-                        command_file_metadata_list[i],
-                        result_list[i].winner.revision,
-                        result_list[i].winner.owner]);
-                }
-                that.end();
             }
         };
-        // o.loadFile = function (doc,revision,owner) {
-        //     var cloned_option = command.cloneOption ();
-        //     cloned_option.error = function (error) {
-        //         am.call(o,'fail',[error]);
-        //         am.end();
-        //     };
-        //     cloned_option.success = function (result) {
-        //         doc.content = result.content;
-        //         am.call(o,'done',[command_file_metadata_list]);
-        //     };
-        //     var newcommand = that.newCommand(
-        //         'loadDocument',
-        //         {path:doc.name + '.' + revision + '.' + owner,
-        //          option:cloned_option});
-        //     that.addJob ( that.newStorage (priv.secondstorage_spec),
-        //                   newcommand );
-        // };
-        // o.fail = function (error) {
-        //     am.neverCall(o,'fail');
-        //     am.neverCall(o,'done');
-        //     command.setMaxRetry(1);
-        //     that.error(error);
-        // };
-        // o.done = function (value) {
-        //     am.neverCall(o,'done');
-        //     am.neverCall(o,'fail');
-        //     that.success(value);
-        // };
-        // am.call(o,'retreiveList');
+        o.loadMetadataFile = function (path) {
+            priv.getDistantMetadata (
+                command, path+'.metadata',
+                function (data) {
+                    data = JSON.parse (data.content);
+                    am.call(
+                        o,'loadFile',
+                        [path,priv.chooseARevision(data),data]
+                    );
+                },function (error) {
+                    am.call(o,'error',[error]);
+                }
+            );
+        };
+        o.loadFile = function (path,revision,data) {
+            var doc = {
+                name: path,
+                last_modified:data[revision].last_modified,
+                creation_date:data[revision].creation_date,
+                revision:revision,
+                revision_object:data
+            };
+            if (data[revision].conflict) {
+                doc.conflict_object = priv.createConflictObject(
+                    command, data, revision );
+            }
+            if (!metadata_only) {
+                priv.loadRevision (
+                    command,path+'.'+revision,
+                    function (data) {
+                        doc.content = data.content;
+                        result_list.push(doc);
+                        am.call(o,'success');
+                    },function (error) {
+                        am.call(o,'error',[error]);
+                    });
+            } else {
+                result_list.push(doc);
+                am.call(o,'success');
+            }
+        };
+        o.success = function (){
+            success_count ++;
+            if (success_count >= success_max) {
+                am.end();
+                that.success(result_list);
+            }
+        };
+        o.error = function (error){
+            am.end();
+            that.error(error);
+        };
+        am.call(o,'retreiveList');
     };
 
     /**
@@ -670,12 +652,11 @@ var newConflictManagerStorage = function ( spec, my ) {
         if (!previous_revision) {
             return setTimeout(function () {
                 that.error({status:0,statusText:'Parameter missing',
-                            message:'Need a previous revision.'});
+                            message:'Need a revision.'});
             });
         }
 
         o.getDistantMetadata = function (){
-            console.log ('r getDistantMetadata');
             priv.getDistantMetadata (
                 command,metadata_file_path,
                 function (result) {
@@ -713,7 +694,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             am.call(o,'updateMetadata');
         };
         o.updateMetadata = function (){
-            console.log ('s updateMetadata');
             var previous_creation_date;
             if (metadata_file_content[previous_revision]) {
                 previous_creation_date = metadata_file_content[
@@ -737,7 +717,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             am.call(o,'saveMetadataOnDistant');
         };
         o.saveMetadataOnDistant = function (){
-            console.log ('s saveMetadataOnDistant on_conflict ' + on_conflict);
             priv.saveMetadataToDistant(
                 command,metadata_file_path,metadata_file_content,
                 function (result) {
@@ -753,15 +732,13 @@ var newConflictManagerStorage = function ( spec, my ) {
             );
         };
         o.deletePreviousRevision = function (){
-            if (previous_revision !== '0' && !on_conflict) {
-                console.log ('s deletePreviousRevision ' + previous_revision);
+            if (previous_revision !== '0' /*&& !on_conflict*/) {
                 priv.deleteAFile (
                     command, previous_revision_file_path,
                     empty_fun,empty_fun);
             }
         };
         o.success = function (){
-            console.log ('s success');
             am.neverCall(o,'error');
             am.neverCall(o,'success');
             that.success(current_revision);
@@ -770,7 +747,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             var gooderror = error || failerror ||
                 {status:0,statusText:'Unknown',
                  message:'Unknown error.'};
-            console.log ('s error ' + JSON.stringify (gooderror));
             if (on_conflict) {
                 gooderror.conflict_object = conflict_object;
             }
