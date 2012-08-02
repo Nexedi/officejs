@@ -77,7 +77,9 @@ var newCryptedStorage = function ( spec, my ) {
             }
             // ok if undef or 0
             arglist = arglist || [];
-            return obj[function_name].apply(obj[function_name],arglist);
+            setTimeout(function (){
+                obj[function_name].apply(obj[function_name],arglist);
+            });
         };
         async.neverCall = function (obj,function_name) {
             obj._wait = obj._wait || {};
