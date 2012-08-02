@@ -552,7 +552,7 @@ var newConflictManagerStorage = function ( spec, my ) {
             var cloned_option = command.cloneOption ();
             cloned_option.metadata_only = true;
             cloned_option.error = function (error) {
-                am.call(o,'fail',[error]);
+                am.call(o,'error',[error]);
             };
             cloned_option.success = function (result) {
                 am.call(o,'filterTheList',[result]);
