@@ -1,4 +1,4 @@
-/*! JIO Storage - v0.1.0 - 2012-08-02
+/*! JIO Storage - v0.1.0 - 2012-08-03
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 (function(LocalOrCookieStorage, $, Base64, sjcl, hex_sha256, Jio) {
@@ -1441,7 +1441,7 @@ var newConflictManagerStorage = function ( spec, my ) {
         o.success = function (){
             am.neverCall(o,'error');
             am.neverCall(o,'success');
-            if (option.success) {option.success(current_revision);}
+            if (option.success) {option.success({revision:current_revision});}
         };
         o.error = function (error){
             var gooderror = error || failerror || {};
@@ -1651,7 +1651,7 @@ var newConflictManagerStorage = function ( spec, my ) {
         o.success = function (){
             am.neverCall(o,'error');
             am.neverCall(o,'success');
-            that.success(current_revision);
+            that.success({revision:current_revision});
         };
         o.error = function (error){
             var gooderror = error || failerror ||
@@ -1976,7 +1976,7 @@ var newConflictManagerStorage = function ( spec, my ) {
         o.success = function (){
             am.neverCall(o,'error');
             am.neverCall(o,'success');
-            that.success(current_revision);
+            that.success({revision:current_revision});
         };
         o.error = function (error){
             var gooderror = error || failerror ||

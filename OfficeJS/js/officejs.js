@@ -559,8 +559,8 @@
                 current_content,{
                     previous_revision: priv.data_object.currentRevision || '0',
                     success: function (result) {
-                        if (result) {
-                            priv.data_object.currentRevision = result;
+                        if (result && result.revision) {
+                            priv.data_object.currentRevision = result.revision;
                         }
                         priv.loading_object.end_save();
                         that.getList();
@@ -595,7 +595,7 @@
                 basename+'.'+current_editor.ext,{
                     max_retry:3,
                     success: function (result) {
-                        if (result.revision) {
+                        if (result && result.revision) {
                             priv.data_object.currentRevision = result.revision;
                             if (result.conflict_object) {
                                 priv.onConflict(result.conflict_object);
@@ -705,8 +705,8 @@
             conflict_object.solveConflict(
                 data,{
                     success: function (result) {
-                        if (result) {
-                            priv.data_object.currentRevision = result;
+                        if (result && result.revision) {
+                            priv.data_object.currentRevision = result.revision;
                         }
                         priv.loading_object.end_save();
                         that.getList();

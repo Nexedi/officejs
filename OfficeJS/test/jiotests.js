@@ -1321,9 +1321,9 @@ test ('Simple methods', function () {
     o.spy('status','done','saving "file.doc".');
     o.jio.saveDocument('file.doc','content1',{
         previous_revision: '0',
-        success:function (revision) {
-            o.new_rev = revision;
-            o.f (revision);
+        success:function (result) {
+            o.new_rev = result.revision;
+            o.f (result);
         },
         error:o.f
     });
@@ -1452,7 +1452,7 @@ test ('Revision Conflict', function() {
             previous_revision:'0',
             error:o.f,
             success:function(value){
-                o.rev.first = value;
+                o.rev.first = value.revision;
                 o.f(value);
             }
         });
@@ -1467,7 +1467,7 @@ test ('Revision Conflict', function() {
             error:o.f,
             success:function(v) {
                 o.f(v);
-                o.rev.second = v;
+                o.rev.second = v.revision;
             }
         });
     o.tick();
@@ -1512,7 +1512,7 @@ test ('Revision Conflict', function() {
             error:o.f,
             success:function (r) {
                 o.f(r);
-                o.rev.forth = r;
+                o.rev.forth = r.revision;
             }
         });
     o.tick();
@@ -1575,7 +1575,7 @@ test ('Conflict in a conflict solving', function () {
             previous_revision:'0',
             error:o.f,
             success:function(value){
-                o.rev.first = value;
+                o.rev.first = value.revision;
                 o.f(value);
             }
         });
@@ -1632,7 +1632,7 @@ test ('Conflict in a conflict solving', function () {
         error:o.f,
         success:function (v) {
             o.f(v);
-            o.rev.fith = v;
+            o.rev.fith = v.revision;
         }
     });
     o.tick();
@@ -1694,7 +1694,7 @@ test ('Remove revision conflict', function () {
             previous_revision:'0',
             error:o.f,
             success:function(value){
-                o.rev.first = value;
+                o.rev.first = value.revision;
                 o.f(value);
             }
         });
@@ -1748,7 +1748,7 @@ test ('Remove revision conflict', function () {
         error:o.f,
         success:function (v) {
             o.f(v);
-            o.rev.forth = v;
+            o.rev.forth = v.revision;
         }
     });
     o.tick();
