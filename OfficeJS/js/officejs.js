@@ -228,21 +228,33 @@
                                     revision: rev,
                                     max_retry:3,
                                     success: function (result) {
+                                        var doc = {
+                                            path:param.conflict_object.path,
+                                            content:result.content,
+                                            last_modified:result.last_modified,
+                                            creation_date:result.creation_date,
+                                            revision:rev
+                                        };
                                         window.basic_conflict_solver.
                                             conflict_object =
                                             param.conflict_object;
                                         window.basic_conflict_solver.
-                                            addRevision(
-                                                rev,result.content);
+                                            addRevision(doc);
                                         load(rev_list[i],i);
                                     },
                                     error: function (error) {
+                                        var doc = {
+                                            path:param.conflict_object.path,
+                                            last_modified:result.last_modified,
+                                            creation_date:result.creation_date,
+                                            revision:rev
+                                        };
                                         window.basic_conflict_solver.
                                             conflict_object =
                                             param.conflict_object;
                                         if (error.status === 404) {
                                             window.basic_conflict_solver.
-                                                addRemovedRevision(rev);
+                                                addRemovedRevision(doc);
                                         } else {
                                             console.error (error.message);
                                         }

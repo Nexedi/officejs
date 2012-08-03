@@ -17,23 +17,25 @@
 
 window.basic_conflict_solver = {
     conflict_object:{},
-    addRevision: function (revision,content) {
+    addRevision: function (doc) {
         document.querySelector ('#basic_conflict_solver_div #revisions').
             innerHTML += '<div class="row-fluid"><div class="span12">'+
-            '<div><textarea id="'+revision+'">'+content+'</textarea></div>'+
+            '<div>'+(new Date(doc.last_modified)).toString()+'</div>'+
+            '<div><textarea id="'+doc.revision+'">'+doc.content+'</textarea></div>'+
             '<div><button onclick="'+
             //'console.log('+"'"+revision+"'"+');'+
-            "basic_conflict_solver.keepRevision('"+revision+"');"+
+            "basic_conflict_solver.keepRevision('"+doc.revision+"');"+
             '">Save this one</button></div><hr/>'+
             '</div></div>';
     },
-    addRemovedRevision: function (revision) {
+    addRemovedRevision: function (doc) {
         document.querySelector ('#basic_conflict_solver_div #revisions').
             innerHTML += '<div class="row-fluid"><div class="span12">'+
+            '<div>'+(new Date(doc.last_modified)).toString()+'</div>'+
             '<div>Removed</div>'+
             '<div><button onclick="'+
             //'console.log('+"'"+revision+"'"+');'+
-            "basic_conflict_solver.keepRevision('"+revision+"');"+
+            "basic_conflict_solver.keepRevision('"+doc.revision+"');"+
             '">Save this one</button></div><hr/>'+
             '</div></div>';
     },

@@ -82,6 +82,8 @@ window.OfficeJS_slickgrid.reload = function () {
                 array[i].icon = mime.icon;
                 array[i].app = mime.preferred_application || mime.application;
             }
+            array[i].conflict = array[i].revision_object[
+                array[i].revision].conflict?'X':'';
             // dates
             // FIXME : we can have 2012/1/1 12:5
             // we should have 2012/01/01 12:05
@@ -111,6 +113,9 @@ window.OfficeJS_slickgrid.reload = function () {
                       field:"last_modified",sortable:true});
         columns.push({id:"creation_date",name:"Created",
                       field:"creation_date",sortable:true});
+        columns.push({id:'on_conflict',name:'',
+                      field:'conflict',sortable:true,
+                      resizable:false,width:24});
 
         grid = new Slick.Grid("#myDocumentList",
                               document_list,
