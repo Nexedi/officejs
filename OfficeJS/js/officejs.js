@@ -170,15 +170,15 @@
                 gadget_id:'page-content',
                 interval_id:null,
                 onload: function () {
+                    var t = this;
                     if (this.interval_id === null) {
                         this.interval_id = setInterval (function() {
-                            that.getList(this.update);
+                            that.getList(t.update);
                         }, 5000);
                     }
                 },
                 update: function () {
-                    OfficeJS.open({app:'document_lister',force:true});
-                    //window.OfficeJS_slickgrid.reload();
+                    window.OfficeJS_slickgrid.reload();
                 },
                 onunload: function () {
                     if (this.interval_id !== null) {
@@ -404,6 +404,15 @@
             if (typeof realapp.onload !== 'undefined') {
                 return realapp.onload(option);
             }
+        };
+
+        /**
+         * Load an empty page in the place of a specific gadget id
+         * @method closeGadgetId
+         * @param  {string} gadgetid The gadget id
+         */
+        that.closeGadgetId = function (gadgetid) {
+            TabbularGadget.addNewTabGadget('component/empty.html',gadgetid);
         };
 
         /**
@@ -690,7 +699,7 @@
 
         
         that.solveConflict = function (conflict_object, data) {
-            // TODO : that.close basic_solver
+            that.closeGadgetId (priv.data_object.currentSolver.gadget_id);
             priv.data_object.currentEditor.setContent(data);
             priv.loading_object.save();
             conflict_object.solveConflict(

@@ -44,6 +44,9 @@
     <!--
 window.OfficeJS_slickgrid = {};
 window.OfficeJS_slickgrid.reload = function () {
+
+    $('#myDocumentList').html('');
+
     var grid, onSortFunction, onClickFunction, check_box_selector,
     onRemoveSeveral, showIconFormatter,
     document_list = OfficeJS.cloneCurrentDocumentList(),

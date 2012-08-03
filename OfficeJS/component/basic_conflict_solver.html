@@ -21,20 +21,20 @@ window.basic_conflict_solver = {
         document.querySelector ('#basic_conflict_solver_div #revisions').
             innerHTML += '<div class="row-fluid"><div class="span12">'+
             '<div><textarea id="'+revision+'">'+content+'</textarea></div>'+
-            '<div><button onclick="console.log('+"'"+revision+"'"+');'+
-            'basic_conflict_solver.keepRevision('+"'"+revision+"'"+');'+
+            '<div><button onclick="'+
+            //'console.log('+"'"+revision+"'"+');'+
+            "basic_conflict_solver.keepRevision('"+revision+"');"+
             '">Save this one</button></div><hr/>'+
-            // window.basic_conflict_solver.keepRevision('+
-            // '<div><button onclick="alert('+"'"+'cobra'+"'"+');'+
-            // "'"+revision+"'"+'); alert("after"); return false;">Save this one</button></div><hr/>'+
             '</div></div>';
     },
     addRemovedRevision: function (revision) {
         document.querySelector ('#basic_conflict_solver_div #revisions').
             innerHTML += '<div class="row-fluid"><div class="span12">'+
             '<div>Removed</div>'+
-            '<div><button onclick="window.basic_conflict_solver.keepRevision('+
-            "'"+revision+"'"+'); return false;">Save this one</button></div><hr/>'+
+            '<div><button onclick="'+
+            //'console.log('+"'"+revision+"'"+');'+
+            "basic_conflict_solver.keepRevision('"+revision+"');"+
+            '">Save this one</button></div><hr/>'+
             '</div></div>';
     },
     keepRevision: function (revision) {
