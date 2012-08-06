@@ -1,4 +1,4 @@
-/*! JIO Storage - v0.1.0 - 2012-08-03
+/*! JIO Storage - v0.1.0 - 2012-08-06
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 (function(LocalOrCookieStorage, $, Base64, sjcl, hex_sha256, Jio) {
@@ -1816,10 +1816,15 @@ var newConflictManagerStorage = function ( spec, my ) {
                 command, path+'.metadata',
                 function (data) {
                     data = JSON.parse (data.content);
-                    am.call(
-                        o,'loadFile',
-                        [path,priv.chooseARevision(data),data]
-                    );
+                    var revision = priv.chooseARevision(data);
+                    if (!data[revision].deleted) {
+                        am.call(
+                            o,'loadFile',
+                            [path,revision,data]
+                        );
+                    } else {
+                        am.call(o,'success');
+                    }
                 },function (error) {
                     am.call(o,'error',[error]);
                 }
@@ -1895,9 +1900,15 @@ var newConflictManagerStorage = function ( spec, my ) {
             priv.getDistantMetadata (
                 command,metadata_file_path,
                 function (result) {
+                    metadata_file_content = JSON.parse (result.content);
+                    if (previous_revision === 'last') {
+                        previous_revision =
+                            priv.chooseARevision (metadata_file_content);
+                        previous_revision_file_path = command.getPath() + '.' +
+                            previous_revision;
+                    }
                     var previous_revision_number =
                         parseInt(previous_revision.split('-')[0],10);
-                    metadata_file_content = JSON.parse (result.content);
                     // set current revision
                     current_revision = (previous_revision_number + 1) + '-' +
                         hex_sha256 ('' + previous_revision +
@@ -1973,10 +1984,10 @@ var newConflictManagerStorage = function ( spec, my ) {
                     empty_fun,empty_fun);
             }
         };
-        o.success = function (){
+        o.success = function (revision){
             am.neverCall(o,'error');
             am.neverCall(o,'success');
-            that.success({revision:current_revision});
+            that.success({revision:revision || current_revision});
         };
         o.error = function (error){
             var gooderror = error || failerror ||
