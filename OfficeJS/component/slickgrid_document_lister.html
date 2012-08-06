@@ -82,8 +82,12 @@ window.OfficeJS_slickgrid.reload = function () {
                 array[i].icon = mime.icon;
                 array[i].app = mime.preferred_application || mime.application;
             }
-            array[i].conflict = array[i].revision_object[
-                array[i].revision].conflict?'X':'';
+            if (array[i].revision) {
+                array[i].conflict = array[i].revision_object[
+                    array[i].revision].conflict?'X':'';
+            } else {
+                array[i].conflict = '';
+            }
             // dates
             // FIXME : we can have 2012/1/1 12:5
             // we should have 2012/01/01 12:05
