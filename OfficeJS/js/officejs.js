@@ -407,7 +407,6 @@
                     priv.data_object.currentSolver = realapp;
                     break;
                 default:
-                    priv.data_object.currentEditor = null;
                     break;
                 }
                 priv.data_object.currentApp = realapp;
@@ -531,7 +530,6 @@
                         priv.data_object.documentList = result;
                         priv.showDocumentListInsideLeftNavBar();
                         priv.loading_object.end_getlist();
-                        // TODO : announce conflicts
                         if (typeof callback === 'function') {
                             callback();
                         }
@@ -585,7 +583,6 @@
                         that.getList();
                         if (error.conflict_object) {
                             priv.onConflict (error.conflict_object);
-                            // TODO : same for remove method
                         }
                     }
                 });
@@ -629,8 +626,10 @@
          * Removes a document.
          * @method remove
          * @param  {string} name The document name.
+         * @param  {string} revision The document name.
          */
         that.remove = function (name,revision) {
+            console.log (arguments);
             if (!priv.isJioSet()) {
                 console.error ('No Jio set yet.');
                 return;
@@ -638,7 +637,7 @@
             priv.loading_object.remove();
             priv.jio.removeDocument(
                 name,{
-                    revision: revision,
+                    revision: revision || 'last',
                     success: function (result) {
                         priv.loading_object.end_remove();
                         that.getList();
@@ -651,7 +650,6 @@
                         that.getList();
                         if (error.conflict_object) {
                             priv.onConflict (error.conflict_object);
-                            // TODO : same for remove method
                         }
                     }
                 });
@@ -668,25 +666,29 @@
                 console.error ('No Jio set yet.');
                 return;
             }
+            var onResponse = function (result) {
+                cpt += 1;
+                if (cpt === l) {
+                    if (typeof current_editor.update !== 'undefined') {
+                        if (priv.data_object.currentEditor !== null &&
+                            current_editor.path ===
+                            priv.data_object.currentEditor.path) {
+                            that.getList(current_editor.update);
+                        } else {
+                            that.getList();
+                        }
+                    }
+                }
+                priv.loading_object.end_remove();
+            };
             for (i = 0, l = documentarray.length; i < l; i+= 1) {
                 priv.loading_object.remove();
                 priv.jio.removeDocument(
-                    documentarray[i],
-                    {onResponse:function (result) {
-                        cpt += 1;
-                        if (cpt === l) {
-                            if (typeof current_editor.update !== 'undefined') {
-                                if (priv.data_object.currentEditor !== null &&
-                                    current_editor.path ===
-                                    priv.data_object.currentEditor.path) {
-                                    that.getList(current_editor.update);
-                                } else {
-                                    that.getList();
-                                }
-                            }
-                        }
-                        priv.loading_object.end_remove();
-                    }});
+                    documentarray[i],{
+                        revision: 'last',
+                        success: onResponse,
+                        error: onResponse
+                    });
             }
         };
 
@@ -709,9 +711,15 @@
             // }
         };
 
-        
+        /**
+         * Solve the conflict
+         * @method solveConflict
+         * @param  {object} conflict_data The conflict object
+         * @param  {string} data The new content of the new revision
+         */
         that.solveConflict = function (conflict_object, data) {
             that.closeGadgetId (priv.data_object.currentSolver.gadget_id);
+            priv.data_object.currentSolver = null;
             priv.data_object.currentEditor.setContent(data);
             priv.loading_object.save();
             conflict_object.solveConflict(
@@ -731,7 +739,6 @@
                         that.getList();
                         if (error.conflict_object) {
                             priv.onConflict (error.conflict_object);
-                            // TODO : same for remove method
                         }
                     }
                 });
