@@ -1,25 +1,74 @@
-<div class="control-group">
-  <label class="control-label"
-         for="input_json_storage">
-    JSON Storage
-  </label>
-  <div class="controls docs-input-sizes">
-    <input class="input-xlarge"
-           type="text" name="JSONstorage" id="input_json_storage"
-           value="{&quot;type&quot;:&quot;wait&quot;,&quot;storage&quot;:{&quot;type&quot;:&quot;dummyallok&quot;}}"
-           placeholder="storage" />
-           <!-- value="{&quot;type&quot;:&quot;local&quot;,&quot;username&quot;:&quot;tristan&quot;}" -->
-           <!-- value="{&quot;type&quot;:&quot;replicate&quot;,&quot;storagelist&quot;:[{&quot;type&quot;:&quot;replicate&quot;,&quot;storagelist&quot;:[{&quot;type&quot;:&quot;dummyallfail&quot;,&quot;username&quot;:&quot;1&quot;},{&quot;type&quot;:&quot;dummyall3tries&quot;,&quot;username&quot;:&quot;2&quot;}]},{&quot;type&quot;:&quot;replicate&quot;,&quot;storagelist&quot;:[{&quot;type&quot;:&quot;dummyallfail&quot;,&quot;username&quot;:&quot;3&quot;},{&quot;type&quot;:&quot;dummyall3tries&quot;,&quot;username&quot;:&quot;4&quot;}]}]}" -->
-           <!-- value="{&quot;type&quot;:&quot;replicate&quot;,&quot;storagelist&quot;:[{&quot;type&quot;:&quot;dummyallfail&quot;},{&quot;type&quot;:&quot;replicate&quot;,&quot;storagelist&quot;:[{&quot;type&quot;:&quot;dummyall3tries&quot;,&quot;username&quot;:&quot;1&quot;},{&quot;type&quot;:&quot;dummyallfail&quot;,&quot;username&quot;:&quot;2&quot;}]},{&quot;type&quot;:&quot;replicate&quot;,&quot;storagelist&quot;:[{&quot;type&quot;:&quot;dummyallnotfound&quot;,&quot;username&quot;:&quot;3&quot;}]}]}" -->
-           <!-- value="{&quot;type&quot;:&quot;local&quot;,&quot;username&quot;:&quot;tristan&quot;,&quot;applicationname&quot;:&quot;jiotests&quot;}" -->
-           <!-- value="{&quot;type&quot;:&quot;dav&quot;,&quot;username&quot;:&quot;tristan&quot;,&quot;password&quot;:&quot;mdp&quot;,&quot;url&quot;:&quot;http://localhost:80&quot;}" -->
-           <!-- value="{&quot;type&quot;:&quot;replicate&quot;,&quot;storagelist&quot;:[{&quot;type&quot;:&quot;local&quot;,&quot;username&quot;:&quot;tristan&quot;},{&quot;type&quot;:&quot;dav&quot;,&quot;username&quot;:&quot;tristan&quot;,&quot;password&quot;:&quot;mdp&quot;,&quot;url&quot;:&quot;http://localhost:80&quot;}]}" -->
+<div id="login-gadget">
+  <div class="control-group">
+    <label class="control-label"
+           for="input_json_storage">
+      JSON Storage
+    </label>
+    <div class="controls docs-input-sizes">
+      <input id="login_input"
+             class="input-xxlarge" value=""
+             type="text" name="JSONstorage" id="input_json_storage"
+             placeholder="{&quot;storage&quot;:&quot;description&quot;}" />
+    </div>
   </div>
+  <div>
+    Remember me&nbsp;&nbsp;
+    <input id="remember_me" type="checkbox"
+           onclick="window.OfficeJS_login.toggleRememberMe();"/>
+  </div>
+  <div>
+    <button type="submit"
+            class="btn"
+            onclick="window.OfficeJS_login.createJIO();">
+      Create New JIO
+    </button>
+  </div>
+  <script type="text/javascript">
+    <!--
+window.OfficeJS_login = {
+    storageId:'#login-gadget #login_input',
+    storagePath:'OfficeJS/login/login',
+    rememberId:'#login-gadget #remember_me',
+    rememberPath:'OfficeJS/login/remember_me',
+    localStorage: LocalOrCookieStorage,
+
+    fillLogin: function () {
+        $(this.storageId).attr(
+            'value',this.localStorage.getItem(this.storagePath) || '');
+    },
+
+    isRememberMe: function () {
+        return $(this.rememberId).attr('checked');
+    },
+    fillRememberMe: function () {
+        var t = this.localStorage.getItem(this.rememberPath);
+        if (t) {
+            this.rememberMe();
+        }
+    },
+    rememberMe: function () {
+        $(this.rememberId).attr('checked','1');
+        this.localStorage.setItem(this.rememberPath,'1');
+    },
+    dontRememberMe: function () {
+        $(this.rememberId).removeAttr('checked');
+        this.localStorage.deleteItem(this.rememberPath);
+    },
+    toggleRememberMe: function () {
+        var t = this.localStorage.getItem(this.rememberPath);
+        if (t) { this.dontRememberMe() } else { this.rememberMe(); }
+    },
+
+    createJIO: function() {
+        var spec = $('#login-gadget #login_input').attr('value');
+        this.localStorage.setItem(this.storagePath,spec);
+        OfficeJS.setJio(spec);
+    }
+};
+window.OfficeJS_login.fillRememberMe();
+if (window.OfficeJS_login.isRememberMe()) {
+    window.OfficeJS_login.fillLogin();
+}
+        //-->
+  </script>
 </div>
-<button type="submit"
-        class="btn"
-        onclick="OfficeJS.setJio(
-                 $('#input_json_storage').attr('value'),
-                 $('#input_json_applicant').attr('value'));">
-  Create New JIO
-</button>
