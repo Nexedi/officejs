@@ -245,8 +245,6 @@
                                     error: function (error) {
                                         var doc = {
                                             path:param.conflict_object.path,
-                                            last_modified:result.last_modified,
-                                            creation_date:result.creation_date,
                                             revision:rev
                                         };
                                         window.basic_conflict_solver.
@@ -742,6 +740,11 @@
                         }
                     }
                 });
+        };
+
+        that.abortSolveConflict = function () {
+            that.closeGadgetId (priv.data_object.currentSolver.gadget_id);
+            priv.data_object.currentSolver = null;
         };
 
         /**

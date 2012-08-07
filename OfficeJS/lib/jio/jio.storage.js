@@ -1,4 +1,4 @@
-/*! JIO Storage - v0.1.0 - 2012-08-06
+/*! JIO Storage - v0.1.0 - 2012-08-07
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 (function(LocalOrCookieStorage, $, Base64, sjcl, hex_sha256, Jio) {
@@ -1465,8 +1465,11 @@ var newConflictManagerStorage = function ( spec, my ) {
                 return this.revision_object;
             },
             solveConflict: function (content,option) {
-                if (metadata[revision].deleted) {
-                    option = option || content || {};
+                if (typeof content === 'undefined') {
+                    option = option || {};
+                    option.deleted = true;
+                } else if (typeof content === 'object') {
+                    option = content;
                     option.deleted = true;
                 } else {
                     option = option || {};

@@ -232,8 +232,11 @@ var newConflictManagerStorage = function ( spec, my ) {
                 return this.revision_object;
             },
             solveConflict: function (content,option) {
-                if (metadata[revision].deleted) {
-                    option = option || content || {};
+                if (typeof content === 'undefined') {
+                    option = option || {};
+                    option.deleted = true;
+                } else if (typeof content === 'object') {
+                    option = content;
                     option.deleted = true;
                 } else {
                     option = option || {};
