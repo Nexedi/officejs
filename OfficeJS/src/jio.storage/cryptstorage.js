@@ -12,7 +12,7 @@ var newCryptedStorage = function ( spec, my ) {
     that.serialized = function () {
         var o = super_serialized();
         o.username = priv.username;
-        o.password = priv.password;
+        o.password = priv.password; // TODO : unsecured !!!
         o.storage = priv.secondstorage_string;
         return o;
     };
@@ -60,8 +60,8 @@ var newCryptedStorage = function ( spec, my ) {
                                 priv.password,
                                 param);
         } catch (e) {
-            callback({status:0,statusText:'Decrypt Fail',
-                      message:'Unable to decrypt.'});
+            callback({status:403,statusText:'Forbidden',error:'forbidden',
+                      message:'Unable to decrypt.',reason:'unable to decrypt'});
             return;
         }
         callback(undefined,tmp);
@@ -95,139 +95,130 @@ var newCryptedStorage = function ( spec, my ) {
         return async;
     };
 
+    that.post = function (command) {
+        that.put (command);
+    };
+
     /**
      * Saves a document.
-     * @method saveDocument
+     * @method put
      */
-    that.saveDocument = function (command) {
+    that.put = function (command) {
         var new_file_name, new_file_content, am = priv.newAsyncModule(), o = {};
         o.encryptFilePath = function () {
-            priv.encrypt(command.getPath(),function(res) {
+            priv.encrypt(command.getDocId(),function(res) {
                 new_file_name = res;
                 am.call(o,'save');
             });
         };
         o.encryptFileContent = function () {
-            priv.encrypt(command.getContent(),function(res) {
+            priv.encrypt(command.getDocContent(),function(res) {
                 new_file_content = res;
                 am.call(o,'save');
             });
         };
         o.save = function () {
-            var settings = command.cloneOption(), newcommand;
-            settings.success = function () { that.success(); };
-            settings.error = function (r) { that.error(r); };
-            newcommand = that.newCommand(
-                'saveDocument',
-                {path:new_file_name,content:new_file_content,option:settings});
-            that.addJob (
-                that.newStorage( priv.secondstorage_spec ),
-                newcommand );
+            var success = function (val) {
+                val.id = command.getDocId();
+                that.success (val);
+            },
+            error = function (err) {
+                that.error (err);
+            },
+            cloned_doc = command.cloneDoc();
+            cloned_doc._id = new_file_name;
+            cloned_doc.content = new_file_content;
+            that.addJob ('put',priv.secondstorage_spec,cloned_doc,
+                         command.cloneOption(),success,error);
         };
         am.wait(o,'save',1);
         am.call(o,'encryptFilePath');
         am.call(o,'encryptFileContent');
-    }; // end saveDocument
+    }; // end put
 
     /**
      * Loads a document.
-     * @method loadDocument
+     * @method get
      */
-    that.loadDocument = function (command) {
+    that.get = function (command) {
         var new_file_name, option, am = priv.newAsyncModule(), o = {};
         o.encryptFilePath = function () {
-            priv.encrypt(command.getPath(),function(res) {
+            priv.encrypt(command.getDocId(),function(res) {
                 new_file_name = res;
-                am.call(o,'loadDocument');
+                am.call(o,'get');
             });
         };
-        o.loadDocument = function () {
-            var settings = command.cloneOption(), newcommand;
-            settings.error = o.loadOnError;
-            settings.success = o.loadOnSuccess;
-            newcommand = that.newCommand (
-                'loadDocument',
-                {path:new_file_name,option:settings});
-            that.addJob (
-                that.newStorage ( priv.secondstorage_spec ), newcommand );
+        o.get = function () {
+            that.addJob('get',priv.secondstorage_spec,new_file_name,
+                        command.cloneOption(),o.success,o.error);
         };
-        o.loadOnSuccess = function (result) {
-            result.name = command.getPath();
+        o.success = function (val) {
+            val._id = command.getDocId();
             if (command.getOption('metadata_only')) {
-                that.success(result);
+                that.success (val);
             } else {
-                priv.decrypt (result.content, function(err,res){
+                priv.decrypt (val.content, function(err,res){
                     if (err) {
                         that.error(err);
                     } else {
-                        result.content = res;
-                        // content only: the second storage should
-                        // manage content_only option, so it is not
-                        // necessary to manage it.
-                        that.success(result);
+                        val.content = res;
+                        that.success (val);
                     }
                 });
             }
         };
-        o.loadOnError = function (error) {
-            // NOTE : we can re create an error object instead of
-            // keep the old ex:status=404,message="document 1y59gyl8g
-            // not found in localStorage"...
+        o.error = function (error) {
             that.error(error);
         };
         am.call(o,'encryptFilePath');
-    }; // end loadDocument
+    }; // end get
 
     /**
      * Gets a document list.
-     * @method getDocumentList
+     * @method allDocs
      */
-    that.getDocumentList = function (command) {
+    that.allDocs = function (command) {
         var result_array = [], am = priv.newAsyncModule(), o = {};
-        o.getDocumentList = function () {
-            var settings = command.cloneOption();
-            settings.success = o.getListOnSuccess;
-            settings.error = o.getListOnError;
-            that.addJob (
-                that.newStorage ( priv.secondstorage_spec ),
-                that.newCommand ( 'getDocumentList', {path:command.getPath(),
-                                                      option:settings}) );
+        o.allDocs = function () {
+            that.addJob ('allDocs', priv.secondstorage_spec, null,
+                         command.cloneOption(), o.onSuccess, o.error);
         };
-        o.getListOnSuccess = function (result) {
-            result_array = result;
+        o.onSuccess = function (val) {
+            if (val.total_rows === 0) {
+                return am.call(o,'success');
+            }
+            result_array = val.rows;
             var i, decrypt = function (c) {
-                priv.decrypt (result_array[c].name,function (err,res) {
+                priv.decrypt (result_array[c].id,function (err,res) {
                     if (err) {
                         am.call(o,'error',[err]);
                     } else {
-                        am.call(o,'pushResult',[res,c,'name']);
+                        result_array[c].id = res;
+                        result_array[c].key = res;
+                        am.call(o,'success');
                     }
                 });
                 if (!command.getOption('metadata_only')) {
-                    priv.decrypt (result_array[c].content,function (err,res) {
-                        if (err) {
-                            am.call(o,'error',[err]);
-                        } else {
-                            am.call(o,'pushResult',[res,c,'content']);
-                        }
-                    });
+                    priv.decrypt (
+                        result_array[c].value.content,
+                        function (err,res) {
+                            if (err) {
+                                am.call(o,'error',[err]);
+                            } else {
+                                result_array[c].value.content = res;
+                                am.call(o,'success');
+                            }
+                        });
                 }
             };
             if (command.getOption('metadata_only')) {
-                am.wait(o,'success',result.length-1);
+                am.wait(o,'success',val.total_rows*1-1);
             } else {
-                am.wait(o,'success',result.length*2-1);
+                am.wait(o,'success',val.total_rows*2-1);
             }
             for (i = 0; i < result_array.length; i+= 1) {
                 decrypt(i);
             }
-        };
-        o.getListOnError = function (error) {
-            am.call(o,'error',[error]);
-        };
-        o.pushResult = function (result,index,key) {
-            result_array[index][key] = result;
-            am.call(o,'success');
         };
         o.error = function (error) {
             am.end();
@@ -235,41 +226,36 @@ var newCryptedStorage = function ( spec, my ) {
         };
         o.success = function () {
             am.end();
-            that.success (result_array);
+            that.success ({total_rows:result_array.length,rows:result_array});
         };
-        am.call(o,'getDocumentList');
-    }; // end getDocumentList
+        am.call(o,'allDocs');
+    }; // end allDocs
 
     /**
      * Removes a document.
-     * @method removeDocument
+     * @method remove
      */
-    that.removeDocument = function (command) {
+    that.remove = function (command) {
         var new_file_name, o = {};
-        o.encryptFilePath = function () {
-            priv.encrypt(command.getPath(),function(res) {
+        o.encryptDocId = function () {
+            priv.encrypt(command.getDocId(),function(res) {
                 new_file_name = res;
                 o.removeDocument();
             });
         };
         o.removeDocument = function () {
-            var cloned_option = command.cloneOption();
-            cloned_option.error = o.removeOnError;
-            cloned_option.success = o.removeOnSuccess;
-            that.addJob(that.newStorage(priv.secondstorage_spec),
-                        that.newCommand(
-                            'removeDocument',
-                            {path:new_file_name,
-                             option:cloned_option}));
+            var cloned_doc = command.cloneDoc();
+            cloned_doc._id = new_file_name;
+            that.addJob ('remove', priv.secondstorage_spec, cloned_doc,
+                         command.cloneOption(), o.success, that.error);
         };
-        o.removeOnSuccess = function (result) {
-            that.success();
+        o.success = function (val) {
+            val.id = command.getDocId();
+            that.success (val);
         };
-        o.removeOnError = function (error) {
-            that.error (error);
-        };
-        o.encryptFilePath();
-    };
+        o.encryptDocId();
+    }; // end remove
+
     return that;
 };
 Jio.addStorageType('crypt', newCryptedStorage);

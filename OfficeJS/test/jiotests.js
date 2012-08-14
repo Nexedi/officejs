@@ -1157,29 +1157,27 @@ test ('Document save' , function () {
                       storage:{type:'local',
                                username:'cryptsavelocal',
                                applicationname:'jiotests'}});
-    o.f = function (result) {
-        if (!result) {
-            result = 'done';
-        } else {
-            result = 'fail';
+    o.f = function (err,val) {
+        if (err) {
+            err = err.status;
         }
-        deepEqual (result,'done','save ok');
+        deepEqual (err || val,{ok:true,id:'testsave'},'save ok');
     };
     this.spy(o,'f');
-    o.jio.saveDocument('testsave','contentoftest',{success:o.f,error:o.f});
+    o.jio.put({_id:'testsave',content:'contentoftest'},o.f);
     clock.tick(1000);
     if (!o.f.calledOnce) {
         ok (false, 'no response / too much results');
     }
     // encrypt 'testsave' with 'cryptsave:mypwd' password
-    o.tmp = LocalOrCookieStorage.getItem(
-        'jio/local/cryptsavelocal/jiotests/rZx5PJxttlf9QpZER/5x354bfX54QFa1');
+    o.tmp = LocalOrCookieStorage.getItem( // '/' = '%2F'
+        'jio/local/cryptsavelocal/jiotests/rZx5PJxttlf9QpZER%2F5x354bfX54QFa1');
     if (o.tmp) {
-        delete o.tmp.last_modified;
-        delete o.tmp.creation_date;
+        delete o.tmp._last_modified;
+        delete o.tmp._creation_date;
     }
     deepEqual (o.tmp,
-               {name:'rZx5PJxttlf9QpZER/5x354bfX54QFa1',
+               {_id:'rZx5PJxttlf9QpZER/5x354bfX54QFa1',
                 content:'upZkPIpitF3QMT/DU5jM3gP0SEbwo1n81rMOfLE'},
                'Check if the document is realy encrypted');
     o.jio.stop();
@@ -1194,26 +1192,20 @@ test ('Document load' , function () {
                       storage:{type:'local',
                                username:'cryptloadlocal',
                                applicationname:'jiotests'}});
-    o.f = function (result) {
-        if (result && !result.status) {
-            deepEqual (result,
-                       {name:'testload',
-                        content:'contentoftest',
-                        last_modified:500,
-                        creation_date:500},
-                       'load ok');
-        } else {
-            ok (false ,'cannot load');
-        }
+    o.f = function (err,val) {
+        deepEqual (err || val,{
+            _id:'testload',content:'contentoftest',
+            _last_modified:500,_creation_date:500},'load ok');
     };
     this.spy(o,'f');
     // encrypt 'testload' with 'cryptload:mypwd' password
     // and 'contentoftest' with 'cryptload:mypwd'
-    o.doc = {name:'hiG4H80pwkXCCrlLl1X0BD0BfWLZwDUX',
-             content:'kSulH8Qo105dSKHcY2hEBXWXC9b+3PCEFSm1k7k',
-             last_modified:500,creation_date:500};
+    o.doc = {
+        _id:'hiG4H80pwkXCCrlLl1X0BD0BfWLZwDUX',
+        content:'kSulH8Qo105dSKHcY2hEBXWXC9b+3PCEFSm1k7k',
+        _last_modified:500,_creation_date:500};
     addFileToLocalStorage('cryptloadlocal','jiotests',o.doc);
-    o.jio.loadDocument('testload',{success:o.f,error:o.f});
+    o.jio.get('testload',o.f);
     clock.tick(1000);
     if (!o.f.calledOnce) {
         ok (false, 'no response / too much results');
@@ -1230,13 +1222,9 @@ test ('Get Document List', function () {
                       storage:{type:'local',
                                username:'cryptgetlistlocal',
                                applicationname:'jiotests'}});
-    o.f = function (result) {
-        if (result && !result.status) {
-            deepEqual (objectifyDocumentArray(result),
-                       objectifyDocumentArray(o.doc_list),'Getting list');
-        } else {
-            ok (false, 'Cannot get list');
-        }
+    o.f = function (err,val) {
+        deepEqual (err || objectifyDocumentArray(val.rows),
+                   objectifyDocumentArray(o.doc_list),'Getting list');
     };
     o.tick = function (tick) {
         clock.tick (tick || 1000);
@@ -1249,29 +1237,32 @@ test ('Get Document List', function () {
         }
     };
     this.spy(o,'f');
-    o.doc_list = [
-        {name:'testgetlist1',last_modified:500,creation_date:200},
-        {name:'testgetlist2',last_modified:300,creation_date:300}
-    ];
+    o.doc_list = [{
+        id:'testgetlist1',key:'testgetlist1',value:{
+            _last_modified:500,_creation_date:200}
+    },{
+        id:'testgetlist2',key:'testgetlist2',value:{
+            _last_modified:300,_creation_date:300}
+    }];
     o.doc_encrypt_list = [
-        {name:'541eX0WTMDw7rqIP7Ofxd1nXlPOtejxGnwOzMw',
+        {_id:'541eX0WTMDw7rqIP7Ofxd1nXlPOtejxGnwOzMw',
          content:'/4dBPUdmLolLfUaDxPPrhjRPdA',
-         last_modified:500,creation_date:200},
-        {name:'541eX0WTMDw7rqIMyJ5tx4YHWSyxJ5UjYvmtqw',
+         _last_modified:500,_creation_date:200},
+        {_id:'541eX0WTMDw7rqIMyJ5tx4YHWSyxJ5UjYvmtqw',
          content:'/4FBALhweuyjxxD53eFQDSm4VA',
-         last_modified:300,creation_date:300}
+         _last_modified:300,_creation_date:300}
     ];
     // encrypt with 'cryptgetlist:mypwd' as password
     LocalOrCookieStorage.setItem(
         'jio/local_file_name_array/cryptgetlistlocal/jiotests',
-        [o.doc_encrypt_list[0].name,o.doc_encrypt_list[1].name]);
+        [o.doc_encrypt_list[0]._id,o.doc_encrypt_list[1]._id]);
     LocalOrCookieStorage.setItem(
-        'jio/local/cryptgetlistlocal/jiotests/'+o.doc_encrypt_list[0].name,
+        'jio/local/cryptgetlistlocal/jiotests/'+o.doc_encrypt_list[0]._id,
         o.doc_encrypt_list[0]);
     LocalOrCookieStorage.setItem(
-        'jio/local/cryptgetlistlocal/jiotests/'+o.doc_encrypt_list[1].name,
+        'jio/local/cryptgetlistlocal/jiotests/'+o.doc_encrypt_list[1]._id,
         o.doc_encrypt_list[1]);
-    o.jio.getDocumentList('.',{success:o.f,error:o.f});
+    o.jio.allDocs(o.f);
     o.tick(10000);
 
     o.jio.stop();
@@ -1286,20 +1277,15 @@ test ('Remove document', function () {
                       storage:{type:'local',
                                username:'cryptremovelocal',
                                applicationname:'jiotests'}});
-    o.f = function (result) {
-        if (!result) {
-            result = 'done';
-        } else {
-            result = 'fail';
-        }
-        deepEqual (result,'done','Document remove');
+    o.f = function (err,val) {
+        deepEqual (err || val,{ok:true,id:'file'},'Document remove');
     };
     this.spy(o,'f');
     // encrypt with 'cryptremove:mypwd' as password
-    o.doc = {name:'JqCLTjyxQqO9jwfxD/lyfGIX+qA',
+    o.doc = {_id:'JqCLTjyxQqO9jwfxD/lyfGIX+qA',
              content:'LKaLZopWgML6IxERqoJ2mUyyO',
-             last_modified:500,creation_date:500};
-    o.jio.removeDocument('file',{success:o.f,error:o.f});
+             _last_modified:500,_creation_date:500};
+    o.jio.remove({_id:'file'},o.f);
     clock.tick(1000);
     if (!o.f.calledOnce){
         ok (false, 'no response / too much results');
