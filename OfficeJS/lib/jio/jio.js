@@ -1,4 +1,4 @@
-/*! JIO - v0.1.0 - 2012-08-01
+/*! JIO - v0.1.0 - 2012-08-14
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
@@ -90,12 +90,13 @@ var storage = function(spec, my) {
      * @param  {object} command The command
      */
     that.execute = function(command) {
-        that.validate(command);
         that.success = command.success;
         that.error   = command.error;
         that.retry   = command.retry;
         that.end     = command.end;
-        command.executeOn(that);
+        if (that.validate(command)) {
+            command.executeOn(that);
+        }
     };
 
     /**
@@ -107,12 +108,15 @@ var storage = function(spec, my) {
         return true;
     };
 
-    that.validate = function(command) {
+    that.validate = function () {
         var mess = that.validateState();
         if (mess) {
-            throw invalidStorage({storage:that,message:mess});
+            that.error({status:0,statusText:'Invalid Storage',
+                        error:'invalid_storage',
+                        message:mess,reason:mess});
+            return false;
         }
-        command.validate(that);
+        return true;
     };
 
     /**
@@ -125,7 +129,8 @@ var storage = function(spec, my) {
     };
 
     that.saveDocument    = function(command) {
-        throw invalidStorage({storage:that,message:'Unknown storage.'});
+        that.error({status:0,statusText:'Unknown storage',
+                    error:'unknown_storage',message:'Unknown Storage'});
     };
     that.loadDocument    = function(command) {
         that.saveDocument();
@@ -157,21 +162,32 @@ var storage = function(spec, my) {
 var storageHandler = function(spec, my) {
     spec = spec || {};
     my = my || {};
-    var that = storage( spec, my );
+    var that = storage( spec, my ), priv = {};
 
-    that.newCommand = function (method, spec) {
+    priv.newCommand = function (method, spec) {
         var o = spec || {};
         o.label = method;
         return command (o, my);
     };
 
-    that.newStorage = function (spec) {
-        var o = spec || {};
-        return jioNamespace.storage (o, my);
-    };
-
-    that.addJob = function (storage,command) {
-        my.jobManager.addJob ( job({storage:storage, command:command}, my) );
+    that.addJob = function (method,storage_spec,doc,option,success,error) {
+        var command_opt = {
+            options: option,
+            callbacks:{success:success,error:error}
+        };
+        if (doc) {
+            if (method === 'get') {
+                command_opt.docid = doc;
+            } else {
+                command_opt.doc = doc;
+            }
+        }
+        my.jobManager.addJob (
+            job({
+                storage:jioNamespace.storage(storage_spec||{}),
+                command:priv.newCommand(method,command_opt)
+            }, my)
+        );
     };
 
     return that;
@@ -183,10 +199,11 @@ var command = function(spec, my) {
     my = my || {};
     // Attributes //
     var priv = {};
-    priv.commandlist = {'saveDocument':saveDocument,
-                        'loadDocument':loadDocument,
-                        'removeDocument':removeDocument,
-                        'getDocumentList':getDocumentList};
+    priv.commandlist = {'post':postCommand,
+                        'put':putCommand,
+                        'get':getCommand,
+                        'remove':removeCommand,
+                        'allDocs':allDocsCommand};
     // creates the good command thanks to his label
     if (spec.label && priv.commandlist[spec.label]) {
         priv.label = spec.label;
@@ -194,14 +211,18 @@ var command = function(spec, my) {
         return priv.commandlist[priv.label](spec, my);
     }
 
-    priv.path      = spec.path || '';
     priv.tried     = 0;
-    priv.option    = spec.option || {};
-    priv.success   = priv.option.success || function (){};
-    priv.error     = priv.option.error || function (){};
+    priv.doc       = spec.doc || {};
+    priv.docid     = spec.docid || '';
+    priv.option    = spec.options || {};
+    priv.callbacks = spec.callbacks || {};
+    priv.success   = priv.callbacks.success || function (){};
+    priv.error     = priv.callbacks.error || function (){};
     priv.retry     = function() {
-        that.error({status:13,statusText:'Fail Retry',
-                    message:'Impossible to retry.'});
+        that.error({
+            status:13,statusText:'Fail Retry',error:'fail_retry',
+            message:'Impossible to retry.',reason:'Impossible to retry.'
+        });
     };
     priv.end       = function() {};
     priv.on_going  = false;
@@ -216,8 +237,7 @@ var command = function(spec, my) {
     that.serialized = function() {
         return {label:that.getLabel(),
                 tried:priv.tried,
-                max_retry:priv.max_retry,
-                path:priv.path,
+                doc:that.cloneDoc(),
                 option:that.cloneOption()};
     };
 
@@ -230,13 +250,21 @@ var command = function(spec, my) {
         return 'command';
     };
 
+    that.getDocId = function () {
+        return priv.docid || priv.doc._id;
+    };
+    that.getDocContent = function () {
+        return priv.doc.content;
+    };
+
     /**
-     * Returns the path of the command.
-     * @method getPath
-     * @return {string} The path of the command.
+     * Returns an information about the document.
+     * @method getDocInfo
+     * @param  {string} infoname The info name.
+     * @return The info value.
      */
-    that.getPath = function() {
-        return priv.path;
+    that.getDocInfo = function (infoname) {
+        return priv.doc[infoname];
     };
 
     /**
@@ -245,38 +273,56 @@ var command = function(spec, my) {
      * @param  {string} optionname The option name.
      * @return The option value.
      */
-    that.getOption = function(optionname) {
+    that.getOption = function (optionname) {
         return priv.option[optionname];
     };
 
     /**
      * Validates the storage.
-     * Override this function.
-     * @param  {object} handler The storage handler
+     * @param  {object} storage The storage.
      */
-    that.validate = function(handler) {
-        that.validateState();
+    that.validate = function (storage) {
+        if (!that.validateState()) { return false; }
+        return storage.validate();
+    };
+
+    /*
+     * Extend this function
+     */
+    that.validateState = function() {
+        if (typeof priv.doc !== 'object') {
+            that.error({
+                status:20,
+                statusText:'Document_Id Required',
+                error:'document_id_required',
+                message:'No document id.',
+                reason:'no document id'
+            });
+            return false;
+        }
+        return true;
     };
 
     that.canBeRetried = function () {
-        return (priv.option.max_retry === 0 ||
+        return (typeof priv.option.max_retry === 'undefined' ||
+                priv.option.max_retry === 0 ||
                 priv.tried < priv.option.max_retry);
     };
-
     that.getTried = function() {
         return priv.tried;
     };
 
     /**
-     * Delegate actual excecution the storage handler.
-     * @param {object} handler The storage handler.
+     * Delegate actual excecution the storage.
+     * @param {object} storage The storage.
      */
-    that.execute = function(handler) {
+    that.execute = function(storage) {
         if (!priv.on_going) {
-            that.validate(handler);
-            priv.tried ++;
-            priv.on_going = true;
-            handler.execute(that);
+            if (that.validate (storage)) {
+                priv.tried ++;
+                priv.on_going = true;
+                storage.execute (that);
+            }
         }
     };
 
@@ -287,16 +333,6 @@ var command = function(spec, my) {
      * @param  {object} storage The storage.
      */
     that.executeOn = function(storage) {};
-
-    /*
-     * Do not override.
-     * Override `validate()' instead
-     */
-    that.validateState = function() {
-        if (priv.path === '') {
-            throw invalidCommandState({command:that,message:'Path is empty'});
-        }
-    };
 
     that.success = function(return_value) {
         priv.on_going = false;
@@ -378,135 +414,163 @@ var command = function(spec, my) {
         return o;
     };
 
+    /**
+     * Clones the document and returns the clone version.
+     * @method cloneDoc
+     * @return {object} The clone of the document.
+     */
+    that.cloneDoc = function () {
+        if (priv.docid) {
+            return priv.docid;
+        }
+        var k, o = {};
+        for (k in priv.doc) {
+            o[k] = priv.doc[k];
+        }
+        return o;
+    };
+
     return that;
 };
 
-var getDocumentList = function(spec, my) {
+var allDocsCommand = function(spec, my) {
     var that = command(spec, my);
     spec = spec || {};
     my = my || {};
     // Attributes //
     // Methods //
     that.getLabel = function() {
-        return 'getDocumentList';
+        return 'allDocs';
     };
 
     that.executeOn = function(storage) {
-        storage.getDocumentList(that);
+        storage.allDocs (that);
     };
 
     that.canBeRestored = function() {
         return false;
     };
 
-    var super_success = that.success;
-    that.success = function (res) {
-        var i;
-        if (res) {
-            for (i = 0; i < res.length; i+= 1) {
-                if (typeof res[i].last_modified !== 'number') {
-                    res[i].last_modified =
-                        new Date(res[i].last_modified).getTime();
-                }
-                if (typeof res[i].creation_date !== 'number') {
-                    res[i].creation_date =
-                        new Date(res[i].creation_date).getTime();
-                }
-            }
-        }
-        super_success(res);
-    };
-
     return that;
 };
 
-var loadDocument = function(spec, my) {
+var getCommand = function(spec, my) {
     var that = command(spec, my);
     spec = spec || {};
     my = my || {};
     // Attributes //
     // Methods //
     that.getLabel = function() {
-        return 'loadDocument';
+        return 'get';
+    };
+
+    that.validateState = function() {
+        if (!that.getDocId()) {
+            that.error({
+                status:20,statusText:'Document Id Required',
+                error:'document_id_required',
+                message:'No document id.',reason:'no document id'
+            });
+            return false;
+        }
+        return true;
     };
 
     that.executeOn = function(storage) {
-        storage.loadDocument(that);
+        storage.get (that);
     };
 
     that.canBeRestored = function() {
         return false;
     };
 
-    var super_success = that.success;
-    that.success = function (res) {
-        if (res) {
-            if (typeof res.last_modified !== 'number') {
-                res.last_modified=new Date(res.last_modified).getTime();
-            }
-            if (typeof res.creation_date !== 'number') {
-                res.creation_date=new Date(res.creation_date).getTime();
-            }
-        }
-        super_success(res);
-    };
     return that;
 };
 
-var removeDocument = function(spec, my) {
+var removeCommand = function(spec, my) {
     var that = command(spec, my);
     spec = spec || {};
     my = my || {};
     // Attributes //
     // Methods //
     that.getLabel = function() {
-        return 'removeDocument';
+        return 'remove';
     };
 
     that.executeOn = function(storage) {
-        storage.removeDocument(that);
+        storage.remove (that);
     };
 
     return that;
 };
 
-var saveDocument = function(spec, my) {
+var putCommand = function(spec, my) {
     var that = command(spec, my);
     spec = spec || {};
     my = my || {};
     // Attributes //
     var priv = {};
-    priv.content = spec.content;
+
     // Methods //
     that.getLabel = function() {
-        return 'saveDocument';
-    };
-
-    that.getContent = function() {
-        return priv.content;
+        return 'put';
     };
 
     /**
      * Validates the storage handler.
      * @param  {object} handler The storage handler
      */
-    var super_validate = that.validate;
-    that.validate = function(handler) {
-        if (typeof priv.content !== 'string') {
-            throw invalidCommandState({command:that,message:'No data to save'});
+    var super_validateState = that.validateState;
+    that.validate = function () {
+        if (typeof that.getDocInfo('content') !== 'string') {
+            that.error({
+                status:21,statusText:'Content Required',
+                error:'content_required',
+                message:'No data to put.',reason:'no data to put'
+            });
+            return false;
         }
-        super_validate(handler);
+        return super_validateState();
     };
 
     that.executeOn = function(storage) {
-        storage.saveDocument(that);
+        storage.put (that);
     };
 
-    var super_serialized = that.serialized;
-    that.serialized = function() {
-        var o = super_serialized();
-        o.content = priv.content;
-        return o;
+    return that;
+};
+
+var postCommand = function(spec, my) {
+    var that = command(spec, my);
+    spec = spec || {};
+    my = my || {};
+    // Attributes //
+    var priv = {};
+
+    // Methods //
+    that.getLabel = function() {
+        return 'post';
+    };
+
+    /**
+     * Validates the storage handler.
+     * @param  {object} handler The storage handler
+     */
+    var super_validateState = that.validateState;
+    that.validate = function () {
+        if (typeof that.getDocInfo('content') !== 'string') {
+            that.error({
+                status:21,statusText:'Content Required',
+                error:'content_required',
+                message:'No data to put.',reason:'no data to put'
+            });
+            return false;
+        }
+        return super_validateState();
+    };
+
+    that.executeOn = function(storage) {
+        storage.put (that);
     };
 
     return that;
@@ -775,7 +839,7 @@ var job = function(spec, my) {
      * @return {boolean} true if ready, else false.
      */
     that.isReady = function() {
-        if (that.getCommand().getTried() === 0) {
+        if (priv.command.getTried() === 0) {
             return priv.status.canStart();
         } else {
             return priv.status.canRestart();
@@ -842,8 +906,9 @@ var job = function(spec, my) {
 
     that.eliminated = function () {
         priv.command.error ({
-            status:10,statusText:'Stoped',
-            message:'This job has been stoped by another one.'});
+            status:10,statusText:'Stopped',error:'stopped',
+            message:'This job has been stoped by another one.',
+            reason:this.message});
     };
 
     that.notAccepted = function () {
@@ -851,8 +916,9 @@ var job = function(spec, my) {
             priv.status = failStatus();
             my.jobManager.terminateJob (that);
         });
-        priv.command.error ({status:11,statusText:'Not Accepted',
-                             message:'This job is already running.'});
+        priv.command.error ({
+            status:11,statusText:'Not Accepted',error:'not_accepted',
+            message:'This job is already running.',reason:this.message});
     };
 
     /**
@@ -861,13 +927,19 @@ var job = function(spec, my) {
      * @param  {object} job The other job.
      */
     that.update = function(job) {
-        priv.command.error ({status:12,statusText:'Replaced',
-                             message:'Job has been replaced by another one.'});
-        priv.date = job.getDate();
+        priv.command.error ({
+            status:12,statusText:'Replaced',error:'replaced',
+            message:'Job has been replaced by another one.',
+            reason:'job has been replaced by another one'});
+        priv.date = new Date(job.getDate().getTime());
         priv.command = job.getCommand();
         priv.status = job.getStatus();
     };
 
+    /**
+     * Executes this job.
+     * @method execute
+     */
     that.execute = function() {
         if (!that.getCommand().canBeRetried()) {
             throw tooMuchTriesJobException(
@@ -1192,7 +1264,7 @@ var jobManager = (function(spec, my) {
     priv.restoreOldJioId = function(id) {
         var jio_date;
         jio_date = LocalOrCookieStorage.getItem('jio/id/'+id)||0;
-        if (jio_date < (Date.now() - 10000)) { // 10 sec
+        if (new Date(jio_date).getTime() < (Date.now() - 10000)) { // 10 sec
             priv.restoreOldJobFromJioId(id);
             priv.removeOldJioId(id);
             priv.removeJobArrayFromJioId(id);
@@ -1292,8 +1364,8 @@ var jobManager = (function(spec, my) {
      * @param  {object} job The new job.
      */
     that.addJob = function(job) {
-        var result_a = that.validateJobAccordingToJobList (priv.job_array,job);
-        priv.appendJob (job,result_a);
+        var result_array = that.validateJobAccordingToJobList (priv.job_array,job);
+        priv.appendJob (job,result_array);
     };
 
     /**
@@ -1304,11 +1376,11 @@ var jobManager = (function(spec, my) {
      * @return {array} A result array.
      */
     that.validateJobAccordingToJobList = function(job_array,job) {
-        var i, result_a = [];
+        var i, result_array = [];
         for (i = 0; i < job_array.length; i+= 1) {
-            result_a.push(jobRules.validateJobAccordingToJob (job_array[i],job));
+            result_array.push(jobRules.validateJobAccordingToJob (job_array[i],job));
         }
-        return result_a;
+        return result_array;
     };
 
     /**
@@ -1318,30 +1390,30 @@ var jobManager = (function(spec, my) {
      * one, to replace one or to eliminate some while browsing.
      * @method appendJob
      * @param  {object} job The job to append.
-     * @param  {array} result_a The result array.
+     * @param  {array} result_array The result array.
      */
-    priv.appendJob = function(job,result_a) {
+    priv.appendJob = function(job,result_array) {
         var i;
-        if (priv.job_array.length !== result_a.length) {
+        if (priv.job_array.length !== result_array.length) {
             throw new RangeError("Array out of bound");
         }
-        for (i = 0; i < result_a.length; i+= 1) {
-            if (result_a[i].action === 'dont accept') {
+        for (i = 0; i < result_array.length; i+= 1) {
+            if (result_array[i].action === 'dont accept') {
                 return job.notAccepted();
             }
         }
-        for (i = 0; i < result_a.length; i+= 1) {
-            switch (result_a[i].action) {
+        for (i = 0; i < result_array.length; i+= 1) {
+            switch (result_array[i].action) {
             case 'eliminate':
-                result_a[i].job.eliminated();
-                priv.removeJob(result_a[i].job);
+                result_array[i].job.eliminated();
+                priv.removeJob(result_array[i].job);
                 break;
             case 'update':
-                result_a[i].job.update(job);
+                result_array[i].job.update(job);
                 priv.copyJobArrayToLocal();
                 return;
             case 'wait':
-                job.waitForJob(result_a[i].job);
+                job.waitForJob(result_array[i].job);
                 break;
             default: break;
             }
@@ -1375,7 +1447,12 @@ var jobRules = (function(spec, my) {
     that.none = function() { return 'none'; };
     that.default_action = that.none;
     that.default_compare = function(job1,job2) {
-        return (job1.getCommand().getPath() === job2.getCommand().getPath() &&
+        return (job1.getCommand().getDocId() ===
+                job2.getCommand().getDocId() &&
+                job1.getCommand().getDocInfo('_rev') ===
+                job2.getCommand().getDocInfo('_rev') &&
+                job1.getCommand().getOption('rev') ===
+                job2.getCommand().getOption('rev') &&
                 JSON.stringify(job1.getStorage().serialized()) ===
                 JSON.stringify(job2.getStorage().serialized()));
     };
@@ -1515,36 +1592,36 @@ var jobRules = (function(spec, my) {
 
       For more information, see documentation
     */
-    that.addActionRule ('saveDocument',true,'saveDocument',
-                  function(job1,job2){
-                      if (job1.getCommand().getContent() ===
-                          job2.getCommand().getContent()) {
-                          return that.dontAccept();
-                      } else {
-                          return that.wait();
-                      }
-                  });
-    that.addActionRule('saveDocument'   ,true ,'loadDocument'   ,that.wait);
-    that.addActionRule('saveDocument'   ,true ,'removeDocument' ,that.wait);
-    that.addActionRule('saveDocument'   ,false,'saveDocument'   ,that.update);
-    that.addActionRule('saveDocument'   ,false,'loadDocument'   ,that.wait);
-    that.addActionRule('saveDocument'   ,false,'removeDocument' ,that.eliminate);
+    that.addActionRule ('put'  ,true,'put',
+                        function(job1,job2){
+                            if (job1.getCommand().getDocInfo('content') ===
+                                job2.getCommand().getDocInfo('content')) {
+                                return that.dontAccept();
+                            } else {
+                                return that.wait();
+                            }
+                        });
+    that.addActionRule('put'   ,true ,'get'   ,that.wait);
+    that.addActionRule('put'   ,true ,'remove' ,that.wait);
+    that.addActionRule('put'   ,false,'put'   ,that.update);
+    that.addActionRule('put'   ,false,'get'   ,that.wait);
+    that.addActionRule('put'   ,false,'remove' ,that.eliminate);
 
-    that.addActionRule('loadDocument'   ,true ,'saveDocument'   ,that.wait);
-    that.addActionRule('loadDocument'   ,true ,'loadDocument'   ,that.dontAccept);
-    that.addActionRule('loadDocument'   ,true ,'removeDocument' ,that.wait);
-    that.addActionRule('loadDocument'   ,false,'saveDocument'   ,that.wait);
-    that.addActionRule('loadDocument'   ,false,'loadDocument'   ,that.update);
-    that.addActionRule('loadDocument'   ,false,'removeDocument' ,that.wait);
+    that.addActionRule('get'   ,true ,'put'   ,that.wait);
+    that.addActionRule('get'   ,true ,'get'   ,that.dontAccept);
+    that.addActionRule('get'   ,true ,'remove' ,that.wait);
+    that.addActionRule('get'   ,false,'put'   ,that.wait);
+    that.addActionRule('get'   ,false,'get'   ,that.update);
+    that.addActionRule('get'   ,false,'remove' ,that.wait);
 
-    that.addActionRule('removeDocument' ,true ,'loadDocument'   ,that.dontAccept);
-    that.addActionRule('removeDocument' ,true ,'removeDocument' ,that.dontAccept);
-    that.addActionRule('removeDocument' ,false,'saveDocument'   ,that.eliminate);
-    that.addActionRule('removeDocument' ,false,'loadDocument'   ,that.dontAccept);
-    that.addActionRule('removeDocument' ,false,'removeDocument' ,that.update);
+    that.addActionRule('remove' ,true ,'get'   ,that.dontAccept);
+    that.addActionRule('remove' ,true ,'remove' ,that.dontAccept);
+    that.addActionRule('remove' ,false,'put'   ,that.eliminate);
+    that.addActionRule('remove' ,false,'get'   ,that.dontAccept);
+    that.addActionRule('remove' ,false,'remove' ,that.update);
 
-    that.addActionRule('getDocumentList',true ,'getDocumentList',that.dontAccept);
-    that.addActionRule('getDocumentList',false,'getDocumentList',that.update);
+    that.addActionRule('allDocs',true ,'allDocs',that.dontAccept);
+    that.addActionRule('allDocs',false,'allDocs',that.update);
     // end adding rules
     ////////////////////////////////////////////////////////////////////////////
     return that;
@@ -1630,107 +1707,168 @@ var jobRules = (function(spec, my) {
         return jobManager.serialized();
     };
 
-    /**
-     * Save a document.
-     * @method saveDocument
-     * @param  {string} path The document path name.
-     * @param  {string} content The document's content.
-     * @param  {object} option (optional) Contains some options:
-     * - {function} success The callback called when the job has passed.
-     * - {function} error The callback called when the job has fail.
-     * - {number} max_retry The number max of retries, 0 = infinity.
-     * @param  {object} specificstorage (optional) A specific storage, only if
-     * you want to save this document elsewhere.
-     */
-    that.saveDocument = function(path, content, option, specificstorage) {
-        option            = option            || {};
-        option.success    = option.success    || function(){};
-        option.error      = option.error      || function(){};
-        option.max_retry  = option.max_retry  || 0;
+    priv.getParam = function (list,nodoc) {
+        var param = {}, i = 0;
+        if (!nodoc) {
+            param.doc = list[i];
+            i ++;
+        }
+        if (typeof list[i] === 'object') {
+            param.options = list[i];
+            i ++;
+        } else {
+            param.options = {};
+        }
+        param.callback = function (err,val){};
+        param.success = function (val) {
+            param.callback(undefined,val);
+        };
+        param.error = function (err) {
+            param.callback(err,undefined);
+        };
+        if (typeof list[i] === 'function') {
+            if (typeof list[i+1] === 'function') {
+                param.success = list[i];
+                param.error = list[i+1];
+            } else {
+                param.callback = list[i];
+            }
+        }
+        return param;
+    };
+
+    priv.addJob = function (commandCreator,spec) {
         jobManager.addJob(
-            job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage,my):
-                          jioNamespace.storage(priv.storage_spec,my)),
-                 command:saveDocument(
-                     {path:path,content:content,option:option},my)},my));
+            job({storage:jioNamespace.storage(priv.storage_spec,my),
+                 command:commandCreator(spec,my)},my));
+    };
+
+    // /**
+    //  * Post a document.
+    //  * @method post
+    //  * @param  {object} doc The document {"content":}.
+    //  * @param  {object} options (optional) Contains some options:
+    //  * - {number} max_retry The number max of retries, 0 = infinity.
+    //  * - {boolean} revs Include revision history of the document.
+    //  * - {boolean} revs_info Retreive the revisions.
+    //  * - {boolean} conflicts Retreive the conflict list.
+    //  * @param  {function} callback (optional) The callback(err,response).
+    //  * @param  {function} error (optional) The callback on error, if this
+    //  *     callback is given in parameter, "callback" is changed as "success",
+    //  *     called on success.
+    //  */
+    // that.post = function() {
+    //     var param = priv.getParam(arguments);
+    //     param.options.max_retry = param.options.max_retry || 0;
+    //     priv.addJob(postCommand,{
+    //         doc:param.doc,
+    //         options:param.options,
+    //         callbacks:{success:param.success,error:param.error}
+    //     });
+    // };
+
+    /**
+     * Put a document.
+     * @method put
+     * @param  {object} doc The document {"_id":,"_rev":,"content":}.
+     * @param  {object} options (optional) Contains some options:
+     * - {number} max_retry The number max of retries, 0 = infinity.
+     * - {boolean} revs Include revision history of the document.
+     * - {boolean} revs_info Retreive the revisions.
+     * - {boolean} conflicts Retreive the conflict list.
+     * @param  {function} callback (optional) The callback(err,response).
+     * @param  {function} error (optional) The callback on error, if this
+     *     callback is given in parameter, "callback" is changed as "success",
+     *     called on success.
+     */
+    that.put = function() {
+        var param = priv.getParam(arguments);
+        param.options.max_retry = param.options.max_retry || 0;
+        priv.addJob(putCommand,{
+            doc:param.doc,
+            options:param.options,
+            callbacks:{success:param.success,error:param.error}
+        });
     };
 
     /**
-     * Load a document.
-     * @method loadDocument
-     * @param  {string} path The document path name.
-     * @param  {object} option (optional) Contains some options:
-     * - {function} success The callback called when the job has passed.
-     * - {function} error The callback called when the job has fail.
+     * Get a document.
+     * @method get
+     * @param  {string} docid The document id (the path).
+     * @param  {object} options (optional) Contains some options:
      * - {number} max_retry The number max of retries, 0 = infinity.
      * - {boolean} metadata_only Load only document metadata.
-     * @param  {object} specificstorage (optional) A specific storage, only if
-     * you want to save this document elsewhere.
+     * - {string} rev The revision we want to get.
+     * - {boolean} revs Include revision history of the document.
+     * - {boolean} revs_info Include list of revisions, and their availability.
+     * - {boolean} conflicts Include a list of conflicts.
+     * @param  {function} callback (optional) The callback(err,response).
+     * @param  {function} error (optional) The callback on error, if this
+     *     callback is given in parameter, "callback" is changed as "success",
+     *     called on success.
      */
-    that.loadDocument = function(path, option, specificstorage) {
-        option               = option               || {};
-        option.success       = option.success       || function(){};
-        option.error         = option.error         || function(){};
-        option.max_retry     = option.max_retry     || 3;
-        option.metadata_only = (option.metadata_only !== undefined?
-                                option.metadata_only:false);
-        jobManager.addJob(
-            job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage,my):
-                          jioNamespace.storage(priv.storage_spec,my)),
-                 command:loadDocument(
-                     {path:path,option:option},my)},my));
+    that.get = function() {
+        var param = priv.getParam(arguments);
+        param.options.max_retry = param.options.max_retry || 3;
+        param.options.metadata_only = (
+            param.options.metadata_only !== undefined?
+                param.options.metadata_only:false);
+        priv.addJob(getCommand,{
+            docid:param.doc,
+            options:param.options,
+            callbacks:{success:param.success,error:param.error}
+        });
     };
 
     /**
      * Remove a document.
-     * @method removeDocument
-     * @param  {string} path The document path name.
-     * @param  {object} option (optional) Contains some options:
-     * - {function} success The callback called when the job has passed.
-     * - {function} error The callback called when the job has fail.
+     * @method remove
+     * @param  {object} doc The document {"_id":,"_rev":}.
+     * @param  {object} options (optional) Contains some options:
      * - {number} max_retry The number max of retries, 0 = infinity.
-     * @param  {object} specificstorage (optional) A specific storage, only if
-     * you want to save this document elsewhere.
+     * - {boolean} revs Include revision history of the document.
+     * - {boolean} revs_info Include list of revisions, and their availability.
+     * - {boolean} conflicts Include a list of conflicts.
+     * @param  {function} callback (optional) The callback(err,response).
+     * @param  {function} error (optional) The callback on error, if this
+     *     callback is given in parameter, "callback" is changed as "success",
+     *     called on success.
      */
-    that.removeDocument = function(path, option, specificstorage) {
-        option            = option            || {};
-        option.success    = option.success    || function(){};
-        option.error      = option.error      || function(){};
-        option.max_retry  = option.max_retry  || 0;
-        jobManager.addJob(
-            job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage,my):
-                          jioNamespace.storage(priv.storage_spec,my)),
-                 command:removeDocument(
-                     {path:path,option:option},my)},my));
+    that.remove = function() {
+        var param = priv.getParam(arguments);
+        param.options.max_retry = param.options.max_retry || 0;
+        priv.addJob(removeCommand,{
+            doc:param.doc,
+            options:param.options,
+            callbacks:{success:param.success,error:param.error}
+        });
     };
 
     /**
-     * Get a document list from a folder.
-     * @method getDocumentList
-     * @param  {string} path The folder path.
-     * @param  {object} option (optional) Contains some options:
-     * - {function} success The callback called when the job has passed.
-     * - {function} error The callback called when the job has fail.
+     * Get a list of documents.
+     * @method allDocs
+     * @param  {object} options (optional) Contains some options:
      * - {number} max_retry The number max of retries, 0 = infinity.
      * - {boolean} metadata_only Load only document metadata
-     * @param  {object} specificstorage (optional) A specific storage, only if
-     * you want to save this document elsewhere.
+     * - {boolean} descending Reverse the order of the output table.
+     * - {boolean} revs Include revision history of the document.
+     * - {boolean} revs_info Include revisions.
+     * - {boolean} conflicts Include conflicts.
+     * @param  {function} callback (optional) The callback(err,response).
+     * @param  {function} error (optional) The callback on error, if this
+     *     callback is given in parameter, "callback" is changed as "success",
+     *     called on success.
      */
-    that.getDocumentList = function(path, option, specificstorage) {
-        option               = option               || {};
-        option.success       = option.success       || function(){};
-        option.error         = option.error         || function(){};
-        option.max_retry     = option.max_retry     || 3;
-        option.metadata_only = (option.metadata_only !== undefined?
-                                option.metadata_only:true);
-        jobManager.addJob(
-            job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage,my):
-                          jioNamespace.storage(priv.storage_spec,my)),
-                 command:getDocumentList(
-                     {path:path,option:option},my)},my));
+    that.allDocs = function() {
+        var param = priv.getParam(arguments,'no doc');
+        param.options.max_retry = param.options.max_retry || 3;
+        param.options.metadata_only = (
+            param.options.metadata_only !== undefined?
+                param.options.metadata_only:true);
+        priv.addJob(allDocsCommand,{
+            options:param.options,
+            callbacks:{success:param.success,error:param.error}
+        });
     };
 
     return that;

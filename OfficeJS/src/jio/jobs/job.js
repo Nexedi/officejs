@@ -49,7 +49,7 @@ var job = function(spec, my) {
      * @return {boolean} true if ready, else false.
      */
     that.isReady = function() {
-        if (that.getCommand().getTried() === 0) {
+        if (priv.command.getTried() === 0) {
             return priv.status.canStart();
         } else {
             return priv.status.canRestart();
@@ -116,8 +116,9 @@ var job = function(spec, my) {
 
     that.eliminated = function () {
         priv.command.error ({
-            status:10,statusText:'Stoped',
-            message:'This job has been stoped by another one.'});
+            status:10,statusText:'Stopped',error:'stopped',
+            message:'This job has been stoped by another one.',
+            reason:this.message});
     };
 
     that.notAccepted = function () {
@@ -125,8 +126,9 @@ var job = function(spec, my) {
             priv.status = failStatus();
             my.jobManager.terminateJob (that);
         });
-        priv.command.error ({status:11,statusText:'Not Accepted',
-                             message:'This job is already running.'});
+        priv.command.error ({
+            status:11,statusText:'Not Accepted',error:'not_accepted',
+            message:'This job is already running.',reason:this.message});
     };
 
     /**
@@ -135,13 +137,19 @@ var job = function(spec, my) {
      * @param  {object} job The other job.
      */
     that.update = function(job) {
-        priv.command.error ({status:12,statusText:'Replaced',
-                             message:'Job has been replaced by another one.'});
-        priv.date = job.getDate();
+        priv.command.error ({
+            status:12,statusText:'Replaced',error:'replaced',
+            message:'Job has been replaced by another one.',
+            reason:'job has been replaced by another one'});
+        priv.date = new Date(job.getDate().getTime());
         priv.command = job.getCommand();
         priv.status = job.getStatus();
     };
 
+    /**
+     * Executes this job.
+     * @method execute
+     */
     that.execute = function() {
         if (!that.getCommand().canBeRetried()) {
             throw tooMuchTriesJobException(

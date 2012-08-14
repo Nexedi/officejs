@@ -4,10 +4,11 @@ var command = function(spec, my) {
     my = my || {};
     // Attributes //
     var priv = {};
-    priv.commandlist = {'saveDocument':saveDocument,
-                        'loadDocument':loadDocument,
-                        'removeDocument':removeDocument,
-                        'getDocumentList':getDocumentList};
+    priv.commandlist = {'post':postCommand,
+                        'put':putCommand,
+                        'get':getCommand,
+                        'remove':removeCommand,
+                        'allDocs':allDocsCommand};
     // creates the good command thanks to his label
     if (spec.label && priv.commandlist[spec.label]) {
         priv.label = spec.label;
@@ -15,14 +16,18 @@ var command = function(spec, my) {
         return priv.commandlist[priv.label](spec, my);
     }
 
-    priv.path      = spec.path || '';
     priv.tried     = 0;
-    priv.option    = spec.option || {};
-    priv.success   = priv.option.success || function (){};
-    priv.error     = priv.option.error || function (){};
+    priv.doc       = spec.doc || {};
+    priv.docid     = spec.docid || '';
+    priv.option    = spec.options || {};
+    priv.callbacks = spec.callbacks || {};
+    priv.success   = priv.callbacks.success || function (){};
+    priv.error     = priv.callbacks.error || function (){};
     priv.retry     = function() {
-        that.error({status:13,statusText:'Fail Retry',
-                    message:'Impossible to retry.'});
+        that.error({
+            status:13,statusText:'Fail Retry',error:'fail_retry',
+            message:'Impossible to retry.',reason:'Impossible to retry.'
+        });
     };
     priv.end       = function() {};
     priv.on_going  = false;
@@ -37,8 +42,7 @@ var command = function(spec, my) {
     that.serialized = function() {
         return {label:that.getLabel(),
                 tried:priv.tried,
-                max_retry:priv.max_retry,
-                path:priv.path,
+                doc:that.cloneDoc(),
                 option:that.cloneOption()};
     };
 
@@ -51,13 +55,21 @@ var command = function(spec, my) {
         return 'command';
     };
 
+    that.getDocId = function () {
+        return priv.docid || priv.doc._id;
+    };
+    that.getDocContent = function () {
+        return priv.doc.content;
+    };
+
     /**
-     * Returns the path of the command.
-     * @method getPath
-     * @return {string} The path of the command.
+     * Returns an information about the document.
+     * @method getDocInfo
+     * @param  {string} infoname The info name.
+     * @return The info value.
      */
-    that.getPath = function() {
-        return priv.path;
+    that.getDocInfo = function (infoname) {
+        return priv.doc[infoname];
     };
 
     /**
@@ -66,38 +78,56 @@ var command = function(spec, my) {
      * @param  {string} optionname The option name.
      * @return The option value.
      */
-    that.getOption = function(optionname) {
+    that.getOption = function (optionname) {
         return priv.option[optionname];
     };
 
     /**
      * Validates the storage.
-     * Override this function.
-     * @param  {object} handler The storage handler
+     * @param  {object} storage The storage.
      */
-    that.validate = function(handler) {
-        that.validateState();
+    that.validate = function (storage) {
+        if (!that.validateState()) { return false; }
+        return storage.validate();
+    };
+
+    /*
+     * Extend this function
+     */
+    that.validateState = function() {
+        if (typeof priv.doc !== 'object') {
+            that.error({
+                status:20,
+                statusText:'Document_Id Required',
+                error:'document_id_required',
+                message:'No document id.',
+                reason:'no document id'
+            });
+            return false;
+        }
+        return true;
     };
 
     that.canBeRetried = function () {
-        return (priv.option.max_retry === 0 ||
+        return (typeof priv.option.max_retry === 'undefined' ||
+                priv.option.max_retry === 0 ||
                 priv.tried < priv.option.max_retry);
     };
-
     that.getTried = function() {
         return priv.tried;
     };
 
     /**
-     * Delegate actual excecution the storage handler.
-     * @param {object} handler The storage handler.
+     * Delegate actual excecution the storage.
+     * @param {object} storage The storage.
      */
-    that.execute = function(handler) {
+    that.execute = function(storage) {
         if (!priv.on_going) {
-            that.validate(handler);
-            priv.tried ++;
-            priv.on_going = true;
-            handler.execute(that);
+            if (that.validate (storage)) {
+                priv.tried ++;
+                priv.on_going = true;
+                storage.execute (that);
+            }
         }
     };
 
@@ -108,16 +138,6 @@ var command = function(spec, my) {
      * @param  {object} storage The storage.
      */
     that.executeOn = function(storage) {};
-
-    /*
-     * Do not override.
-     * Override `validate()' instead
-     */
-    that.validateState = function() {
-        if (priv.path === '') {
-            throw invalidCommandState({command:that,message:'Path is empty'});
-        }
-    };
 
     that.success = function(return_value) {
         priv.on_going = false;
@@ -195,6 +215,22 @@ var command = function(spec, my) {
         var k, o = {};
         for (k in priv.option) {
             o[k] = priv.option[k];
+        }
+        return o;
+    };
+
+    /**
+     * Clones the document and returns the clone version.
+     * @method cloneDoc
+     * @return {object} The clone of the document.
+     */
+    that.cloneDoc = function () {
+        if (priv.docid) {
+            return priv.docid;
+        }
+        var k, o = {};
+        for (k in priv.doc) {
+            o[k] = priv.doc[k];
         }
         return o;
     };

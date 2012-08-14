@@ -78,107 +78,168 @@
         return jobManager.serialized();
     };
 
-    /**
-     * Save a document.
-     * @method saveDocument
-     * @param  {string} path The document path name.
-     * @param  {string} content The document's content.
-     * @param  {object} option (optional) Contains some options:
-     * - {function} success The callback called when the job has passed.
-     * - {function} error The callback called when the job has fail.
-     * - {number} max_retry The number max of retries, 0 = infinity.
-     * @param  {object} specificstorage (optional) A specific storage, only if
-     * you want to save this document elsewhere.
-     */
-    that.saveDocument = function(path, content, option, specificstorage) {
-        option            = option            || {};
-        option.success    = option.success    || function(){};
-        option.error      = option.error      || function(){};
-        option.max_retry  = option.max_retry  || 0;
+    priv.getParam = function (list,nodoc) {
+        var param = {}, i = 0;
+        if (!nodoc) {
+            param.doc = list[i];
+            i ++;
+        }
+        if (typeof list[i] === 'object') {
+            param.options = list[i];
+            i ++;
+        } else {
+            param.options = {};
+        }
+        param.callback = function (err,val){};
+        param.success = function (val) {
+            param.callback(undefined,val);
+        };
+        param.error = function (err) {
+            param.callback(err,undefined);
+        };
+        if (typeof list[i] === 'function') {
+            if (typeof list[i+1] === 'function') {
+                param.success = list[i];
+                param.error = list[i+1];
+            } else {
+                param.callback = list[i];
+            }
+        }
+        return param;
+    };
+
+    priv.addJob = function (commandCreator,spec) {
         jobManager.addJob(
-            job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage,my):
-                          jioNamespace.storage(priv.storage_spec,my)),
-                 command:saveDocument(
-                     {path:path,content:content,option:option},my)},my));
+            job({storage:jioNamespace.storage(priv.storage_spec,my),
+                 command:commandCreator(spec,my)},my));
+    };
+
+    // /**
+    //  * Post a document.
+    //  * @method post
+    //  * @param  {object} doc The document {"content":}.
+    //  * @param  {object} options (optional) Contains some options:
+    //  * - {number} max_retry The number max of retries, 0 = infinity.
+    //  * - {boolean} revs Include revision history of the document.
+    //  * - {boolean} revs_info Retreive the revisions.
+    //  * - {boolean} conflicts Retreive the conflict list.
+    //  * @param  {function} callback (optional) The callback(err,response).
+    //  * @param  {function} error (optional) The callback on error, if this
+    //  *     callback is given in parameter, "callback" is changed as "success",
+    //  *     called on success.
+    //  */
+    // that.post = function() {
+    //     var param = priv.getParam(arguments);
+    //     param.options.max_retry = param.options.max_retry || 0;
+    //     priv.addJob(postCommand,{
+    //         doc:param.doc,
+    //         options:param.options,
+    //         callbacks:{success:param.success,error:param.error}
+    //     });
+    // };
+
+    /**
+     * Put a document.
+     * @method put
+     * @param  {object} doc The document {"_id":,"_rev":,"content":}.
+     * @param  {object} options (optional) Contains some options:
+     * - {number} max_retry The number max of retries, 0 = infinity.
+     * - {boolean} revs Include revision history of the document.
+     * - {boolean} revs_info Retreive the revisions.
+     * - {boolean} conflicts Retreive the conflict list.
+     * @param  {function} callback (optional) The callback(err,response).
+     * @param  {function} error (optional) The callback on error, if this
+     *     callback is given in parameter, "callback" is changed as "success",
+     *     called on success.
+     */
+    that.put = function() {
+        var param = priv.getParam(arguments);
+        param.options.max_retry = param.options.max_retry || 0;
+        priv.addJob(putCommand,{
+            doc:param.doc,
+            options:param.options,
+            callbacks:{success:param.success,error:param.error}
+        });
     };
 
     /**
-     * Load a document.
-     * @method loadDocument
-     * @param  {string} path The document path name.
-     * @param  {object} option (optional) Contains some options:
-     * - {function} success The callback called when the job has passed.
-     * - {function} error The callback called when the job has fail.
+     * Get a document.
+     * @method get
+     * @param  {string} docid The document id (the path).
+     * @param  {object} options (optional) Contains some options:
      * - {number} max_retry The number max of retries, 0 = infinity.
      * - {boolean} metadata_only Load only document metadata.
-     * @param  {object} specificstorage (optional) A specific storage, only if
-     * you want to save this document elsewhere.
+     * - {string} rev The revision we want to get.
+     * - {boolean} revs Include revision history of the document.
+     * - {boolean} revs_info Include list of revisions, and their availability.
+     * - {boolean} conflicts Include a list of conflicts.
+     * @param  {function} callback (optional) The callback(err,response).
+     * @param  {function} error (optional) The callback on error, if this
+     *     callback is given in parameter, "callback" is changed as "success",
+     *     called on success.
      */
-    that.loadDocument = function(path, option, specificstorage) {
-        option               = option               || {};
-        option.success       = option.success       || function(){};
-        option.error         = option.error         || function(){};
-        option.max_retry     = option.max_retry     || 3;
-        option.metadata_only = (option.metadata_only !== undefined?
-                                option.metadata_only:false);
-        jobManager.addJob(
-            job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage,my):
-                          jioNamespace.storage(priv.storage_spec,my)),
-                 command:loadDocument(
-                     {path:path,option:option},my)},my));
+    that.get = function() {
+        var param = priv.getParam(arguments);
+        param.options.max_retry = param.options.max_retry || 3;
+        param.options.metadata_only = (
+            param.options.metadata_only !== undefined?
+                param.options.metadata_only:false);
+        priv.addJob(getCommand,{
+            docid:param.doc,
+            options:param.options,
+            callbacks:{success:param.success,error:param.error}
+        });
     };
 
     /**
      * Remove a document.
-     * @method removeDocument
-     * @param  {string} path The document path name.
-     * @param  {object} option (optional) Contains some options:
-     * - {function} success The callback called when the job has passed.
-     * - {function} error The callback called when the job has fail.
+     * @method remove
+     * @param  {object} doc The document {"_id":,"_rev":}.
+     * @param  {object} options (optional) Contains some options:
      * - {number} max_retry The number max of retries, 0 = infinity.
-     * @param  {object} specificstorage (optional) A specific storage, only if
-     * you want to save this document elsewhere.
+     * - {boolean} revs Include revision history of the document.
+     * - {boolean} revs_info Include list of revisions, and their availability.
+     * - {boolean} conflicts Include a list of conflicts.
+     * @param  {function} callback (optional) The callback(err,response).
+     * @param  {function} error (optional) The callback on error, if this
+     *     callback is given in parameter, "callback" is changed as "success",
+     *     called on success.
      */
-    that.removeDocument = function(path, option, specificstorage) {
-        option            = option            || {};
-        option.success    = option.success    || function(){};
-        option.error      = option.error      || function(){};
-        option.max_retry  = option.max_retry  || 0;
-        jobManager.addJob(
-            job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage,my):
-                          jioNamespace.storage(priv.storage_spec,my)),
-                 command:removeDocument(
-                     {path:path,option:option},my)},my));
+    that.remove = function() {
+        var param = priv.getParam(arguments);
+        param.options.max_retry = param.options.max_retry || 0;
+        priv.addJob(removeCommand,{
+            doc:param.doc,
+            options:param.options,
+            callbacks:{success:param.success,error:param.error}
+        });
     };
 
     /**
-     * Get a document list from a folder.
-     * @method getDocumentList
-     * @param  {string} path The folder path.
-     * @param  {object} option (optional) Contains some options:
-     * - {function} success The callback called when the job has passed.
-     * - {function} error The callback called when the job has fail.
+     * Get a list of documents.
+     * @method allDocs
+     * @param  {object} options (optional) Contains some options:
      * - {number} max_retry The number max of retries, 0 = infinity.
      * - {boolean} metadata_only Load only document metadata
-     * @param  {object} specificstorage (optional) A specific storage, only if
-     * you want to save this document elsewhere.
+     * - {boolean} descending Reverse the order of the output table.
+     * - {boolean} revs Include revision history of the document.
+     * - {boolean} revs_info Include revisions.
+     * - {boolean} conflicts Include conflicts.
+     * @param  {function} callback (optional) The callback(err,response).
+     * @param  {function} error (optional) The callback on error, if this
+     *     callback is given in parameter, "callback" is changed as "success",
+     *     called on success.
      */
-    that.getDocumentList = function(path, option, specificstorage) {
-        option               = option               || {};
-        option.success       = option.success       || function(){};
-        option.error         = option.error         || function(){};
-        option.max_retry     = option.max_retry     || 3;
-        option.metadata_only = (option.metadata_only !== undefined?
-                                option.metadata_only:true);
-        jobManager.addJob(
-            job({storage:(specificstorage?
-                          jioNamespace.storage(specificstorage,my):
-                          jioNamespace.storage(priv.storage_spec,my)),
-                 command:getDocumentList(
-                     {path:path,option:option},my)},my));
+    that.allDocs = function() {
+        var param = priv.getParam(arguments,'no doc');
+        param.options.max_retry = param.options.max_retry || 3;
+        param.options.metadata_only = (
+            param.options.metadata_only !== undefined?
+                param.options.metadata_only:true);
+        priv.addJob(allDocsCommand,{
+            options:param.options,
+            callbacks:{success:param.success,error:param.error}
+        });
     };
 
     return that;

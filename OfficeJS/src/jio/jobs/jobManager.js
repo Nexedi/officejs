@@ -124,7 +124,7 @@ var jobManager = (function(spec, my) {
     priv.restoreOldJioId = function(id) {
         var jio_date;
         jio_date = LocalOrCookieStorage.getItem('jio/id/'+id)||0;
-        if (jio_date < (Date.now() - 10000)) { // 10 sec
+        if (new Date(jio_date).getTime() < (Date.now() - 10000)) { // 10 sec
             priv.restoreOldJobFromJioId(id);
             priv.removeOldJioId(id);
             priv.removeJobArrayFromJioId(id);
@@ -224,8 +224,8 @@ var jobManager = (function(spec, my) {
      * @param  {object} job The new job.
      */
     that.addJob = function(job) {
-        var result_a = that.validateJobAccordingToJobList (priv.job_array,job);
-        priv.appendJob (job,result_a);
+        var result_array = that.validateJobAccordingToJobList (priv.job_array,job);
+        priv.appendJob (job,result_array);
     };
 
     /**
@@ -236,11 +236,11 @@ var jobManager = (function(spec, my) {
      * @return {array} A result array.
      */
     that.validateJobAccordingToJobList = function(job_array,job) {
-        var i, result_a = [];
+        var i, result_array = [];
         for (i = 0; i < job_array.length; i+= 1) {
-            result_a.push(jobRules.validateJobAccordingToJob (job_array[i],job));
+            result_array.push(jobRules.validateJobAccordingToJob (job_array[i],job));
         }
-        return result_a;
+        return result_array;
     };
 
     /**
@@ -250,30 +250,30 @@ var jobManager = (function(spec, my) {
      * one, to replace one or to eliminate some while browsing.
      * @method appendJob
      * @param  {object} job The job to append.
-     * @param  {array} result_a The result array.
+     * @param  {array} result_array The result array.
      */
-    priv.appendJob = function(job,result_a) {
+    priv.appendJob = function(job,result_array) {
         var i;
-        if (priv.job_array.length !== result_a.length) {
+        if (priv.job_array.length !== result_array.length) {
             throw new RangeError("Array out of bound");
         }
-        for (i = 0; i < result_a.length; i+= 1) {
-            if (result_a[i].action === 'dont accept') {
+        for (i = 0; i < result_array.length; i+= 1) {
+            if (result_array[i].action === 'dont accept') {
                 return job.notAccepted();
             }
         }
-        for (i = 0; i < result_a.length; i+= 1) {
-            switch (result_a[i].action) {
+        for (i = 0; i < result_array.length; i+= 1) {
+            switch (result_array[i].action) {
             case 'eliminate':
-                result_a[i].job.eliminated();
-                priv.removeJob(result_a[i].job);
+                result_array[i].job.eliminated();
+                priv.removeJob(result_array[i].job);
                 break;
             case 'update':
-                result_a[i].job.update(job);
+                result_array[i].job.update(job);
                 priv.copyJobArrayToLocal();
                 return;
             case 'wait':
-                job.waitForJob(result_a[i].job);
+                job.waitForJob(result_array[i].job);
                 break;
             default: break;
             }

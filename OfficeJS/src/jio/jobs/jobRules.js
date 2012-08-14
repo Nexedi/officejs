@@ -12,7 +12,12 @@ var jobRules = (function(spec, my) {
     that.none = function() { return 'none'; };
     that.default_action = that.none;
     that.default_compare = function(job1,job2) {
-        return (job1.getCommand().getPath() === job2.getCommand().getPath() &&
+        return (job1.getCommand().getDocId() ===
+                job2.getCommand().getDocId() &&
+                job1.getCommand().getDocInfo('_rev') ===
+                job2.getCommand().getDocInfo('_rev') &&
+                job1.getCommand().getOption('rev') ===
+                job2.getCommand().getOption('rev') &&
                 JSON.stringify(job1.getStorage().serialized()) ===
                 JSON.stringify(job2.getStorage().serialized()));
     };
@@ -152,36 +157,36 @@ var jobRules = (function(spec, my) {
 
       For more information, see documentation
     */
-    that.addActionRule ('saveDocument',true,'saveDocument',
-                  function(job1,job2){
-                      if (job1.getCommand().getContent() ===
-                          job2.getCommand().getContent()) {
-                          return that.dontAccept();
-                      } else {
-                          return that.wait();
-                      }
-                  });
-    that.addActionRule('saveDocument'   ,true ,'loadDocument'   ,that.wait);
-    that.addActionRule('saveDocument'   ,true ,'removeDocument' ,that.wait);
-    that.addActionRule('saveDocument'   ,false,'saveDocument'   ,that.update);
-    that.addActionRule('saveDocument'   ,false,'loadDocument'   ,that.wait);
-    that.addActionRule('saveDocument'   ,false,'removeDocument' ,that.eliminate);
+    that.addActionRule ('put'  ,true,'put',
+                        function(job1,job2){
+                            if (job1.getCommand().getDocInfo('content') ===
+                                job2.getCommand().getDocInfo('content')) {
+                                return that.dontAccept();
+                            } else {
+                                return that.wait();
+                            }
+                        });
+    that.addActionRule('put'   ,true ,'get'   ,that.wait);
+    that.addActionRule('put'   ,true ,'remove' ,that.wait);
+    that.addActionRule('put'   ,false,'put'   ,that.update);
+    that.addActionRule('put'   ,false,'get'   ,that.wait);
+    that.addActionRule('put'   ,false,'remove' ,that.eliminate);
 
-    that.addActionRule('loadDocument'   ,true ,'saveDocument'   ,that.wait);
-    that.addActionRule('loadDocument'   ,true ,'loadDocument'   ,that.dontAccept);
-    that.addActionRule('loadDocument'   ,true ,'removeDocument' ,that.wait);
-    that.addActionRule('loadDocument'   ,false,'saveDocument'   ,that.wait);
-    that.addActionRule('loadDocument'   ,false,'loadDocument'   ,that.update);
-    that.addActionRule('loadDocument'   ,false,'removeDocument' ,that.wait);
+    that.addActionRule('get'   ,true ,'put'   ,that.wait);
+    that.addActionRule('get'   ,true ,'get'   ,that.dontAccept);
+    that.addActionRule('get'   ,true ,'remove' ,that.wait);
+    that.addActionRule('get'   ,false,'put'   ,that.wait);
+    that.addActionRule('get'   ,false,'get'   ,that.update);
+    that.addActionRule('get'   ,false,'remove' ,that.wait);
 
-    that.addActionRule('removeDocument' ,true ,'loadDocument'   ,that.dontAccept);
-    that.addActionRule('removeDocument' ,true ,'removeDocument' ,that.dontAccept);
-    that.addActionRule('removeDocument' ,false,'saveDocument'   ,that.eliminate);
-    that.addActionRule('removeDocument' ,false,'loadDocument'   ,that.dontAccept);
-    that.addActionRule('removeDocument' ,false,'removeDocument' ,that.update);
+    that.addActionRule('remove' ,true ,'get'   ,that.dontAccept);
+    that.addActionRule('remove' ,true ,'remove' ,that.dontAccept);
+    that.addActionRule('remove' ,false,'put'   ,that.eliminate);
+    that.addActionRule('remove' ,false,'get'   ,that.dontAccept);
+    that.addActionRule('remove' ,false,'remove' ,that.update);
 
-    that.addActionRule('getDocumentList',true ,'getDocumentList',that.dontAccept);
-    that.addActionRule('getDocumentList',false,'getDocumentList',that.update);
+    that.addActionRule('allDocs',true ,'allDocs',that.dontAccept);
+    that.addActionRule('allDocs',false,'allDocs',that.update);
     // end adding rules
     ////////////////////////////////////////////////////////////////////////////
     return that;

@@ -20,12 +20,13 @@ var storage = function(spec, my) {
      * @param  {object} command The command
      */
     that.execute = function(command) {
-        that.validate(command);
         that.success = command.success;
         that.error   = command.error;
         that.retry   = command.retry;
         that.end     = command.end;
-        command.executeOn(that);
+        if (that.validate(command)) {
+            command.executeOn(that);
+        }
     };
 
     /**
@@ -37,12 +38,15 @@ var storage = function(spec, my) {
         return true;
     };
 
-    that.validate = function(command) {
+    that.validate = function () {
         var mess = that.validateState();
         if (mess) {
-            throw invalidStorage({storage:that,message:mess});
+            that.error({status:0,statusText:'Invalid Storage',
+                        error:'invalid_storage',
+                        message:mess,reason:mess});
+            return false;
         }
-        command.validate(that);
+        return true;
     };
 
     /**
@@ -55,7 +59,8 @@ var storage = function(spec, my) {
     };
 
     that.saveDocument    = function(command) {
-        throw invalidStorage({storage:that,message:'Unknown storage.'});
+        that.error({status:0,statusText:'Unknown storage',
+                    error:'unknown_storage',message:'Unknown Storage'});
     };
     that.loadDocument    = function(command) {
         that.saveDocument();

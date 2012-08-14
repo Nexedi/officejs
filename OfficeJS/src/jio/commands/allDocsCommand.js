@@ -1,15 +1,19 @@
-var removeDocument = function(spec, my) {
+var allDocsCommand = function(spec, my) {
     var that = command(spec, my);
     spec = spec || {};
     my = my || {};
     // Attributes //
     // Methods //
     that.getLabel = function() {
-        return 'removeDocument';
+        return 'allDocs';
     };
 
     that.executeOn = function(storage) {
-        storage.removeDocument(that);
+        storage.allDocs (that);
+    };
+
+    that.canBeRestored = function() {
+        return false;
     };
 
     return that;
