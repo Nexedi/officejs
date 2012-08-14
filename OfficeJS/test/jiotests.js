@@ -19,14 +19,70 @@
     document.querySelector ('body').appendChild(d);
 }());
 //// end clear jio localstorage
-var base_tick = 30000;
-// debug function to show custumized log at the bottom of the page
-var my_log = function (html_string) {
-    document.querySelector ('div#log').innerHTML += html_string + '<hr/>';
-};
-var empty_fun = function (){};
+
 //// Tools
-var getXML = function (url) {
+var empty_fun = function (){},
+contains = function (array,content) {
+    var i;
+    if (typeof array !== 'object') {
+        return undefined;
+    }
+    for (i = 0; i < array.length || 0; i+= 1) {
+        if (array[i] === content) {
+            return true;
+        }
+    }
+    return false;
+},
+base_tick = 30000,
+basic_test_function_generator = function(o,res,value,message) {
+    return function(err,val) {
+        var jobstatus = (err?'fail':'done');
+        switch (res) {
+        case 'status':
+            err = err || {}; val = err.status;
+            break;
+        case 'jobstatus':
+            val = jobstatus;
+            break;
+        case 'value':
+            val = err || val;
+            break;
+        default:
+            return;
+        }
+        deepEqual (val,value,message);
+    };
+},
+basic_spy_function = function(o,res,value,message,fun) {
+    fun = fun || 'f';
+    o[fun] = basic_test_function_generator(o,res,value,message);
+    o.t.spy(o,fun);
+},
+basic_tick_function = function (o) {
+    var tick, fun, i = 1;
+    tick = 1000;
+    fun = fun || 'f';
+    if (typeof arguments[i] === 'number') {
+        tick = arguments[i]; i++;
+    }
+    if (typeof arguments[i] === 'string') {
+        fun = arguments[i]; i++;
+    }
+    o.clock.tick(tick);
+    if (!o[fun].calledOnce) {
+        if (o[fun].called) {
+            ok(false, 'too much results (o.' + fun +')');
+        } else {
+            ok(false, 'no response (o.' + fun +')');
+        }
+    }
+},
+// debug function to show custumized log at the bottom of the page
+my_log = function (html_string) {
+    document.querySelector ('div#log').innerHTML += html_string + '<hr/>';
+},
+getXML = function (url) {
     var tmp = '';
     $.ajax({'url':url,async:false,
             dataType:'text',success:function(xml){tmp=xml;}});
@@ -35,7 +91,7 @@ var getXML = function (url) {
 objectifyDocumentArray = function (array) {
     var obj = {}, k;
     for (k = 0; k < array.length; k += 1) {
-        obj[array[k].name] = array[k];
+        obj[array[k].id] = array[k];
     }
     return obj;
 },
@@ -147,126 +203,99 @@ test ('All tests', function () {
 
     var o = {}; o.t = this; o.clock = o.t.sandbox.useFakeTimers();
     o.clock.tick(base_tick);
-    o.spy = function(res,value,message,fun) {
-        fun = fun || 'f';
-        o[fun] = function(result) {
-            if (res === 'status') {
-                if (typeof result !== 'undefined' &&
-                    typeof result.status !== 'undefined') {
-                    deepEqual ('fail',value,message);
-                } else {
-                    deepEqual ('done',value,message);
-                }
-            } else {
-                deepEqual (result,value,message);
-            }
-        };
-        o.t.spy(o,fun);
-    };
-    o.tick = function (tick,fun) {
-        fun = fun || 'f';
-        o.clock.tick(tick || 1000);
-        if (!o[fun].calledOnce) {
-            if (o[fun].called) {
-                ok(false, 'too much results (o.' + fun +')');
-            } else {
-                ok(false, 'no response (o.' + fun +')');
-            }
-        }
-    };
+    o.spy = basic_spy_function;
+    o.tick = basic_tick_function;
     // All Ok Dummy Storage
     o.jio = JIO.newJio({'type':'dummyallok'});
     // save
-    o.spy('status','done','dummyallok saving');
-    o.jio.saveDocument('file','content',{success:o.f,error:o.f});
-    o.tick();
+    o.spy(o,'value',{ok:true,id:'file'},'dummyallok saving');
+    o.jio.put({_id:'file',content:'content'},o.f);
+    o.tick(o);
     // load
-    o.spy('value',{name:'file',content:'content',last_modified:15000,
-                   creation_date:10000},'dummyallok loading');
-    o.jio.loadDocument('file',{success:o.f,error:o.f});
-    o.tick();
+    o.spy(o,'value',{_id:'file',content:'content',_last_modified:15000,
+                     _creation_date:10000},'dummyallok loading');
+    o.jio.get('file',o.f);
+    o.tick(o);
     // remove
-    o.spy('status','done','dummyallok removing');
-    o.jio.removeDocument('file',{success:o.f,error:o.f});
-    o.tick();
+    o.spy(o,'value',{ok:true,id:"file"},'dummyallok removing');
+    o.jio.remove({_id:'file'},o.f);
+    o.tick(o);
     // get list
-    o.spy ('value',[{name:'file',content:'filecontent',last_modified:15000,
-                     creation_date:10000},
-                    {name:'memo',content:'memocontent',last_modified:25000,
-                     creation_date:20000}],'dummyallok getting list');
-    o.jio.getDocumentList('.',{success:o.f,error:o.f,metadata_only:false});
-    o.tick();
+    o.spy (o,'value',{
+        total_rows:2,
+        rows:[{
+            id:'file',key:'file',
+            value:{
+                content:'filecontent',
+                _last_modified:15000,
+                _creation_date:10000
+            }
+        },{
+            id:'memo',key:'memo',
+            value:{
+                content:'memocontent',
+                _last_modified:25000,
+                _creation_date:20000
+            }
+        }]
+    },'dummyallok getting list');
+    o.jio.allDocs({metadata_only:false},o.f);
+    o.tick(o);
     o.jio.stop();
 
 
     o.jio = JIO.newJio({'type':'dummyallok'});
     // save
-    o.spy('status','done','dummyallok saving1','f');
-    o.spy('status','done','dummyallok saving2','f2');
-    o.spy('status','done','dummyallok saving3','f3');
-    o.jio.saveDocument('file','content',{success:o.f,error:o.f});
-    o.jio.saveDocument('file2','content2',{success:o.f2,error:o.f2});
-    o.jio.saveDocument('file3','content3',{success:o.f3,error:o.f3});
-    o.tick(1000, 'f');
-    o.tick(1, 'f2');
-    o.tick(1, 'f3');
-    // load
-    o.spy('value',{name:'file',content:'content',last_modified:15000,
-                   creation_date:10000},'dummyallok loading');
-    o.jio.loadDocument('file',{success:o.f,error:o.f});
-    o.tick();
-    // remove
-    o.spy('status','done','dummyallok removing');
-    o.jio.removeDocument('file',{success:o.f,error:o.f});
-    o.tick();
-    // get list
-    o.spy ('value',[{name:'file',content:'filecontent',last_modified:15000,
-                     creation_date:10000},
-                    {name:'memo',content:'memocontent',last_modified:25000,
-                     creation_date:20000}],'dummyallok getting list');
-    o.jio.getDocumentList('.',{success:o.f,error:o.f,metadata_only:false});
-    o.tick();
+    o.spy(o,'value',{ok:true,id:'file'},'dummyallok saving1','f');
+    o.spy(o,'value',{ok:true,id:'file2'},'dummyallok saving2','f2');
+    o.spy(o,'value',{ok:true,id:'file3'},'dummyallok saving3','f3');
+    o.jio.put({_id:'file',content:'content'},o.f);
+    o.jio.put({_id:'file2',content:'content2'},o.f2);
+    o.jio.put({_id:'file3',content:'content3'},o.f3);
+    o.tick(o, 1000, 'f');
+    o.tick(o, 'f2');
+    o.tick(o, 'f3');
     o.jio.stop();
 
 
     // All Fail Dummy Storage
     o.jio = JIO.newJio({'type':'dummyallfail'});
     // save
-    o.spy ('status','fail','dummyallfail saving');
-    o.jio.saveDocument('file','content',{success:o.f,error:o.f});
-    o.tick();
+    o.spy (o,'status',0,'dummyallfail saving');
+    o.jio.put({_id:'file',content:'content'},o.f);
+    o.tick(o);
     // load
-    o.spy ('status','fail','dummyallfail loading');
-    o.jio.loadDocument('file',{success:o.f,error:o.f});
-    o.tick();
+    o.spy (o,'status',0,'dummyallfail loading');
+    o.jio.get('file',o.f);
+    o.tick(o);
     // remove
-    o.spy ('status','fail','dummyallfail removing');
-    o.jio.removeDocument('file',{success:o.f,error:o.f});
-    o.tick();
+    o.spy (o,'status',0,'dummyallfail removing');
+    o.jio.remove({_id:'file'},o.f);
+    o.tick(o);
     // get list
-    o.spy ('status','fail','dummyallfail getting list');
-    o.jio.getDocumentList('.',{success:o.f,error:o.f});
-    o.tick();
+    o.spy (o,'status',0,'dummyallfail getting list');
+    o.jio.allDocs(o.f);
+    o.tick(o);
     o.jio.stop();
 
     // All Not Found Dummy Storage
     o.jio = JIO.newJio({'type':'dummyallnotfound'});
     // save
-    o.spy('status','done','dummyallnotfound saving');
-    o.jio.saveDocument('file','content',{success:o.f,error:o.f});
-    o.tick();
+    o.spy(o,'value',{ok:true,id:'file'},'dummyallnotfound saving');
+    o.jio.put({_id:'file',content:'content'},o.f);
+    o.tick(o);
     // load
-    o.spy('status','fail','dummyallnotfound loading');
-    o.jio.loadDocument('file',{success:o.f,error:o.f});
-    o.tick();
+    o.spy(o,'status',404,'dummyallnotfound loading')
+    o.jio.get('file',o.f);
+    o.tick(o);
     // remove
-    o.spy('status','done','dummyallnotfound removing');
-    o.jio.removeDocument('file',{success:o.f,error:o.f});
-    o.tick();
+    o.spy(o,'value',{ok:true,id:'file'},'dummyallnotfound removing');
+    o.jio.remove({_id:'file'},o.f);
+    o.tick(o);
     // get list
-    o.spy('status','fail','dummyallnotfound getting list');
-    o.jio.getDocumentList ('.',{success:o.f,error:o.f});
-    o.tick();
+    o.spy(o,'status',404,'dummyallnotfound getting list');
+    o.jio.allDocs (o.f);
+    o.tick(o);
     o.jio.stop();
 });
 
@@ -279,12 +308,14 @@ test ('Simple Job Elimination', function () {
 
     o.jio = JIO.newJio({type:'dummyallok',applicationname:'jiotests'});
     id = o.jio.getId();
-    o.jio.saveDocument('file','content',{success:o.f1,error:o.f,max_retry:1});
+    o.jio.put({_id:'file',content:'content'},
+              {max_retry:1},o.f1);
     ok(LocalOrCookieStorage.getItem('jio/job_array/'+id)[0],
        'job creation');
-    o.jio.removeDocument('file',{onResponse:o.f2,max_retry:1});
+    o.jio.remove({_id:'file'},{max_retry:1},o.f2);
     o.tmp = LocalOrCookieStorage.getItem('jio/job_array/'+id)[0];
-    deepEqual(o.tmp.command.label,'removeDocument','job elimination');
+    deepEqual(o.tmp.command.label,'remove','job elimination');
+    o.jio.stop();
 });
 
 test ('Simple Job Replacement', function () {
@@ -294,12 +325,11 @@ test ('Simple Job Replacement', function () {
     o.clock = this.sandbox.useFakeTimers();
     o.clock.tick(base_tick);
     o.id = 0;
-    o.f1 = function (result) {
-        if (typeof result !== 'undefined' &&
-            typeof result.status !== 'undefined') {
-            o.status = 'fail'
+    o.f1 = function (err,val) {
+        if (err) {
+            o.err = err;
         } else {
-            o.status = 'done'
+            o.err = {status:'done'};
         }
     };
     this.spy(o,'f1');
@@ -307,18 +337,43 @@ test ('Simple Job Replacement', function () {
 
     o.jio = JIO.newJio({type:'dummyallok',applicationname:'jiotests'});
     o.id = o.jio.getId();
-    o.jio.saveDocument('file','content',{success:o.f1,error:o.f1});
+    o.jio.put({_id:'file',content:'content'},o.f1);
     o.clock.tick(10);
-    o.jio.saveDocument('file','content',{success:o.f2,error:o.f2});
+    o.jio.put({_id:'file',content:'content'},o.f2);
     deepEqual(LocalOrCookieStorage.getItem(
         'jio/job_array/'+o.id)[0].date,base_tick + 10,
               'The first job date have to be equal to the second job date.');
     o.clock.tick(1000);
-    deepEqual([o.f1.calledOnce,o.status],[true,'fail'],
+    deepEqual([o.f1.calledOnce,o.err.status],[true,12],
        'callback for the first save request -> result fail');
     ok(o.f2.calledOnce,'second callback is called once');
     o.jio.stop();
 
+    o.jio = JIO.newJio({type:'dummyallok',applicationname:'jiotests'});
+    o.ok1 = 0;
+    o.jio.get('file1',function (err,val) {
+        deepEqual (err || val,
+                   {_id:'file1',content:'content',
+                    _creation_date:10000,_last_modified:15000},
+                   'First load');
+        o.ok1 ++;
+    });
+    o.ok2 = 0;
+    o.jio.get('file2',function (err,val) {
+        deepEqual (err || val,
+                   {_id:'file2',content:'content',
+                    _creation_date:10000,_last_modified:15000},
+                   'Second load must not replace the first one');
+        o.ok2 ++;
+    });
+    o.clock.tick(1000);
+    if (o.ok1 !== 1) {
+        ok (false,'no response / too much response');
+    }
+    if (o.ok2 !== 1) {
+        ok (false,'no response / too much response');
+    }
+    o.jio.stop();
 });
 
 test ('Simple Job Waiting', function () {
@@ -328,8 +383,8 @@ test ('Simple Job Waiting', function () {
     o.clock = this.sandbox.useFakeTimers();
     o.clock.tick(base_tick);
     o.id = 0;
-    o.f = function (result) {
-        deepEqual(result,undefined,'job 1 result');
+    o.f = function (err,val) {
+        deepEqual(err || val,{ok:true,id:'file'},'job 1 result');
     };
     o.f3 = o.f; this.spy(o,'f3');
     o.f4 = o.f; this.spy(o,'f4');
@@ -347,9 +402,9 @@ test ('Simple Job Waiting', function () {
 
     o.jio = JIO.newJio({type:'dummyallok',applicationname:'jiotests'});
     o.id = o.jio.getId();
-    o.jio.saveDocument('file','content',{success:o.f3,error:o.f3});
+    o.jio.put({_id:'file',content:'content'},o.f3);
     o.clock.tick(200);
-    o.jio.saveDocument('file','content1',{success:o.f4,error:o.f4});
+    o.jio.put({_id:'file',content:'content1'},o.f4);
 
     o.tmp0 = LocalOrCookieStorage.getItem('jio/job_array/'+o.id)[0];
     o.tmp1 = LocalOrCookieStorage.getItem('jio/job_array/'+o.id)[1];
@@ -374,16 +429,16 @@ test ('Simple Time Waiting' , function () {
 
     var o = {}, clock = this.sandbox.useFakeTimers(), id = 0;
     clock.tick(base_tick);
-    o.f = function (result) {
-        if (typeof result !== 'undefined') {
-            o.res = 'fail';
+    o.f = function (err,val) {
+        if (err) {
+            o.res = err;
         } else {
-            o.res = 'done';
+            o.res = val;
         }
     };
     this.spy(o,'f');
     o.jio = JIO.newJio({type:'dummyall3tries',applicationname:'jiotests'});
-    o.jio.saveDocument('file','content',{success:o.f,error:o.f,max_retry:3});
+    o.jio.put({_id:'file',content:'content'},{max_retry:3},o.f);
     clock.tick(10000);
     if (!o.f.calledOnce) {
         if (o.f.called) {
@@ -392,7 +447,7 @@ test ('Simple Time Waiting' , function () {
             ok(false,'no response.');
         }
     }
-    deepEqual(o.res,'done','job done.');
+    deepEqual(o.res,{ok:true,id:'file'},'job done.');
     o.jio.stop();
 });
 
@@ -401,14 +456,14 @@ module ( 'Jio Restore');
 test ('Restore old Jio', function() {
     var o = {};
     o.clock = this.sandbox.useFakeTimers();
-    o.f = function(result) {
+    o.f = function() {
         ok(false,'must never be called!');
     };
     this.spy(o,'f');
     o.jio = JIO.newJio({type:'dummyall3tries',applicationname:'jiotests'});
     o.id = o.jio.getId();
     ok(true,'create jio, id = ' + o.id);
-    o.jio.saveDocument('file','content',{onResponse:o.f,max_retry:3});
+    o.jio.put({_id:'file',content:'content'},{max_retry:3},o.f);
     o.clock.tick(1000);
     o.jio.close();
     o.jio = JIO.newJio({type:'dummyallok',applicationname:'jiotests'});
@@ -417,9 +472,9 @@ test ('Restore old Jio', function() {
               'job array list must be empty');
     o.tmp1 = LocalOrCookieStorage.getItem('jio/job_array/'+o.jio.getId());
     if (o.tmp1.length > 0) {
-        deepEqual([o.tmp1[0].command.label,o.tmp1[0].command.path,
-                   o.tmp1[0].command.content],
-                  ['saveDocument','file','content'],
+        deepEqual([o.tmp1[0].command.label,o.tmp1[0].command.doc._id,
+                   o.tmp1[0].command.doc.content],
+                  ['put','file','content'],
                   'job which id is id = ' +o.jio.getId()+', restored the jio');
     } else {
         ok (false, 'The recovered job must exists');

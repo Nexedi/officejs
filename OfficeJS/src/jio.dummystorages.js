@@ -1,4 +1,3 @@
-
 // Adds 3 dummy storages to JIO
 // type:
 //     - dummyallok
@@ -12,58 +11,79 @@
     var newDummyStorageAllOk = function ( spec, my ) {
         var that = Jio.storage( spec, my, 'base' );
 
-        that.saveDocument = function (command) {
-            // Tells us that the document is saved.
-
-            setTimeout (function () {
-                that.success ();
-            }, 100);            // 100 ms, for jiotests simple job waiting
-        }; // end saveDocument
-
-        that.loadDocument = function (command) {
-            // Returns a document object containing all information of the
-            // document and its content.
-
-            setTimeout(function () {
-                var doc = {
-                    'name': 'file',
-                    'content': 'content',
-                    'creation_date': 10000,
-                    'last_modified': 15000};
-                that.success (doc);
-            }, 100);
-        }; // end loadDocument
-
-        that.getDocumentList = function (command) {
-            // It returns a document array containing all the user documents
-            // with/but their content.
-
-            setTimeout(function () {
-                var list = [
-                    {'name':'file',
-                     'content':'filecontent',
-                     'creation_date':10000,
-                     'last_modified':15000},
-                    {'name':'memo',
-                     'content':'memocontent',
-                     'creation_date':20000,
-                     'last_modified':25000
-                    }];
-                if (command.getOption('metadata_only')) {
-                    delete list[0].content;
-                    delete list[1].content;
-                }
-                that.success (list);
-            }, 100);
-        }; // end getDocumentList
-
-        that.removeDocument = function (command) {
-            // Remove a document from the storage.
-
-            setTimeout (function () {
-                that.success ();
-            }, 100);
+        var super_serialized = that.serialized;
+        that.serialized = function () {
+            var o = super_serialized();
+            o.username = spec.username;
+            return o;
         };
+
+
+        that.post = function (command) {
+            setTimeout (function () {
+                that.success ({
+                    ok:true,
+                    id:command.getDocId()
+                });
+            }, 100);
+        }; // end post
+
+        that.put = function (command) {
+            setTimeout (function () {
+                that.success ({
+                    ok:true,
+                    id:command.getDocId()
+                });
+            }, 100);            // 100 ms, for jiotests simple job waiting
+        }; // end put
+
+        that.get = function (command) {
+            setTimeout(function () {
+                that.success ({
+                    _id:command.getDocId(),
+                    content:'content',
+                    _creation_date: 10000,
+                    _last_modified: 15000
+                });
+            }, 100);
+        }; // end get
+
+        that.allDocs = function (command) {
+            setTimeout(function () {
+                var o = {
+                    total_rows: 2,
+                    rows: [{
+                        id:'file',
+                        key:'file',
+                        value: {
+                            content:'filecontent',
+                            _creation_date:10000,
+                            _last_modified:15000
+                        }
+                    },{
+                        id:'memo',
+                        key:'memo',
+                        value: {
+                            content:'memocontent',
+                            _creation_date:20000,
+                            _last_modified:25000
+                        }
+                    }]
+                };
+                if (command.getOption('metadata_only')) {
+                    delete o.rows[0].value.content;
+                    delete o.rows[1].value.content;
+                }
+                that.success (o);
+            }, 100);
+        }; // end allDocs
+
+        that.remove = function (command) {
+            setTimeout (function () {
+                that.success ({ok:true,id:command.getDocId()});
+            }, 100);
+        }; // end remove
+
         return that;
     },
     // end Dummy Storage All Ok
@@ -77,25 +97,31 @@
         priv.error = function () {
             setTimeout (function () {
                 that.error ({status:0,statusText:'Unknown Error',
-                             message:'Unknown error.'});
+                             error:'unknown_error',
+                             message:'Execution encountred an error.',
+                             reason:'Execution encountred an error'});
             });
         };
 
-        that.saveDocument = function (command) {
+        that.post = function (command) {
             priv.error();
-        }; // end saveDocument
+        }; // end post
 
-        that.loadDocument = function (command) {
+        that.put = function (command) {
             priv.error();
-        }; // end loadDocument
+        }; // end put
 
-        that.getDocumentList = function (command) {
+        that.get = function (command) {
             priv.error();
-        }; // end getDocumentList
+        }; // end get
 
-        that.removeDocument = function (command) {
+        that.allDocs = function (command) {
             priv.error();
-        }; // end removeDocument
+        }; // end allDocs
+
+        that.remove = function (command) {
+            priv.error();
+        }; // end remove
         return that;
     },
     // end Dummy Storage All Fail
@@ -106,40 +132,53 @@
     newDummyStorageAllNotFound = function ( spec, my ) {
         var that = Jio.storage( spec, my, 'base' );
 
-        that.saveDocument = function (command) {
-            // Document does not exists yet, create it.
-
+        that.post = function (command) {
             setTimeout (function () {
-                that.success ();
+                that.success ({
+                    ok:true,
+                    id:command.getDocId()
+                });
             }, 100);
-        }; // end saveDocument
+        }; // end post
 
-        that.loadDocument = function (command) {
-            // Returns a document object containing nothing.
+        that.put = function (command) {
+            setTimeout (function () {
+                that.success ({
+                    ok:true,
+                    id:command.getDocId()
+                });
+            }, 100);
+        }; // end put
 
+        that.get = function (command) {
             setTimeout(function () {
                 that.error ({status:404,statusText:'Not Found',
-                             message:'Document "'+ command.getPath() +
-                             '" not found.'});
+                             error:'not_found',
+                             message:'Document "'+ command.getDocId() +
+                             '" not found.',
+                             reason:'Document "'+ command.getDocId() +
+                             '" not found'});
             }, 100);
-        }; // end loadDocument
+        }; // end get
 
-        that.getDocumentList = function (command) {
-            // It returns nothing.
-
+        that.allDocs = function (command) {
             setTimeout(function () {
                 that.error ({status:404,statusText:'Not Found',
-                             message:'User list not found.'});
+                             error:'not_found',
+                             message:'User list not found.',
+                             reason:'User list not found'});
             }, 100);
-        }; // end getDocumentList
+        }; // end allDocs
 
-        that.removeDocument = function (command) {
-            // Remove a document from the storage.
-
+        that.remove = function (command) {
             setTimeout (function () {
-                that.success ();
+                that.success ({
+                    ok:true,
+                    id:command.getDocId()
+                });
             }, 100);
-        };
+        }; // end remove
+
         return that;
     },
     // end Dummy Storage All Not Found
@@ -170,7 +209,9 @@
         priv.Try3OKElseFail = function (tries,if_ok_return) {
             if ( typeof tries === 'undefined' ) {
                 return that.error ({status:0,statusText:'Unknown Error',
-                                    message:'Cannot get tried'});
+                                    error:'unknown_error',
+                                    message:'Cannot get tried.',
+                                    reason:'Cannot get tried'});
             }
             if ( tries < 3 ) {
                 return that.retry (
@@ -180,37 +221,51 @@
                 return that.success (if_ok_return);
             }
             if ( tries > 3 ) {
-                return that.error ({status:0,statusText:'Too Much Tries',
-                                    message:'Too much tries.'});
+                return that.error ({status:1,statusText:'Too Much Tries',
+                                    error:'too_much_tries',
+                                    message:'Too much tries.',
+                                    reason:'Too much tries'});
             }
         };
 
-        that.saveDocument = function (command) {
-            priv.doJob (command);
-        }; // end saveDocument
+        that.post = function (command) {
+            priv.doJob (command,{ok:true,id:command.getDocId()});
+        }; // end post
 
-        that.loadDocument = function (command) {
+        that.put = function (command) {
+            priv.doJob (command,{ok:true,id:command.getDocId()});
+        }; // end put
+
+        that.get = function (command) {
             priv.doJob (command,{
-                'content': 'content2',
-                'name': 'file',
-                'creation_date': 11000,
-                'last_modified': 17000
+                _id: command.getDocId(),
+                content: 'content '+command.getDocId(),
+                _creation_date: 11000,
+                _last_modified: 17000
             });
-        }; // end loadDocument
+        }; // end get
 
-        that.getDocumentList = function (command) {
-            priv.doJob(command,[{'name':'file',
-                                 'creation_date':10000,
-                                 'last_modified':15000},
-                                {'name':'memo',
-                                 'creation_date':20000,
-                                 'last_modified':25000}
-                               ]);
-        }; // end getDocumentList
+        that.allDocs = function (command) {
+            priv.doJob(command,{
+                total_rows:2,
+                rows:[{
+                    id:'file',key:'file',
+                    value:{
+                        _creation_date:10000,
+                        _last_modified:15000
+                    }
+                },{
+                    id:'memo',key:'memo',
+                    value:{
+                        _creation_date:20000,
+                        _last_modified:25000
+                    }
+                }]});
+        }; // end allDocs
 
-        that.removeDocument = function (command) {
-            priv.doJob(command);
-        }; // end removeDocument
+        that.remove = function (command) {
+            priv.doJob(command,{ok:true,id:command.getDocId()});
+        }; // end remove
 
         return that;
     };
