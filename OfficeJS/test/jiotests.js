@@ -873,17 +873,17 @@ test ('Document load', function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick(base_tick);
     o.mytest = function (message,doc,doc2) {
-        o.f = function (result) {
+        o.f = function (err,val) {
             var gooddoc = doc;
-            if (result && !result.status) {
-                if (doc2 && result.content === doc2.content) {
+            if (val) {
+                if (doc2 && val.content === doc2.content) {
                     gooddoc = doc2;
                 }
             }
-            deepEqual (result,gooddoc,message);
+            deepEqual (err || val,gooddoc,message);
         };
         o.t.spy(o,'f');
-        o.jio.loadDocument('file',{success:o.f,error:o.f,max_retry:3});
+        o.jio.get('file',{max_retry:3},o.f);
         o.clock.tick(10000);
         if (!o.f.calledOnce) {
             if (o.f.called) {
@@ -897,9 +897,10 @@ test ('Document load', function () {
         {type:'dummyallok',username:'1'},
         {type:'dummyallok',username:'2'}]});
     o.mytest('DummyStorageAllOK,OK: load same file',{
-        name:'file',content:'content',
-        last_modified:15000,
-        creation_date:10000});
+        _id:'file',content:'content',
+        _last_modified:15000,
+        _creation_date:10000
+    });
     o.jio.stop();
 
     o.jio = JIO.newJio({type:'replicate',storagelist:[
@@ -907,13 +908,12 @@ test ('Document load', function () {
         {type:'dummyallok'}]});
     o.mytest('DummyStorageAllOK,3tries: load 2 different files',
              {
-                 name:'file',content:'content',
-                 last_modified:15000,creation_date:10000
+                 _id:'file',content:'content',
+                 _last_modified:15000,_creation_date:10000
              },{
-                 name:'file',content:'content2',
-                 last_modified:17000,creation_date:11000
+                 _id:'file',content:'content file',
+                 _last_modified:17000,_creation_date:11000
              });
-
     o.jio.stop();
 });
 
@@ -923,17 +923,14 @@ test ('Document save', function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick(base_tick);
     o.mytest = function (message,value) {
-        o.f = function (result) {
-            if (!result) {
-                result = 'done';
-            } else {
-                result = 'fail';
+        o.f = function (err,val) {
+            if (err) {
+                err = err.status;
             }
-            deepEqual (result,value,message);
+            deepEqual (err || val,value,message);
         };
         o.t.spy(o,'f');
-        o.jio.saveDocument('file','content',{
-            success:o.f,error:o.f,max_retry:3});
+        o.jio.put({_id:'file',content:'content'},{max_retry:3},o.f);
         o.clock.tick(500);
         if (!o.f.calledOnce) {
             if (o.f.called) {
@@ -946,13 +943,13 @@ test ('Document save', function () {
     o.jio = JIO.newJio({type:'replicate',storagelist:[
         {type:'dummyallok',username:'1'},
         {type:'dummyallok',username:'2'}]});
-    o.mytest('DummyStorageAllOK,OK: save a file.','done');
+    o.mytest('DummyStorageAllOK,OK: save a file.',{ok:true,id:'file'});
     o.jio.stop();
 
     o.jio = JIO.newJio({type:'replicate',storagelist:[
         {type:'dummyall3tries',username:'1'},
         {type:'dummyallok',username:'2'}]});
-    o.mytest('DummyStorageAll3Tries,OK: save a file.','done');
+    o.mytest('DummyStorageAll3Tries,OK: save a file.',{ok:true,id:'file'});
     o.jio.stop();
 });
 
@@ -962,12 +959,12 @@ test ('Get Document List', function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick(base_tick);
     o.mytest = function (message,value) {
-        o.f = function (result) {
-            deepEqual (objectifyDocumentArray(result),
+        o.f = function (err,val) {
+            deepEqual (err || objectifyDocumentArray(val.rows),
                        objectifyDocumentArray(value),message);
         };
         o.t.spy(o,'f');
-        o.jio.getDocumentList('.',{success:o.f,error:o.f,max_retry:3});
+        o.jio.allDocs({max_retry:3},o.f);
         o.clock.tick(10000);
         if (!o.f.calledOnce) {
             if (o.f.called) {
@@ -980,10 +977,10 @@ test ('Get Document List', function () {
     o.jio = JIO.newJio({type:'replicate',storagelist:[
         {type:'dummyall3tries',username:'1'},
         {type:'dummyallok',username:'2'}]});
-    o.doc1 = {name:'file',
-              last_modified:15000,creation_date:10000};
-    o.doc2 = {name:'memo',
-              last_modified:25000,creation_date:20000};
+    o.doc1 = {id:'file',key:'file',value:{
+              _last_modified:15000,_creation_date:10000}};
+    o.doc2 = {id:'memo',key:'memo',value:{
+              _last_modified:25000,_creation_date:20000}};
     o.mytest('DummyStorageAllOK,3tries: get document list.',
              [o.doc1,o.doc2]);
     o.jio.stop();
@@ -1002,16 +999,14 @@ test ('Remove document', function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick(base_tick);
     o.mytest = function (message,value) {
-        o.f = function (result) {
-            if (!result) {
-                result = 'done';
-            } else {
-                result = 'fail';
+        o.f = function (err,val) {
+            if (err) {
+                err = err.status;
             }
-            deepEqual (result,value,message);
+            deepEqual (err || val,value,message);
         };
         o.t.spy(o,'f');
-        o.jio.removeDocument('file',{success:o.f,error:o.f,max_retry:3});
+        o.jio.remove({_id:'file'},{max_retry:3},o.f);
         o.clock.tick(10000);
         if (!o.f.calledOnce) {
             if (o.f.called) {
@@ -1024,7 +1019,7 @@ test ('Remove document', function () {
     o.jio = JIO.newJio({type:'replicate',storagelist:[
         {type:'dummyallok',username:'1'},
         {type:'dummyall3tries',username:'2'}]});
-    o.mytest('DummyStorageAllOK,3tries: remove document.','done');
+    o.mytest('DummyStorageAllOK,3tries: remove document.',{ok:true,id:'file'});
     o.jio.stop();
 });
 

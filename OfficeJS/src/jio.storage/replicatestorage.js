@@ -20,84 +20,82 @@ var newReplicateStorage = function ( spec, my ) {
         return '';
     };
 
-    priv.isTheLast = function () {
-        return (priv.return_value_array.length === priv.nb_storage);
+    priv.isTheLast = function (error_array) {
+        return (error_array.length === priv.nb_storage);
     };
 
-    priv.doJob = function (command,errormessage) {
+    priv.doJob = function (command,errormessage,nodocid) {
         var done = false, error_array = [], i,
-        onErrorDo = function (result) {
-            priv.return_value_array.push(result);
+        error = function (err) {
             if (!done) {
-                error_array.push(result);
-                if (priv.isTheLast()) {
-                    that.error (
-                        {status:207,
-                         statusText:'Multi-Status',
-                         message:errormessage,
-                         array:error_array});
+                error_array.push(err);
+                if (priv.isTheLast(error_array)) {
+                    that.error ({
+                        status:207,
+                        statusText:'Multi-Status',
+                        error:'multi_status',
+                        message:'All '+errormessage+
+                            (!nodocid?' "'+command.getDocId()+'"':' ') +
+                            ' requests have failed.',
+                        reason:'requests fail',
+                        array:error_array
+                    });
                 }
             }
         },
-        onSuccessDo = function (result) {
-            priv.return_value_array.push(result);
+        success = function (val) {
             if (!done) {
                 done = true;
-                that.success (result);
+                that.success (val);
             }
         };
         for (i = 0; i < priv.nb_storage; i+= 1) {
-            var newcommand = command.clone();
-            var newstorage = that.newStorage(priv.storagelist[i]);
-            newcommand.onErrorDo (onErrorDo);
-            newcommand.onSuccessDo (onSuccessDo);
-            that.addJob (newstorage, newcommand);
+            var cloned_option = command.cloneOption();
+            that.addJob (command.getLabel(),priv.storagelist[i],
+                         command.cloneDoc(),cloned_option,success,error);
         }
+    };
+
+    that.post = function (command) {
+        priv.doJob (command,'post');
+        that.end();
     };
 
     /**
      * Save a document in several storages.
-     * @method saveDocument
+     * @method put
      */
-    that.saveDocument = function (command) {
-        priv.doJob (
-            command,
-            'All save "'+ command.getPath() +'" requests have failed.');
+    that.put = function (command) {
+        priv.doJob (command,'put');
         that.end();
     };
 
     /**
      * Load a document from several storages, and send the first retreived
      * document.
-     * @method loadDocument
+     * @method get
      */
-    that.loadDocument = function (command) {
-        priv.doJob (
-            command,
-            'All load "'+ command.getPath() +'" requests have failed.');
+    that.get = function (command) {
+        priv.doJob (command,'get');
         that.end();
     };
 
     /**
      * Get a document list from several storages, and returns the first
      * retreived document list.
-     * @method getDocumentList
+     * @method allDocs
      */
-    that.getDocumentList = function (command) {
-        priv.doJob (
-            command,
-            'All get document list requests have failed.');
+    that.allDocs = function (command) {
+        priv.doJob (command,'allDocs',true);
         that.end();
     };
 
     /**
      * Remove a document from several storages.
-     * @method removeDocument
+     * @method remove
      */
-    that.removeDocument = function (command) {
-        priv.doJob (
-            command,
-            'All remove "' + command.getPath() + '" requests have failed.');
+    that.remove = function (command) {
+        priv.doJob (command,'remove');
         that.end();
     };
 
