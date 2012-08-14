@@ -1,8 +1,29 @@
 var newDAVStorage = function ( spec, my ) {
     var that = Jio.storage( spec, my, 'base' ), priv = {};
 
+    priv.secureDocId = function (string) {
+        var split = string.split('/'), i;
+        if (split[0] === '') {
+            split = split.slice(1);
+        }
+        for (i = 0; i < split.length; i+= 1) {
+            if (split[i] === '') { return ''; }
+        }
+        return split.join('%2F');
+    };
+    priv.convertSlashes = function (string) {
+        return string.split('/').join('%2F');
+    };
+
+    priv.restoreSlashes = function (string) {
+        return string.split('%2F').join('/');
+    };
+
+
     priv.username = spec.username || '';
+    priv.secured_username = priv.convertSlashes(priv.username);
     priv.applicationname = spec.applicationname || 'untitled';
+    priv.secured_applicationname = priv.convertSlashes(priv.applicationname);
     priv.url = spec.url || '';
     priv.password = spec.password || ''; // TODO : is it secured ?
 
@@ -22,7 +43,7 @@ var newDAVStorage = function ( spec, my ) {
      * @return {string} '' -> ok, 'message' -> error
      */
     that.validateState = function() {
-        if (priv.username && priv.url) {
+        if (priv.secured_username && priv.url) {
             return '';
         }
         return 'Need at least 2 parameters: "username" and "url".';
@@ -54,50 +75,55 @@ var newDAVStorage = function ( spec, my ) {
         return async;
     };
 
+    that.post = function (command) {
+        that.put(command);
+    };
+
     /**
      * Saves a document in the distant dav storage.
-     * @method saveDocument
+     * @method put
      */
-    that.saveDocument = function (command) {
+    that.put = function (command) {
 
-        // TODO if path of /dav/user/applic does not exists, it won't work!
-        //// save on dav
+        var secured_docid = priv.secureDocId(command.getDocId());
+
         $.ajax ( {
-            url: priv.url + '/dav/' +
-                priv.username + '/' +
-                priv.applicationname + '/' +
-                command.getPath(),
+            url: priv.url + '/' +
+                priv.secured_username + '/' +
+                priv.secured_applicationname + '/' +
+                secured_docid,
             type: 'PUT',
-            data: command.getContent(),
+            data: command.getDocContent(),
             async: true,
             dataType: 'text', // TODO is it necessary ?
             headers: {'Authorization':'Basic '+Base64.encode(
                 priv.username+':'+priv.password)},
             // xhrFields: {withCredentials: 'true'}, // cross domain
             success: function () {
-                that.success();
+                that.success({ok:true,id:command.getDocId()});
             },
             error: function (type) {
-                type.message = 'Cannot save "' + command.getPath() +
-                    '" into DAVStorage.';
+                // TODO : make statusText to lower case and add '_'
+                type.error = type.statusText;
+                type.reason = 'Cannot save "' + command.getDocId() + '"';
+                type.message = type.reason + '.';
                 that.retry(type);
             }
         } );
-        //// end saving on dav
-    };
+    }; // end put
 
     /**
      * Loads a document from a distant dav storage.
-     * @method loadDocument
+     * @method get
      */
-    that.loadDocument = function (command) {
-        var doc = {},
-        getContent = function () {
+    that.get = function (command) {
+        var secured_docid = priv.secureDocId(command.getDocId()),
+        doc = {}, getContent = function () {
             $.ajax ( {
-                url: priv.url + '/dav/' +
-                    priv.username + '/' +
-                    priv.applicationname + '/' +
-                    command.getPath(),
+                url: priv.url + '/' +
+                    priv.secured_username + '/' +
+                    priv.secured_applicationname + '/' +
+                    secured_docid,
                 type: "GET",
                 async: true,
                 dataType: 'text', // TODO is it necessary ?
@@ -109,28 +135,31 @@ var newDAVStorage = function ( spec, my ) {
                     that.success(doc);
                 },
                 error: function (type) {
+                    type.error = type.statusText; // TODO : to lower case
                     if (type.status === 404) {
                         type.message = 'Document "' +
-                            command.getPath() +
-                            '" not found in localStorage.';
+                            command.getDocId() +
+                            '" not found.';
+                        type.reason = 'missing';
                         that.error(type);
                     } else {
-                        type.message =
-                            'Cannot load "' + command.getPath() +
-                            '" from DAVStorage.';
+                        type.reason =
+                            'An error occured when trying to get "' +
+                            command.getDocId() + '"';
+                        type.message = type.reason + '.';
                         that.retry(type);
                     }
                 }
             } );
         };
-        doc.name = command.getPath(); // TODO : basename
+        doc._id = command.getDocId();
         // NOTE : if (command.getOption('content_only') { return getContent(); }
         // Get properties
         $.ajax ( {
-            url: priv.url + '/dav/' +
-                priv.username + '/' +
-                priv.applicationname + '/' +
-                command.getPath(),
+            url: priv.url + '/' +
+                priv.secured_username + '/' +
+                priv.secured_applicationname + '/' +
+                secured_docid,
             type: "PROPFIND",
             async: true,
             dataType: 'xml',
@@ -141,12 +170,14 @@ var newDAVStorage = function ( spec, my ) {
                 $(xmlData).find(
                     'lp1\\:getlastmodified, getlastmodified'
                 ).each( function () {
-                    doc.last_modified = $(this).text();
+                    doc._last_modified =
+                        new Date($(this).text()).getTime();
                 });
                 $(xmlData).find(
                     'lp1\\:creationdate, creationdate'
                 ).each( function () {
-                    doc.creation_date = $(this).text();
+                    doc._creation_date =
+                        new Date($(this).text()).getTime();
                 });
                 if (!command.getOption('metadata_only')) {
                     getContent();
@@ -155,11 +186,15 @@ var newDAVStorage = function ( spec, my ) {
                 }
             },
             error: function (type) {
-                type.message = 'Cannot load "' + command.getPath() +
-                    '" informations from DAVStorage.';
                 if (type.status === 404) {
+                    type.message = 'Cannot find "' + command.getDocId() +
+                        '" informations.';
+                    type.reason = 'missing';
                     that.error(type);
                 } else {
+                    type.reason = 'Cannot get "' + command.getDocId() +
+                        '" informations';
+                    type.message = type.reason + '.';
                     that.retry(type);
                 }
             }
@@ -168,18 +203,18 @@ var newDAVStorage = function ( spec, my ) {
 
     /**
      * Gets a document list from a distant dav storage.
-     * @method getDocumentList
+     * @method allDocs
      */
-    that.getDocumentList = function (command) {
-        var document_array = [], file = {}, path_array = [],
+    that.allDocs = function (command) {
+        var rows = [],
         am = priv.newAsyncModule(), o = {};
 
         o.getContent = function (file) {
             $.ajax ( {
-                url: priv.url + '/dav/' +
-                    priv.username + '/' +
-                    priv.applicationname + '/' +
-                    file.name,
+                url: priv.url + '/' +
+                    priv.secured_username + '/' +
+                    priv.secured_applicationname + '/' +
+                    priv.secureDocId(file.id),
                 type: "GET",
                 async: true,
                 dataType: 'text', // TODO : is it necessary ?
@@ -187,24 +222,26 @@ var newDAVStorage = function ( spec, my ) {
                           Base64.encode(priv.username +':'+
                                         priv.password)},
                 success: function (content) {
-                    file.content = content;
+                    file.value.content = content;
                     // WARNING : files can be disordered because
                     // of asynchronous action
-                    document_array.push (file);
+                    rows.push (file);
                     am.call(o,'success');
                 },
                 error: function (type) {
-                    type.message = 'Cannot get a document '+
-                        'content from DAVStorage.';
+                    type.error = type.statusText; // TODO : to lower case
+                    type.reason = 'Cannot get a document '+
+                        'content from DAVStorage';
+                    type.message = type.message + '.';
                     am.call(o,'error',[type]);
                 }
             });
         };
         o.getDocumentList = function () {
             $.ajax ( {
-                url: priv.url + '/dav/' +
-                    priv.username + '/' +
-                    priv.applicationname + '/',
+                url: priv.url + '/' +
+                    priv.secured_username + '/' +
+                    priv.secured_applicationname + '/',
                 async: true,
                 type: 'PROPFIND',
                 dataType: 'xml',
@@ -222,41 +259,46 @@ var newDAVStorage = function ( spec, my ) {
                     }
                     response.each( function(i,data){
                         if(i>0) { // exclude parent folder
-                            file = {};
+                            var file = {value:{}};
                             $(data).find('D\\:href, href').each(function(){
-                                path_array = $(this).text().split('/');
-                                file.name =
-                                    (path_array[path_array.length-1] ?
-                                     path_array[path_array.length-1] :
-                                     path_array[path_array.length-2]+'/');
+                                var split = $(this).text().split('/');
+                                file.id = split[split.length-1];
+                                file.id = priv.restoreSlashes(file.id);
+                                file.key = file.id;
                             });
-                            if (file.name === '.htaccess' ||
-                                file.name === '.htpasswd') { return; }
+                            if (file.id === '.htaccess' ||
+                                file.id === '.htpasswd') { return; }
                             $(data).find(
                                 'lp1\\:getlastmodified, getlastmodified'
                             ).each(function () {
-                                file.last_modified = $(this).text();
+                                file.value._last_modified =
+                                    new Date($(this).text()).getTime();
                             });
                             $(data).find(
                                 'lp1\\:creationdate, creationdate'
                             ).each(function () {
-                                file.creation_date = $(this).text();
+                                file.value._creation_date =
+                                    new Date($(this).text()).getTime();
                             });
                             if (!command.getOption ('metadata_only')) {
                                 am.call(o,'getContent',[file]);
                             } else {
-                                document_array.push (file);
+                                rows.push (file);
                                 am.call(o,'success');
                             }
                         }
                     });
                 },
                 error: function (type) {
-                    type.message =
-                        'Cannot get a document list from DAVStorage.';
                     if (type.status === 404) {
+                        type.error = 'not_found';
+                        type.reason = 'missing';
                         am.call(o,'error',[type]);
                     } else {
+                        type.error = type.statusText; // TODO : to lower case
+                        type.reason =
+                            'Cannot get a document list from DAVStorage';
+                        type.message = type.reason + '.';
                         am.call(o,'retry',[type]);
                     }
                 }
@@ -278,36 +320,43 @@ var newDAVStorage = function ( spec, my ) {
             am.neverCall(o,'retry');
             am.neverCall(o,'success');
             am.neverCall(o,'error');
-            that.success(document_array);
+            that.success({total_rows:rows.length,
+                          rows:rows});
         };
         am.call (o,'getDocumentList');
-    };
+    }; // end allDocs
 
     /**
      * Removes a document from a distant dav storage.
-     * @method removeDocument
+     * @method remove
      */
-    that.removeDocument = function (command) {
+    that.remove = function (command) {
+
+        var secured_docid = priv.secureDocId(command.getDocId());
 
         $.ajax ( {
-            url: priv.url + '/dav/' +
-                priv.username + '/' +
-                priv.applicationname + '/' +
-                command.getPath(),
+            url: priv.url + '/' +
+                priv.secured_username + '/' +
+                priv.secured_applicationname + '/' +
+                secured_docid,
             type: "DELETE",
             async: true,
             headers: {'Authorization':'Basic '+Base64.encode(
                 priv.username + ':' + priv.password )},
             // xhrFields: {withCredentials: 'true'}, // cross domain
-            success: function () {
-                that.success();
+            success: function (data,state,type) {
+                that.success({ok:true,id:command.getDocId()});
             },
-            error: function (type) {
+            error: function (type,state,statusText) {
                 if (type.status === 404) {
-                    that.success();
+                    //that.success({ok:true,id:command.getDocId()});
+                    type.error = 'not_found';
+                    type.reason = 'missing';
+                    type.message = 'Cannot remove missing file.';
+                    that.error(type);
                 } else {
-                    type.message = 'Cannot remove "' + that.getFileName() +
-                        '" from DAVStorage.';
+                    type.reason = 'Cannot remove "' + that.getDocId() + '"';
+                    type.message = type.reason + '.';
                     that.retry(type);
                 }
             }

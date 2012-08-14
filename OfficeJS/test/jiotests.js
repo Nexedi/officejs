@@ -640,20 +640,20 @@ test ('Document load', function () {
     o.mytest = function (message,doc,errprop,errget) {
         var server = o.t.sandbox.useFakeServer();
         server.respondWith (
-            "PROPFIND","https://ca-davstorage:8080/dav/davload/jiotests/file",
+            "PROPFIND","https://ca-davstorage:8080/davload/jiotests/file",
             [errprop,{'Content-Type':'text/xml; charset="utf-8"'},
              o.davload]);
         server.respondWith (
-            "GET","https://ca-davstorage:8080/dav/davload/jiotests/file",
+            "GET","https://ca-davstorage:8080/davload/jiotests/file",
             [errget,{},'content']);
-        o.f = function (result) {
-            if (result && result.status) {
-                result = undefined;
+        o.f = function (err,val) {
+            if (err) {
+                err = err.status;
             }
-            deepEqual (result,doc,message);
+            deepEqual (err || val,doc,message);
         };
         o.t.spy(o,'f');
-        o.jio.loadDocument('file',{success:o.f,error:o.f,max_retry:1});
+        o.jio.get('file',{max_retry:1},o.f);
         o.clock.tick(1000);
         server.respond();
         if (!o.f.calledOnce) {
@@ -676,11 +676,11 @@ test ('Document load', function () {
     //     403 Forbidden
     //     404 Not Found
     // load an inexistant document.
-    o.mytest ('load inexistant document',undefined,404,404);
+    o.mytest ('load inexistant document',404,404,404);
     // load a document.
-    o.mytest ('load document',{name:'file',content:'content',
-                               last_modified:1335953199000,
-                               creation_date:1335953202000},207,200);
+    o.mytest ('load document',{_id:'file',content:'content',
+                               _last_modified:1335953199000,
+                               _creation_date:1335953202000},207,200);
     o.jio.stop();
 });
 
@@ -696,16 +696,16 @@ test ('Document save', function () {
         var server = o.t.sandbox.useFakeServer();
         server.respondWith (
             // lastmodified = 7000, creationdate = 5000
-            "PROPFIND","https://ca-davstorage:8080/dav/davsave/jiotests/file",
+            "PROPFIND","https://ca-davstorage:8080/davsave/jiotests/file",
             [errnoprop,{'Content-Type':'text/xml; charset="utf-8"'},
              o.davsave]);
         server.respondWith (
             "PUT",
-            "https://ca-davstorage:8080/dav/davsave/jiotests/file",
+            "https://ca-davstorage:8080/davsave/jiotests/file",
             [errnoput, {'Content-Type':'x-www-form-urlencoded'},
              'content']);
         server.respondWith (
-            "GET","https://ca-davstorage:8080/dav/davsave/jiotests/file",
+            "GET","https://ca-davstorage:8080/davsave/jiotests/file",
             [errnoprop===207?200:errnoprop,{},'content']);
         // server.respondWith ("MKCOL","https://ca-davstorage:8080/dav",
         //                     [200,{},'']);
@@ -714,16 +714,9 @@ test ('Document save', function () {
         // server.respondWith ("MKCOL",
         //                    "https://ca-davstorage:8080/dav/davsave/jiotests",
         //                     [200,{},'']);
-        o.f = function (result) {
-            if (result && result.status) {
-                    result = 'fail';
-            } else {
-                result = 'done';
-            }
-            deepEqual (result,value,message);
-        };
+        o.f = basic_test_function_generator(o,'value',value,message);
         o.t.spy(o,'f');
-        o.jio.saveDocument('file','content',{success:o.f,error:o.f});
+        o.jio.put({_id:'file',content:'content'},o.f);
         o.clock.tick(1000);
         server.respond();
         if (!o.f.calledOnce) {
@@ -749,10 +742,10 @@ test ('Document save', function () {
     // mytest('create path if not exists, and create document',
     //        true,201,404);
     // the document does not exist, we want to create it
-    o.mytest('create document','done',201,404);
+    o.mytest('create document',{ok:true,id:'file'},201,404);
     o.clock.tick(8000);
     // the document already exists, we want to overwrite it
-    o.mytest('overwrite document','done',204,207);
+    o.mytest('overwrite document',{ok:true,id:'file'},204,207);
     o.jio.stop();
 });
 
@@ -767,28 +760,27 @@ test ('Get Document List', function () {
     o.mytest = function (message,metadata_only,value,errnoprop) {
         var server = o.t.sandbox.useFakeServer();
         server.respondWith (
-            "PROPFIND",'https://ca-davstorage:8080/dav/davlist/jiotests/',
+            "PROPFIND",'https://ca-davstorage:8080/davlist/jiotests/',
             [errnoprop,{'Content-Type':'text/xml; charset="utf-8"'},
              o.davlist]);
         server.respondWith (
-            "GET","https://ca-davstorage:8080/dav/davlist/jiotests/file",
+            "GET","https://ca-davstorage:8080/davlist/jiotests/file",
             [200,{},'content']);
         server.respondWith (
-            "GET","https://ca-davstorage:8080/dav/davlist/jiotests/memo",
+            "GET","https://ca-davstorage:8080/davlist/jiotests/memo",
             [200,{},'content2']);
-        o.f = function (result) {
-            if (result && result.status) {
+        o.f = function (err,val) {
+            if (err) {
                 result = undefined;
             } else {
-                deepEqual (objectifyDocumentArray(result),
+                deepEqual (objectifyDocumentArray(val.rows),
                            objectifyDocumentArray(value),message);
                 return;
             }
             deepEqual (result, value, message);
         };
         o.t.spy(o,'f');
-        o.jio.getDocumentList('.',{success:o.f,error:o.f,
-                                   metadata_only:metadata_only});
+        o.jio.allDocs({metadata_only:metadata_only},o.f);
         o.clock.tick(1000);
         server.respond();
         if (!o.f.calledOnce) {
@@ -804,16 +796,34 @@ test ('Get Document List', function () {
                         url:'https://ca-davstorage:8080',
                         applicationname:'jiotests'});
     o.mytest('fail to get list',true,undefined,404);
-    o.mytest('getting list',true,[{name:'file',creation_date:1335962911000,
-                                   last_modified:1335962907000},
-                                  {name:'memo',creation_date:1335894073000,
-                                   last_modified:1335955713000}],207);
-    o.mytest('getting list',false,[{name:'file',content:'content',
-                                    creation_date:1335962911000,
-                                    last_modified:1335962907000},
-                                   {name:'memo',content:'content2',
-                                    creation_date:1335894073000,
-                                    last_modified:1335955713000}],207);
+    o.mytest('getting list',true,[{
+        id:'file',key:'file',
+        value:{
+            _creation_date:1335962911000,
+            _last_modified:1335962907000
+        }
+    },{
+        id:'memo',key:'memo',
+        value:{
+            _creation_date:1335894073000,
+            _last_modified:1335955713000
+        }
+    }],207);
+    o.mytest('getting list',false,[{
+        id:'file',key:'file',
+        value:{
+            content:'content',
+            _creation_date:1335962911000,
+            _last_modified:1335962907000
+        }
+    },{
+        id:'memo',key:'memo',
+        value:{
+            content:'content2',
+            _creation_date:1335894073000,
+            _last_modified:1335955713000
+        }
+    }],207);
     o.jio.stop();
 });
 
@@ -825,18 +835,16 @@ test ('Remove document', function () {
     o.mytest = function (message,value,errnodel) {
         var server = o.t.sandbox.useFakeServer();
         server.respondWith (
-            "DELETE","https://ca-davstorage:8080/dav/davremove/jiotests/file",
+            "DELETE","https://ca-davstorage:8080/davremove/jiotests/file",
             [errnodel,{},'']);
-        o.f = function (result) {
-            if (result && result.status) {
-                result = 'fail';
-            } else {
-                result = 'done';
+        o.f = function (err,val) {
+            if (err) {
+                err = err.status;
             }
-            deepEqual (result,value,message);
+            deepEqual (err || val,value,message);
         };
         o.t.spy(o,'f');
-        o.jio.removeDocument('file',{success:o.f,error:o.f});
+        o.jio.remove({_id:'file'},o.f);
         o.clock.tick(1000);
         server.respond();
         if (!o.f.calledOnce) {
@@ -850,10 +858,10 @@ test ('Remove document', function () {
     o.jio = JIO.newJio({type:'dav',username:'davremove',
                         password:'checkpwd',
                         url:'https://ca-davstorage:8080',
-                        appliactionname:'jiotests'});
+                        applicationname:'jiotests'});
 
-    o.mytest('remove document','done',204);
-    o.mytest('remove an already removed document','done',404);
+    o.mytest('remove document',{ok:true,id:'file'},204);
+    o.mytest('remove an already removed document',404,404);
     o.jio.stop();
 });
 
