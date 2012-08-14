@@ -136,6 +136,56 @@ removeFileFromLocalStorage = function (user,appid,file) {
                                  newarray);
     LocalOrCookieStorage.deleteItem(
         'jio/local/'+user+'/'+appid+'/'+file._id);
+},
+makeRevsAccordingToRevsInfo = function (revs,revs_info) {
+    var i, j;
+    for (i = 0; i < revs.start; i+= 1) {
+        for (j = 0; j < revs_info.length; j+= 1) {
+            var id = revs_info[j].rev.split('-'); id.shift(); id = id.join('-');
+            if (revs.ids[i] === id) {
+                revs.ids[i] = revs_info[j].rev.split('-')[0];
+                break;
+            }
+        }
+    }
+},
+checkRev = function (rev) {
+    if (typeof rev === 'string') {
+        if (parseInt(rev.split('-')[0],10) > 0) {
+            return rev;
+        }
+    }
+    return 'ERROR: not a good revision!';
+},
+checkConflictRow = function (row) {
+    var fun;
+    if (typeof row === 'object') {
+        if (row.value && typeof row.value._solveConflict === 'function') {
+            fun = row.value._solveConflict;
+            row.value._solveConflict = 'function';
+        }
+    }
+    return fun;
+},
+getHashFromRev = function (rev) {
+    var id = rev;
+    if (typeof id === 'string') {
+        id = id.split('-');
+        id.shift(); id = id.join('-');
+    }
+    return id;
+},
+revs_infoContains = function (revs_info, rev) {
+    var i;
+    if (typeof revs_info !== 'object') {
+        return undefined;
+    }
+    for (i = 0; i < revs_info.length || 0; i+= 1) {
+        if (revs_info[i].rev && revs_info[i].rev === rev) {
+            return true;
+        }
+    }
+    return false;
 };
 //// end tools
 
@@ -1302,19 +1352,9 @@ test ('Simple methods', function () {
 
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick(base_tick);
-    o.spy = function(res,value,message,before) {
-        o.f = function(result) {
-            if (res === 'status') {
-                if (result && result.conflict_object) {
-                    result = 'conflict';
-                } else if (result && typeof result.status !== 'undefined') {
-                    result = 'fail';
-                } else {
-                    result = 'done';
-                }
-            }
-            if (before) { before (result); }
-            deepEqual (result,value,message);
+    o.spy = function(value,message) {
+        o.f = function(err,val) {
+            deepEqual (err || val,value,message);
         };
         o.t.spy(o,'f');
     };
@@ -1333,79 +1373,154 @@ test ('Simple methods', function () {
                         storage:{type:'local',
                                  username:'conflictmethods',
                                  applicationname:'jiotests'}});
-    o.spy('status','done','saving "file.doc".');
-    o.jio.saveDocument('file.doc','content1',{
-        previous_revision: '0',
-        success:function (result) {
-            o.new_rev = result.revision;
-            o.f (result);
-        },
-        error:o.f
+    // PUT
+    o.spy({ok:true,id:'file.doc',rev:'1'},'saving "file.doc".');
+    o.jio.put({_id:'file.doc',content:'content1'},function (err,val) {
+        if (val) {
+            o.rev1 = val.rev;
+            val.rev = val.rev.split('-')[0];
+        }
+        o.f (err,val);
     });
     o.tick();
-
-    o.spy('status','done','saving "file2.doc".');
-    o.jio.saveDocument('file2.doc','yes',{
-        previous_revision: '0',
-        success:o.f,
-        error:o.f
-    });
+    // PUT with options
+    o.spy({ok:true,id:'file2.doc',rev:'1',
+           conflicts:{total_rows:0,rows:[]},
+           revisions:{start:1,ids:['1']},
+           revs_info:[{rev:'1',status:'available'}]},
+          'saving "file2.doc".');
+    o.jio.put({_id:'file2.doc',content:'yes'},
+              {revs:true,revs_info:true,conflicts:true},
+              function (err,val) {
+                  if (val) {
+                      o.rev2 = val.rev;
+                      val.rev = val.rev.split('-')[0];
+                      if (val.revs_info) {
+                          if (val.revisions) {
+                              makeRevsAccordingToRevsInfo(
+                                  val.revisions,val.revs_info);
+                          }
+                          val.revs_info[0].rev =
+                              val.revs_info[0].rev.split('-')[0];
+                      }
+                 }
+                  o.f (err,val);
+              });
     o.tick();
 
-
-    o.spy('value',{name:'file.doc',content:'content1',revision:'rev'},
-          'loading "file.doc".',function (o) {
-              if (!o) { return; }
-              if (o.revision) { o.revision = 'rev'; }
-              if (o.creation_date) { delete o.creation_date; }
-              else { ok(false, 'creation date missing!'); }
-              if (o.last_modified) { delete o.last_modified; }
-              else { ok(false, 'last modified missing!'); }
-              if (o.revision_object) { delete o.revision_object; }
-              else { ok(false, 'revision object missing!'); }
-          });
-    o.jio.loadDocument('file.doc',{success:o.f,error:o.f});
+    // GET
+    o.get_callback = function (err,val) {
+        if (val) {
+            val._rev = (val._rev?val._rev.split('-')[0]:'/');
+            val._creation_date = (val._creation_date?true:undefined);
+            val._last_modified = (val._last_modified?true:undefined);
+        }
+        o.f(err,val);
+    };
+    o.spy({_id:'file.doc',content:'content1',_rev:'1',
+           _creation_date:true,_last_modified:true},'loading "file.doc".');
+    o.jio.get('file.doc',o.get_callback);
     o.tick();
-
-    o.spy('value',[{name:'file.doc',revision:'rev'},
-                   {name:'file2.doc',revision:'rev'}],
-          'getting list.',function (a) {
-              var i;
-              if (!a) { return; }
-              for (i = 0; i < a.length; i+= 1) {
-                  if (a[i].revision) { a[i].revision = 'rev'; }
-                  if (a[i].creation_date) { delete a[i].creation_date; }
-                  else { ok(false, 'creation date missing!'); }
-                  if (a[i].last_modified) { delete a[i].last_modified; }
-                  else { ok(false, 'last modified missing!'); }
-                  if (a[i].revision_object) { delete a[i].revision_object; }
-                  else { ok(false, 'revision object missing!'); }
-              }
-              // because the result can be disordered
-              if (a.length === 2 && a[0].name === 'file2.doc') {
-                  var tmp = a[0];
-                  a[0] = a[1];
-                  a[1] = tmp;
-              }
-          });
-    o.jio.getDocumentList('.',{success:o.f,error:o.f});
-    o.tick();
-
-    o.spy('status','done','removing "file.doc"');
-    o.jio.removeDocument('file.doc',{
-        success:o.f,error:o.f,revision:o.new_rev
-    });
-    o.tick();
-
-    o.spy('status','fail','loading document fail.');
-    o.jio.loadDocument('file.doc',{
-        success:o.f,error:function (error) {
-            if (error.status === 404) {
-                o.f(error);
-            } else {
-                deepEqual (error, '{}', 'An 404 error was expected.');
+    // GET with options
+    o.get_callback = function (err,val) {
+        if (val) {
+            val._rev = (val._rev?val._rev.split('-')[0]:'/');
+            val._creation_date = (val._creation_date?true:undefined);
+            val._last_modified = (val._last_modified?true:undefined);
+            if (val._revs_info) {
+                if (val._revisions) {
+                    makeRevsAccordingToRevsInfo(
+                        val._revisions,val._revs_info);
+                }
+                val._revs_info[0].rev =
+                    val._revs_info[0].rev.split('-')[0];
             }
         }
+        o.f(err,val);
+    };
+    o.spy({_id:'file2.doc',content:'yes',_rev:'1',
+           _creation_date:true,_last_modified:true,
+           _conflicts:{total_rows:0,rows:[]},
+           _revisions:{start:1,ids:['1']},
+           _revs_info:[{rev:'1',status:'available'}]},
+          'loading "file2.doc".');
+    o.jio.get('file2.doc',{revs:true,revs_info:true,conflicts:true},
+              o.get_callback);
+    o.tick();
+
+    // allDocs
+    o.spy({total_rows:2,rows:[{
+        id:'file.doc',key:'file.doc',
+        value:{_rev:'1',_creation_date:true,_last_modified:true}
+    },{
+        id:'file2.doc',key:'file2.doc',
+        value:{_rev:'1',_creation_date:true,_last_modified:true}
+    }]},'getting list.');
+    o.jio.allDocs(function (err,val) {
+        if (val) {
+            var i;
+            for (i = 0; i < val.total_rows; i+= 1) {
+                val.rows[i].value._creation_date =
+                    val.rows[i].value._creation_date?
+                    true:undefined;
+                val.rows[i].value._last_modified =
+                    val.rows[i].value._last_modified?
+                    true:undefined;
+                val.rows[i].value._rev = val.rows[i].value._rev.split('-')[0];
+            }
+            // because the result can be disordered
+            if (val.total_rows === 2 && val.rows[0].id === 'file2.doc') {
+                var tmp = val.rows[0];
+                val.rows[0] = val.rows[1];
+                val.rows[1] = tmp;
+            }
+        }
+        o.f(err,val);
+    });
+    o.tick();
+
+    // remove
+    o.spy({ok:true,id:'file.doc',rev:'2'},
+          'removing "file.doc"');
+    o.jio.remove({_id:'file.doc'},{rev:o.rev1},function (err,val) {
+        if (val) {
+            val.rev = val.rev?val.rev.split('-')[0]:undefined;
+        }
+        o.f(err,val);
+    });
+    o.tick();
+    // remove with options
+    o.spy({
+        ok:true,id:'file2.doc',rev:'2',
+        conflicts:{total_rows:0,rows:[]},
+        revisions:{start:2,ids:['2',getHashFromRev(o.rev2)]},
+        revs_info:[{rev:'2',status:'deleted'}]
+    },'removing "file2.doc"');
+    o.jio.remove(
+        {_id:'file2.doc'},
+        {rev:o.rev2,conflicts:true,revs:true,revs_info:true},
+        function (err,val) {
+            if (val) {
+                val.rev = val.rev?val.rev.split('-')[0]:undefined;
+                if (val.revs_info) {
+                    if (val.revisions) {
+                        makeRevsAccordingToRevsInfo(
+                            val.revisions,val.revs_info);
+                    }
+                    val.revs_info[0].rev =
+                        val.revs_info[0].rev.split('-')[0];
+                }
+            }
+            o.f(err,val);
+        });
+    o.tick();
+
+    o.spy(404,'loading document fail.');
+    o.jio.get('file.doc',function (err,val) {
+        if (err) {
+            err = err.status;
+        }
+        o.f(err,val);
     });
     o.tick();
 
@@ -1417,33 +1532,9 @@ test ('Revision Conflict', function() {
 
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick (base_tick);
-    o.spy = function(res,value,message,function_name) {
-        function_name = function_name || 'f';
-        o[function_name] = function(result) {
-            if (res === 'status') {
-                if (result && result.conflict_object) {
-                    result = 'conflict';
-                } else if (result && typeof result.status !== 'undefined') {
-                    result = 'fail';
-                } else {
-                    result = 'done';
-                }
-            }
-            deepEqual (result,value,message);
-        };
-        o.t.spy(o,function_name);
-    };
-    o.tick = function (tick, function_name) {
-        function_name = function_name || 'f'
-        o.clock.tick(tick || 1000);
-        if (!o[function_name].calledOnce) {
-            if (o[function_name].called) {
-                ok(false, 'too much results');
-            } else {
-                ok(false, 'no response');
-            }
-        }
-    };
+    o.spy = basic_spy_function;
+    o.tick = basic_tick_function;
+
     o.localNamespace = 'jio/local/revisionconflict/jiotests/';
     o.rev={};
     o.checkContent = function (string,message) {
@@ -1461,76 +1552,136 @@ test ('Revision Conflict', function() {
     o.jio = JIO.newJio({type:'conflictmanager',
                         storage:o.secondstorage_spec});
     // create a new file
-    o.spy('status','done','new file "file.doc", revision: "0".');
-    o.jio.saveDocument(
-        'file.doc','content1',{
-            previous_revision:'0',
-            error:o.f,
-            success:function(value){
-                o.rev.first = value.revision;
-                o.f(value);
+    o.spy(o,'value',
+          {ok:true,id:'file.doc',rev:'1',conflicts:{total_rows:0,rows:[]},
+           revs_info:[{rev:'1',status:'available'}],
+           revisions:{start:1,ids:['1']}},
+          'new file "file.doc".');
+    o.jio.put(
+        {_id:'file.doc',content:'content1'},
+        {revs:true,revs_info:true,conflicts:true},
+        function (err,val) {
+            if (val) {
+                o.rev.first = val.rev;
+                val.rev = val.rev?val.rev.split('-')[0]:undefined;
+                if (val.revs_info) {
+                    if (val.revisions) {
+                        makeRevsAccordingToRevsInfo(
+                            val.revisions,val.revs_info);
+                    }
+                    val.revs_info[0].rev =
+                        val.revs_info[0].rev.split('-')[0];
+                }
             }
-        });
-    o.tick();
+            o.f(err,val);
+        }
+    );
+    o.tick(o);
     o.checkContent('file.doc.'+o.rev.first);
     // modify the file
-    o.spy('status','done','modify "file.doc", revision: "'+
+    o.spy(o,'value',
+          {ok:true,id:'file.doc',rev:'2',
+           conflicts:{total_rows:0,rows:[]},
+           revisions:{start:2,ids:['2',getHashFromRev(o.rev.first)]},
+           revs_info:[{rev:'2',status:'available'}]},
+          'modify "file.doc", revision: "'+
           o.rev.first+'".');
-    o.jio.saveDocument(
-        'file.doc','content2',{
-            previous_revision:o.rev.first,
-            error:o.f,
-            success:function(v) {
-                o.f(v);
-                o.rev.second = v.revision;
+    o.jio.put(
+        {_id:'file.doc',content:'content2',_rev:o.rev.first},
+        {revs:true,revs_info:true,conflicts:true},
+        function (err,val) {
+            if (val) {
+                o.rev.second = val.rev;
+                val.rev = val.rev?val.rev.split('-')[0]:undefined;
+                if (val.revs_info) {
+                    if (val.revisions) {
+                        makeRevsAccordingToRevsInfo(
+                            val.revisions,val.revs_info);
+                    }
+                    val.revs_info[0].rev =
+                        val.revs_info[0].rev.split('-')[0];
+                }
             }
-        });
-    o.tick();
+            o.f(err,val);
+        }
+    );
+    o.tick(o);
     o.checkContent('file.doc.'+o.rev.second);
     o.checkNoContent('file.doc.'+o.rev.first);
     // modify the file from the second revision instead of the third
-    o.spy('status','conflict','modify "file.doc", revision: "'+
-          o.rev.first+'" -> conflict!');
-    o.jio.saveDocument(
-        'file.doc','content3',{
-            previous_revision:o.rev.first,
-            success:o.f,
-            error: function (error) {
-                o.conflict_object = error.conflict_object;
-                o.f(error);
-                o.rev.third = '?';
-                if (o.conflict_object) {
-                    o.rev.third = o.conflict_object.revision;
-                    ok (!o.conflict_object.revision_object[o.new_rev],
-                        'check if the first revision is not include to '+
-                        'the conflict list.');
-                    ok (o.conflict_object.revision_object[
-                        o.conflict_object.revision],
-                        'check if the new revision is include to '+
-                        'the conflict list.');
+    o.test_message = 'modify "file.doc", revision: "'+
+        o.rev.first+'" -> conflict!';
+    o.f = o.t.spy();
+    o.jio.put(
+        {_id:'file.doc',content:'content3',_rev:o.rev.first},
+        {revs:true,revs_info:true,conflicts:true},function (err,val) {
+            o.f();
+            var k;
+            if (err) {
+                o.rev.third = err.rev;
+                err.rev = checkRev(err.rev);
+                if (err.conflicts && err.conflicts.rows) {
+                    o.solveConflict = checkConflictRow (err.conflicts.rows[0]);
+                }
+                for (k in {'error':0,'message':0,'reason':0,'statusText':0}) {
+                    if (err[k]) {
+                        delete err[k];
+                    } else {
+                        err[k] = 'ERROR: ' + k + ' is missing !';
+                    }
                 }
             }
+            deepEqual(err||val,{
+                rev:o.rev.third,
+                conflicts:{total_rows:1,rows:[
+                    {id:'file.doc',key:[o.rev.second,o.rev.third],
+                     value:{_solveConflict:'function'}}]},
+                status:409,
+                // just one revision in the history, it does not keep older
+                // revisions because it is not a revision manager storage.
+                revisions:{start:1,ids:[getHashFromRev(o.rev.third)]},
+                revs_info:[{rev:o.rev.second,status:'available'},
+                           {rev:o.rev.third,status:'available'}]
+            },o.test_message);
+            ok (!revs_infoContains(err.revs_info,o.rev.first),
+                'check if the first revision is not include to '+
+                'the conflict list.');
+            ok (revs_infoContains(err.revs_info,err.rev),
+                'check if the new revision is include to '+
+                'the conflict list.');
         });
-    o.tick();
+    o.tick(o);
     o.checkContent ('file.doc.'+o.rev.third);
     // loading test
-    o.spy('status','conflict','loading "file.doc" -> conflict!');
-    o.jio.loadDocument('file.doc',{
-        success:o.f,error:o.f
-    });
-    o.tick();
-    if (!o.conflict_object) { return ok(false,'Cannot to continue the tests'); }
-    // solving conflict
-    o.spy('status','done','solve conflict "file.doc".');
-    o.conflict_object.solveConflict(
-        'content4',{
-            error:o.f,
-            success:function (r) {
-                o.f(r);
-                o.rev.forth = r.revision;
+    o.spy(o,'value',{_id:'file.doc',_rev:o.rev.third,content:'content3'},
+          'loading "file.doc" -> conflict!');
+    o.jio.get('file.doc',function (err,val) {
+        var k;
+        if (val) {
+            for (k in {'_creation_date':0,'_last_modified':0}) {
+                if (val[k]) {
+                    delete val[k];
+                } else {
+                    val[k] = 'ERROR: ' + k + ' is missing !';
+                }
             }
+        }
+        o.f(err,val);
+    });
+    o.tick(o);
+    if (!o.solveConflict) { return ok(false,'Cannot to continue the tests'); }
+    // solving conflict
+    o.spy(o,'value',{ok:true,id:'file.doc',rev:'3'},
+          'solve conflict "file.doc".');
+    o.solveConflict(
+        'content4',function (err,val) {
+            if (val) {
+                o.rev.forth = val.rev;
+                val.rev = val.rev?val.rev.split('-')[0]:undefined;
+            }
+            o.f(err,val);
         });
-    o.tick();
+    o.tick(o);
     o.checkContent('file.doc.'+o.rev.forth);
     o.checkNoContent('file.doc.'+o.rev.second);
     o.checkNoContent('file.doc.'+o.rev.third);
@@ -1540,33 +1691,9 @@ test ('Revision Conflict', function() {
 test ('Conflict in a conflict solving', function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick (base_tick);
-    o.spy = function(res,value,message,function_name) {
-        function_name = function_name || 'f';
-        o[function_name] = function(result) {
-            if (res === 'status') {
-                if (result && result.conflict_object) {
-                    result = 'conflict';
-                } else if (result && typeof result.status !== 'undefined') {
-                    result = 'fail';
-                } else {
-                    result = 'done';
-                }
-            }
-            deepEqual (result,value,message);
-        };
-        o.t.spy(o,function_name);
-    };
-    o.tick = function (tick, function_name) {
-        function_name = function_name || 'f'
-        o.clock.tick(tick || 1000);
-        if (!o[function_name].calledOnce) {
-            if (o[function_name].called) {
-                ok(false, 'too much results');
-            } else {
-                ok(false, 'no response');
-            }
-        }
-    };
+    o.spy = basic_spy_function;
+    o.tick = basic_tick_function;
+
     o.localNamespace = 'jio/local/conflictconflict/jiotests/';
     o.rev={};
     o.checkContent = function (string,message) {
@@ -1584,73 +1711,165 @@ test ('Conflict in a conflict solving', function () {
     o.jio = JIO.newJio({type:'conflictmanager',
                         storage:o.secondstorage_spec});
     // create a new file
-    o.spy('status','done','new file "file.doc", revision: "0".');
-    o.jio.saveDocument(
-        'file.doc','content1',{
-            previous_revision:'0',
-            error:o.f,
-            success:function(value){
-                o.rev.first = value.revision;
-                o.f(value);
+    o.test_message = 'new file "file.doc", revision: "0".'
+    o.f = o.t.spy();
+    o.jio.put(
+        {_id:'file.doc',content:'content1'},
+        {conflicts:true,revs:true,revs_info:true},
+        function(err,val) {
+            o.f();
+            if (val) {
+                o.rev.first = val.rev;
+                val.rev = checkRev(val.rev);
             }
+            deepEqual(err||val,{
+                ok:true,id:'file.doc',rev:o.rev.first,
+                conflicts:{total_rows:0,rows:[]},
+                revisions:{start:1,ids:[getHashFromRev(o.rev.first)]},
+                revs_info:[{rev:o.rev.first,status:'available'}]
+            },o.test_message);
         });
-    o.tick();
+    o.tick(o);
     o.checkContent ('file.doc.'+o.rev.first);
     // modify the file from the second revision instead of the third
-    o.spy('status','conflict','modify "file.doc", revision: "0" -> conflict!');
-    o.jio.saveDocument(
-        'file.doc','content2',{
-            previous_revision:"0",
-            success:o.f,
-            error: function (error) {
-                o.f(error);
-                o.conflict_object = error.conflict_object;
-                o.rev.second = o.conflict_object?o.conflict_object.revision:'?';
+    o.test_message = 'modify "file.doc", revision: "0" -> conflict!';
+    o.f = o.t.spy();
+    o.jio.put(
+        {_id:'file.doc',content:'content2'},
+        {conflicts:true,revs:true,revs_info:true},
+        function (err,val) {
+        o.f();
+        var k;
+        if (err) {
+            o.rev.second = err.rev;
+            err.rev = checkRev(err.rev);
+            if (err.conflicts && err.conflicts.rows) {
+                o.solveConflict = checkConflictRow (err.conflicts.rows[0]);
             }
-        });
-    o.tick();
-    o.checkContent ('file.doc.'+o.rev.second);
-    if (!o.conflict_object) { return ok(false,'Cannot to continue the tests'); }
-    // saving another time
-    o.spy('status','conflict','modify "file.doc" when solving, revision: "'+
-          o.rev.first+'" -> conflict!');
-    o.jio.saveDocument('file.doc','content3',{
-        previous_revision: o.rev.first,
-        error:function(e){
-            o.f(e);
-            o.rev.third = o.conflict_object?o.conflict_object.revision:'?';
-        },
-        success:o.f
+            for (k in {'error':0,'message':0,'reason':0,'statusText':0}) {
+                if (err[k]) {
+                    delete err[k];
+                } else {
+                    err[k] = 'ERROR: ' + k + ' is missing !';
+                }
+            }
+        }
+        deepEqual(err||val,{
+            rev:o.rev.second,
+            conflicts:{total_rows:1,rows:[
+                {id:'file.doc',key:[o.rev.first,o.rev.second],
+                 value:{_solveConflict:'function'}}]},
+            status:409,
+            // just one revision in the history, it does not keep older
+            // revisions because it is not a revision manager storage.
+            revisions:{start:1,ids:[getHashFromRev(o.rev.second)]},
+            revs_info:[{rev:o.rev.first,status:'available'},
+                       {rev:o.rev.second,status:'available'}]
+        },o.test_message);
     });
-    o.tick();
+    o.tick(o);
+    o.checkContent ('file.doc.'+o.rev.second);
+    if (!o.solveConflict) { return ok(false,'Cannot to continue the tests'); }
+    // saving another time
+    o.test_message = 'modify "file.doc" when solving, revision: "'+
+        o.rev.first+'" -> conflict!';
+    o.f = o.t.spy();
+    o.jio.put(
+        {_id:'file.doc',content:'content3',_rev:o.rev.first},
+        {conflicts:true,revs:true,revs_info:true},
+        function(err,val){
+            o.f();
+            if (err) {
+                o.rev.third = err.rev;
+                err.rev = checkRev(err.rev);
+                if (err.conflicts && err.conflicts.rows) {
+                    checkConflictRow (err.conflicts.rows[0]);
+                }
+                for (k in {'error':0,'message':0,'reason':0,'statusText':0}) {
+                    if (err[k]) {
+                        delete err[k];
+                    } else {
+                        err[k] = 'ERROR: ' + k + ' is missing !';
+                    }
+                }
+            }
+            deepEqual(err||val,{
+                rev:o.rev.third,
+                conflicts:{total_rows:1,rows:[
+                    {id:'file.doc',key:[o.rev.second,o.rev.third],
+                     value:{_solveConflict:'function'}}]},
+                status:409,
+                // just one revision in the history, it does not keep older
+                // revisions because it is not a revision manager storage.
+                revisions:{start:2,ids:[getHashFromRev(o.rev.third),
+                                        getHashFromRev(o.rev.first)]},
+                revs_info:[{rev:o.rev.second,status:'available'},
+                           {rev:o.rev.third,status:'available'}]
+            },o.test_message);
+        });
+    o.tick(o);
     o.checkContent ('file.doc.'+o.rev.third);
     o.checkNoContent ('file.doc.'+o.rev.first);
     // solving first conflict
-    o.spy('status','conflict','solving conflict "file.doc" -> conflict!');
-    o.conflict_object.solveConflict('content4',{
-        success: o.f,
-        error: function (error) {
-            o.rev.forth = '?';
-            if (error.conflict_object) {
-                o.conflict_object = error.conflict_object;
-                o.rev.forth = o.conflict_object.revision;
+    o.test_message = 'solving conflict "file.doc" -> conflict!';
+    o.f = o.t.spy();
+    o.solveConflict(
+        'content4',{conflicts:true,revs:true,revs_info:true},
+        function (err,val) {
+            o.f();
+            if (err) {
+                o.rev.forth = err.rev;
+                err.rev = checkRev(err.rev);
+                if (err.conflicts && err.conflicts.rows) {
+                    o.solveConflict = checkConflictRow (err.conflicts.rows[0]);
+                }
+                for (k in {'error':0,'message':0,'reason':0,'statusText':0}) {
+                    if (err[k]) {
+                        delete err[k];
+                    } else {
+                        err[k] = 'ERROR: ' + k + ' is missing !';
+                    }
+                }
             }
-            o.f(error);
-        }
-    })
-    o.tick();
+            deepEqual(err||val,{
+                rev:o.rev.forth,
+                conflicts:{total_rows:1,rows:[
+                    {id:'file.doc',key:[o.rev.third,o.rev.forth],
+                     value:{_solveConflict:'function'}}]},
+                status:409,
+                // just one revision in the history, it does not keep older
+                // revisions because it is not a revision manager storage.
+                revisions:{start:2,ids:[getHashFromRev(o.rev.forth),
+                                        getHashFromRev(o.rev.second)]},
+                revs_info:[{rev:o.rev.third,status:'available'},
+                           {rev:o.rev.forth,status:'available'}]
+            },o.test_message);
+        });
+    o.tick(o);
     o.checkContent ('file.doc.'+o.rev.forth);
     o.checkNoContent ('file.doc.'+o.rev.second);
+    if (!o.solveConflict) { return ok(false,'Cannot to continue the tests'); }
     // solving last conflict
-    o.spy('status','done','solving last conflict "file.doc".');
-    o.conflict_object.solveConflict('content5',{
-        error:o.f,
-        success:function (v) {
-            o.f(v);
-            o.rev.fith = v.revision;
-        }
-    });
-    o.tick();
+    o.test_message = 'solving last conflict "file.doc".';
+    o.f = o.t.spy();
+    o.solveConflict(
+        'content5',{conflicts:true,revs:true,revs_info:true},
+        function (err,val) {
+            if (val) {
+                o.rev.fith = val.rev;
+                val.rev = checkRev(val.rev);
+            }
+            deepEqual(err||val,{
+                ok:true,id:'file.doc',rev:o.rev.fith,
+                conflicts:{total_rows:0,rows:[]},
+                revisions:{start:3,ids:[getHashFromRev(o.rev.fith),
+                                        getHashFromRev(o.rev.forth),
+                                        getHashFromRev(o.rev.second)]},
+                revs_info:[{rev:o.rev.fith,status:'available'}]
+            },o.test_message);
+            o.f();
+        });
+    o.tick(o);
     o.checkContent ('file.doc.'+o.rev.fith);
 
     o.jio.stop();
@@ -1659,33 +1878,9 @@ test ('Conflict in a conflict solving', function () {
 test ('Remove revision conflict', function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick (base_tick);
-    o.spy = function(res,value,message,function_name) {
-        function_name = function_name || 'f';
-        o[function_name] = function(result) {
-            if (res === 'status') {
-                if (result && result.conflict_object) {
-                    result = 'conflict';
-                } else if (result && typeof result.status !== 'undefined') {
-                    result = 'fail';
-                } else {
-                    result = 'done';
-                }
-            }
-            deepEqual (result,value,message);
-        };
-        o.t.spy(o,function_name);
-    };
-    o.tick = function (tick, function_name) {
-        function_name = function_name || 'f'
-        o.clock.tick(tick || 1000);
-        if (!o[function_name].calledOnce) {
-            if (o[function_name].called) {
-                ok(false, 'too much results');
-            } else {
-                ok(false, 'no response');
-            }
-        }
-    };
+    o.spy = basic_spy_function;
+    o.tick = basic_tick_function;
+
     o.localNamespace = 'jio/local/removeconflict/jiotests/';
     o.rev={};
     o.checkContent = function (string,message) {
@@ -1703,74 +1898,186 @@ test ('Remove revision conflict', function () {
     o.jio = JIO.newJio({type:'conflictmanager',
                         storage:o.secondstorage_spec});
 
-    o.spy('status','done','new file "file.doc", revision: "0".');
-    o.jio.saveDocument(
-        'file.doc','content1',{
-            previous_revision:'0',
-            error:o.f,
-            success:function(value){
-                o.rev.first = value.revision;
-                o.f(value);
+    o.test_message = 'new file "file.doc", revision: "0".';
+    o.f = o.t.spy();
+    o.jio.put(
+        {_id:'file.doc',content:'content1'},
+        {conflicts:true,revs:true,revs_info:true},
+        function(err,val) {
+            o.f();
+            if (val) {
+                o.rev.first = val.rev;
+                val.rev = checkRev(val.rev);
             }
+            deepEqual(err||val,{
+                ok:true,id:'file.doc',rev:o.rev.first,
+                conflicts:{total_rows:0,rows:[]},
+                revisions:{start:1,ids:[getHashFromRev(o.rev.first)]},
+                revs_info:[{rev:o.rev.first,status:'available'}]
+            },o.test_message);
         });
-    o.tick();
+    o.tick(o);
     o.checkContent ('file.doc.'+o.rev.first);
 
-    o.spy('status','fail','remove "file.doc", revision: "wrong" -> conflict!');
-    o.jio.removeDocument(
-        'file.doc',{
-            previous_revision:'wrong',
-            success:o.f,
-            error:function (e) {
-                o.f(e);
+    o.test_message = 'remove "file.doc", revision: "wrong" -> conflict!';
+    o.f = o.t.spy();
+    o.jio.remove(
+        {_id:'file.doc'},
+        {conflicts:true,revs:true,revs_info:true,rev:'wrong'},
+        function (err,val) {
+            o.f();
+            if (err) {
+                o.rev.second = err.rev;
+                err.rev = checkRev(err.rev);
+                if (err.conflicts && err.conflicts.rows) {
+                    o.solveConflict = checkConflictRow (err.conflicts.rows[0]);
+                }
+                for (k in {'error':0,'message':0,'reason':0,'statusText':0}) {
+                    if (err[k]) {
+                        delete err[k];
+                    } else {
+                        err[k] = 'ERROR: ' + k + ' is missing !';
+                    }
+                }
             }
+            deepEqual(err||val,{
+                rev:o.rev.second,
+                conflicts:{total_rows:1,rows:[
+                    {id:'file.doc',key:[o.rev.first,o.rev.second],
+                     value:{_solveConflict:'function'}}]},
+                status:409,
+                // just one revision in the history, it does not keep older
+                // revisions because it is not a revision manager storage.
+                revisions:{start:1,ids:[getHashFromRev(o.rev.second)]},
+                revs_info:[{rev:o.rev.first,status:'available'},
+                           {rev:o.rev.second,status:'deleted'}]
+            },o.test_message);
         });
-    o.tick();
+    o.tick(o);
 
-    o.spy('status','conflict','new file again "file.doc", revision: "0".');
-    o.jio.saveDocument(
-        'file.doc','content2',{
-            previous_revision:'0',
-            success:o.f,
-            error:function (error) {
-                o.f(error);
-                o.rev.second = error.conflict_object ?
-                    error.conflict_object.revision : '?';
+    o.test_message = 'new file again "file.doc".';
+    o.f = o.t.spy();
+    o.jio.put(
+        {_id:'file.doc',content:'content2'},
+        {conflicts:true,revs:true,revs_info:true},
+        function (err,val) {
+            o.f();
+            if (err) {
+                o.rev.third = err.rev;
+                err.rev = checkRev(err.rev);
+                if (err.conflicts && err.conflicts.rows) {
+                    o.solveConflict = checkConflictRow (err.conflicts.rows[0]);
+                }
+                for (k in {'error':0,'message':0,'reason':0,'statusText':0}) {
+                    if (err[k]) {
+                        delete err[k];
+                    } else {
+                        err[k] = 'ERROR: ' + k + ' is missing !';
+                    }
+                }
             }
+            deepEqual(err||val,{
+                rev:o.rev.third,
+                conflicts:{total_rows:1,rows:[
+                    {id:'file.doc',key:[o.rev.first,o.rev.second,o.rev.third],
+                     value:{_solveConflict:'function'}}]},
+                status:409,
+                // just one revision in the history, it does not keep older
+                // revisions because it is not a revision manager storage.
+                revisions:{start:1,ids:[getHashFromRev(o.rev.third)]},
+                revs_info:[{rev:o.rev.first,status:'available'},
+                           {rev:o.rev.second,status:'deleted'},
+                           {rev:o.rev.third,status:'available'}]
+            },o.test_message);
         });
-    o.tick();
-    o.checkContent ('file.doc.'+o.rev.second);
+    o.tick(o);
+    o.checkContent ('file.doc.'+o.rev.third);
 
-    o.spy('status','conflict','remove "file.doc", revision: "'+o.rev.first+
-          '" -> conflict!');
-    o.jio.removeDocument(
-        'file.doc',{
-            revision:o.rev.first,
-            success:o.f,
-            error:function (error) {
-                o.conflict_object = error.conflict_object;
-                o.f(error);
-                o.rev.third = o.conflict_object?o.conflict_object.revision:'?';
+    o.test_message = 'remove "file.doc", revision: "'+o.rev.first+
+        '" -> conflict!'
+    o.f = o.t.spy();
+    o.jio.remove(
+        {_id:'file.doc'},
+        {conflicts:true,revs:true,revs_info:true,rev:o.rev.first},
+        function (err,val) {
+            o.f();
+            if (err) {
+                o.rev.forth = err.rev;
+                err.rev = checkRev(err.rev);
+                if (err.conflicts && err.conflicts.rows) {
+                    o.solveConflict = checkConflictRow (err.conflicts.rows[0]);
+                }
+                for (k in {'error':0,'message':0,'reason':0,'statusText':0}) {
+                    if (err[k]) {
+                        delete err[k];
+                    } else {
+                        err[k] = 'ERROR: ' + k + ' is missing !';
+                    }
+                }
             }
+            deepEqual(err||val,{
+                rev:o.rev.forth,
+                conflicts:{total_rows:1,rows:[
+                    {id:'file.doc',key:[o.rev.second,o.rev.third,o.rev.forth],
+                     value:{_solveConflict:'function'}}]},
+                status:409,
+                // just one revision in the history, it does not keep older
+                // revisions because it is not a revision manager storage.
+                revisions:{start:2,ids:[getHashFromRev(o.rev.forth),
+                                        getHashFromRev(o.rev.first)]},
+                revs_info:[{rev:o.rev.second,status:'deleted'},
+                           {rev:o.rev.third,status:'available'},
+                           {rev:o.rev.forth,status:'deleted'}]
+            },o.test_message);
         });
-    o.tick();
+    o.tick(o);
     o.checkNoContent ('file.doc.'+o.rev.first);
-    o.checkNoContent ('file.doc.'+o.rev.third);
-
-    if (!o.conflict_object) { return ok(false, 'Cannot continue the tests'); }
-    o.spy('status','done','solve "file.doc"');
-    o.conflict_object.solveConflict({
-        error:o.f,
-        success:function (v) {
-            o.f(v);
-            o.rev.forth = v.revision;
-        }
-    });
-    o.tick();
-    o.checkNoContent ('file.doc.'+o.rev.second);
-    o.checkNoContent ('file.doc.'+o.rev.third);
     o.checkNoContent ('file.doc.'+o.rev.forth);
 
+    if (!o.solveConflict) { return ok(false, 'Cannot continue the tests'); }
+    o.test_message = 'solve "file.doc"';
+    o.f = o.t.spy();
+    o.solveConflict({conflicts:true,revs:true,revs_info:true},function(err,val){
+        o.f();
+        if (val) {
+            o.rev.fith = val.rev;
+            val.rev = checkRev(val.rev);
+        }
+        deepEqual(err||val,{
+            ok:true,id:'file.doc',rev:o.rev.fith,
+            conflicts:{total_rows:0,rows:[]},
+            revisions:{start:3,ids:[getHashFromRev(o.rev.fith),
+                                    getHashFromRev(o.rev.forth),
+                                    getHashFromRev(o.rev.first)]},
+            revs_info:[{rev:o.rev.fith,status:'deleted'}]
+        },o.test_message);
+    });
+    o.tick(o);
+    o.checkNoContent ('file.doc.'+o.rev.second);
+    o.checkNoContent ('file.doc.'+o.rev.forth);
+    o.checkNoContent ('file.doc.'+o.rev.fith);
+
+    o.jio.stop();
+});
+
+test ('Load Revisions', function () {
+    var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.clock.tick (base_tick);
+    o.spy = basic_spy_function;
+    o.tick = basic_tick_function;
+    o.secondstorage_spec = {type:'local',
+                            username:'loadrevisions',
+                            applicationname:'jiotests'}
+    //////////////////////////////////////////////////////////////////////
+    o.jio = JIO.newJio({type:'conflictmanager',
+                        storage:o.secondstorage_spec});
+    o.spy(o,'status',404,'load file rev:1,','f'); // 12 === Replaced
+    o.spy(o,'status',404,'load file rev:2','g');
+    o.spy(o,'status',404,'and load file rev:3 at the same time','h');
+    o.jio.get('file',{rev:'1'},o.f);
+    o.jio.get('file',{rev:'2'},o.g);
+    o.jio.get('file',{rev:'3'},o.h);
+    o.tick(o,1000,'f'); o.tick(o,0,'g'); o.tick(o,0,'h');
     o.jio.stop();
 });
 
