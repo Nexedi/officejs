@@ -105,21 +105,21 @@ addFileToLocalStorage = function (user,appid,file) {
         userarray.push(user);
         LocalOrCookieStorage.setItem('jio/local_user_array',userarray);
         LocalOrCookieStorage.setItem(
-            'jio/local_file_name_array/'+user+'/'+appid,[file.name]);
+            'jio/local_file_name_array/'+user+'/'+appid,[file._id]);
     } else {
         filenamearray =
             LocalOrCookieStorage.getItem(
                 'jio/local_file_name_array/'+user+'/'+appid) || [];
-        filenamearray.push(file.name);
+        filenamearray.push(file._id);
         LocalOrCookieStorage.setItem(
             'jio/local_file_name_array/'+user+'/'+appid,
             filenamearray);
         LocalOrCookieStorage.setItem(
-            'jio/local/'+user+'/'+appid+'/'+file.name,
+            'jio/local/'+user+'/'+appid+'/'+file._id,
             file);
     }
     LocalOrCookieStorage.setItem(
-        'jio/local/'+user+'/'+appid+'/'+file.name,
+        'jio/local/'+user+'/'+appid+'/'+file._id,
         file);
 },
 removeFileFromLocalStorage = function (user,appid,file) {
@@ -128,14 +128,14 @@ removeFileFromLocalStorage = function (user,appid,file) {
         LocalOrCookieStorage.getItem(
             'jio/local_file_name_array/'+user+'/'+appid) || [];
     for (i = 0, l = filenamearray.length; i < l; i+= 1) {
-        if (filenamearray[i] !== file.name) {
+        if (filenamearray[i] !== file._id) {
             newarray.push(filenamearray[i]);
         }
     }
     LocalOrCookieStorage.setItem('jio/local_file_name_array/'+user+'/'+appid,
                                  newarray);
     LocalOrCookieStorage.deleteItem(
-        'jio/local/'+user+'/'+appid+'/'+file.name);
+        'jio/local/'+user+'/'+appid+'/'+file._id);
 };
 //// end tools
 
@@ -489,37 +489,18 @@ test ('Document save', function () {
     // We launch a saving to localstorage and we check if the file is
     // realy saved. Then save again and check if
 
-    var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    var o = {}; o.t = this; o.clock = o.t.sandbox.useFakeTimers();
     o.clock.tick(base_tick);
-    o.spy = function(res,value,message) {
-        o.f = function(result) {
-            if (res === 'status') {
-                if (result && result.status) {
-                    result = 'fail';
-                } else {
-                    result = 'done';
-                }
-            }
-            deepEqual (result,value,message);
-        };
-        o.t.spy(o,'f');
-    };
-    o.tick = function (value, tick) {
-        o.clock.tick(tick || 1000);
-        if (!o.f.calledOnce) {
-            if (o.f.called) {
-                ok(false, 'too much results');
-            } else {
-                ok(false, 'no response');
-            }
-        }
+    o.spy = basic_spy_function;
+    o.tick = function (o, tick, value, fun) {
+        basic_tick_function(o,tick,fun);
         o.tmp =
             LocalOrCookieStorage.getItem ('jio/local/MrSaveName/jiotests/file');
         if (o.tmp) {
-            o.tmp.lmcd = (o.tmp.last_modified === o.tmp.creation_date);
-            delete o.tmp.last_modified;
-            delete o.tmp.creation_date;
-            deepEqual (o.tmp,{name:'file',content:'content',lmcd:value},
+            o.tmp.lmcd = (o.tmp._last_modified === o.tmp._creation_date);
+            delete o.tmp._last_modified;
+            delete o.tmp._creation_date;
+            deepEqual (o.tmp,{_id:'file',content:'content',lmcd:value},
                        'check saved document');
         } else {
             ok (false, 'document is not saved!');
@@ -529,13 +510,13 @@ test ('Document save', function () {
     o.jio = JIO.newJio({type:'local',username:'MrSaveName',
                         applicationname:'jiotests'});
     // save and check document existence
-    o.spy('status','done','saving document');
-    o.jio.saveDocument('file','content',{success:o.f,error:o.f});
-    o.tick(true);
+    o.spy (o,'value',{ok:true,id:'file'},'saving document');
+    o.jio.put({_id:'file',content:'content'},o.f);
+    o.tick(o,null,true);
 
-    o.spy('status','done','saving document');
-    o.jio.saveDocument('file','content',{success:o.f,error:o.f});
-    o.tick(false);
+    o.spy (o,'value',{ok:true,id:'file'},'saving document');
+    o.jio.put({_id:'file',content:'content'},o.f);
+    o.tick(o,null,false);
 
     o.jio.stop();
 });
@@ -547,44 +528,23 @@ test ('Document load', function () {
 
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick(base_tick);
-    o.spy = function(res,value,message) {
-        o.f = function(result) {
-            if (res === 'status') {
-                if (result && result.status) {
-                    result = 'fail';
-                } else {
-                    result = 'done';
-                }
-            }
-            deepEqual (result,value,message);
-        };
-        o.t.spy(o,'f');
-    };
-    o.tick = function (value, tick) {
-        o.clock.tick(tick || 1000);
-        if (!o.f.calledOnce) {
-            if (o.f.called) {
-                ok(false, 'too much results');
-            } else {
-                ok(false, 'no response');
-            }
-        }
-    };
+    o.spy = basic_spy_function;
+    o.tick = basic_tick_function;
 
     o.jio = JIO.newJio({type:'local',username:'MrLoadName',
                         applicationname:'jiotests'});
     // save and check document existence
-    o.doc = {name:'file',content:'content',
-             last_modified:1234,creation_date:1000};
+    o.doc = {_id:'file',content:'content',
+             _last_modified:1234,_creation_date:1000};
 
-    o.spy('status','fail','loading document failure');
-    o.jio.loadDocument('file',{success:o.f,error:o.f});
-    o.tick();
+    o.spy(o,'status',404,'loading document failure');
+    o.jio.get('file',o.f);
+    o.tick(o);
 
     addFileToLocalStorage('MrLoadName','jiotests',o.doc);
-    o.spy('value',o.doc,'loading document success');
-    o.jio.loadDocument('file',{success:o.f,error:o.f});
-    o.tick();
+    o.spy(o,'value',o.doc,'loading document success');
+    o.jio.get('file',o.f);
+    o.tick(o);
 
     o.jio.stop();
 });
@@ -596,12 +556,16 @@ test ('Get document list', function () {
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick(base_tick);
     o.mytest = function (value){
-        o.f = function (result) {
-            deepEqual (objectifyDocumentArray(result),
-                       objectifyDocumentArray(value),'getting list');
+        o.f = function (err,val) {
+            if (val) {
+                deepEqual (objectifyDocumentArray(val.rows),
+                           objectifyDocumentArray(value),'getting list');
+            } else {
+                deepEqual (err,value,'getting list');
+            }
         };
         o.t.spy(o,'f');
-        o.jio.getDocumentList('.',{success: o.f,error:o.f});
+        o.jio.allDocs(o.f);
         o.clock.tick(1000);
         if (!o.f.calledOnce) {
             if (o.f.called) {
@@ -613,15 +577,25 @@ test ('Get document list', function () {
     };
     o.jio = JIO.newJio({type:'local',username:'MrListName',
                         applicationname:'jiotests'});
-    o.doc1 = {name:'file',content:'content',
-              last_modified:1,creation_date:0};
-    o.doc2 = {name:'memo',content:'test',
-              last_modified:5,creation_date:2};
+    o.doc1 = {_id:'file',content:'content',
+              _last_modified:1,_creation_date:0};
+    o.doc2 = {_id:'memo',content:'test',
+              _last_modified:5,_creation_date:2};
     addFileToLocalStorage ('MrListName','jiotests',o.doc1);
     addFileToLocalStorage ('MrListName','jiotests',o.doc2);
-    delete o.doc1.content;
-    delete o.doc2.content;
-    o.mytest ([o.doc1,o.doc2]);
+    o.mytest ([{
+        id:o.doc2._id,key:o.doc2._id,
+        value:{
+            _creation_date:o.doc2._creation_date,
+            _last_modified:o.doc2._last_modified
+        }
+    },{
+        id:o.doc1._id,key:o.doc1._id,
+        value:{
+            _last_modified:o.doc1._last_modified,
+            _creation_date:o.doc1._creation_date
+        }
+    }]);
 
     o.jio.stop();
 });
@@ -633,32 +607,22 @@ test ('Document remove', function () {
 
     var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
     o.clock.tick(base_tick);
-    o.mytest = function (){
-        o.f = function (result) {
-            if (result) {
-                result = 'fail';
-            } else {
-                result = 'done';
-            }
-            deepEqual(result,'done','removing document');
-        };
-        o.t.spy(o,'f');
-        o.jio.removeDocument('file',{success:o.f,error:o.f});
-        o.clock.tick(1000);
-        if (!o.f.calledOnce) {
-            ok(false, 'no response / too much results');
-        } else {
-            // check if the file is still there
-            o.tmp = LocalOrCookieStorage.getItem (
-                'jio/local/MrRemoveName/jiotests/file');
-            ok (!o.tmp, 'check no content');
-        }
+    o.spy = basic_spy_function;
+    o.tick = function () {
+        basic_tick_function.apply(basic_tick_function,arguments);
+        // check if the file is still there
+        o.tmp = LocalOrCookieStorage.getItem (
+            'jio/local/MrRemoveName/jiotests/file');
+        ok (!o.tmp, 'check no content');
     };
+
     o.jio = JIO.newJio({type:'local',username:'MrRemoveName',
                         applicationname:'jiotests'});
     // test removing a file
-    addFileToLocalStorage ('MrRemoveName','jiotests',{name:'file'});
-    o.mytest ();
+    o.spy (o,'value',{ok:true,id:'file'},'removing document');
+    addFileToLocalStorage ('MrRemoveName','jiotests',{_id:'file'});
+    o.jio.remove({_id:'file'},o.f);
+    o.tick (o);
 
     o.jio.stop();
 });

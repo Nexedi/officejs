@@ -5,12 +5,32 @@
 var newLocalStorage = function ( spec, my ) {
     var that = Jio.storage( spec, my, 'base' ), priv = {};
 
+    priv.secureDocId = function (string) {
+        var split = string.split('/'), i;
+        if (split[0] === '') {
+            split = split.slice(1);
+        }
+        for (i = 0; i < split.length; i+= 1) {
+            if (split[i] === '') { return ''; }
+        }
+        return split.join('%2F');
+    };
+    priv.convertSlashes = function (string) {
+        return string.split('/').join('%2F');
+    };
+
+    priv.restoreSlashes = function (string) {
+        return string.split('%2F').join('/');
+    };
+
     priv.username = spec.username || '';
+    priv.secured_username = priv.convertSlashes(priv.username);
     priv.applicationname = spec.applicationname || 'untitled';
+    priv.secured_applicationname = priv.convertSlashes(priv.applicationname);
 
     var storage_user_array_name = 'jio/local_user_array';
     var storage_file_array_name = 'jio/local_file_name_array/' +
-        priv.username + '/' + priv.applicationname;
+        priv.secured_username + '/' + priv.secured_applicationname;
 
     var super_serialized = that.serialized;
     that.serialized = function() {
@@ -21,7 +41,7 @@ var newLocalStorage = function ( spec, my ) {
     };
 
     that.validateState = function() {
-        if (priv.username) {
+        if (priv.secured_username) {
             return '';
         }
         return 'Need at least one parameter: "username".';
@@ -103,42 +123,64 @@ var newLocalStorage = function ( spec, my ) {
                                      new_array);
     };
 
+    priv.checkSecuredDocId = function (secured_docid,docid,method) {
+        if (!secured_docid) {
+            that.error({
+                status:403,statusText:'Method Not Allowed',
+                error:'method_not_allowed',
+                message:'Cannot '+method+' "'+docid+
+                    '", file name is incorrect.',
+                reason:'Cannot '+method+' "'+docid+
+                    '", file name is incorrect'
+            });
+            return false;
+        }
+        return true;
+    };
+
+    that.post = function (command) {
+        that.put(command);
+    };
+
     /**
      * Saves a document in the local storage.
      * It will store the file in 'jio/local/USR/APP/FILE_NAME'.
-     * @method saveDocument
+     * @method put
      */
-    that.saveDocument = function (command) {
+    that.put = function (command) {
         // wait a little in order to simulate asynchronous saving
         setTimeout (function () {
-            var doc = null, path =
-                'jio/local/'+priv.username+'/'+
-                priv.applicationname+'/'+
-                command.getPath();
+            var secured_docid = priv.secureDocId(command.getDocId()),
+            doc = null, path =
+                'jio/local/'+priv.secured_username+'/'+
+                priv.secured_applicationname+'/'+
+                secured_docid;
 
+            if (!priv.checkSecuredDocId(
+                secured_docid,command.getDocId(),'put')) {return;}
             // reading
             doc = LocalOrCookieStorage.getItem(path);
             if (!doc) {
                 // create document
                 doc = {
-                    'name': command.getPath(),
-                    'content': command.getContent(),
-                    'creation_date': Date.now(),
-                    'last_modified': Date.now()
+                    _id: command.getDocId(),
+                    content: command.getDocContent(),
+                    _creation_date: Date.now(),
+                    _last_modified: Date.now()
                 };
-                if (!priv.userExists(priv.username)) {
-                    priv.addUser (priv.username);
+                if (!priv.userExists(priv.secured_username)) {
+                    priv.addUser (priv.secured_username);
                 }
-                priv.addFileName(command.getPath());
+                priv.addFileName(secured_docid);
             } else {
                 // overwriting
-                doc.last_modified = Date.now();
-                doc.content = command.getContent();
+                doc.content = command.getDocContent();
+                doc._last_modified = Date.now();
             }
             LocalOrCookieStorage.setItem(path, doc);
-            that.success ();
+            that.success ({ok:true,id:command.getDocId()});
         });
-    }; // end saveDocument
+    }; // end put
 
     /**
      * Loads a document from the local storage.
@@ -146,22 +188,25 @@ var newLocalStorage = function ( spec, my ) {
      * You can add an 'options' object to the job, it can contain:
      * - metadata_only {boolean} default false, retrieve the file metadata
      *   only if true.
-     * @method loadDocument
+     * @method get
      */
-    that.loadDocument = function (command) {
-        // document object is {'name':string,'content':string,
-        // 'creation_date':date,'last_modified':date}
+    that.get = function (command) {
 
         setTimeout(function () {
-            var doc = null;
+            var secured_docid = priv.secureDocId(command.getDocId()),
+            doc = null;
 
+            if (!priv.checkSecuredDocId(
+                secured_docid,command.getDocId(),'get')) {return;}
             doc = LocalOrCookieStorage.getItem(
-                'jio/local/'+priv.username+'/'+
-                    priv.applicationname+'/'+command.getPath());
+                'jio/local/'+priv.secured_username+'/'+
+                    priv.secured_applicationname+'/'+secured_docid);
             if (!doc) {
                 that.error ({status:404,statusText:'Not Found.',
-                             message:'Document "'+ command.getPath() +
-                             '" not found in localStorage.'});
+                             error:'not_found',
+                             message:'Document "'+ command.getDocId() +
+                             '" not found.',
+                             reason:'missing'});
             } else {
                 if (command.getOption('metadata_only')) {
                     delete doc.content;
@@ -169,22 +214,20 @@ var newLocalStorage = function ( spec, my ) {
                 that.success (doc);
             }
         });
-    }; // end loadDocument
+    }; // end get
 
     /**
      * Gets a document list from the local storage.
      * It will retreive an array containing files meta data owned by
      * the user.
-     * @method getDocumentList
+     * @method allDocs
      */
-    that.getDocumentList = function (command) {
-        // the list is [object,object] -> object = {'name':string,
-        // 'last_modified':date,'creation_date':date}
+    that.allDocs = function (command) {
 
         setTimeout(function () {
             var new_array = [], array = [], i, l, k = 'key',
-            path = 'jio/local/'+priv.username+'/'+ priv.applicationname,
-            file_object = {};
+            path = 'jio/local/'+priv.secured_username+'/'+
+                priv.secured_applicationname, file_object = {};
 
             array = priv.getFileNameArray();
             for (i = 0, l = array.length; i < l; i += 1) {
@@ -193,39 +236,43 @@ var newLocalStorage = function ( spec, my ) {
                 if (file_object) {
                     if (command.getOption('metadata_only')) {
                         new_array.push ({
-                            name:file_object.name,
-                            creation_date:file_object.creation_date,
-                            last_modified:file_object.last_modified});
+                            id:file_object._id,key:file_object._id,value:{
+                                _creation_date:file_object._creation_date,
+                                _last_modified:file_object._last_modified}});
                     } else {
                         new_array.push ({
-                            name:file_object.name,
-                            content:file_object.content,
-                            creation_date:file_object.creation_date,
-                            last_modified:file_object.last_modified});
+                            id:file_object._id,key:file_object._id,value:{
+                                content:file_object.content,
+                                _creation_date:file_object._creation_date,
+                                _last_modified:file_object._last_modified}});
                     }
                 }
             }
-            that.success (new_array);
+            that.success ({total_rows:new_array.length,rows:new_array});
         });
-    }; // end getDocumentList
+    }; // end allDocs
 
     /**
      * Removes a document from the local storage.
      * It will also remove the path from the local file array.
-     * @method removeDocument
+     * @method remove
      */
-    that.removeDocument = function (command) {
+    that.remove = function (command) {
         setTimeout (function () {
-            var path = 'jio/local/'+
-                priv.username+'/'+
-                priv.applicationname+'/'+
-                command.getPath();
+            var secured_docid = priv.secureDocId(command.getDocId()),
+            path = 'jio/local/'+
+                priv.secured_username+'/'+
+                priv.secured_applicationname+'/'+
+                secured_docid;
+            if (!priv.checkSecuredDocId(
+                secured_docid,command.getDocId(),'remove')) {return;}
             // deleting
             LocalOrCookieStorage.deleteItem(path);
-            priv.removeFileName(command.getPath());
-            that.success ();
+            priv.removeFileName(secured_docid);
+            that.success ({ok:true,id:command.getDocId()});
         });
-    };
+    }; // end remove
+
     return that;
 };
 Jio.addStorageType('local', newLocalStorage);
