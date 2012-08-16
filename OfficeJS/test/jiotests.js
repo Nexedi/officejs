@@ -151,7 +151,8 @@ makeRevsAccordingToRevsInfo = function (revs,revs_info) {
 },
 checkRev = function (rev) {
     if (typeof rev === 'string') {
-        if (parseInt(rev.split('-')[0],10) > 0) {
+        if (rev.split('-').length > 1 &&
+            parseInt(rev.split('-')[0],10) > 0) {
             return rev;
         }
     }
@@ -2078,6 +2079,120 @@ test ('Load Revisions', function () {
     o.jio.get('file',{rev:'2'},o.g);
     o.jio.get('file',{rev:'3'},o.h);
     o.tick(o,1000,'f'); o.tick(o,0,'g'); o.tick(o,0,'h');
+    o.jio.stop();
+});
+
+test ('Get revision List', function () {
+    var o = {}; o.clock = this.sandbox.useFakeTimers(); o.t = this;
+    o.clock.tick (base_tick);
+    o.spy = basic_spy_function;
+    o.tick = basic_tick_function;
+    o.secondstorage_spec = {type:'local',
+                            username:'getrevisionlist',
+                            applicationname:'jiotests'}
+    o.rev = {};
+    //////////////////////////////////////////////////////////////////////
+    o.jio = JIO.newJio({type:'conflictmanager',
+                        storage:o.secondstorage_spec});
+    o.spy(o,'value',{total_rows:0,rows:[]},'Get revision list');
+    o.jio.allDocs(o.f);
+    o.tick(o);
+
+    o.spy(o,'value',{total_rows:0,rows:[],conflicts:{total_rows:0,rows:[]}},
+          'Get revision list with informations');
+    o.jio.allDocs({conflicts:true,revs:true,info_revs:true},o.f);
+    o.tick(o);
+
+    o.spy(o,'jobstatus','done','saving file');
+    o.jio.put({_id:'file',content:'content file'},function (err,val) {
+        o.rev.file1 = val?val.rev:undefined;
+        o.f(err,val);
+    });
+    o.tick(o);
+    o.spy(o,'jobstatus','done','saving memo');
+    o.jio.put({_id:'memo',content:'content memo'},function (err,val) {
+        o.rev.memo1 = val?val.rev:undefined;
+        o.f(err,val);
+    });
+    o.tick(o);
+    o.spy(o,'status',409,'saving memo conflict');
+    o.jio.put({_id:'memo',content:'content memo'},function (err,val) {
+        o.rev.memo2 = err?err.rev:undefined;
+        o.f(err,val);
+    });
+    o.tick(o);
+
+    o.f = o.t.spy();
+    o.jio.allDocs(function (err,val) {
+        var i;
+        if (val) {
+            for (i = 0; i < val.total_rows; i+= 1) {
+                val.rows[i].value._creation_date =
+                    val.rows[i].value._creation_date?true:undefined;
+                val.rows[i].value._last_modified =
+                    val.rows[i].value._last_modified?true:undefined;
+                o.rev[i] = checkRev (val.rows[i].value._rev);
+            }
+        }
+        deepEqual(err||val,{total_rows:2,rows:[{
+            id:'file',key:'file',value:{
+                _creation_date:true,_last_modified:true,_rev:o.rev[0]
+            }
+        },{
+            id:'memo',key:'memo',value:{
+                _creation_date:true,_last_modified:true,_rev:o.rev[1]
+            }
+        }]},'Get revision list after adding 2 files');
+        o.f();
+    });
+    o.tick(o);
+
+    o.f = o.t.spy();
+    o.jio.allDocs(
+        {conflicts:true,revs:true,revs_info:true},
+        function (err,val) {
+            var i;
+            if (val) {
+                for (i = 0; i < val.total_rows; i+= 1) {
+                    val.rows[i].value._creation_date =
+                        val.rows[i].value._creation_date?true:undefined;
+                    val.rows[i].value._last_modified =
+                        val.rows[i].value._last_modified?true:undefined;
+                    if (val.conflicts && val.conflicts.rows) {
+                        o.solveConflict =
+                            checkConflictRow (val.conflicts.rows[0]);
+                    }
+                }
+            }
+            deepEqual(err||val,{
+                total_rows:2,rows:[{
+                    id:'file',key:'file',value:{
+                        _creation_date:true,_last_modified:true,
+                        _revisions:{start:1,ids:[getHashFromRev(o.rev.file1)]},
+                        _rev:o.rev.file1,_revs_info:[{
+                            rev:o.rev.file1,status:'available'
+                        }]
+                    }
+                },{
+                    id:'memo',key:'memo',value:{
+                        _creation_date:true,_last_modified:true,
+                        _revisions:{start:1,ids:[getHashFromRev(o.rev.memo2)]},
+                        _rev:o.rev.memo2,_revs_info:[{
+                            rev:o.rev.memo1,status:'available'
+                        },{
+                            rev:o.rev.memo2,status:'available'
+                        }]
+                    }
+                }],
+                conflicts:{total_rows:1,rows:[{
+                    id:'memo',key:[o.rev.memo1,o.rev.memo2],
+                    value:{_solveConflict:'function'}
+                }]}
+            },'Get revision list with informations after adding 2 files');
+            o.f();
+        });
+    o.tick(o);
+
     o.jio.stop();
 });
 

@@ -1,4 +1,4 @@
-/*! JIO Storage - v0.1.0 - 2012-08-14
+/*! JIO Storage - v0.1.0 - 2012-08-16
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 (function(LocalOrCookieStorage, $, Base64, sjcl, hex_sha256, Jio) {
@@ -1862,7 +1862,7 @@ var newConflictManagerStorage = function ( spec, my ) {
     that.allDocs = function (command) {
         var o = {}, am = priv.newAsyncModule(),
         metadata_only = command.getOption('metadata_only'),
-        result_list = [],
+        result_list = [], conflict_object = {total_rows:0,rows:[]},
         nb_loaded_file = 0,
         success_count = 0, success_max = 0;
         o.retreiveList = function () {
@@ -1898,8 +1898,7 @@ var newConflictManagerStorage = function ( spec, my ) {
                     var revision = priv.chooseARevision(data);
                     if (!data[revision]._deleted) {
                         am.call(
-                            o,'loadFile',
-                            [path,revision,data]
+                            o,'loadFile',[path,revision,data]
                         );
                     } else {
                         am.call(o,'success');
@@ -1917,15 +1916,18 @@ var newConflictManagerStorage = function ( spec, my ) {
                     _rev:revision
                 }
             };
+            if (command.getOption('revs')) {
+                doc.value._revisions = priv._revs(data,revision);
+            }
             if (command.getOption('revs_info')) {
                 doc.value._revs_info = priv._revs_info(data,revision);
             }
             if (command.getOption('conflicts')) {
                 if (data[revision]._conflict) {
-                    doc.value._conflicts = priv.createConflictObject(
-                        command, data, revision );
-                } else {
-                    doc.value._conflicts = {total_rows:0,rows:[]};
+                    conflict_object.total_rows ++;
+                    conflict_object.rows.push(priv.createConflictRow(
+                        command, path, data, revision
+                    ));
                 }
             }
             if (!metadata_only) {
@@ -1944,10 +1946,15 @@ var newConflictManagerStorage = function ( spec, my ) {
             }
         };
         o.success = function (){
+            var obj;
             success_count ++;
             if (success_count >= success_max) {
                 am.end();
-                that.success({total_rows:result_list.length,rows:result_list});
+                obj = {total_rows:result_list.length,rows:result_list};
+                if (command.getOption('conflicts')) {
+                    obj.conflicts = conflict_object;
+                }
+                that.success(obj);
             }
         };
         o.error = function (error){
