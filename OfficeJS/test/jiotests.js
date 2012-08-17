@@ -1857,21 +1857,21 @@ test ('Conflict in a conflict solving', function () {
         'content5',{conflicts:true,revs:true,revs_info:true},
         function (err,val) {
             if (val) {
-                o.rev.fith = val.rev;
+                o.rev.fifth = val.rev;
                 val.rev = checkRev(val.rev);
             }
             deepEqual(err||val,{
-                ok:true,id:'file.doc',rev:o.rev.fith,
+                ok:true,id:'file.doc',rev:o.rev.fifth,
                 conflicts:{total_rows:0,rows:[]},
-                revisions:{start:3,ids:[getHashFromRev(o.rev.fith),
+                revisions:{start:3,ids:[getHashFromRev(o.rev.fifth),
                                         getHashFromRev(o.rev.forth),
                                         getHashFromRev(o.rev.second)]},
-                revs_info:[{rev:o.rev.fith,status:'available'}]
+                revs_info:[{rev:o.rev.fifth,status:'available'}]
             },o.test_message);
             o.f();
         });
     o.tick(o);
-    o.checkContent ('file.doc.'+o.rev.fith);
+    o.checkContent ('file.doc.'+o.rev.fifth);
 
     o.jio.stop();
 });
@@ -2041,22 +2041,78 @@ test ('Remove revision conflict', function () {
     o.solveConflict({conflicts:true,revs:true,revs_info:true},function(err,val){
         o.f();
         if (val) {
-            o.rev.fith = val.rev;
+            o.rev.fifth = val.rev;
             val.rev = checkRev(val.rev);
         }
         deepEqual(err||val,{
-            ok:true,id:'file.doc',rev:o.rev.fith,
+            ok:true,id:'file.doc',rev:o.rev.fifth,
             conflicts:{total_rows:0,rows:[]},
-            revisions:{start:3,ids:[getHashFromRev(o.rev.fith),
+            revisions:{start:3,ids:[getHashFromRev(o.rev.fifth),
                                     getHashFromRev(o.rev.forth),
                                     getHashFromRev(o.rev.first)]},
-            revs_info:[{rev:o.rev.fith,status:'deleted'}]
+            revs_info:[{rev:o.rev.fifth,status:'deleted'}]
         },o.test_message);
     });
     o.tick(o);
     o.checkNoContent ('file.doc.'+o.rev.second);
     o.checkNoContent ('file.doc.'+o.rev.forth);
-    o.checkNoContent ('file.doc.'+o.rev.fith);
+    o.checkNoContent ('file.doc.'+o.rev.fifth);
+
+    o.test_message = 'save "file3.doc"';
+    o.f = o.t.spy();
+    o.jio.put(
+        {_id:'file3.doc',content:'content3'},
+        function(err,val) {
+            o.f();
+            if (val) {
+                o.rev.sixth = val.rev;
+                val.rev = checkRev(val.rev);
+            }
+            deepEqual(err||val,{
+                ok:true,id:'file3.doc',rev:o.rev.sixth
+            },o.test_message);
+        });
+    o.tick(o);
+    o.test_message = 'save "file3.doc", rev "'+o.rev.sixth+'"';
+    o.f = o.t.spy();
+    o.jio.put(
+        {_id:'file3.doc',content:'content3',_rev:o.rev.sixth},
+        function(err,val) {
+            o.f();
+            if (val) {
+                o.rev.seventh = val.rev;
+                val.rev = checkRev(val.rev);
+            }
+            deepEqual(err||val,{
+                ok:true,id:'file3.doc',rev:o.rev.seventh
+            },o.test_message);
+        });
+    o.tick(o);
+
+    o.test_message = 'remove last "file3.doc"';
+    o.f = o.t.spy();
+    o.jio.remove(
+        {_id:'file3.doc'},
+        {conflicts:true,revs:true,revs_info:true,rev:'last'},
+        function (err,val) {
+            o.f();
+            if (val) {
+                o.rev.eighth = val.rev;
+                val.rev = checkRev(val.rev);
+            }
+            deepEqual(err||val,{
+                ok:true,id:'file3.doc',
+                rev:o.rev.eighth,
+                conflicts:{total_rows:0,rows:[]},
+                // just one revision in the history, it does not keep older
+                // revisions because it is not a revision manager storage.
+                revisions:{start:3,ids:[getHashFromRev(o.rev.eighth),
+                                        getHashFromRev(o.rev.seventh),
+                                        getHashFromRev(o.rev.sixth)]},
+                revs_info:[{rev:o.rev.eighth,status:'deleted'}]
+            },o.test_message);
+        });
+    o.tick(o);
 
     o.jio.stop();
 });
