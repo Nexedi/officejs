@@ -24,8 +24,15 @@
       <i class="icon-remove icon-white"></i>
       Remove Selected
     </button>
+    <button type="submit"
+            id="slickgrid_document_lister_refresh"
+            class="btn"
+            onclick="OfficeJS_slickgrid.refresh();">
+      <i class="icon-refresh"></i>
+      Refresh
+    </button>
   </div>
-<div id="myDocumentList" style="width:100%;height:300px"></div>
+<div id="slickgrid_documentlist" style="width:100%;height:300px"></div>
 <script type="text/javascript"
         src="lib/jquery/jquery.js"></script>
 <script type="text/javascript"
@@ -42,135 +49,7 @@
 
 <script type="text/javascript">
     <!--
-window.OfficeJS_slickgrid = {};
-window.OfficeJS_slickgrid.reload = function () {
-
-    $('#myDocumentList').html('');
-
-    var grid, onSortFunction, onClickFunction, check_box_selector,
-    onRemoveSeveral, showIconFormatter,
-    document_list = OfficeJS.cloneCurrentDocumentList(),
-    columns = [],
-    options = {
-        enableCellNavigation: true,
-        enableColumnReorder: false,
-        multiColumnSort: true,
-        forceFitColumns: true
-    };
-
-    showIconFormatter = function (row,cell,value,columnDef,dataContext) {
-        return dataContext.icon;
-    };
-
-    (function (array) {
-        var i, lm, cd, split, mime;
-        for (i = 0; i < array.length; i += 1) {
-            // file names
-            split = array[i].name.split('.');
-            array[i].ext = '';
-            if (split.length > 1) {
-                array[i].ext = split[split.length-1];
-                split.length -= 1;
-            }
-            array[i].base_name = split.join('.');
-            // app & icon
-            mime = OfficeJS.getMimeOfExt (array[i].ext);
-            if (!mime) {
-                array[i].icon = '?';
-                array[i].app = 'text_editor';
-            } else {
-                array[i].icon = mime.icon;
-                array[i].app = mime.preferred_application || mime.application;
-            }
-            if (array[i].revision) {
-                array[i].conflict = array[i].revision_object[
-                    array[i].revision].conflict?'X':'';
-            } else {
-                array[i].conflict = '';
-            }
-            // dates
-            // FIXME : we can have 2012/1/1 12:5
-            // we should have 2012/01/01 12:05
-            lm = (new Date(array[i].last_modified));
-            cd = (new Date(array[i].creation_date));
-            array[i].last_modified = lm.getFullYear()+'/'+
-                (lm.getMonth()+1)+'/'+lm.getDate()+' '+
-                lm.getHours()+':'+lm.getMinutes();
-            array[i].creation_date = cd.getFullYear()+'/'+
-                (cd.getMonth()+1)+'/'+cd.getDate()+' '+
-                cd.getHours()+':'+cd.getMinutes();
-        }
-    }(document_list));
-
-    $(function () {
-
-        check_box_selector = new Slick.CheckboxSelectColumn({
-            cssClass: "slick-cell-checkboxsel"
-        });
-        columns.push(check_box_selector.getColumnDefinition());
-        columns.push({id:"icon",name:"",field:"icon",
-                      sortable:true,resizable:false,width:24,
-                      formatter:showIconFormatter});
-        columns.push({id:"file_name",name:"Document",
-                      field:"base_name",sortable:true});
-        columns.push({id:"last_modified",name:"Modified",
-                      field:"last_modified",sortable:true});
-        columns.push({id:"creation_date",name:"Created",
-                      field:"creation_date",sortable:true});
-        columns.push({id:'on_conflict',name:'',
-                      field:'conflict',sortable:true,
-                      resizable:false,width:24});
-
-        grid = new Slick.Grid("#myDocumentList",
-                              document_list,
-                              columns,
-                              options);
-        grid.setSelectionModel(new Slick.RowSelectionModel(
-            {selectActiveRow: false}));
-        grid.registerPlugin(check_box_selector);
-
-        onSortFunction = function (e, args) {
-            var cols = args.sortCols;
-
-                document_list.sort(function (data_row1, data_row2) {
-                    var i, l, field, sign, value1, value2, result;
-                    for (i = 0, l = cols.length; i < l; i++) {
-                        field = cols[i].sortCol.field;
-                        sign = cols[i].sortAsc ? 1 : -1;
-                        value1 = data_row1[field];
-                        value2 = data_row2[field];
-                        result = (value1==value2?0:(value1>value2?1:-1))*sign;
-                        if (result != 0) {
-                            return result;
-                        }
-                    }
-                    return 0;
-                });
-            grid.invalidate();
-            grid.render();
-        };
-        onClickFunction = function (e) {
-            var cell = grid.getCellFromEvent(e);
-            if (cell.cell === grid.getColumnIndex('file_name')) {
-                OfficeJS.open({app:document_list[cell.row].app,
-                               file_name:document_list[cell.row].name});
-            }
-        };
-        onRemoveSeveral = function () {
-            var document_name_array = [], selected, i, l;
-            selected = grid.getSelectedRows();
-            for (i = 0, l = selected.length; i < l; i+= 1) {
-                document_name_array.push(document_list[selected[i]].name);
-            }
-            OfficeJS.removeSeveralFromArray (document_name_array);
-        };
-        document.querySelector ('#slickgrid_document_lister_remove_selected').
-            onclick = onRemoveSeveral;
-        grid.onClick.subscribe(onClickFunction);
-        grid.onSort.subscribe(onSortFunction);
-    });
-};
-window.OfficeJS_slickgrid.reload();
+OfficeJS_slickgrid.load();
 //-->
 </script>
 </body>

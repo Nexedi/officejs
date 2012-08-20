@@ -1,57 +1,14 @@
 <div id="basic_conflict_solver_div" style="text-align:center;" class="well">
   <div class="row-fluid">
     <div class="span12">
-      A conflict occured while saving this document:
+      There is a conflict in document <span id="basic_conflict_solver_docid"></span>
     </div>
   </div>
   <div id="revisions">
   </div>
   <div class="row-fluid">
     <div class="span12">
-      <button onclick="basic_conflict_solver.abort()">Abort</button>
+      <button onclick="OfficeJS_basic_conflict_solver.abort();">Abort</button>
     </div>
   </div>
 </div>
-<script type="text/javascript">
-  <!--
-
-window.basic_conflict_solver = {
-    conflict_object:{},
-    addRevision: function (doc) {
-        document.querySelector ('#basic_conflict_solver_div #revisions').
-            innerHTML += '<div class="row-fluid"><div class="span12">'+
-            '<div>'+(new Date(doc.last_modified)).toString()+'</div>'+
-            '<div><textarea id="'+doc.revision+'">'+doc.content+'</textarea></div>'+
-            '<div><button onclick="'+
-            //'console.log('+"'"+revision+"'"+');'+
-            "basic_conflict_solver.keepRevision('"+doc.revision+"');"+
-            '">Save this one</button></div><hr/>'+
-            '</div></div>';
-    },
-    addRemovedRevision: function (doc) {
-        document.querySelector ('#basic_conflict_solver_div #revisions').
-            innerHTML += '<div class="row-fluid"><div class="span12">'+
-            '<div>'+(new Date(doc.last_modified)).toString()+'</div>'+
-            '<div>Removed</div>'+
-            '<div><button onclick="'+
-            //'console.log('+"'"+revision+"'"+');'+
-            "basic_conflict_solver.removeRevision();"+
-            '">Save this one</button></div><hr/>'+
-            '</div></div>';
-    },
-    removeRevision: function () {
-        OfficeJS.solveConflict(this.conflict_object);
-    },
-    keepRevision: function (revision) {
-        OfficeJS.solveConflict(
-            this.conflict_object,
-            $('#'+revision).text()
-        );
-    },
-    abort: function () {
-        OfficeJS.abortSolveConflict();
-    }
-};
-
-      //-->
-</script>

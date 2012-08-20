@@ -1,18 +1,18 @@
 <div>
   <input type="text"
          name="fileName"
-         id="input_file_name"
+         id="svg-edit_docid"
          value=""
          placeholder="File name here" />&nbsp;
   <button type="submit"
           class="btn btn-primary"
-          onclick="OfficeJS.save($('#input_file_name').attr('value'));">
+          onclick="OfficeJS_svgedit.save();">
     <i class="icon-download-alt icon-white"></i>
     Save
   </button>&nbsp;
 </div>
 <iframe src="lib/svg-edit/svg-editor.html"
-        id="svg_edit_frame"
+        id="svg-edit_frame"
         style="width:100%;
                height:500px;"
         scrolling="no">

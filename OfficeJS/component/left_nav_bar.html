@@ -5,7 +5,7 @@
       <li>
         <a href="#/login"
            onclick="javascript:
-                    OfficeJS.open({app:'login'});
+                    OfficeJS_left_nav_bar.login();
                     return false;">
           <i class="icon-ok">
           </i>
@@ -20,7 +20,7 @@
   <li class="texteditor left-nav-tools">
     <a href="#/texteditor"
        onclick="javascript:
-                OfficeJS.open({app:'text_editor'});
+                OfficeJS_left_nav_bar.newTextDocument();
                 return false;">
       <i class="icon-font"></i>
       New Text Document
@@ -29,7 +29,7 @@
   <li class="imgeditor left-nav-tools">
     <a href="#/imgeditor"
        onclick="javascript:
-                OfficeJS.open({app:'img_editor'});
+                OfficeJS_left_nav_bar.newImage();
                 return false;">
       <i class="icon-pencil"></i>
       New Image
@@ -38,7 +38,7 @@
   <li class="spreadsheet left-nav-tools">
     <a href="#/spreadsheet"
        onclick="javascript:
-                OfficeJS.open({app:'spreadsheet'});
+                OfficeJS_left_nav_bar.newSpreadSheet();
                 return false;">
       <i class="icon-signal"></i>
       New Spreadsheet
@@ -47,7 +47,7 @@
   <li class="spreadsheet left-nav-tools">
     <a href="#/workinprogress"
        onclick="javascript:
-                OfficeJS.open({app:'workinprogress'});
+                OfficeJS_left_nav_bar.showActivities();
                 return false;">
       <i class="icon-tasks"></i>
       Show Activity
@@ -56,7 +56,7 @@
   <!-- <li class="editpreferences left-nav-tools"> -->
   <!--   <a href="#/edit_preferences" -->
   <!--      onclick="javascript: -->
-  <!--               OfficeJS.open({app:'edit_preferences'}); -->
+  <!--               OfficeJS_left_nav_bar.editPreference(); -->
   <!--               return false;"> -->
   <!--     <i class="icon-check"></i> -->
   <!--     Edit Preferences -->
@@ -65,7 +65,7 @@
   <li id="nav_document_list_header left-nav-tools">
     <a href="#/doclist"
        onclick="javascript:
-                OfficeJS.open({app:'document_lister'});
+                OfficeJS_left_nav_bar.showDocumentList();
                 return false;">
       <i class="icon-list"></i>
       Document List

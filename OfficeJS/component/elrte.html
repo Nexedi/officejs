@@ -32,16 +32,18 @@
     </script>
     <script type="text/javascript" charset="utf-8">
       <!--
-$().ready(function() {
-    var opts = {
-        cssClass : 'el-rte',
-        lang     : 'en',
-        height   : 450,
-        toolbar  : 'complete',
-        cssfiles : ['lib/elrte/css/elrte-inner.css']
-    }
-    $('#elrte_editor').elrte(opts);
-})
+(function () {
+    $().ready(function() {
+        var opts = {
+            cssClass : 'el-rte',
+            lang     : 'en',
+            height   : 450,
+            toolbar  : 'complete',
+            cssfiles : ['lib/elrte/css/elrte-inner.css']
+        }
+        $('#elrte_editor').elrte(opts);
+    });
+}());
 //-->
     </script>
   </head>
@@ -49,12 +51,12 @@ $().ready(function() {
     <div>
       <input type="text"
              name="fileName"
-             id="input_file_name"
+             id="elrte_docid"
              value=""
              placeholder="File name here" />&nbsp;
       <button type="submit"
               class="btn btn-primary"
-              onclick="OfficeJS.save($('#input_file_name').attr('value'));">
+              onclick="OfficeJS_elrte.save();">
         <i class="icon-download-alt icon-white"></i>
         Save
       </button>&nbsp;

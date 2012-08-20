@@ -14,61 +14,66 @@
   <div>
     Remember me&nbsp;&nbsp;
     <input id="remember_me" type="checkbox"
-           onclick="window.OfficeJS_login.toggleRememberMe();"/>
+           onclick="OfficeJS_login.object.toggleRememberMe();"/>
   </div>
   <div>
     <button type="submit"
             class="btn"
-            onclick="window.OfficeJS_login.createJIO();">
+            onclick="OfficeJS_login.object.connect();">
       Create New JIO
     </button>
   </div>
   <script type="text/javascript">
     <!--
-window.OfficeJS_login = {
-    storageId:'#login-gadget #login_input',
-    storagePath:'OfficeJS/login/login',
-    rememberId:'#login-gadget #remember_me',
-    rememberPath:'OfficeJS/login/remember_me',
-    localStorage: LocalOrCookieStorage,
-
-    fillLogin: function () {
-        $(this.storageId).attr(
-            'value',this.localStorage.getItem(this.storagePath) || '');
-    },
-
-    isRememberMe: function () {
-        return $(this.rememberId).attr('checked');
-    },
-    fillRememberMe: function () {
-        var t = this.localStorage.getItem(this.rememberPath);
+(function () {
+    "use strict";
+    var odf = function (obj,name,value) {
+        Object.defineProperty(obj,name,{
+            configurable:false,enumerable:false,writable:false,value:value
+        });
+    };
+    odf(OfficeJS_login,'object',{});
+    var that = OfficeJS_login.object;
+    odf(OfficeJS_login.object,'storage_id','#login-gadget #login_input');
+    odf(OfficeJS_login.object,'storage_path','OfficeJS/login/login');
+    odf(OfficeJS_login.object,'remember_id','#login-gadget #remember_me');
+    odf(OfficeJS_login.object,'remember_path','OfficeJS/login/remember_me');
+    odf(OfficeJS_login.object,'fillLogin',function () {
+        $(that.storage_id).attr(
+            'value',localStorage.getItem(that.storage_path) || '');
+    });
+    odf(OfficeJS_login.object,'isRememberMe',function () {
+        return $(that.remember_id).attr('checked');
+    });
+    odf(OfficeJS_login.object,'fillRememberMe',function () {
+        var t = localStorage.getItem(that.remember_path);
         if (t) {
-            this.rememberMe();
+            that.rememberMe();
         }
-    },
-    rememberMe: function () {
-        $(this.rememberId).attr('checked','1');
-        this.localStorage.setItem(this.rememberPath,'1');
-    },
-    dontRememberMe: function () {
-        $(this.rememberId).removeAttr('checked');
-        this.localStorage.deleteItem(this.rememberPath);
-    },
-    toggleRememberMe: function () {
-        var t = this.localStorage.getItem(this.rememberPath);
-        if (t) { this.dontRememberMe() } else { this.rememberMe(); }
-    },
-
-    createJIO: function() {
+    });
+    odf(OfficeJS_login.object,'rememberMe',function () {
+        $(that.remember_id).attr('checked','1');
+        localStorage.setItem(that.remember_path,'1');
+    });
+    odf(OfficeJS_login.object,'dontRememberMe',function () {
+        $(that.remember_id).removeAttr('checked');
+        localStorage.deleteItem(that.remember_path);
+    });
+    odf(OfficeJS_login.object,'toggleRememberMe',function () {
+        var t = localStorage.getItem(that.remember_path);
+        if (t) { that.dontRememberMe() } else { that.rememberMe(); }
+    });
+    odf(OfficeJS_login.object,'connect',function () {
         var spec = $('#login-gadget #login_input').attr('value');
-        this.localStorage.setItem(this.storagePath,spec);
-        OfficeJS.setJio(spec);
+        localStorage.setItem(that.storage_path,spec);
+        OfficeJS_login.connect (spec);
+    });
+
+    that.fillRememberMe();
+    if (that.isRememberMe()) {
+        that.fillLogin();
     }
-};
-window.OfficeJS_login.fillRememberMe();
-if (window.OfficeJS_login.isRememberMe()) {
-    window.OfficeJS_login.fillLogin();
-}
+}());
         //-->
   </script>
 </div>

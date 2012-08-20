@@ -1,297 +1,52 @@
-(function () {
-    // Tools
-    var baseName = function (file_name) {
-        var split = file_name.split('.');
-        if (split.length > 1) {
-            split.length -= 1;
-            return split.join('.');
-        } else {
-            return file_name;
-        }
+(function (scope) {
+    "use strict";
+    var odf = function (obj,name,value) {
+        Object.defineProperty(obj,name,{
+            configurable:false,enumerable:false,writable:false,value:value
+        });
     };
-    var JIO = jio;
+    var OfficeJS = {};
+    //////////////////////////////////////////////////////////////////////
 
-    /**
-     * OfficeJS Object
-     */
-    window.OfficeJS = (function () {
-        var that = {}, priv = {};
-        // Attributes //
-        priv.preference_object = {
-            document_lister:'slickgrid',
-            edit_preferences:'simplepreferenceeditor',
-            text_editor:'elrte',
-            img_editor:'svg-edit',
-            spreadsheet:'jquery-sheet'
-        };
-        priv.conflict_solver_object = {
-            // ext: "solver_name"
-            // default: "basic_conflict_solver"
-            // ...
-        };
-        priv.app_object = {
-            topnavbar: {
-                type:'nav',
-                path:'component/top_nav_bar.html',
-                gadget_id:'page-top_nav_bar'
+    odf(OfficeJS,'env',{});
+    odf(OfficeJS,'tmp',{});
+    odf(OfficeJS,'system',{});
+    odf(OfficeJS,'run',{});
+    odf(OfficeJS,'lib',{});
+    odf(OfficeJS,'command',{});
+
+    //////////////////////////////////////////////////////////////////////
+
+    OfficeJS.system.preferences = {};
+    OfficeJS.system.applications = {};
+    OfficeJS.system.mime = {};
+    OfficeJS.system.icon = {};
+
+    // Top Nav Bar //
+    OfficeJS.system.applications['top_nav_bar'] = {
+        name:          'top_nav_bar',
+        componentpath: 'component/top_nav_bar.html',
+        gadgetid:      'page-top_nav_bar',
+        varname:       'OfficeJS_top_nav_bar',
+        api: {
+            about: function () {
+                OfficeJS.lib.openApplication(
+                    OfficeJS.system.applications['about']);
             },
-            leftnavbar: {
-                type:'nav',
-                path:'component/left_nav_bar.html',
-                gadget_id:'page-left_nav_bar',
-                bar_tools: false,
-                update: function () {
-                    var elmt;
-                    if (priv.isJioSet() && !this.bar_tools) {
-                        // add tools to nav bar
-                        elmt = document.querySelector ('script#left-nav-tools');
-                        document.querySelector ('#left-nav-bar').innerHTML +=
-                        elmt.innerHTML;
-                        this.bar_tools = true;
-                    }
-                }
-            },
-            login: {
-                type:'loader',
-                path:'component/login.html',
-                gadget_id:'page-content',
-                getContent: function () {
-                    var tmp = {
-                        user_name: 'NoName',
-                        password: 'NoPwd'
-                    };
-                    // NOTE : stringify or not ?
-                    return JSON.stringify (tmp);
-                }
-            },
-            about: {
-                type:'viewer',
-                path:'component/about.html',
-                gadget_id:'page-content'
-            },
-            contact: {
-                type:'viewer',
-                path:'component/contact.html',
-                gadget_id:'page-content'
-            },
-            simplepreferenceeditor: {
-                // NOTE
-                type:'editor',
-                path:''
-                // ...
-            },
-            elrte: {
-                type:'editor',  // means it can edit a content
-                path:'component/elrte.html',
-                gadget_id:'page-content',
-                ext:'html',
-                element:'#elrte_editor',
-                getContent: function () {
-                    $(this.element).elrte('updateSource');
-                    return $(this.element).elrte('val');
-                },
-                setContent: function (content) {
-                    $(this.element).elrte('val', content);
-                },
-                onload: function (param) {
-                    // FIXME : wait for initialization end
-                    setTimeout(function () {
-                        if (typeof param.file_name !== 'undefined') {
-                            $('#input_file_name').attr('value',
-                                                  baseName(param.file_name));
-                            that.load(baseName(param.file_name));
-                        }
-                    },1000);
-                }
-                // TODO : onunload, are you sure? leave without saving?
-            },
-            'jquery-sheet': {
-                type:'editor',
-                path:'component/jquery-sheet.html',
-                gadget_id:'page-content',
-                ext:'jqs',
-                getContent: function () {
-                    return JSON.stringify (
-                        $.sheet.instance[0].exportSheet.json()
-                    );
-                },
-                setContent: function (content) {
-                    $('#jQuerySheet').sheet({
-                        title: '',
-                        inlineMenu: inlineMenu($.sheet.instance),
-                        buildSheet: $.sheet.makeTable.json(
-                            JSON.parse(content)
-                        ),
-                        autoFiller: true
-                    });
-                },
-                onload: function (param) {
-                    // FIXME : wait for initialization end
-                    setTimeout(function () {
-                        if (typeof param.file_name !== 'undefined') {
-                            $('#input_file_name').attr('value',
-                                                  baseName(param.file_name));
-                            that.load(baseName(param.file_name));
-                        }
-                    },1000);
-                }
-            },
-            'svg-edit': {
-                type:'editor',
-                path:'component/svg-edit.html',
-                gadget_id:'page-content',
-                ext:'svg',
-                frameid:'svg_edit_frame',
-                getContent: function () {
-                    return document.getElementById (this.frameid).
-                        contentWindow.svgCanvas.getSvgString();
-                },
-                setContent: function (content) {
-                    document.getElementById (this.frameid).
-                        contentWindow.svgCanvas.setSvgString(content);
-                },
-                onload: function (param) {
-                    var waitForInit = function (fun) {
-                        // FIXME : wait for init end
-                        setTimeout(fun,1000);
-                    }
-                    waitForInit(function () {
-                        if (typeof param.file_name !== 'undefined') {
-                            $('#input_file_name').attr('value',
-                                                  baseName(param.file_name));
-                            that.load(baseName(param.file_name));
-                        }
-                    });
-                }
-            },
-            slickgrid: {
-                type:'editor',
-                path:'component/slickgrid_document_lister.html',
-                gadget_id:'page-content',
-                interval_id:null,
-                onload: function () {
-                    var t = this;
-                    if (this.interval_id === null) {
-                        this.interval_id = setInterval (function() {
-                            that.getList(t.update);
-                        }, 5000);
-                    }
-                },
-                update: function () {
-                    window.OfficeJS_slickgrid.reload();
-                },
-                onunload: function () {
-                    if (this.interval_id !== null) {
-                        clearInterval (this.interval_id);
-                        this.interval_id = null;
-                    }
-                    delete window.OfficeJS_slickgrid;
-                    return true;
-                }
-            },
-            workinprogress: {
-                type:'viewer',
-                path:'component/workinprogress.html',
-                gadget_id:'page-content',
-                onload: function () {
-                    var i = null, wait = function() {
-                        // wait for workinprogress initialization end.
-                        if (window.work_in_progress) {
-                            window.work_in_progress.start();
-                            clearInterval(i);
-                        }
-                    }
-                    i = setInterval (wait,100);
-                },
-                onunload: function () {
-                    window.work_in_progress.stop();
-                    delete window.work_in_progress;
-                    return true;
-                }
-            },
-            basic_conflict_solver: {
-                type:'solver',
-                path:'component/basic_conflict_solver.html',
-                gadget_id:'page-conflict',
-                onload: function (param) {
-                    var rev_list = [], i;
-                    for (var rev in param.conflict_object.revision_object) {
-                        rev_list.push(rev);
-                    }
-                    // FIXME : load jobs are in conflict ! redesign jio !
-                    var load = function (rev,i) {
-                        if (rev) {
-                            i++;
-                            setTimeout(function() {
-                            priv.jio.loadDocument(
-                                param.conflict_object.path,{
-                                    revision: rev,
-                                    max_retry:3,
-                                    success: function (result) {
-                                        var doc = {
-                                            path:param.conflict_object.path,
-                                            content:result.content,
-                                            last_modified:result.last_modified,
-                                            creation_date:result.creation_date,
-                                            revision:rev
-                                        };
-                                        window.basic_conflict_solver.
-                                            conflict_object =
-                                            param.conflict_object;
-                                        window.basic_conflict_solver.
-                                            addRevision(doc);
-                                        load(rev_list[i],i);
-                                    },
-                                    error: function (error) {
-                                        var doc = {
-                                            path:param.conflict_object.path,
-                                            revision:rev
-                                        };
-                                        window.basic_conflict_solver.
-                                            conflict_object =
-                                            param.conflict_object;
-                                        if (error.status === 404) {
-                                            window.basic_conflict_solver.
-                                                addRemovedRevision(doc);
-                                        } else {
-                                            console.error (error.message);
-                                        }
-                                        load(rev_list[i],i);
-                                    }
-                                });
-                            });
-                        }
-                    };
-                    load (rev_list[0],0);
-                    // NOTE : improve, don't load already loaded revision
-                }
+            contact: function () {
+                OfficeJS.lib.openApplication(
+                    OfficeJS.system.applications['contact']);
             }
-        };
-        priv.mime_object = {
-            // <preferred_application> if the name of the app set in
-            // preferences.
-            // If <preferred_application> does not exist it means that the
-            // extension is very specific, so <application> is called instead of
-            // the default editor.
-            // NOTE : the icon may be set in the app in app_object.
-            html:{preferred_application:'text_editor',application:'elrte',
-                  icon:'<i class="icon-font"></i>'},
-            svg:{preferred_application:'img_editor',application:'svg-edit',
-                 icon:'<i class="icon-pencil"></i>'},
-            jqs:{application:'jquery-sheet',
-                 icon:'<i class="icon-signal"></i>'}
-        };
-        priv.data_object = {
-            documentList:[],
-            gadget_object:{}, // contains current gadgets id with their location
-            currentFile:null,
-            currentEditor:null,
-            currentSolver:null,
-            currentApp:null,
-            currentActivity:null,
-            currentRevision:null
-        };
-        priv.loading_object = {
+        },
+        lib: {
+            spin:function (state) {
+                OfficeJS.system.applications['top_nav_bar'].spin[state]();
+            },
+            endspin:function (state) {
+                OfficeJS.system.applications['top_nav_bar'].spin['end'+state]();
+            }
+        },
+        spin: {
             spinstate: 0,
             savestate: 0,
             loadstate: 0,
@@ -304,7 +59,7 @@
                 }
                 this[string+'state'] ++;
             },
-            end_main: function (string){
+            endmain: function (string){
                 if (this[string+'state']>0) {
                     this[string+'state']--;
                 }
@@ -318,510 +73,1018 @@
             load:function(){this.main('load');this.spin();},
             getlist:function(){this.main('getlist');this.spin();},
             remove:function(){this.main('remove');this.spin();},
-            end_spin:function(){this.end_main('spin');},
-            end_save:function(){this.end_main('save');this.end_spin();},
-            end_load:function(){this.end_main('load');this.end_spin();},
-            end_getlist:function(){this.end_main('getlist');this.end_spin();},
-            end_remove:function(){this.end_main('remove');this.end_spin();}
-        };
-        priv.lastfailure = {};
-        // Initializer //
-        priv.init = function() {
-        };
+            endspin:function(){this.endmain('spin');},
+            endsave:function(){this.endmain('save');this.endspin();},
+            endload:function(){this.endmain('load');this.endspin();},
+            endgetlist:function(){this.endmain('getlist');this.endspin();},
+            endremove:function(){this.endmain('remove');this.endspin();}
+        }
+    };
+    // End Top Nav Bar //
 
-        // Methods //
-        /**
-         * Shows a list of document inside the left nav bar
-         * @method showDocumentListInsideLeftNavBar
-         */
-        priv.showDocumentListInsideLeftNavBar = function () {
-            $('#nav_document_list_header').show();
-        };
-
-        /**
-         * @method getRealApplication
-         * @param  {string} appname The app name set in preference.
-         * @return {object} The real application object.
-         */
-        priv.getRealApplication = function (appname) {
-            var realappname = that.getPreference (appname);
-            if (!realappname) {
-                return priv.app_object[appname];
+    // Left Nav Bar //
+    OfficeJS.system.applications['left_nav_bar'] = {
+        name:          'left_nav_bar',
+        componentpath: 'component/left_nav_bar.html',
+        gadgetid:      'page-left_nav_bar',
+        varname:       'OfficeJS_left_nav_bar',
+        api: {
+            login: function () {
+                OfficeJS.lib.openApplication(
+                    OfficeJS.system.applications['login']
+                );
+            },
+            newTextDocument: function () {
+                OfficeJS.lib.openApplication(
+                    OfficeJS.lib.getAppFromPref('html-editor')
+                );
+            },
+            newImage: function () {
+                OfficeJS.lib.openApplication(
+                    OfficeJS.lib.getAppFromPref('svg-editor')
+                );
+            },
+            newSpreadSheet: function () {
+                OfficeJS.lib.openApplication(
+                    OfficeJS.lib.getAppFromPref('jqs-sheet')
+                );
+            },
+            showActivities: function () {
+                OfficeJS.lib.openApplication(
+                    OfficeJS.lib.getAppFromPref('activities')
+                );
+            },
+            showDocumentList: function () {
+                OfficeJS.lib.openApplication(
+                    OfficeJS.lib.getAppFromPref('documentlister')
+                );
             }
-            return priv.app_object[realappname];
-        };
-
-        /**
-         * @method isJioSet
-         * @return {boolean} true if jio is set else false.
-         */
-        priv.isJioSet = function () {
-            return (typeof priv.jio === 'object');
-        };
-
-        /**
-         * Opens an application
-         * @method open
-         * @param  {object} option Contains some settings:
-         *     - app   {string} The app name we want to open, set in preferences
-         *     - force {boolean} To reload applications even if it is the same.
-         *             (optional)
-         *     - ... and some other parameters
-         */
-        that.open = function (option) {
-            var realapp, realgadgetid, realpath, acientapp;
-            if (!option) {
-                console.error ('open: This function needs a parameter');
-                return null;
-            };
-            realapp = priv.getRealApplication (option.app);
-            if (!realapp) {
-                // cannot get real app
-                console.error ('Unknown application: ' + option.app);
-                return null;
+        },
+        lib:{
+            showTools: function () {
+                var elmt;
+                if (OfficeJS.run.jio && !OfficeJS.tmp.tools_opened) {
+                    OfficeJS.tmp.tools_opened = true;
+                    elmt = document.querySelector ('script#left-nav-tools');
+                    document.querySelector ('#left-nav-bar').innerHTML +=
+                    elmt.innerHTML;
+                }
             }
-            realgadgetid = option.gadget_id || realapp.gadget_id;
-            realpath = realapp.path;
-            if (option.force || priv.data_object.currentEditor !== realapp) {
-                ancientapp = priv.data_object.gadget_object[realgadgetid];
-                if (ancientapp) {
-                    // if there is already a gadget there, unload it
-                    if (typeof ancientapp.onunload !== 'undefined' &&
-                        !ancientapp.onunload()) {
-                        // if onunload return false, it means that we must not
-                        // load a new gadget because this one is not ready to
-                        // exit.
-                        return null;
+        }
+    };
+    // End Left Nav Bar //
+
+    // login //
+    OfficeJS.system.applications['login'] = {
+        name:          'login',
+        componentpath: 'component/login.html',
+        gadgetid:      'page-content',
+        varname:       'OfficeJS_login',
+        api: {
+            connect: function (spec) {
+                if (!OfficeJS.run.jio) {
+                    if (typeof spec === 'string') {
+                        spec = JSON.parse (spec);
                     }
+                    OfficeJS.run.jio = jio.newJio(spec);
+                    OfficeJS.system.applications['left_nav_bar'].
+                        lib.showTools();
+                    OfficeJS.lib.allDocs();
                 }
-                priv.data_object.gadget_object[realgadgetid] = realapp;
-                TabbularGadget.addNewTabGadget(realpath,realgadgetid);
-                // set current editor
-                switch (realapp.type) {
-                case 'editor':
-                    priv.data_object.currentEditor = realapp;
-                    break;
-                case 'solver':
-                    priv.data_object.currentSolver = realapp;
-                    break;
-                default:
-                    break;
+            }
+        }
+    };
+    // End login //
+
+    // about //
+    OfficeJS.system.applications['about'] = {
+        type:          'about',
+        'class':       'viewer',
+        name:          'about',
+        componentpath: 'component/about.html',
+        gadgetid:      'page-content'
+    };
+    // End about //
+
+    // contact //
+    OfficeJS.system.applications['contact'] = {
+        type:          'contact',
+        'class':       'viewer',
+        name:          'contact',
+        componentpath: 'component/contact.html',
+        gadgetid:      'page-content'
+    };
+    // End contact //
+
+    // elRTE //
+    OfficeJS.system.applications['elrte'] = {
+        type:          'html-editor',
+        name:          'elrte',
+        'class':       'editor',
+        componentpath: 'component/elrte.html',
+        gadgetid:      'page-content',
+        varname:       'OfficeJS_elrte',
+        exts:          ['html'],
+        default_ext:   'html',
+        docid_elmnt:   '#elrte_docid',
+        editor_elmnt:  '#elrte_editor',
+        api: {
+            save: function () {
+                var id, content;
+                id = OfficeJS.system.applications['elrte'].
+                    lib.getDocId();
+                content = OfficeJS.system.applications['elrte'].
+                    lib.getContent();
+                console.log ('content ' + content);
+                if (id) {
+                    OfficeJS.lib.put({
+                        _id:id+'.'+OfficeJS.system.applications['elrte'].
+                            default_ext,
+                        content:content||''
+                    },function (err,val) {
+                        setTimeout(function(){
+                            OfficeJS.lib.allDocs();
+                        });
+                    });
                 }
-                priv.data_object.currentApp = realapp;
             }
-            // onload call
-            if (typeof realapp.onload !== 'undefined') {
-                return realapp.onload(option);
+        },
+        lib: {
+            getDocId: function () {
+                return $(OfficeJS.system.applications['elrte'].docid_elmnt).
+                    attr('value');
+            },
+            getContent: function () {
+                $(OfficeJS.system.applications['elrte'].editor_elmnt).
+                    elrte('updateSource');
+                return $(OfficeJS.system.applications['elrte'].editor_elmnt).
+                    elrte('val');
+            },
+            setDocId: function (docid) {
+                $(OfficeJS.system.applications['elrte'].docid_elmnt).
+                    attr('value',docid);
+            },
+            setContent: function (content) {
+                return $(OfficeJS.system.applications['elrte'].editor_elmnt).
+                    elrte('val',content);
             }
-        };
-
-        /**
-         * Load an empty page in the place of a specific gadget id
-         * @method closeGadgetId
-         * @param  {string} gadgetid The gadget id
-         */
-        that.closeGadgetId = function (gadgetid) {
-            TabbularGadget.addNewTabGadget('component/empty.html',gadgetid);
-        };
-
-        /**
-         * @method getPreference
-         * @param  {string} key The preference
-         * @return {string} The content of the preference.
-         */
-        that.getPreference = function (key) {
-            return priv.preference_object[key];
-        };
-
-        /**
-         * @method getContentOf
-         * @param  {string} app The application name
-         * @return {string} The content of the application, or null.
-         */
-        that.getContentOf = function (app) {
-            var realapp = priv.getRealApplication (app);
-            if (!realapp) {
-                console.error ('Unknown application: ' + app);
-                return null;
-            }
-            if (typeof realapp.getContent !== 'undefined') {
-                return realapp.getContent();
-            }
-            return null;
-        };
-
-        /**
-         * @method getPathOf
-         * @param  {string} app The application name
-         * @return {string} The path of the application component, or null.
-         */
-        that.getPathOf = function (app) {
-            var realapp = priv.getRealApplication (app);
-            if (!realapp) {
-                console.error ('Unknown application: ' + app);
-                return null;
-            }
-            return realapp.path;
-        };
-
-        /**
-         * Returns the current editor file extension.
-         * @return {string} The current editor file extension.
-         */
-        that.getExt = function () {
-            return priv.data_object.currentEditor.ext;
-        };
-
-        /**
-         * Returns a clone of the mime object having this file [extension].
-         * @method getMimeOfExt
-         * @param  {string} extension The extension without '.'.
-         * @return {object} A clone of the mime object
-         */
-        that.getMimeOfExt = function (extension) {
-            if (typeof priv.mime_object[extension] === 'undefined') {
-                return null;
-            }
-            return $.extend (true,{},priv.mime_object[extension]);
-        };
-
-        /**
-         * @method setJio
-         * @param {object} storage The storage informations
-         */
-        that.setJio = function (storage) {
-            var leftnavbar;
-            if (priv.isJioSet()) {
-                alert ('Jio already set.');
-                return;
-            }
-            // if there is not any jio created
-            priv.jio = JIO.newJio (JSON.parse(storage));
-            // update left nav bar
-            leftnavbar = priv.getRealApplication ('leftnavbar');
-            if (typeof leftnavbar.update !== 'undefined') {
-                leftnavbar.update();
-            }
-            that.getList();
-        };
-
-        /**
-         * Returns the array list in priv.data_object
-         * @method getList
-         * @param  {function} callback Another callback called after retrieving
-         *         the list. (optional)
-         */
-        that.getList = function (callback) {
-            if (!priv.isJioSet()) {
-                console.error ('No Jio set yet.');
-                return;
-            }
-            priv.loading_object.getlist();
-            priv.jio.getDocumentList(
-                '.',{
-                    sort:{last_modified:'descending',
-                          name:'ascending'},
-                    limit:{begin:0,end:50},
-                    // search:{name:'a'},
-                    max_retry:3,
-                    success: function (result) {
-                        priv.data_object.documentList = result;
-                        priv.showDocumentListInsideLeftNavBar();
-                        priv.loading_object.end_getlist();
-                        if (typeof callback === 'function') {
-                            callback();
+        },
+        onload: function (doc) {
+            if (doc) {
+                setTimeout(function(){
+                    OfficeJS.system.applications['elrte'].
+                        lib.setDocId(OfficeJS.lib.basename(doc._id));
+                    OfficeJS.system.applications['elrte'].
+                        lib.setContent('loading...');
+                    console.log ('get docid ' + doc._id);
+                    OfficeJS.lib.get(doc._id,null,function (err,val) {
+                        if (val) {
+                            console.log ('receive ' + JSON.stringify (val));
+                            OfficeJS.system.applications['elrte'].
+                                lib.setContent(val.content);
+                        } else {
+                            // TODO : 
                         }
-                    },
-                    error: function (error) {
-                        priv.lastfailure.path = '.';
-                        priv.lastfailure.method = 'getDocumentList';
-                        console.error (error.message);
-                        priv.loading_object.end_getlist();
-                        if (typeof callback === 'function') {
-                            callback();
+                    });
+                },500); // FIXME : 
+            }
+        },
+        update: function (content) {
+            OfficeJS.system.applications['elrte'].lib.setContent (content);
+        }
+    };
+    OfficeJS.system.preferences['html-editor'] =
+        OfficeJS.system.applications['elrte'];
+    OfficeJS.system.mime['html'] = 'html-editor';
+    OfficeJS.system.icon['html'] = '<i class="icon-font"></i>';
+    // End elRTE //
+
+    // svg edit //
+    OfficeJS.system.applications['svg-edit'] = {
+        type:          'svg-editor',
+        name:          'svg-edit',
+        'class':       'editor',
+        componentpath: 'component/svg-edit.html',
+        gadgetid:      'page-content',
+        varname:       'OfficeJS_svgedit',
+        exts:          ['svg'],
+        default_ext:   'svg',
+        docid_elmnt:   '#svg-edit_docid',
+        editor_elmnt:  '#svg-edit_frame',
+        api: {
+            save: function () {
+                var id, content;
+                id = OfficeJS.system.applications['svg-edit'].
+                    lib.getDocId();
+                content = OfficeJS.system.applications['svg-edit'].
+                    lib.getContent();
+                if (id) {
+                    OfficeJS.lib.put({
+                        _id:id+'.'+OfficeJS.system.applications['svg-edit'].
+                            default_ext,
+                        content:content||''
+                    },function (err,val) {
+                        setTimeout(function(){
+                            OfficeJS.lib.allDocs();
+                        });
+                    });
+                }
+            }
+        },
+        lib:{
+            getDocId: function () {
+                return $(OfficeJS.system.applications['svg-edit'].docid_elmnt).
+                    attr('value');
+            },
+            setDocId: function (docid) {
+                $(OfficeJS.system.applications['svg-edit'].docid_elmnt).
+                    attr('value',docid);
+            },
+            getContent: function () {
+                return document.querySelector (
+                    OfficeJS.system.applications['svg-edit'].editor_elmnt).
+                    contentWindow.svgCanvas.getSvgString();
+            },
+            setContent: function (content) {
+                return document.querySelector (
+                    OfficeJS.system.applications['svg-edit'].editor_elmnt).
+                    contentWindow.svgCanvas.setSvgString(content);
+            }
+        },
+        onload: function (doc) {
+            if (doc) {
+                setTimeout(function(){
+                    OfficeJS.system.applications['svg-edit'].
+                        lib.setDocId(OfficeJS.lib.basename(doc._id));
+                    OfficeJS.lib.get(doc._id,null,function (err,val) {
+                        if (val) {
+                            OfficeJS.system.applications['svg-edit'].
+                                lib.setContent(val.content);
+                        } else {
+                            // TODO : 
                         }
+                    });
+                },500); // FIXME : 
+            }
+        }
+    };
+    OfficeJS.system.preferences['svg-editor'] =
+        OfficeJS.system.applications['svg-edit'];
+    OfficeJS.system.mime['svg'] = 'svg-editor';
+    OfficeJS.system.icon['svg'] = '<i class="icon-pencil"></i>';
+    // End svg edit //
+
+    // jquery-sheet //
+    OfficeJS.system.applications['jquery-sheet'] = {
+        type:          'jqs-sheet',
+        name:          'jquery-sheet',
+        'class':       'editor',
+        componentpath: 'component/jquery-sheet.html',
+        gadgetid:      'page-content',
+        varname:       'OfficeJS_jquerysheet',
+        exts:          ['jqs'],
+        default_ext:   'jqs',
+        docid_elmnt:   '#jquery-sheet_docid',
+        sheet_elmnt:   '#jQuerySheet',
+        api: {
+            save: function () {
+                var id, content;
+                id = OfficeJS.system.applications['jquery-sheet'].
+                    lib.getDocId();
+                content = OfficeJS.system.applications['jquery-sheet'].
+                    lib.getContent();
+                if (id) {
+                    OfficeJS.lib.put({
+                        _id:id+'.'+OfficeJS.system.applications['jquery-sheet'].
+                            default_ext,
+                        content:content||''
+                    },function (err,val) {
+                        setTimeout(function(){
+                            OfficeJS.lib.allDocs();
+                        });
+                    });
+                }
+            },
+            firstload: function () {
+                OfficeJS.system.applications['jquery-sheet'].lib.firstload();
+            }
+        },
+        lib:{
+            getDocId: function () {
+                return $(OfficeJS.system.applications['jquery-sheet'].
+                         docid_elmnt).attr('value');
+            },
+            setDocId: function (docid) {
+                $(OfficeJS.system.applications['jquery-sheet'].
+                  docid_elmnt).attr('value',docid);
+            },
+            getContent: function () {
+                return JSON.stringify (
+                    $.sheet.instance[0].exportSheet.json()
+                );
+            },
+            setContent: function (content) {
+                return $(OfficeJS.system.applications['jquery-sheet'].
+                         sheet_elmnt).sheet({
+                             title: '',
+                             inlineMenu: OfficeJS.system.applications[
+                                 'jquery-sheet'].lib.inlineMenu(
+                                     $.sheet.instance),
+                             buildSheet: $.sheet.makeTable.json(
+                                 JSON.parse (content)),
+                             autoFiller: true
+                         });
+            },
+            //This function builds the inline menu to make it easy to
+            //interact with each sheet instance
+            inlineMenu: function (I) {
+                I = (I ? I.length : 0);
+
+                //we want to be able to edit the
+                //html for the menu to make them multi
+                //instance
+                var html = $('#inlineMenu').html().
+                    replace(/sheetInstance/g,
+                            "$.sheet.instance[" + I + "]");
+                var menu = $(html);
+
+                //The following is just so you get an idea of how to style cells
+                menu.find('.colorPickerCell').colorPicker().change(function(){
+                    $.sheet.instance[I].cellChangeStyle(
+                        'background-color', $(this).val());
+                });
+
+                menu.find('.colorPickerFont').colorPicker().change(function(){
+                    $.sheet.instance[I].cellChangeStyle('color', $(this).val());
+                });
+
+                menu.find('.colorPickers').children().eq(1).
+                    css('background-image',
+                        "url('lib/jquery.sheet/images/palette.png')");
+                menu.find('.colorPickers').children().eq(3).
+                    css('background-image',
+                        "url('lib/jquery.sheet/images/palette_bg.png')");
+                return menu;
+            },
+            firstload: function () {
+                //Here is where we initiate the sheets
+                //every time sheet is created it creates a new
+                //jQuery.sheet.instance
+                //(array), to manipulate each sheet,
+                //the jQuery object is returned
+                $('#jQuerySheet').sheet({
+                    title: '',
+                    inlineMenu: OfficeJS.system.applications[
+                        'jquery-sheet'].lib.inlineMenu($.sheet.instance),
+                    urlGet: 'component/newspreadsheet.html',
+                    // buildSheet: true,
+                    editable: true,
+                    autoFiller: true
+                });
+
+                //This is for some fancy menu stuff
+                var o = $('#structures');
+                var top = o.offset().top - 300;
+                $(document).scroll(function(e){
+                    if ($(this).scrollTop() > top) {
+                        $('#lockedMenu').removeClass('locked');
+                    }
+                    else {
+                        $('#lockedMenu').addClass('locked');
+                    }
+                }).scroll();
+            }
+        },
+        onload: function (doc) {
+            if (doc) {
+                setTimeout(function(){
+                    OfficeJS.system.applications['jquery-sheet'].
+                        lib.setDocId(OfficeJS.lib.basename(doc._id));
+                    OfficeJS.lib.get(doc._id,null,function (err,val) {
+                        if (val) {
+                            OfficeJS.system.applications['jquery-sheet'].
+                                lib.setContent(val.content);
+                        } else {
+                            // TODO : 
+                        }
+                    });
+                },500); // FIXME : 
+            }
+        }
+    };
+    OfficeJS.system.preferences['jqs-sheet'] =
+        OfficeJS.system.applications['jquery-sheet'];
+    OfficeJS.system.mime['jqs'] = 'jqs-sheet';
+    OfficeJS.system.icon['jqs'] = '<i class="icon-signal"></i>';
+    // End jquery-sheet //
+
+    // slickgrid //
+    OfficeJS.system.applications['slickgrid'] = {
+        type:          'documentlister',
+        name:          'slickgrid',
+        'class':       'viewer',
+        componentpath: 'component/slickgrid_document_lister.html',
+        gadgetid:      'page-content',
+        varname:       'OfficeJS_slickgrid',
+        list_elmnt:    '#slickgrid_documentlist',
+        api: {
+            load: function () {
+                setTimeout (function () {
+                    try {
+                        OfficeJS.tmp.slick_reload = 0;
+                        OfficeJS.system.applications['slickgrid'].lib.reload();
+                    } catch (e) {} // avoid reload the wrong component
+                });
+            },
+            refresh: function () {
+                OfficeJS.lib.allDocs(function (err,val) {
+                    if (val) {
+                        try {
+                            OfficeJS.tmp.slick_reload = 0;
+                            OfficeJS.system.applications['slickgrid'].
+                                lib.reload();
+                        } catch (e) {} // avoid reload the wrong component
+                    } else {
+                        // TODO : 
                     }
                 });
-        };
-
-        that.cloneCurrentDocumentList = function () {
-            // clone document list
-            return $.extend(true,[],priv.data_object.documentList);
-        };
-
-        /**
-         * Saves the document.
-         * @method save
-         * @param  {string} basename The document name without ext.
-         */
-        that.save = function (basename) {
-            var current_editor = priv.data_object.currentEditor,
-            current_content = current_editor.getContent();
-            if (!priv.isJioSet()) {
-                console.error ('No Jio set yet.');
-                return;
             }
-            priv.loading_object.save();
-            priv.jio.saveDocument(
-                basename+'.'+current_editor.ext,
-                current_content,{
-                    previous_revision: priv.data_object.currentRevision || '0',
-                    success: function (result) {
-                        if (result && result.revision) {
-                            priv.data_object.currentRevision = result.revision;
-                        }
-                        priv.loading_object.end_save();
-                        that.getList();
-                    },
-                    error: function (error) {
-                        priv.lastfailure.path = basename;
-                        priv.lastfailure.method = 'saveDocument';
-                        console.error (error.message);
-                        priv.loading_object.end_save();
-                        that.getList();
-                        if (error.conflict_object) {
-                            priv.onConflict (error.conflict_object);
-                        }
+        },
+        lib:{
+            reload: function () {
+                var grid, onSortFunction, onClickFunction,
+                check_box_selector, i, array,
+                onRemoveSeveral,showIconFormatter,
+                document_list,columns,options;
+
+                if (!OfficeJS.tmp.documentlist) {
+                    if (OfficeJS.tmp.slick_reload === 3) { return; }
+                    setTimeout(function() {
+                        OfficeJS.tmp.slick_reload =
+                            OfficeJS.tmp.slick_reload?
+                            OfficeJS.tmp.slick_reload++:1;
+                        OfficeJS.system.applications['slickgrid'].lib.reload();
+                    },100);
+                    return;
+                }
+
+                $(OfficeJS.system.applications['slickgrid'].
+                  list_elmnt).html('');
+                document_list = OfficeJS.tmp.documentlist;
+                options = {
+                    enableCellNavigation: true,
+                    enableColumnReorder: false,
+                    multiColumnSort: true,
+                    forceFitColumns: true
+                };
+                showIconFormatter = function (
+                    row,cell,value,columnDef,dataContext) {
+                    return dataContext.icon;
+                };
+                // make array
+                array = [];
+                for (i = 0; i < document_list.total_rows; i+= 1) {
+                    var arrayi = {}, lm, cd, j;
+                    arrayi.id = document_list.rows[i].id;
+                    arrayi.basename = OfficeJS.lib.basename(arrayi.id);
+                    arrayi.ext = OfficeJS.lib.extOf(arrayi.id);
+                    if (arrayi.ext) {
+                        arrayi.icon = OfficeJS.system.icon[arrayi.ext] || '?';
+                        arrayi.app = OfficeJS.lib.getAppFromMime(arrayi.ext) ||
+                            OfficeJS.lib.getAppFromPref('html-editor');
+                    } else {
+                        arrayi.icon = '?';
+                        arrayi.app = OfficeJS.lib.getAppFromPref('html-editor');
                     }
-                });
-        };
-
-        /**
-         * Loads a document.
-         * @method load
-         * @param  {string} basename The document name without ext.
-         */
-        that.load = function (basename) {
-            var current_editor = priv.data_object.currentEditor;
-            if (!priv.isJioSet()) {
-                console.error ('No Jio set yet.');
-                return;
-            }
-            priv.loading_object.load();
-            priv.jio.loadDocument(
-                basename+'.'+current_editor.ext,{
-                    max_retry:3,
-                    success: function (result) {
-                        if (result && result.revision) {
-                            priv.data_object.currentRevision = result.revision;
-                            if (result.conflict_object) {
-                                priv.onConflict(result.conflict_object);
+                    if (document_list.conflicts) {
+                        arrayi.conflict = '';
+                        for (j = 0;
+                             j < document_list.conflicts.total_rows;
+                             j+= 1) {
+                            if (document_list.conflicts.rows[j].id ===
+                                arrayi.id) {
+                                var row = document_list.conflicts.rows[j];
+                                arrayi.conflict = 'X';
+                                arrayi.showConflict = function () {
+                                    console.log ('showConflict');
+                                    OfficeJS.lib.openApplication(
+                                        OfficeJS.lib.getAppFromPref(
+                                            'conflictsolver'),
+                                        {_id:arrayi.id,row:row} // wrong
+                                    );
+                                };
+                                break;
                             }
                         }
-                        current_editor.setContent(result.content);
-                        priv.loading_object.end_load();
-                    },
-                    error: function (error) {
-                        priv.lastfailure.path = basename;
-                        priv.lastfailure.method = 'loadDocument';
-                        console.error (error.message);
-                        priv.loading_object.end_load();
                     }
-                });
-        };
-
-        /**
-         * Removes a document.
-         * @method remove
-         * @param  {string} name The document name.
-         * @param  {string} revision The document name.
-         */
-        that.remove = function (name,revision) {
-            console.log (arguments);
-            if (!priv.isJioSet()) {
-                console.error ('No Jio set yet.');
-                return;
-            }
-            priv.loading_object.remove();
-            priv.jio.removeDocument(
-                name,{
-                    revision: revision || 'last',
-                    success: function (result) {
-                        priv.loading_object.end_remove();
-                        that.getList();
-                    },
-                    error: function (error) {
-                        priv.lastfailure.path = name;
-                        priv.lastfailure.method = 'removeDocument';
-                        console.error (error.message);
-                        priv.loading_object.end_remove();
-                        that.getList();
-                        if (error.conflict_object) {
-                            priv.onConflict (error.conflict_object);
-                        }
-                    }
-                });
-        };
-
-        /**
-         * Removes several files.
-         * @method removeSeveralFromArray
-         * @param  {array} documentarray Contains all file names ({string}).
-         */
-        that.removeSeveralFromArray = function (documentarray) {
-            var i, l, cpt = 0, current_editor = priv.data_object.currentEditor;
-            if (!priv.isJioSet()) {
-                console.error ('No Jio set yet.');
-                return;
-            }
-            var onResponse = function (result) {
-                cpt += 1;
-                if (cpt === l) {
-                    if (typeof current_editor.update !== 'undefined') {
-                        if (priv.data_object.currentEditor !== null &&
-                            current_editor.path ===
-                            priv.data_object.currentEditor.path) {
-                            that.getList(current_editor.update);
-                        } else {
-                            that.getList();
-                        }
-                    }
+                    // dates
+                    // FIXME : we can have 2012/1/1 12:5
+                    // we should have 2012/01/01 12:05
+                    lm = (new Date(document_list.rows[i].value._last_modified));
+                    cd = (new Date(document_list.rows[i].value._creation_date));
+                    arrayi.last_modified = lm.getFullYear()+'/'+
+                        (lm.getMonth()+1)+'/'+lm.getDate()+' '+
+                        lm.getHours()+':'+lm.getMinutes();
+                    arrayi.creation_date = cd.getFullYear()+'/'+
+                        (cd.getMonth()+1)+'/'+cd.getDate()+' '+
+                        cd.getHours()+':'+cd.getMinutes();
+                    array.push(arrayi);
                 }
-                priv.loading_object.end_remove();
-            };
-            for (i = 0, l = documentarray.length; i < l; i+= 1) {
-                priv.loading_object.remove();
-                priv.jio.removeDocument(
-                    documentarray[i],{
-                        revision: 'last',
-                        success: onResponse,
-                        error: onResponse
+                check_box_selector = new Slick.CheckboxSelectColumn({
+                    cssClass: "slick-cell-checkboxsel"
+                });
+                columns = [];
+                columns.push(check_box_selector.getColumnDefinition());
+                columns.push({id:"icon",name:"",field:"icon",
+                              sortable:true,resizable:false,width:24,
+                              formatter:showIconFormatter});
+                columns.push({id:"file_name",name:"Document",
+                              field:"basename",sortable:true});
+                columns.push({id:"last_modified",name:"Modified",
+                              field:"last_modified",sortable:true});
+                columns.push({id:"creation_date",name:"Created",
+                              field:"creation_date",sortable:true});
+                if (document_list.conflicts) {
+                    columns.push({id:'on_conflict',name:'',
+                                  field:'conflict',sortable:true,
+                                  resizable:false,width:24});
+                }
+                grid = new Slick.Grid(
+                    OfficeJS.system.applications['slickgrid'].list_elmnt,
+                    array,columns,options);
+                grid.setSelectionModel(new Slick.RowSelectionModel(
+                    {selectActiveRow: false}));
+                grid.registerPlugin(check_box_selector);
+                onSortFunction = function (e, args) {
+                    var cols = args.sortCols;
+                    document_list.sort(function (data_row1, data_row2) {
+                        var i, l, field, sign, value1, value2, result;
+                        for (i = 0, l = cols.length; i < l; i++) {
+                            field = cols[i].sortCol.field;
+                            sign = cols[i].sortAsc ? 1 : -1;
+                            value1 = data_row1[field];
+                            value2 = data_row2[field];
+                            result = (value1==value2?0:
+                                      (value1>value2?1:-1))*sign;
+                            if (result != 0) {
+                                return result;
+                            }
+                        }
+                        return 0;
+                    });
+                    grid.invalidate();
+                    grid.render();
+                };
+                onClickFunction = function (e) {
+                    var cell = grid.getCellFromEvent(e);
+                    if (cell.cell === grid.getColumnIndex('file_name')) {
+                        OfficeJS.lib.openApplication(
+                            array[cell.row].app,{_id:array[cell.row].id});
+                    } else if (cell.cell ===
+                               grid.getColumnIndex('on_conflict')) {
+                        array[cell.row].showConflict?
+                            array[cell.row].showConflict():true;
+                    }
+                };
+                onRemoveSeveral = function () {
+                    var document_name_array = [], selected, i, l, cpt = 0;
+                    selected = grid.getSelectedRows();
+                    for (i = 0, l = selected.length; i < l; i+= 1) {
+                        OfficeJS.lib.remove(
+                            {_id:document_list.rows[selected[i]].id},'last',
+                            function (err,val) {
+                                cpt ++;
+                                if (l === cpt) {
+                                    OfficeJS_slickgrid.refresh();
+                                }
+                            });
+                    }
+                };
+                document.querySelector (
+                    '#slickgrid_document_lister_remove_selected').
+                    onclick = onRemoveSeveral;
+                document.querySelector (
+                    '#slickgrid_document_lister_refresh').
+                    onclick = OfficeJS_slickgrid.refresh;
+                grid.onClick.subscribe(onClickFunction);
+                grid.onSort.subscribe(onSortFunction);
+            }
+        },
+        update: function () {
+            OfficeJS.system.applications['slickgrid'].lib.reload();
+        }
+    };
+    OfficeJS.system.preferences['documentlister'] =
+        OfficeJS.system.applications['slickgrid'];
+    // End slickgrid //
+
+    // work in progress //
+    OfficeJS.system.applications['workinprogress'] = {
+        type:          'activities',
+        name:          'workinprogress',
+        'class':       'viewer',
+        componentpath: 'component/workinprogress.html',
+        gadgetid:      'page-content',
+        main_elmnt:    '#workinprogress_activities',
+        api: {},
+        lib:{
+            id: null,
+            start: function () {
+                if (OfficeJS.system.applications['workinprogress'].
+                    lib.id === null) {
+                    var update = function () {
+                        var act = OfficeJS.run.jio.getJobArray(), i, str = '';
+                        for (i = 0; i < act.length; i+= 1) {
+                            str += act[i].command.label +' try number '+
+                                act[i].command.tried + '<br />';
+                        }
+                        if (OfficeJS.tmp.lastfailure) {
+                            str += '<span style="color:red;">Last failure: '+
+                                OfficeJS.tmp.lastfailure.label +
+                                ', status: '+OfficeJS.tmp.lastfailure.status+
+                                ', reason: '+OfficeJS.tmp.lastfailure.reason+
+                                '</span><br/>';
+                        }
+                        if (str === '') {
+                            str = 'There is no on going tasks.<br />';
+                        }
+                        document.querySelector (
+                            OfficeJS.system.applications['workinprogress'].
+                                main_elmnt).innerHTML = str;
+                    };
+                    update();
+                    OfficeJS.system.applications['workinprogress'].
+                        lib.id = setInterval (update, 200);
+                }
+            },
+            stop: function () {
+                if (OfficeJS.system.applications['workinprogress'].
+                    lib.id !== null) {
+                    clearInterval(OfficeJS.system.applications[
+                        'workinprogress'].lib.id);
+                    OfficeJS.system.applications['workinprogress'].
+                        lib.id = null;
+                }
+            }
+        },
+        onload: function () {
+            setTimeout(function(){
+                OfficeJS.system.applications['workinprogress'].lib.start();
+            },50);
+        },
+        onunload: function () {
+            OfficeJS.system.applications['workinprogress'].lib.stop();
+            return true;
+        }
+    };
+    OfficeJS.system.preferences['activities'] =
+        OfficeJS.system.applications['workinprogress'];
+    // End work in progress //
+
+    // basic conflict solver //
+    OfficeJS.system.applications['basic_conflict_solver'] = {
+        type:          'conflictsolver',
+        'class':       'editor',
+        name:          'basic_conflict_solver',
+        componentpath: 'component/basic_conflict_solver.html',
+        gadgetid:      'page-conflict',
+        varname:       'OfficeJS_basic_conflict_solver',
+        docid_elmnt:   '#basic_conflict_solver_docid',
+        main_elmnt:    '#basic_conflict_solver_div',
+        api: {
+            abort: function () {
+                OfficeJS.lib.openApplication(
+                    OfficeJS.system.applications['close_conflict_solver']);
+            },
+            removeRevision: function () {
+                OfficeJS.system.applications['top_nav_bar'].lib.spin('remove');
+                OfficeJS.tmp.basic_conflict_solver_current_conflict.value.
+                    _solveConflict(
+                        {conflicts:true,revs:true,revs_info:true},
+                        function (err,val) {
+                            OfficeJS.system.applications['top_nav_bar'].lib.
+                                endspin('remove');
+                            if (err && err.conflicts.total_rows > 0) {
+                                OfficeJS.lib.openApplication(
+                                    OfficeJS.lib.getAppFromPref(
+                                        'conflictsolver'));
+                            }
+                            OfficeJS.lib.allDocs ( function () {
+                                if (OfficeJS.tmp['page-content'].type ===
+                                    'documentlister') {
+                                    OfficeJS.tmp['page-content'].update?
+                                        OfficeJS.tmp['page-content'].update():
+                                        true;
+                                }
+                            });
+                            if (OfficeJS.tmp['page-content']['class'] ===
+                                'editor') {
+                                OfficeJS.tmp['page-content'].update?
+                                    OfficeJS.tmp['page-content'].update(''):
+                                    true;
+                            }
+                        });
+                OfficeJS.system.applications['basic_conflict_solver'].
+                    api.abort();
+            },
+            keepRevision: function (revision) {
+                var content = $('#'+revision).text();
+                OfficeJS.system.applications['top_nav_bar'].lib.spin('save');
+                OfficeJS.tmp.basic_conflict_solver_current_conflict.value.
+                    _solveConflict(
+                        content,
+                        {conflicts:true,revs:true,revs_info:true},
+                        function (err,val) {
+                            OfficeJS.system.applications['top_nav_bar'].lib.
+                                endspin('save');
+                            if (err && err.conflicts.total_rows > 0) {
+                                OfficeJS.lib.openApplication(
+                                    OfficeJS.lib.getAppFromPref(
+                                        'conflictsolver'));
+                            }
+                            OfficeJS.lib.allDocs ( function () {
+                                if (OfficeJS.tmp['page-content'].type ===
+                                    'documentlister') {
+                                    OfficeJS.tmp['page-content'].update?
+                                        OfficeJS.tmp['page-content'].update():
+                                        true;
+                                }
+                            });
+                            if (OfficeJS.tmp['page-content']['class'] ===
+                                'editor') {
+                                OfficeJS.tmp['page-content'].update?
+                                    OfficeJS.tmp['page-content'].update(
+                                        content):
+                                    true;
+                            }
+                        });
+                OfficeJS.system.applications['basic_conflict_solver'].
+                    api.abort();
+            }
+        },
+        lib:{
+            addRevision: function (doc) {
+                setTimeout( function () {
+                    document.querySelector (OfficeJS.system.applications[
+                        'basic_conflict_solver'].main_elmnt+' #revisions').
+                        innerHTML += '<div class="row-fluid"><div class="span12">'+
+                        '<div>'+(new Date(doc._last_modified)).toString()+'</div>'+
+                        '<div><textarea id="'+doc._rev+'">'+doc.content+
+                        '</textarea></div>'+
+                        '<div><button onclick="'+
+                        //'console.log('+"'"+revision+"'"+');'+
+                        "OfficeJS_basic_conflict_solver.keepRevision('"+doc._rev+"');"+
+                        '">Save this one</button></div><hr/>'+
+                        '</div></div>';
+                },50);
+            },
+            addRemovedRevision: function (doc) {
+                setTimeout( function () {
+                    document.querySelector (OfficeJS.system.applications[
+                        'basic_conflict_solver'].main_elmnt+' #revisions').
+                        innerHTML += '<div class="row-fluid"><div class="span12">'+
+                        '<div>'+(new Date(doc._last_modified)).toString()+'</div>'+
+                        '<div>Removed</div>'+
+                        '<div><button onclick="'+
+                        //'console.log('+"'"+revision+"'"+');'+
+                        "OfficeJS_basic_conflict_solver.removeRevision();"+
+                        '">Save this one</button></div><hr/>'+
+                        '</div></div>';
+                },50);
+            }
+        },
+        onload: function (doc) {
+            // doc.row
+            OfficeJS.tmp.basic_conflict_solver_current_conflict = doc.row;
+            setTimeout(function(){
+                document.querySelector (
+                    OfficeJS.system.applications[
+                        'basic_conflict_solver'].docid_elmnt
+                ).textContent = doc._id;
+            },50); // FIXME : wait for init end
+            console.log (OfficeJS.tmp.basic_conflict_solver_current_conflict);
+            var i;
+            for (i = 0; i < OfficeJS.tmp.basic_conflict_solver_current_conflict.
+                 key.length; i+= 1) {
+                console.log ('a');
+                OfficeJS.system.applications['top_nav_bar'].lib.spin('load');
+                OfficeJS.lib.get(
+                    doc._id,
+                    OfficeJS.tmp.basic_conflict_solver_current_conflict.key[i],
+                    function (err,val) {
+                        OfficeJS.system.applications['top_nav_bar'].lib.
+                            endspin('load');
+                        if (val) {
+                            OfficeJS.system.applications[
+                                'basic_conflict_solver'].
+                                lib.addRevision(val);
+                        } else if (err && err.status === 404) {
+                            OfficeJS.system.applications[
+                                'basic_conflict_solver'].
+                                lib.addRemovedRevision(err);
+                        }
                     });
             }
-        };
+        }
+    };
+    OfficeJS.system.preferences['conflictsolver'] =
+        OfficeJS.system.applications['basic_conflict_solver'];
+    // End basic conflict solver //
 
-        /**
-         * Called when there is conflict
-         * @method onConflict
-         * @param  {object} doc The document object
-         * @param  {object} conflict_object The conflict object
-         */
-        priv.onConflict = function (conflict_object) {
-            // get the good conflict solver and load it
-            // if (ext && priv.conflict_solver_object[ext]) {
-            //     that.open({app:priv.conflict_solver_object[ext],
-            //                // local_content:document.content,
-            //                conflict_object:conflict_object});
-            // } else {
-                that.open({app:'basic_conflict_solver',
-                           // local_content:document.content,
-                           conflict_object:conflict_object});
-            // }
-        };
+    OfficeJS.system.applications['close_conflict_solver'] = {
+        componentpath: 'component/empty.html',
+        gadgetid:      'page-conflict'
+    };
+    //////////////////////////////////////////////////////////////////////
 
-        /**
-         * Solve the conflict
-         * @method solveConflict
-         * @param  {object} conflict_data The conflict object
-         * @param  {string} data The new content of the new revision
-         */
-        that.solveConflict = function (conflict_object, data) {
-            that.closeGadgetId (priv.data_object.currentSolver.gadget_id);
-            priv.data_object.currentSolver = null;
-            priv.data_object.currentEditor.setContent(data);
-            priv.loading_object.save();
-            conflict_object.solveConflict(
-                data,{
-                    success: function (result) {
-                        if (result && result.revision) {
-                            priv.data_object.currentRevision = result.revision;
-                        }
-                        priv.loading_object.end_save();
-                        that.getList();
-                    },
-                    error: function (error) {
-                        priv.lastfailure.path = basename;
-                        priv.lastfailure.method = 'saveDocument';
-                        console.error (error.message);
-                        priv.loading_object.end_save();
-                        that.getList();
-                        if (error.conflict_object) {
-                            priv.onConflict (error.conflict_object);
+    odf(OfficeJS.lib,'basename',function (docid) {
+        var basename = docid.split('.').slice(0,-1).join('.');
+        if (basename === '') {
+            return docid;
+        }
+        return basename;
+    });
+    odf(OfficeJS.lib,'extOf',function (docid) {
+        var ext = docid.split('.').splice(-1)[0];
+        if (ext === docid) {
+            return '';
+        }
+        return ext;
+    });
+    odf(OfficeJS.lib,'put',function (doc,callback) {
+        if (OfficeJS.run.jio) {
+            if (OfficeJS.tmp[doc._id + ' knownrevision']) {
+                doc._rev = OfficeJS.tmp[doc._id + ' knownrevision'];
+            }
+            OfficeJS.system.applications['top_nav_bar'].lib.spin('save');
+            OfficeJS.run.jio.put(
+                doc,{conflicts:true,revs:true,revs_info:true},
+                function (err,val) {
+                    OfficeJS.system.applications['top_nav_bar'].lib.
+                        endspin('save');
+                    OfficeJS.tmp[doc._id + ' knownrevision'] =
+                        (err||val||{rev:undefined}).rev;
+                    if (err) {
+                        OfficeJS.tmp.lastfailure =
+                            OfficeJS.lib.cloneObjectRoot(err);
+                        OfficeJS.tmp.lastfailure.label = 'put';
+                        OfficeJS.tmp.lastfailure.docid = doc._id;
+                    }
+                    if ((err||val).conflicts &&
+                        (err||val).conflicts.total_rows > 0) {
+                        OfficeJS.lib.openApplication(
+                            OfficeJS.lib.getAppFromPref(
+                                'conflictsolver'),
+                            {_id:doc._id,row:(err||val).conflicts.rows[0]}
+                        );
+                    }
+                    callback?callback(err,val):true;
+                }
+            );
+        }
+    });
+    odf(OfficeJS.lib,'get',function (docid,rev,callback) {
+        if (OfficeJS.run.jio) {
+            var opts = {conflicts:true,revs:true,revs_info:true,max_retry:3};
+            if (rev) {
+                opts.rev = rev;
+            }
+            OfficeJS.system.applications['top_nav_bar'].lib.spin('load');
+            OfficeJS.run.jio.get(
+                docid,opts,
+                function (err,val) {
+                    OfficeJS.system.applications['top_nav_bar'].lib.
+                        endspin('load');
+                    if (!rev) {
+                        OfficeJS.tmp[docid + ' knownrevision'] =
+                            (err||val||{_rev:undefined})._rev;
+                        if ((err||val)._conflicts &&
+                            (err||val)._conflicts.total_rows > 0) {
+                            OfficeJS.lib.openApplication(
+                                OfficeJS.lib.getAppFromPref(
+                                    'conflictsolver'),
+                                {_id:docid,row:(err||val)._conflicts.rows[0]}
+                            );
                         }
                     }
-                });
-        };
-
-        that.abortSolveConflict = function () {
-            that.closeGadgetId (priv.data_object.currentSolver.gadget_id);
-            priv.data_object.currentSolver = null;
-        };
-
-        /**
-         * Get current activity.
-         * @method getActivity
-         * @return {array} A list of current states for each current activities.
-         */
-        that.getActivity = function () {
-            var activity = priv.jio.getJobArray ();
-            var lastfailure = that.getLastFailure();
-            var res = [], i;
-            for (i = 0; i < activity.length; i+= 1) {
-                switch (activity[i].command.label) {
-                case 'saveDocument':
-                    res.push(activity[i].storage.type+
-                             ': Saving "' + activity[i].command.path + '".');
-                    break;
-                case 'loadDocument':
-                    res.push(activity[i].storage.type+
-                             ': Loading "' + activity[i].command.path + '".');
-                    break;
-                case 'removeDocument':
-                    res.push(activity[i].storage.type+
-                             ': Removing "' + activity[i].command.path + '".');
-                    break;
-                case 'getDocumentList':
-                    res.push(activity[i].storage.type+
-                             ': Get document list' +
-                             ' at "' + activity[i].command.path + '".');
-                    break;
-                default:
-                    res.push('Unknown action.');
-                    break;
+                    if (err) {
+                        OfficeJS.tmp.lastfailure =
+                            OfficeJS.lib.cloneObjectRoot(err);
+                        OfficeJS.tmp.lastfailure.label = 'get';
+                        OfficeJS.tmp.lastfailure.docid = docid;
+                    }
+                    callback?callback(err,val):true;
                 }
-            }
-            if (lastfailure.method) {
-                switch (lastfailure.method) {
-                case 'saveDocument':
-                    res.push('<span style="color:red;">LastFailure: '+
-                             'Fail to save "'+ lastfailure.path + '"</span>');
-                    break;
-                case 'loadDocument':
-                    res.push('<span style="color:red;">LastFailure: '+
-                             'Fail to load "'+ lastfailure.path + '"</span>');
-                    break;
-                case 'removeDocument':
-                    res.push('<span style="color:red;">LastFailure: '+
-                             'Fail to remove "'+ lastfailure.path + '"</span>');
-                    break;
-                case 'getDocumentList':
-                    res.push('<span style="color:red;">LastFailure: '+
-                             'Fail to retreive list ' +
-                             ' at "' + lastfailure.path + '"</span>');
-                    break;
-                default:
-                    break;
+            );
+        }
+    });
+    odf(OfficeJS.lib,'allDocs',function (callback) {
+        if (OfficeJS.run.jio) {
+            OfficeJS.system.applications['top_nav_bar'].lib.spin('getlist');
+            OfficeJS.run.jio.allDocs(
+                {conflicts:true,revs:true,revs_info:true,max_retry:3},
+                function (err,val) {
+                    OfficeJS.system.applications['top_nav_bar'].lib.
+                        endspin('getlist');
+                    if (val) {
+                        OfficeJS.tmp.documentlist = val;
+                    } else if (err) {
+                        OfficeJS.tmp.lastfailure =
+                            OfficeJS.lib.cloneObjectRoot(err);
+                        OfficeJS.tmp.lastfailure.label = 'allDocs';
+                    }
+                    callback?callback(err,val):true;
                 }
+            );
+        }
+    });
+    odf(OfficeJS.lib,'remove',function (doc,rev,callback) {
+        if (OfficeJS.run.jio) {
+            var opts = {conflicts:true,revs:true,revs_info:true};
+            if (rev) {
+                opts.rev = rev;
+            } else if (OfficeJS.tmp[doc._id + ' knownrevision']) {
+                opts.rev = OfficeJS.tmp[doc._id + ' knownrevision'];
             }
-            return res;
-        };
+            OfficeJS.system.applications['top_nav_bar'].lib.spin('remove');
+            OfficeJS.run.jio.remove(
+                doc,opts,
+                function (err,val) {
+                    OfficeJS.system.applications['top_nav_bar'].lib.
+                        endspin('remove');
+                    if (err) {
+                        OfficeJS.tmp.lastfailure =
+                            OfficeJS.lib.cloneObjectRoot(err);
+                        OfficeJS.tmp.lastfailure.label = 'remove';
+                        OfficeJS.tmp.lastfailure.docid = doc._id;
+                    }
+                    callback?callback(err,val):true;
+                }
+            );
+        }
+    });
+    odf(OfficeJS.lib,'getAppFromPref',function (spec) {
+        return OfficeJS.system.preferences[spec];
+    });
+    odf(OfficeJS.lib,'getAppFromMime',function (ext) {
+        return OfficeJS.lib.getAppFromPref(OfficeJS.system.mime[ext]);
+    });
+    odf(OfficeJS.lib,'cloneObjectRoot',function (obj) {
+        var cloned_obj = {}, key;
+        for (key in obj) {
+            cloned_obj[key] = obj[key];
+        }
+        return cloned_obj;
+    });
+    odf(OfficeJS.lib,'cloneAndProtectObjectRoot',function (obj) {
+        var cloned_obj = {}, key;
+        for (key in obj) {
+            odf(cloned_obj,key,obj[key]);
+        }
+        return cloned_obj;
+    });
+    odf(OfficeJS.lib,'openApplication',function (app,obj) {
+        // unload
+        if (app.gadgetid && OfficeJS.tmp[app.gadgetid] &&
+            OfficeJS.tmp[app.gadgetid].onunload) {
+            if (!OfficeJS.tmp[app.gadgetid].onunload()) {
+                return false;
+            }
+        }
+        // set api
+        if (app.varname) {
+            scope[app.varname]=OfficeJS.lib.cloneAndProtectObjectRoot(app.api);
+        }
+        // open
+        TabbularGadget.addNewTabGadget(app.componentpath,app.gadgetid);
+        OfficeJS.tmp[app.gadgetid] = app;
+        // load
+        if (app.onload) {
+            app.onload(obj);
+        }
+        return true;
+    });
+    odf(OfficeJS.lib,'hideApplication',function (app) {
+        // TODO : 
+    });
 
-        /**
-         * Returns the last job failure.
-         * @method getLastFailure
-         * @return {object} The last failure.
-         */
-        that.getLastFailure = function () {
-            return priv.lastfailure;
-        };
+    //////////////////////////////////////////////////////////////////////
 
-        // End of class //
-        priv.init();
-        return that;
-    }());                       // end OfficeJS
+    odf(OfficeJS.command,'getEnv',function (env) {
+        return OfficeJS.env[env];
+    });
+    odf(OfficeJS.command,'setEnv',function (env,value) {
+        OfficeJS.env[env] = value;
+    });
+    odf(OfficeJS.command,'setPreference',function (id,value) {
+        // TODO : 
+    });
 
-    // show gadgets
-    OfficeJS.open({app:'topnavbar'});
-    OfficeJS.open({app:'leftnavbar'});
-    OfficeJS.open({app:'login'});
-}());
+    //////////////////////////////////////////////////////////////////////
+
+    odf(scope,'OfficeJS',OfficeJS.command);
+
+    OfficeJS.lib.openApplication(OfficeJS.system.applications['top_nav_bar']);
+    OfficeJS.lib.openApplication(OfficeJS.system.applications['left_nav_bar']);
+    OfficeJS.lib.openApplication(OfficeJS.system.applications['login']);
+}(window));
