@@ -117,8 +117,8 @@ var job = function(spec, my) {
     that.eliminated = function () {
         priv.command.error ({
             status:10,statusText:'Stopped',error:'stopped',
-            message:'This job has been stoped by another one.',
-            reason:this.message});
+            message:'This job has been stopped by another one.',
+            reason:'this job has been stopped by another one'});
     };
 
     that.notAccepted = function () {
@@ -128,7 +128,8 @@ var job = function(spec, my) {
         });
         priv.command.error ({
             status:11,statusText:'Not Accepted',error:'not_accepted',
-            message:'This job is already running.',reason:this.message});
+            message:'This job is already running.',
+            reason:'this job is already running'});
     };
 
     /**
