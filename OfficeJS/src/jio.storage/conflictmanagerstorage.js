@@ -569,13 +569,6 @@ var newConflictManagerStorage = function ( spec, my ) {
             doc._creation_date =
                 metadata_file_content[current_revision]._creation_date;
             doc._rev = current_revision;
-            if (command.getOption('revs')) {
-                doc._revisions = priv._revs(metadata_file_content,
-                                            current_revision);
-            }
-            if (command.getOption('revs_info')) {
-                doc._revs_info = priv._revs_info(metadata_file_content);
-            }
             if (metadata_only) {
                 am.call(o,'success');
             } else {
@@ -598,7 +591,7 @@ var newConflictManagerStorage = function ( spec, my ) {
             );
         };
         o.checkForConflicts = function () {
-            if (metadata_file_content[current_revision].conflict) {
+            if (metadata_file_content[current_revision]._conflict) {
                 on_conflict = true;
                 conflict_object =
                     priv.createConflictObject(
@@ -607,25 +600,39 @@ var newConflictManagerStorage = function ( spec, my ) {
                         current_revision
                     );
             }
-            if (command.getOption('conflicts')) {
-                doc._conflicts = conflict_object;
-            }
             am.call(o,'success');
         };
         o.success = function (){
             am.neverCall(o,'error');
             am.neverCall(o,'success');
+            if (command.getOption('revs')) {
+                doc._revisions = priv._revs(metadata_file_content,
+                                            current_revision);
+            }
+            if (command.getOption('revs_info')) {
+                doc._revs_info = priv._revs_info(metadata_file_content);
+            }
+            if (command.getOption('conflicts')) {
+                doc._conflicts = conflict_object;
+            }
             that.success(doc);
         };
-        o.error = function (error){
-            var gooderror = error || {status:0,statusText:'Unknown',
+        o.error = function (error) {
+            var err = error || {status:0,statusText:'Unknown',
                                       message:'Unknown error.'};
-            if (on_conflict) {
-                gooderror.conflict_object = conflict_object;
+            if (command.getOption('revs')) {
+                err._revisions = priv._revs(metadata_file_content,
+                                            current_revision);
+            }
+            if (command.getOption('revs_info')) {
+                err._revs_info = priv._revs_info(metadata_file_content);
+            }
+            if (command.getOption('conflicts')) {
+                err._conflicts = conflict_object;
             }
             am.neverCall(o,'error');
             am.neverCall(o,'success');
-            that.error(gooderror);
+            that.error(err);
         };
         am.call(o,'getDistantMetadata');
     };

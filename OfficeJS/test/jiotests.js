@@ -1622,6 +1622,7 @@ test ('Revision Conflict', function() {
                 o.rev.third = err.rev;
                 err.rev = checkRev(err.rev);
                 if (err.conflicts && err.conflicts.rows) {
+                    o.tmp = err.conflicts;
                     o.solveConflict = checkConflictRow (err.conflicts.rows[0]);
                 }
                 for (k in {'error':0,'message':0,'reason':0,'statusText':0}) {
@@ -1654,11 +1655,15 @@ test ('Revision Conflict', function() {
     o.tick(o);
     o.checkContent ('file.doc.'+o.rev.third);
     // loading test
-    o.spy(o,'value',{_id:'file.doc',_rev:o.rev.third,content:'content3'},
+    o.spy(o,'value',{_id:'file.doc',_rev:o.rev.third,content:'content3',
+                     _conflicts:o.tmp},
           'loading "file.doc" -> conflict!');
-    o.jio.get('file.doc',function (err,val) {
+    o.jio.get('file.doc',{conflicts:true},function (err,val) {
         var k;
         if (val) {
+            if (val._conflicts && val._conflicts.rows) {
+                checkConflictRow (val._conflicts.rows[0]);
+            }
             for (k in {'_creation_date':0,'_last_modified':0}) {
                 if (val[k]) {
                     delete val[k];
