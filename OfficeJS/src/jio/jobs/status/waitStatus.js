@@ -24,7 +24,7 @@ var waitStatus = function(spec, my) {
     priv.refreshJobIdArray = function() {
         var tmp_job_id_array = [], i;
         for (i = 0; i < priv.job_id_array.length; i+= 1) {
-            if (my.jobManager.jobIdExists(priv.job_id_array[i])) {
+            if (jobManager.jobIdExists(priv.job_id_array[i])) {
                 tmp_job_id_array.push(priv.job_id_array[i]);
             }
         }
