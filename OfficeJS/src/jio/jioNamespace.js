@@ -1,5 +1,5 @@
 var storage_type_object = {     // -> 'key':constructorFunction
-    'base': function () {}      // overidden by jio
+    'base': function () {}      // overriden by jio
 };
 var jioNamespace = (function(spec) {
     var that = {};

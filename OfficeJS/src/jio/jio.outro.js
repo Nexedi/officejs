@@ -53,6 +53,7 @@
             return storage_type_object[type](spec, my);
         }
     });
+    jobManager.storage = that.storage;
 
     Object.defineProperty(that,"start",{
         configurable:false,enumerable:false,writable:false,value:

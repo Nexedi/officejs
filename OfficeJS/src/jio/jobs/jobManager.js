@@ -139,7 +139,7 @@ var jobManager = (function(spec) {
             var command_object = command(jio_job_array[i].command);
             if (command_object.canBeRestored()) {
                 that.addJob ( job(
-                    {storage:jio.storage(jio_job_array[i].storage),
+                    {storage:that.storage(jio_job_array[i].storage),
                      command:command_object}));
             }
         }
