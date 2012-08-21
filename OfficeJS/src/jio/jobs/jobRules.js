@@ -1,15 +1,30 @@
-var jobRules = (function(spec, my) {
+var jobRules = (function(spec) {
     var that = {};
     // Attributes //
     var priv = {};
     priv.compare = {};
     priv.action = {};
 
-    that.eliminate = function() { return 'eliminate'; };
-    that.update = function() { return 'update'; };
-    that.dontAccept = function() { return 'dont accept'; };
-    that.wait = function() { return 'wait'; };
-    that.none = function() { return 'none'; };
+    Object.defineProperty(that,"eliminate",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() { return 'eliminate'; }
+    });
+    Object.defineProperty(that,"update",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() { return 'update'; }
+    });
+    Object.defineProperty(that,"dontAccept",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() { return 'dont accept'; }
+    });
+    Object.defineProperty(that,"wait",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() { return 'wait'; }
+    });
+    Object.defineProperty(that,"none",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() { return 'none'; }
+    });
     that.default_action = that.none;
     that.default_compare = function(job1,job2) {
         return (job1.getCommand().getDocId() ===
@@ -70,12 +85,15 @@ var jobRules = (function(spec, my) {
      * @param job2 {object} The new job.
      * @return {string} The action string.
      */
-    that.validateJobAccordingToJob = function(job1,job2) {
-        if (priv.canCompare(job1,job2)) {
-            return {action:priv.getAction(job1,job2),job:job1};
+    Object.defineProperty(that,"validateJobAccordingToJob",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(job1,job2) {
+            if (priv.canCompare(job1,job2)) {
+                return {action:priv.getAction(job1,job2),job:job1};
+            }
+            return {action:that.default_action(job1,job2),job:job1};
         }
-        return {action:that.default_action(job1,job2),job:job1};
-    };
+    });
 
     /**
      * Adds a rule the action rules.
@@ -85,12 +103,16 @@ var jobRules = (function(spec, my) {
      * @param method2 {string} The action label from the new job.
      * @param rule {function} The rule that return an action string.
      */
-    that.addActionRule = function(method1,ongoing,method2,rule) {
-        var ongoing_s = (ongoing?'on going':'not on going');
-        priv.action[method1] = priv.action[method1] || {};
-        priv.action[method1][ongoing_s] = priv.action[method1][ongoing_s] || {};
-        priv.action[method1][ongoing_s][method2] = rule;
-    };
+    Object.defineProperty(that,"addActionRule",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(method1,ongoing,method2,rule) {
+            var ongoing_s = (ongoing?'on going':'not on going');
+            priv.action[method1] = priv.action[method1] || {};
+            priv.action[method1][ongoing_s] =
+                priv.action[method1][ongoing_s] || {};
+            priv.action[method1][ongoing_s][method2] = rule;
+        }
+    });
 
     /**
      * Adds a rule the compare rules.
@@ -100,10 +122,13 @@ var jobRules = (function(spec, my) {
      * @param rule {function} The rule that return a boolean
      * - true if job1 and job2 can be compared, else false.
      */
-    that.addCompareRule = function(method1,method2,rule) {
-        priv.compare[method1] = priv.compare[method1] || {};
-        priv.compare[method1][method2] = rule;
-    };
+    Object.defineProperty(that,"addCompareRule",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(method1,method2,rule) {
+            priv.compare[method1] = priv.compare[method1] || {};
+            priv.compare[method1][method2] = rule;
+        }
+    });
 
     ////////////////////////////////////////////////////////////////////////////
     // Adding some rules

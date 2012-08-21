@@ -1,7 +1,6 @@
 var newConflictManagerStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'handler' ), priv = {};
     spec = spec || {};
-    my = my || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     var storage_exists = (spec.storage?true:false);
     priv.secondstorage_spec = spec.storage || {type:'base'};
@@ -42,7 +41,7 @@ var newConflictManagerStorage = function ( spec, my ) {
     };
 
     priv.saveNewRevision = function (command,path,content,success,error) {
-        that.addJob ('put',priv.secondstorage_spec,{_id:path,content:content},
+        that.addJob ('post',priv.secondstorage_spec,{_id:path,content:content},
                      command.cloneOption(),success,error);
     };
 
@@ -72,6 +71,7 @@ var newConflictManagerStorage = function ( spec, my ) {
     };
 
     priv._revs = function (metadata,revision) {
+        if (!(metadata && revision)) { return null; }
         if (metadata[revision]) {
             return {start:metadata[revision]._revisions.length,
                     ids:metadata[revision]._revisions};
@@ -81,6 +81,7 @@ var newConflictManagerStorage = function ( spec, my ) {
     };
 
     priv._revs_info = function (metadata) {
+        if (!metadata) { return null; }
         var k, l = [];
         for (k in metadata) {
             l.push({

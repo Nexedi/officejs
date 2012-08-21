@@ -1,5 +1,6 @@
 var newCryptedStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'handler' ), priv = {};
+    spec = spec || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     var is_valid_storage = (spec.storage?true:false);
 

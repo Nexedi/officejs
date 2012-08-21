@@ -1,5 +1,6 @@
 var newReplicateStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'handler' ), priv = {};
+    spec = spec || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     priv.return_value_array = [];
     priv.storagelist = spec.storagelist || [];

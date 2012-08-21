@@ -1,2 +1,2 @@
-var jio = function(spec, my) {
+var jio = function(spec) {
 

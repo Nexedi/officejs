@@ -1,7 +1,6 @@
-var jobManager = (function(spec, my) {
+var jobManager = (function(spec) {
     var that = {};
     spec = spec || {};
-    my = my || {};
     // Attributes //
     var job_array_name = 'jio/job_array';
     var priv = {};
@@ -9,9 +8,6 @@ var jobManager = (function(spec, my) {
     priv.interval_id = null;
     priv.interval = 200;
     priv.job_array = [];
-
-    my.jobManager = that;
-    my.jobIdHandler = jobIdHandler;
 
     // Methods //
     /**
@@ -140,11 +136,11 @@ var jobManager = (function(spec, my) {
         var i, jio_job_array;
         jio_job_array = LocalOrCookieStorage.getItem('jio/job_array/'+id)||[];
         for (i = 0; i < jio_job_array.length; i+= 1) {
-            var command_object = command(jio_job_array[i].command, my);
+            var command_object = command(jio_job_array[i].command);
             if (command_object.canBeRestored()) {
                 that.addJob ( job(
-                    {storage:jioNamespace.storage(jio_job_array[i].storage,my),
-                     command:command_object}, my));
+                    {storage:jio.storage(jio_job_array[i].storage),
+                     command:command_object}));
             }
         }
     };

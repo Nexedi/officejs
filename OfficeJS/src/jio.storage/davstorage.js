@@ -1,5 +1,6 @@
 var newDAVStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'base' ), priv = {};
+    spec = spec || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     priv.secureDocId = function (string) {
         var split = string.split('/'), i;
@@ -75,15 +76,7 @@ var newDAVStorage = function ( spec, my ) {
         return async;
     };
 
-    that.post = function (command) {
-        that.put(command);
-    };
-
-    /**
-     * Saves a document in the distant dav storage.
-     * @method put
-     */
-    that.put = function (command) {
+    priv.putOrPost = function (command,type) {
 
         var secured_docid = priv.secureDocId(command.getDocId());
 
@@ -92,7 +85,7 @@ var newDAVStorage = function ( spec, my ) {
                 priv.secured_username + '/' +
                 priv.secured_applicationname + '/' +
                 secured_docid,
-            type: 'PUT',
+            type: type,
             data: command.getDocContent(),
             async: true,
             dataType: 'text', // TODO is it necessary ?
@@ -110,6 +103,18 @@ var newDAVStorage = function ( spec, my ) {
                 that.retry(type);
             }
         } );
+    };
+
+    that.post = function (command) {
+        priv.putOrPost (command,'POST');
+    };
+
+    /**
+     * Saves a document in the distant dav storage.
+     * @method put
+     */
+    that.put = function (command) {
+        priv.putOrPost (command,'PUT');
     }; // end put
 
     /**
@@ -247,6 +252,7 @@ var newDAVStorage = function ( spec, my ) {
                 dataType: 'xml',
                 headers: {'Authorization': 'Basic '+Base64.encode(
                     priv.username + ':' + priv.password ), Depth: '1'},
+                // xhrFields: {withCredentials: 'true'}, // cross domain
                 success: function (xmlData) {
                     var response = $(xmlData).find(
                         'D\\:response, response'

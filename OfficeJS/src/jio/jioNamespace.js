@@ -1,33 +1,12 @@
-var jioNamespace = (function(spec, my) {
+var storage_type_object = {     // -> 'key':constructorFunction
+    'base': function () {}      // overidden by jio
+};
+var jioNamespace = (function(spec) {
     var that = {};
     spec = spec || {};
-    my = my || {};
     // Attributes //
-    var storage_type_o = {      // -> 'key':constructorFunction
-        'base': storage,
-        'handler': storageHandler
-    };
 
     // Methods //
-
-    /**
-     * Returns a storage from a storage description.
-     * @method storage
-     * @param  {object} spec The specifications.
-     * @param  {object} my The protected object.
-     * @param  {string} forcetype Force storage type
-     * @return {object} The storage object.
-     */
-    that.storage = function(spec, my, forcetype) {
-        spec = spec || {};
-        my = my || {};
-        var type = forcetype || spec.type || 'base';
-        if (!storage_type_o[type]) {
-            throw invalidStorageType({type:type,
-                                      message:'Storage does not exists.'});
-        }
-        return storage_type_o[type](spec, my);
-    };
 
     /**
      * Creates a new jio instance.
@@ -39,14 +18,19 @@ var jioNamespace = (function(spec, my) {
      *     - {string} spec.storage.applicationname: The application name
      * @return {object} The new Jio instance.
      */
-    that.newJio = function(spec) {
-        var storage = spec;
-        if (typeof storage === 'string') {
-            storage = JSON.parse (storage);
+    Object.defineProperty(that,"newJio",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(spec) {
+            var storage = spec, instance = null;
+            if (typeof storage === 'string') {
+                storage = JSON.parse (storage);
+            }
+            storage = storage || {type:'base'};
+            instance = jio(spec);
+            instance.start();
+            return instance;
         }
-        storage = storage || {type:'base'};
-        return jio(spec);
-    };
+    });
 
     /**
      * Add a storage type to jio.
@@ -54,13 +38,16 @@ var jioNamespace = (function(spec, my) {
      * @param  {string} type The storage type
      * @param  {function} constructor The associated constructor
      */
-    that.addStorageType = function(type, constructor) {
-        constructor = constructor || function(){return null;};
-        if (storage_type_o[type]) {
-            throw invalidStorageType({type:type,message:'Already known.'});
+    Object.defineProperty(that,"addStorageType",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(type, constructor) {
+            constructor = constructor || function(){return null;};
+            if (storage_type_object[type]) {
+                throw invalidStorageType({type:type,message:'Already known.'});
+            }
+            storage_type_object[type] = constructor;
         }
-        storage_type_o[type] = constructor;
-    };
+    });
 
     return that;
 }());

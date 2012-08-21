@@ -1,14 +1,10 @@
 // Class jio
-    var that = {};
+    var that = {}, priv = {};
     spec = spec || {};
-    my = my || {};
     // Attributes //
-    var priv = {};
     var jio_id_array_name = 'jio/id_array';
     priv.id = null;
 
-    my.jobManager = jobManager;
-    my.jobIdHandler = jobIdHandler;
     priv.storage_spec = spec;
 
     // initialize //
@@ -31,38 +27,79 @@
     };
 
     // Methods //
-    that.start = function() {
-        priv.init();
-        activityUpdater.start();
-        jobManager.start();
-    };
-    that.stop = function() {
-        jobManager.stop();
-    };
-    that.close = function() {
-        activityUpdater.stop();
-        jobManager.stop();
-        priv.id = null;
-    };
-    that.start();
+    /**
+     * Returns a storage from a storage description.
+     * @method storage
+     * @param  {object} spec The specifications.
+     * @param  {object} my The protected object.
+     * @param  {string} forcetype Force storage type
+     * @return {object} The storage object.
+     */
+    Object.defineProperty(that,"storage",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(spec, my, forcetype) {
+            spec = spec || {};
+            my = my || {};
+            my.basicStorage = storage;
+            my.storage = that.storage; // NOTE : or proxy storage
+            var type = forcetype || spec.type || 'base';
+            if (type === 'base') {
+                return storage(spec, my);
+            }
+            if (!storage_type_object[type]) {
+                throw invalidStorageType(
+                    {type:type,message:'Storage does not exists.'});
+            }
+            return storage_type_object[type](spec, my);
+        }
+    });
+
+    Object.defineProperty(that,"start",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            priv.init();
+            activityUpdater.start();
+            jobManager.start();
+        }
+    });
+    Object.defineProperty(that,"stop",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            jobManager.stop();
+        }
+    });
+    Object.defineProperty(that,"close",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            activityUpdater.stop();
+            jobManager.stop();
+            priv.id = null;
+        }
+    });
 
     /**
      * Returns the jio id.
      * @method getId
      * @return {number} The jio id.
      */
-    that.getId = function() {
-        return priv.id;
-    };
+    Object.defineProperty(that,"getId",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            return priv.id;
+        }
+    });
 
     /**
      * Returns the jio job rules object used by the job manager.
      * @method getJobRules
      * @return {object} The job rules object
      */
-    that.getJobRules = function() {
-        return jobRules;
-    };
+    Object.defineProperty(that,"getJobRules",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            return jobRules;
+        }
+    });
 
     /**
      * Checks if the storage description is valid or not.
@@ -70,13 +107,19 @@
      * @param  {object} description The description object.
      * @return {boolean} true if ok, else false.
      */
-    that.validateStorageDescription = function(description) {
-        return jioNamespace.storage(description, my).isValid();
-    };
+    Object.defineProperty(that,"validateStorageDescription",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(description) {
+            return that.storage(description).isValid();
+        }
+    });
 
-    that.getJobArray = function () {
-        return jobManager.serialized();
-    };
+    Object.defineProperty(that,"getJobArray",{
+        configurable:false,enumerable:false,writable:false,value:
+        function () {
+            return jobManager.serialized();
+        }
+    });
 
     priv.getParam = function (list,nodoc) {
         var param = {}, i = 0;
@@ -110,33 +153,36 @@
 
     priv.addJob = function (commandCreator,spec) {
         jobManager.addJob(
-            job({storage:jioNamespace.storage(priv.storage_spec,my),
-                 command:commandCreator(spec,my)},my));
+            job({storage:that.storage(priv.storage_spec),
+                 command:commandCreator(spec)}));
     };
 
-    // /**
-    //  * Post a document.
-    //  * @method post
-    //  * @param  {object} doc The document {"content":}.
-    //  * @param  {object} options (optional) Contains some options:
-    //  * - {number} max_retry The number max of retries, 0 = infinity.
-    //  * - {boolean} revs Include revision history of the document.
-    //  * - {boolean} revs_info Retreive the revisions.
-    //  * - {boolean} conflicts Retreive the conflict list.
-    //  * @param  {function} callback (optional) The callback(err,response).
-    //  * @param  {function} error (optional) The callback on error, if this
-    //  *     callback is given in parameter, "callback" is changed as "success",
-    //  *     called on success.
-    //  */
-    // that.post = function() {
-    //     var param = priv.getParam(arguments);
-    //     param.options.max_retry = param.options.max_retry || 0;
-    //     priv.addJob(postCommand,{
-    //         doc:param.doc,
-    //         options:param.options,
-    //         callbacks:{success:param.success,error:param.error}
-    //     });
-    // };
+    /**
+     * Post a document.
+     * @method post
+     * @param  {object} doc The document {"content":}.
+     * @param  {object} options (optional) Contains some options:
+     * - {number} max_retry The number max of retries, 0 = infinity.
+     * - {boolean} revs Include revision history of the document.
+     * - {boolean} revs_info Retreive the revisions.
+     * - {boolean} conflicts Retreive the conflict list.
+     * @param  {function} callback (optional) The callback(err,response).
+     * @param  {function} error (optional) The callback on error, if this
+     *     callback is given in parameter, "callback" is changed as "success",
+     *     called on success.
+     */
+    Object.defineProperty(that,"post",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            var param = priv.getParam(arguments);
+            param.options.max_retry = param.options.max_retry || 0;
+            priv.addJob(postCommand,{
+                doc:param.doc,
+                options:param.options,
+                callbacks:{success:param.success,error:param.error}
+            });
+        }
+    });
 
     /**
      * Put a document.
@@ -152,15 +198,18 @@
      *     callback is given in parameter, "callback" is changed as "success",
      *     called on success.
      */
-    that.put = function() {
-        var param = priv.getParam(arguments);
-        param.options.max_retry = param.options.max_retry || 0;
-        priv.addJob(putCommand,{
-            doc:param.doc,
-            options:param.options,
-            callbacks:{success:param.success,error:param.error}
-        });
-    };
+    Object.defineProperty(that,"put",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            var param = priv.getParam(arguments);
+            param.options.max_retry = param.options.max_retry || 0;
+            priv.addJob(putCommand,{
+                doc:param.doc,
+                options:param.options,
+                callbacks:{success:param.success,error:param.error}
+            });
+        }
+    });
 
     /**
      * Get a document.
@@ -178,18 +227,21 @@
      *     callback is given in parameter, "callback" is changed as "success",
      *     called on success.
      */
-    that.get = function() {
-        var param = priv.getParam(arguments);
-        param.options.max_retry = param.options.max_retry || 3;
-        param.options.metadata_only = (
-            param.options.metadata_only !== undefined?
-                param.options.metadata_only:false);
-        priv.addJob(getCommand,{
-            docid:param.doc,
-            options:param.options,
-            callbacks:{success:param.success,error:param.error}
-        });
-    };
+    Object.defineProperty(that,"get",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            var param = priv.getParam(arguments);
+            param.options.max_retry = param.options.max_retry || 3;
+            param.options.metadata_only = (
+                param.options.metadata_only !== undefined?
+                    param.options.metadata_only:false);
+            priv.addJob(getCommand,{
+                docid:param.doc,
+                options:param.options,
+                callbacks:{success:param.success,error:param.error}
+            });
+        }
+    });
 
     /**
      * Remove a document.
@@ -205,15 +257,18 @@
      *     callback is given in parameter, "callback" is changed as "success",
      *     called on success.
      */
-    that.remove = function() {
-        var param = priv.getParam(arguments);
-        param.options.max_retry = param.options.max_retry || 0;
-        priv.addJob(removeCommand,{
-            doc:param.doc,
-            options:param.options,
-            callbacks:{success:param.success,error:param.error}
-        });
-    };
+    Object.defineProperty(that,"remove",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            var param = priv.getParam(arguments);
+            param.options.max_retry = param.options.max_retry || 0;
+            priv.addJob(removeCommand,{
+                doc:param.doc,
+                options:param.options,
+                callbacks:{success:param.success,error:param.error}
+            });
+        }
+    });
 
     /**
      * Get a list of documents.
@@ -230,17 +285,20 @@
      *     callback is given in parameter, "callback" is changed as "success",
      *     called on success.
      */
-    that.allDocs = function() {
-        var param = priv.getParam(arguments,'no doc');
-        param.options.max_retry = param.options.max_retry || 3;
-        param.options.metadata_only = (
-            param.options.metadata_only !== undefined?
-                param.options.metadata_only:true);
-        priv.addJob(allDocsCommand,{
-            options:param.options,
-            callbacks:{success:param.success,error:param.error}
-        });
-    };
+    Object.defineProperty(that,"allDocs",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            var param = priv.getParam(arguments,'no doc');
+            param.options.max_retry = param.options.max_retry || 3;
+            param.options.metadata_only = (
+                param.options.metadata_only !== undefined?
+                    param.options.metadata_only:true);
+            priv.addJob(allDocsCommand,{
+                options:param.options,
+                callbacks:{success:param.success,error:param.error}
+            });
+        }
+    });
 
     return that;
 };                              // End Class jio

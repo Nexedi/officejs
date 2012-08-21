@@ -1,7 +1,6 @@
-var jobIdHandler = (function(spec, my) {
+var jobIdHandler = (function(spec) {
     var that = {};
     spec = spec || {};
-    my = my || {};
     // Attributes //
     var id = 0;
     // Methods //

@@ -1,5 +1,6 @@
 var newIndexStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'handler' ), priv = {};
+    spec = spec || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     var validatestate_secondstorage = spec.storage || false;
     priv.secondstorage_spec = spec.storage || {type:'base'};

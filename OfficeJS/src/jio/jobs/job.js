@@ -1,10 +1,9 @@
-var job = function(spec, my) {
+var job = function(spec) {
     var that = {};
     spec = spec || {};
-    my = my || {};
     // Attributes //
     var priv = {};
-    priv.id        = my.jobIdHandler.nextId();
+    priv.id        = jobIdHandler.nextId();
     priv.command   = spec.command;
     priv.storage   = spec.storage;
     priv.status    = initialStatus();
@@ -76,7 +75,7 @@ var job = function(spec, my) {
      */
     that.waitForJob = function(job) {
         if (priv.status.getLabel() !== 'wait') {
-            priv.status = waitStatus({},my);
+            priv.status = waitStatus({});
         }
         priv.status.waitForJob(job);
     };
@@ -99,7 +98,7 @@ var job = function(spec, my) {
      */
     that.waitForTime = function(ms) {
         if (priv.status.getLabel() !== 'wait') {
-            priv.status = waitStatus({},my);
+            priv.status = waitStatus({});
         }
         priv.status.waitForTime(ms);
     };
@@ -124,7 +123,7 @@ var job = function(spec, my) {
     that.notAccepted = function () {
         priv.command.onEndDo (function () {
             priv.status = failStatus();
-            my.jobManager.terminateJob (that);
+            jobManager.terminateJob (that);
         });
         priv.command.error ({
             status:11,statusText:'Not Accepted',error:'not_accepted',
@@ -171,7 +170,7 @@ var job = function(spec, my) {
         });
         priv.command.onEndDo (function(status) {
             priv.status = status;
-            my.jobManager.terminateJob (that);
+            jobManager.terminateJob (that);
         });
         priv.command.execute (priv.storage);
     };

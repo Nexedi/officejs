@@ -7,12 +7,12 @@ var storage = function(spec, my) {
     priv.type = spec.type || '';
 
     // Methods //
-    that.getType = function() {
-        return priv.type;
-    };
-    that.setType = function(type) {
-        priv.type = type;
-    };
+    Object.defineProperty(that,"getType",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            return priv.type;
+        }
+    });
 
     /**
      * Execute the command on this storage.
@@ -41,9 +41,10 @@ var storage = function(spec, my) {
     that.validate = function () {
         var mess = that.validateState();
         if (mess) {
-            that.error({status:0,statusText:'Invalid Storage',
-                        error:'invalid_storage',
-                        message:mess,reason:mess});
+            that.error({
+                status:0,statusText:'Invalid Storage',
+                error:'invalid_storage',
+                message:mess,reason:mess});
             return false;
         }
         return true;
@@ -85,6 +86,32 @@ var storage = function(spec, my) {
     that.retry   = function() {};
     that.error   = function() {};
     that.end     = function() {};  // terminate the current job.
+
+    priv.newCommand = function (method, spec) {
+        var o = spec || {};
+        o.label = method;
+        return command (o, my);
+    };
+
+    that.addJob = function (method,storage_spec,doc,option,success,error) {
+        var command_opt = {
+            options: option,
+            callbacks:{success:success,error:error}
+        };
+        if (doc) {
+            if (method === 'get') {
+                command_opt.docid = doc;
+            } else {
+                command_opt.doc = doc;
+            }
+        }
+        jobManager.addJob (
+            job({
+                storage:my.storage(storage_spec||{}),
+                command:priv.newCommand(method,command_opt)
+            }, my)
+        );
+    };
 
     return that;
 };
