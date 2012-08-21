@@ -9,7 +9,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 1 : all ok
     var newDummyStorageAllOk = function ( spec, my ) {
-        var that = Jio.storage( spec, my, 'base' );
+        var that = my.basicStorage( spec, my );
 
         var super_serialized = that.serialized;
         that.serialized = function () {
@@ -92,7 +92,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 2 : all fail
     newDummyStorageAllFail = function ( spec, my ) {
-        var that = Jio.storage( spec, my, 'base' ), priv = {};
+        var that = my.basicStorage( spec, my ), priv = {};
 
         priv.error = function () {
             setTimeout (function () {
@@ -130,7 +130,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 3 : all not found
     newDummyStorageAllNotFound = function ( spec, my ) {
-        var that = Jio.storage( spec, my, 'base' );
+        var that = my.basicStorage( spec, my );
 
         that.post = function (command) {
             setTimeout (function () {
@@ -187,7 +187,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Dummy Storage 4 : all 3 tries
     newDummyStorageAll3Tries = function ( spec, my ) {
-        var that = Jio.storage( spec, my, 'base' ), priv = {};
+        var that = my.basicStorage( spec, my ), priv = {};
 
         // this serialized method is used to make simple difference between
         // two dummyall3tries storages:

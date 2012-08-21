@@ -691,11 +691,13 @@ test ('Document load', function () {
     o.mytest = function (message,doc,errprop,errget) {
         var server = o.t.sandbox.useFakeServer();
         server.respondWith (
-            "PROPFIND","https://ca-davstorage:8080/davload/jiotests/file",
+            "PROPFIND",
+                /https:\/\/ca-davstorage:8080\/davload\/jiotests\/file(\?.*|$)/,
             [errprop,{'Content-Type':'text/xml; charset="utf-8"'},
              o.davload]);
         server.respondWith (
-            "GET","https://ca-davstorage:8080/davload/jiotests/file",
+            "GET",
+                /https:\/\/ca-davstorage:8080\/davload\/jiotests\/file(\?.*|$)/,
             [errget,{},'content']);
         o.f = function (err,val) {
             if (err) {
@@ -747,16 +749,18 @@ test ('Document save', function () {
         var server = o.t.sandbox.useFakeServer();
         server.respondWith (
             // lastmodified = 7000, creationdate = 5000
-            "PROPFIND","https://ca-davstorage:8080/davsave/jiotests/file",
+            "PROPFIND",
+                /https:\/\/ca-davstorage:8080\/davsave\/jiotests\/file(\?.*|$)/,
             [errnoprop,{'Content-Type':'text/xml; charset="utf-8"'},
              o.davsave]);
         server.respondWith (
             "PUT",
-            "https://ca-davstorage:8080/davsave/jiotests/file",
+                /https:\/\/ca-davstorage:8080\/davsave\/jiotests\/file(\?.*|$)/,
             [errnoput, {'Content-Type':'x-www-form-urlencoded'},
              'content']);
         server.respondWith (
-            "GET","https://ca-davstorage:8080/davsave/jiotests/file",
+            "GET",
+                /https:\/\/ca-davstorage:8080\/davsave\/jiotests\/file(\?.*|$)/,
             [errnoprop===207?200:errnoprop,{},'content']);
         // server.respondWith ("MKCOL","https://ca-davstorage:8080/dav",
         //                     [200,{},'']);
@@ -811,14 +815,17 @@ test ('Get Document List', function () {
     o.mytest = function (message,metadata_only,value,errnoprop) {
         var server = o.t.sandbox.useFakeServer();
         server.respondWith (
-            "PROPFIND",'https://ca-davstorage:8080/davlist/jiotests/',
+            "PROPFIND",
+                /https:\/\/ca-davstorage:8080\/davlist\/jiotests\/(\?.*|$)/,
             [errnoprop,{'Content-Type':'text/xml; charset="utf-8"'},
              o.davlist]);
         server.respondWith (
-            "GET","https://ca-davstorage:8080/davlist/jiotests/file",
+            "GET",
+                /https:\/\/ca-davstorage:8080\/davlist\/jiotests\/file(\?.*|$)/,
             [200,{},'content']);
         server.respondWith (
-            "GET","https://ca-davstorage:8080/davlist/jiotests/memo",
+            "GET",
+                /https:\/\/ca-davstorage:8080\/davlist\/jiotests\/memo(\?.*|$)/,
             [200,{},'content2']);
         o.f = function (err,val) {
             if (err) {
@@ -886,7 +893,8 @@ test ('Remove document', function () {
     o.mytest = function (message,value,errnodel) {
         var server = o.t.sandbox.useFakeServer();
         server.respondWith (
-            "DELETE","https://ca-davstorage:8080/davremove/jiotests/file",
+            "DELETE",
+                /https:\/\/ca-davstorage:8080\/davremove\/jiotests\/file(\?.*|$)/,
             [errnodel,{},'']);
         o.f = function (err,val) {
             if (err) {
