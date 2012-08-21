@@ -79,12 +79,12 @@ var newDAVStorage = function ( spec, my ) {
     priv.putOrPost = function (command,type) {
 
         var secured_docid = priv.secureDocId(command.getDocId());
-
         $.ajax ( {
             url: priv.url + '/' +
                 priv.secured_username + '/' +
                 priv.secured_applicationname + '/' +
-                secured_docid,
+                secured_docid + '?_=' + Date.now(), // to make url unique!
+                // and avoid chrome PUT on cache !
             type: type,
             data: command.getDocContent(),
             async: true,
@@ -128,7 +128,7 @@ var newDAVStorage = function ( spec, my ) {
                 url: priv.url + '/' +
                     priv.secured_username + '/' +
                     priv.secured_applicationname + '/' +
-                    secured_docid,
+                    secured_docid + '?_=' + Date.now(),
                 type: "GET",
                 async: true,
                 dataType: 'text', // TODO is it necessary ?
@@ -164,7 +164,7 @@ var newDAVStorage = function ( spec, my ) {
             url: priv.url + '/' +
                 priv.secured_username + '/' +
                 priv.secured_applicationname + '/' +
-                secured_docid,
+                secured_docid + '?_=' + Date.now(),
             type: "PROPFIND",
             async: true,
             dataType: 'xml',
@@ -219,7 +219,7 @@ var newDAVStorage = function ( spec, my ) {
                 url: priv.url + '/' +
                     priv.secured_username + '/' +
                     priv.secured_applicationname + '/' +
-                    priv.secureDocId(file.id),
+                    priv.secureDocId(file.id) + '?_=' + Date.now(),
                 type: "GET",
                 async: true,
                 dataType: 'text', // TODO : is it necessary ?
@@ -246,7 +246,7 @@ var newDAVStorage = function ( spec, my ) {
             $.ajax ( {
                 url: priv.url + '/' +
                     priv.secured_username + '/' +
-                    priv.secured_applicationname + '/',
+                    priv.secured_applicationname + '/' + '?_=' + Date.now(),
                 async: true,
                 type: 'PROPFIND',
                 dataType: 'xml',
@@ -339,12 +339,11 @@ var newDAVStorage = function ( spec, my ) {
     that.remove = function (command) {
 
         var secured_docid = priv.secureDocId(command.getDocId());
-
         $.ajax ( {
             url: priv.url + '/' +
                 priv.secured_username + '/' +
                 priv.secured_applicationname + '/' +
-                secured_docid,
+                secured_docid + '?_=' + Date.now(),
             type: "DELETE",
             async: true,
             headers: {'Authorization':'Basic '+Base64.encode(
