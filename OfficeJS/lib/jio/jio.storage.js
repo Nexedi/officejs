@@ -1,10 +1,11 @@
-/*! JIO Storage - v0.1.0 - 2012-08-20
+/*! JIO Storage - v0.1.0 - 2012-08-21
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 (function(LocalOrCookieStorage, $, Base64, sjcl, hex_sha256, Jio) {
 
 var newLocalStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'base' ), priv = {};
+    spec = spec || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     priv.secureDocId = function (string) {
         var split = string.split('/'), i;
@@ -279,7 +280,8 @@ var newLocalStorage = function ( spec, my ) {
 Jio.addStorageType('local', newLocalStorage);
 
 var newDAVStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'base' ), priv = {};
+    spec = spec || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     priv.secureDocId = function (string) {
         var split = string.split('/'), i;
@@ -355,24 +357,16 @@ var newDAVStorage = function ( spec, my ) {
         return async;
     };
 
-    that.post = function (command) {
-        that.put(command);
-    };
-
-    /**
-     * Saves a document in the distant dav storage.
-     * @method put
-     */
-    that.put = function (command) {
+    priv.putOrPost = function (command,type) {
 
         var secured_docid = priv.secureDocId(command.getDocId());
-
         $.ajax ( {
             url: priv.url + '/' +
                 priv.secured_username + '/' +
                 priv.secured_applicationname + '/' +
-                secured_docid,
-            type: 'PUT',
+                secured_docid + '?_=' + Date.now(), // to make url unique!
+                // and avoid chrome PUT on cache !
+            type: type,
             data: command.getDocContent(),
             async: true,
             dataType: 'text', // TODO is it necessary ?
@@ -390,6 +384,18 @@ var newDAVStorage = function ( spec, my ) {
                 that.retry(type);
             }
         } );
+    };
+
+    that.post = function (command) {
+        priv.putOrPost (command,'POST');
+    };
+
+    /**
+     * Saves a document in the distant dav storage.
+     * @method put
+     */
+    that.put = function (command) {
+        priv.putOrPost (command,'PUT');
     }; // end put
 
     /**
@@ -403,7 +409,7 @@ var newDAVStorage = function ( spec, my ) {
                 url: priv.url + '/' +
                     priv.secured_username + '/' +
                     priv.secured_applicationname + '/' +
-                    secured_docid,
+                    secured_docid + '?_=' + Date.now(),
                 type: "GET",
                 async: true,
                 dataType: 'text', // TODO is it necessary ?
@@ -439,7 +445,7 @@ var newDAVStorage = function ( spec, my ) {
             url: priv.url + '/' +
                 priv.secured_username + '/' +
                 priv.secured_applicationname + '/' +
-                secured_docid,
+                secured_docid + '?_=' + Date.now(),
             type: "PROPFIND",
             async: true,
             dataType: 'xml',
@@ -494,7 +500,7 @@ var newDAVStorage = function ( spec, my ) {
                 url: priv.url + '/' +
                     priv.secured_username + '/' +
                     priv.secured_applicationname + '/' +
-                    priv.secureDocId(file.id),
+                    priv.secureDocId(file.id) + '?_=' + Date.now(),
                 type: "GET",
                 async: true,
                 dataType: 'text', // TODO : is it necessary ?
@@ -521,12 +527,13 @@ var newDAVStorage = function ( spec, my ) {
             $.ajax ( {
                 url: priv.url + '/' +
                     priv.secured_username + '/' +
-                    priv.secured_applicationname + '/',
+                    priv.secured_applicationname + '/' + '?_=' + Date.now(),
                 async: true,
                 type: 'PROPFIND',
                 dataType: 'xml',
                 headers: {'Authorization': 'Basic '+Base64.encode(
                     priv.username + ':' + priv.password ), Depth: '1'},
+                // xhrFields: {withCredentials: 'true'}, // cross domain
                 success: function (xmlData) {
                     var response = $(xmlData).find(
                         'D\\:response, response'
@@ -613,12 +620,11 @@ var newDAVStorage = function ( spec, my ) {
     that.remove = function (command) {
 
         var secured_docid = priv.secureDocId(command.getDocId());
-
         $.ajax ( {
             url: priv.url + '/' +
                 priv.secured_username + '/' +
                 priv.secured_applicationname + '/' +
-                secured_docid,
+                secured_docid + '?_=' + Date.now(),
             type: "DELETE",
             async: true,
             headers: {'Authorization':'Basic '+Base64.encode(
@@ -648,7 +654,8 @@ var newDAVStorage = function ( spec, my ) {
 Jio.addStorageType('dav', newDAVStorage);
 
 var newReplicateStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'handler' ), priv = {};
+    spec = spec || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     priv.return_value_array = [];
     priv.storagelist = spec.storagelist || [];
@@ -753,7 +760,8 @@ var newReplicateStorage = function ( spec, my ) {
 Jio.addStorageType('replicate', newReplicateStorage);
 
 var newIndexStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'handler' ), priv = {};
+    spec = spec || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     var validatestate_secondstorage = spec.storage || false;
     priv.secondstorage_spec = spec.storage || {type:'base'};
@@ -961,7 +969,8 @@ var newIndexStorage = function ( spec, my ) {
 Jio.addStorageType ('indexed', newIndexStorage);
 
 var newCryptedStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'handler' ), priv = {};
+    spec = spec || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     var is_valid_storage = (spec.storage?true:false);
 
@@ -1223,9 +1232,8 @@ var newCryptedStorage = function ( spec, my ) {
 Jio.addStorageType('crypt', newCryptedStorage);
 
 var newConflictManagerStorage = function ( spec, my ) {
-    var that = Jio.storage( spec, my, 'handler' ), priv = {};
     spec = spec || {};
-    my = my || {};
+    var that = my.basicStorage( spec, my ), priv = {};
 
     var storage_exists = (spec.storage?true:false);
     priv.secondstorage_spec = spec.storage || {type:'base'};
@@ -1253,20 +1261,18 @@ var newConflictManagerStorage = function ( spec, my ) {
     priv.getDistantMetadata = function (command,path,success,error) {
         var cloned_option = command.cloneOption ();
         cloned_option.metadata_only = false;
-        cloned_option.max_retry = command.getOption('max_retry') || 3;
         that.addJob ('get',priv.secondstorage_spec,path,cloned_option,
                      success, error);
     };
 
     priv.saveMetadataToDistant = function (command,path,content,success,error) {
-        // max_retry:0 // inf
         that.addJob ('put',priv.secondstorage_spec,
                      {_id:path,content:JSON.stringify (content)},
                      command.cloneOption(),success,error);
     };
 
     priv.saveNewRevision = function (command,path,content,success,error) {
-        that.addJob ('put',priv.secondstorage_spec,{_id:path,content:content},
+        that.addJob ('post',priv.secondstorage_spec,{_id:path,content:content},
                      command.cloneOption(),success,error);
     };
 
@@ -1277,7 +1283,6 @@ var newConflictManagerStorage = function ( spec, my ) {
 
     priv.deleteAFile = function (command,path,success,error) {
         var cloned_option = command.cloneOption();
-        cloned_option.max_retry = 0; // inf
         that.addJob ('remove',priv.secondstorage_spec,{_id:path},
                      command.cloneOption(), success, error);
     };
@@ -1296,6 +1301,7 @@ var newConflictManagerStorage = function ( spec, my ) {
     };
 
     priv._revs = function (metadata,revision) {
+        if (!(metadata && revision)) { return null; }
         if (metadata[revision]) {
             return {start:metadata[revision]._revisions.length,
                     ids:metadata[revision]._revisions};
@@ -1305,6 +1311,7 @@ var newConflictManagerStorage = function ( spec, my ) {
     };
 
     priv._revs_info = function (metadata) {
+        if (!metadata) { return null; }
         var k, l = [];
         for (k in metadata) {
             l.push({

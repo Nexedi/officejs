@@ -180,7 +180,7 @@ var newLocalStorage = function ( spec, my ) {
             }
             LocalOrCookieStorage.setItem(path, doc);
             that.success ({ok:true,id:command.getDocId()});
-        },5000);
+        });
     }; // end put
 
     /**
@@ -214,7 +214,7 @@ var newLocalStorage = function ( spec, my ) {
                 }
                 that.success (doc);
             }
-        },5000);
+        });
     }; // end get
 
     /**
@@ -250,7 +250,7 @@ var newLocalStorage = function ( spec, my ) {
                 }
             }
             that.success ({total_rows:new_array.length,rows:new_array});
-        },5000);
+        });
     }; // end allDocs
 
     /**
@@ -271,7 +271,7 @@ var newLocalStorage = function ( spec, my ) {
             LocalOrCookieStorage.deleteItem(path);
             priv.removeFileName(secured_docid);
             that.success ({ok:true,id:command.getDocId()});
-        },5000);
+        });
     }; // end remove
 
     return that;

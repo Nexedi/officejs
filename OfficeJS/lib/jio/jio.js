@@ -1,7 +1,8 @@
-/*! JIO - v0.1.0 - 2012-08-14
+/*! JIO - v0.1.0 - 2012-08-21
 * Copyright (c) 2012 Nexedi; Licensed  */
 
 var jio = (function () {
+    "use strict";
 
 var jioException = function(spec, my) {
     var that = {};
@@ -68,6 +69,9 @@ var invalidJobException = function(spec, my) {
     return that;
 };
 
+var jio = function(spec) {
+
+
 var storage = function(spec, my) {
     var that = {};
     spec = spec || {};
@@ -77,12 +81,12 @@ var storage = function(spec, my) {
     priv.type = spec.type || '';
 
     // Methods //
-    that.getType = function() {
-        return priv.type;
-    };
-    that.setType = function(type) {
-        priv.type = type;
-    };
+    Object.defineProperty(that,"getType",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            return priv.type;
+        }
+    });
 
     /**
      * Execute the command on this storage.
@@ -111,9 +115,10 @@ var storage = function(spec, my) {
     that.validate = function () {
         var mess = that.validateState();
         if (mess) {
-            that.error({status:0,statusText:'Invalid Storage',
-                        error:'invalid_storage',
-                        message:mess,reason:mess});
+            that.error({
+                status:0,statusText:'Invalid Storage',
+                error:'invalid_storage',
+                message:mess,reason:mess});
             return false;
         }
         return true;
@@ -156,14 +161,6 @@ var storage = function(spec, my) {
     that.error   = function() {};
     that.end     = function() {};  // terminate the current job.
 
-    return that;
-};
-
-var storageHandler = function(spec, my) {
-    spec = spec || {};
-    my = my || {};
-    var that = storage( spec, my ), priv = {};
-
     priv.newCommand = function (method, spec) {
         var o = spec || {};
         o.label = method;
@@ -182,9 +179,9 @@ var storageHandler = function(spec, my) {
                 command_opt.doc = doc;
             }
         }
-        my.jobManager.addJob (
+        jobManager.addJob (
             job({
-                storage:jioNamespace.storage(storage_spec||{}),
+                storage:my.storage(storage_spec||{}),
                 command:priv.newCommand(method,command_opt)
             }, my)
         );
@@ -788,13 +785,12 @@ var waitStatus = function(spec, my) {
     return that;
 };
 
-var job = function(spec, my) {
+var job = function(spec) {
     var that = {};
     spec = spec || {};
-    my = my || {};
     // Attributes //
     var priv = {};
-    priv.id        = my.jobIdHandler.nextId();
+    priv.id        = jobIdHandler.nextId();
     priv.command   = spec.command;
     priv.storage   = spec.storage;
     priv.status    = initialStatus();
@@ -866,7 +862,7 @@ var job = function(spec, my) {
      */
     that.waitForJob = function(job) {
         if (priv.status.getLabel() !== 'wait') {
-            priv.status = waitStatus({},my);
+            priv.status = waitStatus({});
         }
         priv.status.waitForJob(job);
     };
@@ -889,7 +885,7 @@ var job = function(spec, my) {
      */
     that.waitForTime = function(ms) {
         if (priv.status.getLabel() !== 'wait') {
-            priv.status = waitStatus({},my);
+            priv.status = waitStatus({});
         }
         priv.status.waitForTime(ms);
     };
@@ -907,18 +903,19 @@ var job = function(spec, my) {
     that.eliminated = function () {
         priv.command.error ({
             status:10,statusText:'Stopped',error:'stopped',
-            message:'This job has been stoped by another one.',
-            reason:this.message});
+            message:'This job has been stopped by another one.',
+            reason:'this job has been stopped by another one'});
     };
 
     that.notAccepted = function () {
         priv.command.onEndDo (function () {
             priv.status = failStatus();
-            my.jobManager.terminateJob (that);
+            jobManager.terminateJob (that);
         });
         priv.command.error ({
             status:11,statusText:'Not Accepted',error:'not_accepted',
-            message:'This job is already running.',reason:this.message});
+            message:'This job is already running.',
+            reason:'this job is already running'});
     };
 
     /**
@@ -960,7 +957,7 @@ var job = function(spec, my) {
         });
         priv.command.onEndDo (function(status) {
             priv.status = status;
-            my.jobManager.terminateJob (that);
+            jobManager.terminateJob (that);
         });
         priv.command.execute (priv.storage);
     };
@@ -1008,9 +1005,6 @@ var announcement = function(spec, my) {
 
     return that;
 };
-
-var jio = function(spec, my) {
-
 
 var activityUpdater = (function(spec, my) {
     var that = {};
@@ -1123,10 +1117,9 @@ var announcer = (function(spec, my) {
     return that;
 }());
 
-var jobIdHandler = (function(spec, my) {
+var jobIdHandler = (function(spec) {
     var that = {};
     spec = spec || {};
-    my = my || {};
     // Attributes //
     var id = 0;
     // Methods //
@@ -1138,10 +1131,9 @@ var jobIdHandler = (function(spec, my) {
     return that;
 }());
 
-var jobManager = (function(spec, my) {
+var jobManager = (function(spec) {
     var that = {};
     spec = spec || {};
-    my = my || {};
     // Attributes //
     var job_array_name = 'jio/job_array';
     var priv = {};
@@ -1149,9 +1141,6 @@ var jobManager = (function(spec, my) {
     priv.interval_id = null;
     priv.interval = 200;
     priv.job_array = [];
-
-    my.jobManager = that;
-    my.jobIdHandler = jobIdHandler;
 
     // Methods //
     /**
@@ -1280,11 +1269,11 @@ var jobManager = (function(spec, my) {
         var i, jio_job_array;
         jio_job_array = LocalOrCookieStorage.getItem('jio/job_array/'+id)||[];
         for (i = 0; i < jio_job_array.length; i+= 1) {
-            var command_object = command(jio_job_array[i].command, my);
+            var command_object = command(jio_job_array[i].command);
             if (command_object.canBeRestored()) {
                 that.addJob ( job(
-                    {storage:jioNamespace.storage(jio_job_array[i].storage,my),
-                     command:command_object}, my));
+                    {storage:that.storage(jio_job_array[i].storage),
+                     command:command_object}));
             }
         }
     };
@@ -1433,18 +1422,33 @@ var jobManager = (function(spec, my) {
     return that;
 }());
 
-var jobRules = (function(spec, my) {
+var jobRules = (function(spec) {
     var that = {};
     // Attributes //
     var priv = {};
     priv.compare = {};
     priv.action = {};
 
-    that.eliminate = function() { return 'eliminate'; };
-    that.update = function() { return 'update'; };
-    that.dontAccept = function() { return 'dont accept'; };
-    that.wait = function() { return 'wait'; };
-    that.none = function() { return 'none'; };
+    Object.defineProperty(that,"eliminate",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() { return 'eliminate'; }
+    });
+    Object.defineProperty(that,"update",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() { return 'update'; }
+    });
+    Object.defineProperty(that,"dontAccept",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() { return 'dont accept'; }
+    });
+    Object.defineProperty(that,"wait",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() { return 'wait'; }
+    });
+    Object.defineProperty(that,"none",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() { return 'none'; }
+    });
     that.default_action = that.none;
     that.default_compare = function(job1,job2) {
         return (job1.getCommand().getDocId() ===
@@ -1505,12 +1509,15 @@ var jobRules = (function(spec, my) {
      * @param job2 {object} The new job.
      * @return {string} The action string.
      */
-    that.validateJobAccordingToJob = function(job1,job2) {
-        if (priv.canCompare(job1,job2)) {
-            return {action:priv.getAction(job1,job2),job:job1};
+    Object.defineProperty(that,"validateJobAccordingToJob",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(job1,job2) {
+            if (priv.canCompare(job1,job2)) {
+                return {action:priv.getAction(job1,job2),job:job1};
+            }
+            return {action:that.default_action(job1,job2),job:job1};
         }
-        return {action:that.default_action(job1,job2),job:job1};
-    };
+    });
 
     /**
      * Adds a rule the action rules.
@@ -1520,12 +1527,16 @@ var jobRules = (function(spec, my) {
      * @param method2 {string} The action label from the new job.
      * @param rule {function} The rule that return an action string.
      */
-    that.addActionRule = function(method1,ongoing,method2,rule) {
-        var ongoing_s = (ongoing?'on going':'not on going');
-        priv.action[method1] = priv.action[method1] || {};
-        priv.action[method1][ongoing_s] = priv.action[method1][ongoing_s] || {};
-        priv.action[method1][ongoing_s][method2] = rule;
-    };
+    Object.defineProperty(that,"addActionRule",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(method1,ongoing,method2,rule) {
+            var ongoing_s = (ongoing?'on going':'not on going');
+            priv.action[method1] = priv.action[method1] || {};
+            priv.action[method1][ongoing_s] =
+                priv.action[method1][ongoing_s] || {};
+            priv.action[method1][ongoing_s][method2] = rule;
+        }
+    });
 
     /**
      * Adds a rule the compare rules.
@@ -1535,10 +1546,13 @@ var jobRules = (function(spec, my) {
      * @param rule {function} The rule that return a boolean
      * - true if job1 and job2 can be compared, else false.
      */
-    that.addCompareRule = function(method1,method2,rule) {
-        priv.compare[method1] = priv.compare[method1] || {};
-        priv.compare[method1][method2] = rule;
-    };
+    Object.defineProperty(that,"addCompareRule",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(method1,method2,rule) {
+            priv.compare[method1] = priv.compare[method1] || {};
+            priv.compare[method1][method2] = rule;
+        }
+    });
 
     ////////////////////////////////////////////////////////////////////////////
     // Adding some rules
@@ -1628,16 +1642,12 @@ var jobRules = (function(spec, my) {
 }());
 
 // Class jio
-    var that = {};
+    var that = {}, priv = {};
     spec = spec || {};
-    my = my || {};
     // Attributes //
-    var priv = {};
     var jio_id_array_name = 'jio/id_array';
     priv.id = null;
 
-    my.jobManager = jobManager;
-    my.jobIdHandler = jobIdHandler;
     priv.storage_spec = spec;
 
     // initialize //
@@ -1660,38 +1670,80 @@ var jobRules = (function(spec, my) {
     };
 
     // Methods //
-    that.start = function() {
-        priv.init();
-        activityUpdater.start();
-        jobManager.start();
-    };
-    that.stop = function() {
-        jobManager.stop();
-    };
-    that.close = function() {
-        activityUpdater.stop();
-        jobManager.stop();
-        priv.id = null;
-    };
-    that.start();
+    /**
+     * Returns a storage from a storage description.
+     * @method storage
+     * @param  {object} spec The specifications.
+     * @param  {object} my The protected object.
+     * @param  {string} forcetype Force storage type
+     * @return {object} The storage object.
+     */
+    Object.defineProperty(that,"storage",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(spec, my, forcetype) {
+            spec = spec || {};
+            my = my || {};
+            my.basicStorage = storage;
+            my.storage = that.storage; // NOTE : or proxy storage
+            var type = forcetype || spec.type || 'base';
+            if (type === 'base') {
+                return storage(spec, my);
+            }
+            if (!storage_type_object[type]) {
+                throw invalidStorageType(
+                    {type:type,message:'Storage does not exists.'});
+            }
+            return storage_type_object[type](spec, my);
+        }
+    });
+    jobManager.storage = that.storage;
+
+    Object.defineProperty(that,"start",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            priv.init();
+            activityUpdater.start();
+            jobManager.start();
+        }
+    });
+    Object.defineProperty(that,"stop",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            jobManager.stop();
+        }
+    });
+    Object.defineProperty(that,"close",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            activityUpdater.stop();
+            jobManager.stop();
+            priv.id = null;
+        }
+    });
 
     /**
      * Returns the jio id.
      * @method getId
      * @return {number} The jio id.
      */
-    that.getId = function() {
-        return priv.id;
-    };
+    Object.defineProperty(that,"getId",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            return priv.id;
+        }
+    });
 
     /**
      * Returns the jio job rules object used by the job manager.
      * @method getJobRules
      * @return {object} The job rules object
      */
-    that.getJobRules = function() {
-        return jobRules;
-    };
+    Object.defineProperty(that,"getJobRules",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            return jobRules;
+        }
+    });
 
     /**
      * Checks if the storage description is valid or not.
@@ -1699,13 +1751,19 @@ var jobRules = (function(spec, my) {
      * @param  {object} description The description object.
      * @return {boolean} true if ok, else false.
      */
-    that.validateStorageDescription = function(description) {
-        return jioNamespace.storage(description, my).isValid();
-    };
+    Object.defineProperty(that,"validateStorageDescription",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(description) {
+            return that.storage(description).isValid();
+        }
+    });
 
-    that.getJobArray = function () {
-        return jobManager.serialized();
-    };
+    Object.defineProperty(that,"getJobArray",{
+        configurable:false,enumerable:false,writable:false,value:
+        function () {
+            return jobManager.serialized();
+        }
+    });
 
     priv.getParam = function (list,nodoc) {
         var param = {}, i = 0;
@@ -1739,33 +1797,36 @@ var jobRules = (function(spec, my) {
 
     priv.addJob = function (commandCreator,spec) {
         jobManager.addJob(
-            job({storage:jioNamespace.storage(priv.storage_spec,my),
-                 command:commandCreator(spec,my)},my));
+            job({storage:that.storage(priv.storage_spec),
+                 command:commandCreator(spec)}));
     };
 
-    // /**
-    //  * Post a document.
-    //  * @method post
-    //  * @param  {object} doc The document {"content":}.
-    //  * @param  {object} options (optional) Contains some options:
-    //  * - {number} max_retry The number max of retries, 0 = infinity.
-    //  * - {boolean} revs Include revision history of the document.
-    //  * - {boolean} revs_info Retreive the revisions.
-    //  * - {boolean} conflicts Retreive the conflict list.
-    //  * @param  {function} callback (optional) The callback(err,response).
-    //  * @param  {function} error (optional) The callback on error, if this
-    //  *     callback is given in parameter, "callback" is changed as "success",
-    //  *     called on success.
-    //  */
-    // that.post = function() {
-    //     var param = priv.getParam(arguments);
-    //     param.options.max_retry = param.options.max_retry || 0;
-    //     priv.addJob(postCommand,{
-    //         doc:param.doc,
-    //         options:param.options,
-    //         callbacks:{success:param.success,error:param.error}
-    //     });
-    // };
+    /**
+     * Post a document.
+     * @method post
+     * @param  {object} doc The document {"content":}.
+     * @param  {object} options (optional) Contains some options:
+     * - {number} max_retry The number max of retries, 0 = infinity.
+     * - {boolean} revs Include revision history of the document.
+     * - {boolean} revs_info Retreive the revisions.
+     * - {boolean} conflicts Retreive the conflict list.
+     * @param  {function} callback (optional) The callback(err,response).
+     * @param  {function} error (optional) The callback on error, if this
+     *     callback is given in parameter, "callback" is changed as "success",
+     *     called on success.
+     */
+    Object.defineProperty(that,"post",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            var param = priv.getParam(arguments);
+            param.options.max_retry = param.options.max_retry || 0;
+            priv.addJob(postCommand,{
+                doc:param.doc,
+                options:param.options,
+                callbacks:{success:param.success,error:param.error}
+            });
+        }
+    });
 
     /**
      * Put a document.
@@ -1781,15 +1842,18 @@ var jobRules = (function(spec, my) {
      *     callback is given in parameter, "callback" is changed as "success",
      *     called on success.
      */
-    that.put = function() {
-        var param = priv.getParam(arguments);
-        param.options.max_retry = param.options.max_retry || 0;
-        priv.addJob(putCommand,{
-            doc:param.doc,
-            options:param.options,
-            callbacks:{success:param.success,error:param.error}
-        });
-    };
+    Object.defineProperty(that,"put",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            var param = priv.getParam(arguments);
+            param.options.max_retry = param.options.max_retry || 0;
+            priv.addJob(putCommand,{
+                doc:param.doc,
+                options:param.options,
+                callbacks:{success:param.success,error:param.error}
+            });
+        }
+    });
 
     /**
      * Get a document.
@@ -1807,18 +1871,21 @@ var jobRules = (function(spec, my) {
      *     callback is given in parameter, "callback" is changed as "success",
      *     called on success.
      */
-    that.get = function() {
-        var param = priv.getParam(arguments);
-        param.options.max_retry = param.options.max_retry || 3;
-        param.options.metadata_only = (
-            param.options.metadata_only !== undefined?
-                param.options.metadata_only:false);
-        priv.addJob(getCommand,{
-            docid:param.doc,
-            options:param.options,
-            callbacks:{success:param.success,error:param.error}
-        });
-    };
+    Object.defineProperty(that,"get",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            var param = priv.getParam(arguments);
+            param.options.max_retry = param.options.max_retry || 3;
+            param.options.metadata_only = (
+                param.options.metadata_only !== undefined?
+                    param.options.metadata_only:false);
+            priv.addJob(getCommand,{
+                docid:param.doc,
+                options:param.options,
+                callbacks:{success:param.success,error:param.error}
+            });
+        }
+    });
 
     /**
      * Remove a document.
@@ -1834,15 +1901,18 @@ var jobRules = (function(spec, my) {
      *     callback is given in parameter, "callback" is changed as "success",
      *     called on success.
      */
-    that.remove = function() {
-        var param = priv.getParam(arguments);
-        param.options.max_retry = param.options.max_retry || 0;
-        priv.addJob(removeCommand,{
-            doc:param.doc,
-            options:param.options,
-            callbacks:{success:param.success,error:param.error}
-        });
-    };
+    Object.defineProperty(that,"remove",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            var param = priv.getParam(arguments);
+            param.options.max_retry = param.options.max_retry || 0;
+            priv.addJob(removeCommand,{
+                doc:param.doc,
+                options:param.options,
+                callbacks:{success:param.success,error:param.error}
+            });
+        }
+    });
 
     /**
      * Get a list of documents.
@@ -1859,51 +1929,33 @@ var jobRules = (function(spec, my) {
      *     callback is given in parameter, "callback" is changed as "success",
      *     called on success.
      */
-    that.allDocs = function() {
-        var param = priv.getParam(arguments,'no doc');
-        param.options.max_retry = param.options.max_retry || 3;
-        param.options.metadata_only = (
-            param.options.metadata_only !== undefined?
-                param.options.metadata_only:true);
-        priv.addJob(allDocsCommand,{
-            options:param.options,
-            callbacks:{success:param.success,error:param.error}
-        });
-    };
+    Object.defineProperty(that,"allDocs",{
+        configurable:false,enumerable:false,writable:false,value:
+        function() {
+            var param = priv.getParam(arguments,'no doc');
+            param.options.max_retry = param.options.max_retry || 3;
+            param.options.metadata_only = (
+                param.options.metadata_only !== undefined?
+                    param.options.metadata_only:true);
+            priv.addJob(allDocsCommand,{
+                options:param.options,
+                callbacks:{success:param.success,error:param.error}
+            });
+        }
+    });
 
     return that;
 };                              // End Class jio
 
-var jioNamespace = (function(spec, my) {
+var storage_type_object = {     // -> 'key':constructorFunction
+    'base': function () {}      // overriden by jio
+};
+var jioNamespace = (function(spec) {
     var that = {};
     spec = spec || {};
-    my = my || {};
     // Attributes //
-    var storage_type_o = {      // -> 'key':constructorFunction
-        'base': storage,
-        'handler': storageHandler
-    };
 
     // Methods //
-
-    /**
-     * Returns a storage from a storage description.
-     * @method storage
-     * @param  {object} spec The specifications.
-     * @param  {object} my The protected object.
-     * @param  {string} forcetype Force storage type
-     * @return {object} The storage object.
-     */
-    that.storage = function(spec, my, forcetype) {
-        spec = spec || {};
-        my = my || {};
-        var type = forcetype || spec.type || 'base';
-        if (!storage_type_o[type]) {
-            throw invalidStorageType({type:type,
-                                      message:'Storage does not exists.'});
-        }
-        return storage_type_o[type](spec, my);
-    };
 
     /**
      * Creates a new jio instance.
@@ -1915,14 +1967,19 @@ var jioNamespace = (function(spec, my) {
      *     - {string} spec.storage.applicationname: The application name
      * @return {object} The new Jio instance.
      */
-    that.newJio = function(spec) {
-        var storage = spec;
-        if (typeof storage === 'string') {
-            storage = JSON.parse (storage);
+    Object.defineProperty(that,"newJio",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(spec) {
+            var storage = spec, instance = null;
+            if (typeof storage === 'string') {
+                storage = JSON.parse (storage);
+            }
+            storage = storage || {type:'base'};
+            instance = jio(spec);
+            instance.start();
+            return instance;
         }
-        storage = storage || {type:'base'};
-        return jio(spec);
-    };
+    });
 
     /**
      * Add a storage type to jio.
@@ -1930,13 +1987,16 @@ var jioNamespace = (function(spec, my) {
      * @param  {string} type The storage type
      * @param  {function} constructor The associated constructor
      */
-    that.addStorageType = function(type, constructor) {
-        constructor = constructor || function(){return null;};
-        if (storage_type_o[type]) {
-            throw invalidStorageType({type:type,message:'Already known.'});
+    Object.defineProperty(that,"addStorageType",{
+        configurable:false,enumerable:false,writable:false,value:
+        function(type, constructor) {
+            constructor = constructor || function(){return null;};
+            if (storage_type_object[type]) {
+                throw invalidStorageType({type:type,message:'Already known.'});
+            }
+            storage_type_object[type] = constructor;
         }
-        storage_type_o[type] = constructor;
-    };
+    });
 
     return that;
 }());
