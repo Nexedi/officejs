@@ -28,13 +28,11 @@ var newConflictManagerStorage = function ( spec, my ) {
     priv.getDistantMetadata = function (command,path,success,error) {
         var cloned_option = command.cloneOption ();
         cloned_option.metadata_only = false;
-        cloned_option.max_retry = command.getOption('max_retry') || 3;
         that.addJob ('get',priv.secondstorage_spec,path,cloned_option,
                      success, error);
     };
 
     priv.saveMetadataToDistant = function (command,path,content,success,error) {
-        // max_retry:0 // inf
         that.addJob ('put',priv.secondstorage_spec,
                      {_id:path,content:JSON.stringify (content)},
                      command.cloneOption(),success,error);
@@ -52,7 +50,6 @@ var newConflictManagerStorage = function ( spec, my ) {
 
     priv.deleteAFile = function (command,path,success,error) {
         var cloned_option = command.cloneOption();
-        cloned_option.max_retry = 0; // inf
         that.addJob ('remove',priv.secondstorage_spec,{_id:path},
                      command.cloneOption(), success, error);
     };
