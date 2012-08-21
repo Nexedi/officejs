@@ -57,7 +57,7 @@
     });
     odf(OfficeJS_login.object,'dontRememberMe',function () {
         $(that.remember_id).removeAttr('checked');
-        localStorage.deleteItem(that.remember_path);
+        delete localStorage[that.remember_path];
     });
     odf(OfficeJS_login.object,'toggleRememberMe',function () {
         var t = localStorage.getItem(that.remember_path);
