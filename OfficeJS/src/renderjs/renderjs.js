@@ -25,7 +25,7 @@ var RenderJs = (function () {
           load: function (root) {
                     /* Load gadget layout by traversing DOM */
                     var gadget_list;
-                    gadget_list = root.find("[gadget]");
+                    gadget_list = root.find("[data-gadget]");
                     // Load chilren
                     gadget_list.each(function() {
                       RenderJs.loadGadgetFromUrl($(this));
@@ -42,7 +42,7 @@ var RenderJs = (function () {
           loadGadgetFromUrl: function(gadget) {
                     /* Load gadget's SPECs from URL */
                     var url, gadget_id, gadget_property, cacheable, cache_id, app_cache, data, gadget_js;
-                    url = gadget.attr("gadget");
+                    url = gadget.attr("data-gadget");
                     gadget_id = gadget.attr("id");
 
                     // register gadget in javascript namespace
@@ -50,7 +50,7 @@ var RenderJs = (function () {
                     RenderJs.GadgetIndex.registerGadget(gadget_js);
 
                     if (url!==undefined && url!==""){
-                      gadget_property = gadget.attr("gadget:property");
+                      gadget_property = gadget.attr("data-gadget:property");
                       cacheable = false;
                       if (gadget_property!==undefined) {
                         gadget_property = $.parseJSON(gadget_property);
@@ -152,8 +152,8 @@ var RenderJs = (function () {
           updateGadgetData: function(gadget) {
                     /* Do real gagdet update here */
                     var data_source, data_handler;
-                    data_source = gadget.attr("gadget:data-source");
-                    data_handler = gadget.attr("gadget:data-handler");
+                    data_source = gadget.attr("data-gadget:data-source");
+                    data_handler = gadget.attr("data-gadget:data-handler");
                     // acquire data and pass it to method handler
                     if (data_source!==undefined){
                       $.ajax({url:data_source,
@@ -306,9 +306,9 @@ var RenderJs = (function () {
                           tab_container=$('#'+dom_id);
                           tab_container.empty();
                           html_string =['<div class="gadget" ',
-                                        'gadget="' + gadget + '"',
-                                        'gadget:data-handler="' + gadget_data_handler + '" ',
-                                        'gadget:data-source="' + gadget_data_source +'"></div>'].join('\n');
+                                        'data-gadget="' + gadget + '"',
+                                        'data-gadget:data-handler="' + gadget_data_handler + '" ',
+                                        'data-gadget:data-source="' + gadget_data_source +'"></div>'].join('\n');
 
                           tab_container.append(html_string);
                           tab_gadget = tab_container.find(".gadget");
