@@ -1,3 +1,5 @@
+
+
 function setupRenderJSTest(){
   /*
   * Main RenderJS test entry point
@@ -11,13 +13,12 @@ function setupRenderJSTest(){
   });
 
  
-//   module("TabularGadget");
-//   test('addNewTabGadget', function(){
-//               RenderJs.TabbularGadget.addNewTabGadget("qunit-fixture", "Person_view/Form_asRenderJSGadget", "ERP5Form.update", "Form_asJSON?form_id=Person_view");
-//               equal($("#qunit-fixture").children(".gadget").length, 1);
-//               equal(RenderJs.GadgetIndex.getGadgetList().length, 1);
-// 
-//   });
+  module("TabularGadget");
+   test('addNewTabGadget', function(){
+               RenderJs.TabbularGadget.addNewTabGadget("qunit-fixture", "test-gadget.xhtml");
+               equal($("#qunit-fixture").children(".gadget").length, 1);
+               equal(RenderJs.GadgetIndex.getGadgetList().length, 1);
+   });
 
   module("GadgetIndex");
   test('GadgetIndex', function(){
@@ -26,7 +27,7 @@ function setupRenderJSTest(){
                 RenderJs.GadgetIndex.unregisterGadget(this);
               });
               
-              $("#qunit-fixture").append('<div gadget="" id="new">XXXXXXXXXXXX</div>');
+              $("#qunit-fixture").append('<div data-gadget="" id="new">XXXXXXXXXXXX</div>');
               RenderJs.bootstrap($("#qunit-fixture"));
               RenderJs.GadgetIndex.getRootGadget().getDom().one("ready", function (){
                 RenderJs.update($("#qunit-fixture"));

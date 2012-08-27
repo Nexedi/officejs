@@ -63,13 +63,11 @@ var RenderJs = (function () {
                           app_cache = RenderJs.Cache.get(cache_id, undefined);
                           if(app_cache===undefined || app_cache===null){
                             // not in cache so we pull from network and cache
-                            //console.log("not in cache: " + cache_id + "  " + url);
                             $.ajax({url:url,
                                     yourCustomData: {"gadget_id": gadget_id, "cache_id": cache_id},
                                     success: function (data) {
                                                 cache_id = this.yourCustomData.cache_id;
                                                 gadget_id = this.yourCustomData.gadget_id;
-                                                //console.log("set in cache: " + cache_id);
                                                 RenderJs.Cache.set(cache_id, data);
                                                 RenderJs.GadgetIndex.getGadgetById(gadget_id).setReady();
                                                 RenderJs.updateAndRecurse(gadget, data);
@@ -86,7 +84,6 @@ var RenderJs = (function () {
                         }
                       else {
                         // not to be cached
-                        //console.log("Not to be cached " + url + gadget_id);
                         $.ajax({url:url,
                                 yourCustomData: {"gadget_id": gadget_id},
                                 success: function (data) {
@@ -125,9 +122,7 @@ var RenderJs = (function () {
             var is_gadget_list_loaded;
             is_gadget_list_loaded = RenderJs.GadgetIndex.isGadgetListLoaded();
             if (is_gadget_list_loaded){
-              //console.log("to trigger ");
               if (!RenderJs.isReady()) {
-                //console.log("trigger ", RenderJs.GadgetIndex.getGadgetList());
                 RenderJs.GadgetIndex.getRootGadget().getDom().trigger("ready");
                 RenderJs.setReady(true);
               }
@@ -445,7 +440,6 @@ var RenderJs = (function () {
                             func = new Function(func_body);
                             source_gadget.dom.bind(source_method_id, func);
                           }
-                          console.log(source_gadget_id, '.', source_method_id, '-->', destination_gadget_id, '.', destination_method_id);
                         }
                         );
                       }
