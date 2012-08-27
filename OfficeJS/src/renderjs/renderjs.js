@@ -446,3 +446,8 @@ var RenderJs = (function () {
           }}())
 
   }}());
+
+// impliticly call RenderJs bootstrap
+$(document).ready(function() {
+  RenderJs.bootstrap($('body'));
+});
