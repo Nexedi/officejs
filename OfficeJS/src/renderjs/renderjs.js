@@ -1,3 +1,9 @@
+// Add required by RenderJs jstorage library only if used HTML application uses requirejs
+if (typeof require !== 'undefined') {
+  require(["../../../../lib/jstorage/jstorage.js"], function(util) {
+  });
+}
+
 // fallback for IE
 if (typeof console === "undefined" || typeof console.log === "undefined") {
   console = {};
