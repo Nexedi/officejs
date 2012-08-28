@@ -12,14 +12,6 @@ function setupRenderJSTest(){
                 deepEqual(data, RenderJs.Cache.get(cache_id));
   });
 
- 
-  module("TabularGadget");
-   test('addNewTabGadget', function(){
-               RenderJs.TabbularGadget.addNewTabGadget("qunit-fixture", "test-gadget.xhtml");
-               equal($("#qunit-fixture").children(".gadget").length, 1);
-               equal(RenderJs.GadgetIndex.getGadgetList().length, 1);
-   });
-
   module("GadgetIndex");
   test('GadgetIndex', function(){
                // re-init GadgetIndex
@@ -37,12 +29,19 @@ function setupRenderJSTest(){
               equal($("#qunit-fixture").attr("id"), RenderJs.GadgetIndex.getRootGadget().getDom().attr("id"));
               equal(RenderJs.GadgetIndex.getGadgetById("qunit-fixture"), RenderJs.GadgetIndex.getRootGadget());
 
-              // unregister gadget
+              // unregister gadget all gadgets from this test not to mess with rest of tests
               RenderJs.GadgetIndex.unregisterGadget(RenderJs.GadgetIndex.getGadgetById("qunit-fixture"));
               equal(RenderJs.GadgetIndex.getGadgetList().length, 1);
               equal(RenderJs.GadgetIndex.getGadgetById("new"), RenderJs.GadgetIndex.getRootGadget());
-              
+              RenderJs.GadgetIndex.unregisterGadget(RenderJs.GadgetIndex.getGadgetById("new"));
+              equal(RenderJs.GadgetIndex.getGadgetList().length, 0);
+   });
 
+   module("TabularGadget");
+   test('addNewTabGadget', function(){
+               RenderJs.TabbularGadget.addNewTabGadget("qunit-fixture", "test-gadget.html", "", "");
+               equal($("#qunit-fixture").children(".gadget").length, 1);
+               equal(RenderJs.GadgetIndex.getGadgetList().length, 1);
    });
 
 };

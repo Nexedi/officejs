@@ -150,7 +150,7 @@ var RenderJs = (function () {
                     data_source = gadget.attr("data-gadget:data-source");
                     data_handler = gadget.attr("data-gadget:data-handler");
                     // acquire data and pass it to method handler
-                    if (data_source!==undefined){
+                    if (data_source!==undefined && data_source!==""){
                       $.ajax({url:data_source,
                               dataType: "json",
                               yourCustomData: {"data_handler": data_handler},
