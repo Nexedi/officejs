@@ -44,5 +44,7 @@ function setupRenderJSTest(){
                equal(RenderJs.GadgetIndex.getGadgetList().length, 1);
    });
 
+   // XXX: test InteractionGadget
+
 };
 

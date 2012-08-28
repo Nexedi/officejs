@@ -1,0 +1,21 @@
+<div>
+  A (gadget)
+  <button onclick="RenderJs.GadgetIndex.getGadgetById('A').jsCall1()">A.jsCall1 -> C.jsCall1</button>
+  <button onclick="$('#A').trigger('htmlEvent1')">HTML event 1</button>
+  <button onclick="$('#A').trigger('htmlEvent2')">HTML event 2</button>
+  <p id="hide" style="display:none;"> hidden text on myownHTMlEvent1</p>
+</div>
+
+<script type="text/javascript" language="javascript">
+  //<![CDATA[
+     $(document).ready(function() {
+         gadget = RenderJs.GadgetIndex.getGadgetById("A");
+         gadget.jsCall1 = function (){alert("A.jscall1");};
+         gadget.jsCall2 = function (){alert("A.jscall2");};
+         gadget.myOwnHtmlEvent1 = function (){
+           $("#hide").toggle();
+           alert("A.myOwnHtmlEvent1");
+         };
+     });
+  //]]>
+</script>

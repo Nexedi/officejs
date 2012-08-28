@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <script src="../../../../lib/jquery/jquery.js"> </script>
+    <script src="../../../../lib/jstorage/jstorage.js"> </script>
+    <script type="text/javascript" src="../../renderjs.js"></script>
+  <head>
+  <body>
+
+    <div id="A"
+         data-gadget="A.html"
+         data-gadget:property="{&quot;cacheable&quot;: &quot;1&quot;, &quot;cache_id&quot;: &quot;A&quot;}"></div>
+
+    <div id="B"
+         data-gadget="B.html"
+         data-gadget:property="{&quot;cacheable&quot;: &quot;1&quot;, &quot;cache_id&quot;: &quot;B&quot;}"></div>
+
+    <div data-gadget=""
+         id="main-interactor">
+
+      <connect source="A.jsCall1"
+               destination="B.jsCall1"></connect>
+      <connect source="A.htmlEvent1"
+               destination="B.htmlEvent1"></connect>
+      <connect source="A.htmlEvent1"
+               destination="A.myOwnHtmlEvent1"></connect>
+      <connect source="A.htmlEvent2"
+               destination="B.htmlEvent2"></connect>
+      <connect source="B.jsCall2"
+               destination="A.jsCall2"></connect>
+
+    </div>
+
+    <script type="text/javascript" language="javascript">
+      //<![CDATA[
+        $(document).ready(function() {
+        // XXX: using setTimeout is ugly, see non working example below to be fixed
+        window.setTimeout(function () {
+             RenderJs.InteractionGadget.bind($("#main-interactor"));}, 1000);
+//           RenderJs.GadgetIndex.getRootGadget().getDom().bind("ready", function () {
+//             RenderJs.InteractionGadget.bind($("#main-interactor"));});
+
+          });
+
+      //]]>
+    </script>
+
+  </body>
+</html>
+
+
+
