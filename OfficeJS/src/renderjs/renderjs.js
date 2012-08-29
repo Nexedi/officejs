@@ -1,3 +1,7 @@
+// by default RenderJs will render all gadgets when page is loaded
+// still it's possible to override this and use explicit gadget rendering
+var RENDERJS_ENABLE_IMPLICIT_GADGET_RENDERING = true;
+
 // Add required by RenderJs jstorage library only if used HTML application uses requirejs
 if (typeof require !== 'undefined') {
   require(["../../../../lib/jstorage/jstorage.js"], function(util) {
@@ -162,6 +166,33 @@ var RenderJs = (function () {
                               yourCustomData: {"data_handler": data_handler},
                               success: RenderJs.updateGadgetWithDataHandler});}
           },
+          
+          addGadget: function(dom_id, gadget, gadget_data_handler, gadget_data_source) {
+                          /*
+                          * add new gadget and render it
+                          */
+                          var html_string;
+                          tab_container=$('#'+dom_id);
+                          tab_container.empty();
+                          html_string =['<div class="gadget" ',
+                                        'data-gadget="' + gadget + '"',
+                                        'data-gadget:data-handler="' + gadget_data_handler + '" ',
+                                        'data-gadget:data-source="' + gadget_data_source +'"></div>'].join('\n');
+
+                          tab_container.append(html_string);
+                          tab_gadget = tab_container.find(".gadget");
+                          // render new gadget
+                          RenderJs.setReady(false);
+                          RenderJs.loadGadgetFromUrl(tab_gadget);
+                          // clear previous events
+                          RenderJs.GadgetIndex.getRootGadget().getDom().bind("ready", function (){
+                            if (!is_ready){
+                              RenderJs.updateGadgetData(tab_gadget);
+                              is_ready = true;
+                            }
+                          });
+                          return tab_gadget;
+          },
 
           Cache : (function() {
                   /*
@@ -303,29 +334,9 @@ var RenderJs = (function () {
                           /*
                           * add new gadget and render it
                           */
-                          var html_string;
-                          tab_container=$('#'+dom_id);
-                          tab_container.empty();
-                          html_string =['<div class="gadget" ',
-                                        'data-gadget="' + gadget + '"',
-                                        'data-gadget:data-handler="' + gadget_data_handler + '" ',
-                                        'data-gadget:data-source="' + gadget_data_source +'"></div>'].join('\n');
-
-                          tab_container.append(html_string);
-                          tab_gadget = tab_container.find(".gadget");
+                          tab_gadget = RenderJs.addGadget(dom_id, gadget, gadget_data_handler, gadget_data_source)
 
                           // XXX: we should unregister all gadgets (if any we replace now in DOM)
-
-                          // render new gadget
-                          RenderJs.setReady(false);
-                          RenderJs.loadGadgetFromUrl(tab_gadget);
-                          // clear previous events
-                          RenderJs.GadgetIndex.getRootGadget().getDom().bind("ready", function (){
-                            if (!is_ready){
-                              RenderJs.updateGadgetData(tab_gadget);
-                              is_ready = true;
-                            }
-                          });
                         }
 
           }}()),
@@ -455,5 +466,7 @@ var RenderJs = (function () {
 
 // impliticly call RenderJs bootstrap
 $(document).ready(function() {
-  RenderJs.bootstrap($('body'));
+  if (RENDERJS_ENABLE_IMPLICIT_GADGET_RENDERING){
+    RenderJs.bootstrap($('body'));
+  }
 });

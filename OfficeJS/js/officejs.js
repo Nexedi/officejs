@@ -1056,7 +1056,7 @@
             scope[app.varname]=OfficeJS.lib.cloneAndProtectObjectRoot(app.api);
         }
         // open
-        TabbularGadget.addNewTabGadget(app.componentpath,app.gadgetid);
+        RenderJs.addGadget(app.gadgetid, app.componentpath);
         OfficeJS.tmp[app.gadgetid] = app;
         // load
         if (app.onload) {
@@ -1083,8 +1083,12 @@
     //////////////////////////////////////////////////////////////////////
 
     odf(scope,'OfficeJS',OfficeJS.command);
-
+ 
     OfficeJS.lib.openApplication(OfficeJS.system.applications['top_nav_bar']);
     OfficeJS.lib.openApplication(OfficeJS.system.applications['left_nav_bar']);
     OfficeJS.lib.openApplication(OfficeJS.system.applications['login']);
 }(window));
+
+// configure RenderJs to skip its built in implicit gadget rendering
+// as our application will do that explicitly
+var RENDERJS_ENABLE_IMPLICIT_GADGET_RENDERING=false;
