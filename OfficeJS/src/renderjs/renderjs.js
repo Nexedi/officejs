@@ -59,17 +59,17 @@ var RenderJs = (function () {
                     gadget_js = new RenderJs.Gadget(gadget_id, gadget);
                     RenderJs.GadgetIndex.registerGadget(gadget_js);
 
+                    // XXX: update Gadget's instance with contents of "data-gadget-property"
+                    
                     if (url!==undefined && url!==""){
-                      gadget_property = gadget.attr("data-gadget:property");
-                      cacheable = false;
-                      if (gadget_property!==undefined) {
-                        gadget_property = $.parseJSON(gadget_property);
-                        cacheable = Boolean(gadget_property.cacheable);
+                      cacheable = gadget.attr("data-gadget-cacheable");
+                      cache_id = gadget.attr("data-gadget-cache-id");                  
+                      if (cacheable!==undefined && cache_id!==undefined){
+                        cacheable = Boolean(parseInt(cacheable));
                       }
                       //cacheable = false ; // to develop faster
                       if (cacheable) {
                           // get from cache if possible, use last part from URL as cache_key
-                          cache_id = gadget_property.cache_id;
                           app_cache = RenderJs.Cache.get(cache_id, undefined);
                           if(app_cache===undefined || app_cache===null){
                             // not in cache so we pull from network and cache
@@ -157,8 +157,8 @@ var RenderJs = (function () {
           updateGadgetData: function(gadget) {
                     /* Do real gagdet update here */
                     var data_source, data_handler;
-                    data_source = gadget.attr("data-gadget:data-source");
-                    data_handler = gadget.attr("data-gadget:data-handler");
+                    data_source = gadget.attr("data-gadget-source");
+                    data_handler = gadget.attr("data-gadget-handler");
                     // acquire data and pass it to method handler
                     if (data_source!==undefined && data_source!==""){
                       $.ajax({url:data_source,
@@ -176,8 +176,8 @@ var RenderJs = (function () {
                           tab_container.empty();
                           html_string =['<div class="gadget" ',
                                         'data-gadget="' + gadget + '"',
-                                        'data-gadget:data-handler="' + gadget_data_handler + '" ',
-                                        'data-gadget:data-source="' + gadget_data_source +'"></div>'].join('\n');
+                                        'data-gadget-handler="' + gadget_data_handler + '" ',
+                                        'data-gadget-source="' + gadget_data_source +'"></div>'].join('\n');
 
                           tab_container.append(html_string);
                           tab_gadget = tab_container.find(".gadget");
