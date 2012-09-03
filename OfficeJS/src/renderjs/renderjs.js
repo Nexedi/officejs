@@ -430,6 +430,21 @@ var RenderJs = (function () {
                         * Bind event between gadgets.
                         */
                         gadget_id = gadget_dom.attr("id");
+
+                        var createMethodInteraction = function (original_source_method_id, source_gadget_id, source_method_id,
+                                                          destination_gadget_id, destination_method_id) {
+                          var interaction = function() {
+                            RenderJs.GadgetIndex.getGadgetById(source_gadget_id)[original_source_method_id].apply(null, arguments);
+                            RenderJs.GadgetIndex.getGadgetById(destination_gadget_id)[destination_method_id]();
+                          };
+                          return interaction;
+                        };
+                        var createTriggerInteraction = function (destination_gadget_id, destination_method_id) {
+                          var interaction = function() {
+                            RenderJs.GadgetIndex.getGadgetById(destination_gadget_id)[destination_method_id].apply(null, arguments);
+                          };
+                          return interaction;
+                        };
                         gadget_dom.find("connect").each(function (key, value){
                           var source, source_gadget_id, source_method_id, source_gadget, destination, destination_gadget_id,
                               destination_method_id, destination_gadget, func_body, func;
@@ -445,17 +460,15 @@ var RenderJs = (function () {
 
                           if (source_gadget.hasOwnProperty(source_method_id)){
                             // direct javascript use case
-                            func_body = 'RenderJs.GadgetIndex.getGadgetById("' + source_gadget_id + '")["original_' + source_method_id + '"]();';
-                            func_body = func_body + '\nRenderJs.GadgetIndex.getGadgetById("' + destination_gadget_id + '")["' + destination_method_id + '"]();';
-                            func = new Function(func_body);
-                            source_gadget["original_" + source_method_id] = source_gadget[source_method_id];
-                            source_gadget[source_method_id] =  func;
+                            var original_source_method_id = "original_" + source_method_id;
+                            source_gadget[original_source_method_id] = source_gadget[source_method_id];
+                            source_gadget[source_method_id] =  createMethodInteraction(original_source_method_id, source_gadget_id, source_method_id,
+                                                                                 destination_gadget_id, destination_method_id);
                           }
                           else{
                             // this is a custom event attached to HTML gadget representation
-                            func_body = 'RenderJs.GadgetIndex.getGadgetById("' + destination_gadget_id + '")["' + destination_method_id + '"]();';
-                            func = new Function(func_body);
-                            source_gadget.dom.bind(source_method_id, func);
+                            var interaction = createTriggerInteraction(destination_gadget_id, destination_method_id);
+                            source_gadget.dom.bind(source_method_id, interaction);
                           }
                         }
                         );
