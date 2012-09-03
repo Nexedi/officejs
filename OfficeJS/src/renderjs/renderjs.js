@@ -4,15 +4,15 @@ var RENDERJS_ENABLE_IMPLICIT_GADGET_RENDERING = true;
 
 // Add required by RenderJs jstorage library only if used HTML application
 // uses requirejs
-if (typeof require !== 'undefined') {
-    require(["../../../../lib/jstorage/jstorage.js"], function(util) {
+if (typeof require!=='undefined') {
+    require(["../../../../lib/jstorage/jstorage.js"], function (util) {
     });
 }
 
 // fallback for IE
-if (typeof console === "undefined" || typeof console.log === "undefined") {
+if (typeof console==="undefined" || typeof console.log==="undefined") {
     console = {};
-    console.log = function() {};
+    console.log = function () {};
 }
 
 /*
@@ -22,7 +22,7 @@ var RenderJs = (function () {
     // a variable indicating if current gadget loading is over or not
     var is_ready = false;
 
-    return  {
+    return {
         bootstrap: function (root) {
             /* initial load application gadget */
             RenderJs.loadGadgetFromUrl(root);
@@ -34,19 +34,19 @@ var RenderJs = (function () {
             var gadget_list;
             gadget_list = root.find("[data-gadget]");
             // Load chilren
-            gadget_list.each(function() {
+            gadget_list.each(function () {
                 RenderJs.loadGadgetFromUrl($(this));
             });
         },
 
-        updateAndRecurse: function(gadget, data) {
+        updateAndRecurse: function (gadget, data) {
             /* Update current gadget and recurse down */
             gadget.append(data);
             // a gadget may contain sub gadgets
             this.load(gadget);
         },
 
-        loadGadgetFromUrl: function(gadget) {
+        loadGadgetFromUrl: function (gadget) {
             /* Load gadget's SPECs from URL */
             var url, gadget_id, gadget_property, cacheable, cache_id,
             app_cache, data, gadget_js;
@@ -59,10 +59,10 @@ var RenderJs = (function () {
 
             // XXX: update Gadget's instance with contents of "data-gadget-property"
 
-            if (url !== undefined && url !== ""){
+            if (url !== undefined && url !== "") {
                 cacheable = gadget.attr("data-gadget-cacheable");
                 cache_id = gadget.attr("data-gadget-cache-id");
-                if (cacheable !== undefined && cache_id !== undefined){
+                if (cacheable !== undefined && cache_id !== undefined) {
                     cacheable = Boolean(parseInt(cacheable));
                 }
                 //cacheable = false ; // to develop faster
@@ -70,12 +70,13 @@ var RenderJs = (function () {
                     // get from cache if possible, use last part from URL as
                     // cache_key
                     app_cache = RenderJs.Cache.get(cache_id, undefined);
-                    if(app_cache === undefined || app_cache === null){
+                    if (app_cache === undefined || app_cache === null) {
                         // not in cache so we pull from network and cache
                         $.ajax({
-                            url:url,
+                            url: url,
                             yourCustomData: {
-                                "gadget_id": gadget_id, "cache_id": cache_id
+                                "gadget_id": gadget_id,
+                                "cache_id": cache_id
                             },
                             success: function (data) {
                                 cache_id = this.yourCustomData.cache_id;
@@ -97,7 +98,7 @@ var RenderJs = (function () {
                 } else {
                     // not to be cached
                     $.ajax({
-                        url:url,
+                        url: url,
                         yourCustomData: {"gadget_id": gadget_id},
                         success: function (data) {
                             gadget_id = this.yourCustomData.gadget_id;
@@ -148,7 +149,7 @@ var RenderJs = (function () {
 
         update: function (root) {
             /* update gadget with data from remote source */
-            root.find("[gadget]").each(function (i,v) {
+            root.find("[gadget]").each(function (i, v) {
                 RenderJs.updateGadgetData($(this));
             });
         },
@@ -156,8 +157,8 @@ var RenderJs = (function () {
         updateGadgetWithDataHandler: function (result) {
             var data_handler;
             data_handler = this.yourCustomData.data_handler;
-            if (data_handler !== undefined){
-                eval(data_handler+ "(result)");
+            if (data_handler !== undefined) {
+                eval(data_handler + "(result)");
             }
         },
 
@@ -167,9 +168,9 @@ var RenderJs = (function () {
             data_source = gadget.attr("data-gadget-source");
             data_handler = gadget.attr("data-gadget-handler");
             // acquire data and pass it to method handler
-            if (data_source !== undefined && data_source !== ""){
+            if (data_source !== undefined && data_source !== "") {
                 $.ajax({
-                    url:data_source,
+                    url: data_source,
                     dataType: "json",
                     yourCustomData: {"data_handler": data_handler},
                     success: RenderJs.updateGadgetWithDataHandler
@@ -177,19 +178,19 @@ var RenderJs = (function () {
             }
         },
 
-        addGadget: function(dom_id, gadget, gadget_data_handler,
+        addGadget: function (dom_id, gadget, gadget_data_handler,
                             gadget_data_source) {
             /*
              * add new gadget and render it
              */
-            var html_string;
-            tab_container = $('#'+dom_id);
+            var html_string, tab_container, tab_gadget;
+            tab_container = $('#' + dom_id);
             tab_container.empty();
             html_string = [
                 '<div class="gadget" ',
                 'data-gadget="' + gadget + '"',
                 'data-gadget-handler="' + gadget_data_handler + '" ',
-                'data-gadget-source="' + gadget_data_source +'"></div>'
+                'data-gadget-source="' + gadget_data_source + '"></div>'
             ].join('\n');
 
             tab_container.append(html_string);
@@ -199,8 +200,8 @@ var RenderJs = (function () {
             RenderJs.loadGadgetFromUrl(tab_gadget);
             // clear previous events
             RenderJs.GadgetIndex.getRootGadget().getDom().bind(
-                "ready", function (){
-                    if (!is_ready){
+                "ready", function () {
+                    if (!is_ready) {
                         RenderJs.updateGadgetData(tab_gadget);
                         is_ready = true;
                     }
@@ -209,7 +210,7 @@ var RenderJs = (function () {
             return tab_gadget;
         },
 
-        Cache: (function() {
+        Cache: (function () {
             /*
              * Generic cache implementation that can fall back to local
              * namespace storage if no "modern" storage like localStorage
@@ -226,7 +227,7 @@ var RenderJs = (function () {
                     return this.ROOT_CACHE_ID + cache_id;
                 },
 
-                hasLocalStorage: function() {
+                hasLocalStorage: function () {
                     /*
                      * Feature test if localStorage is supported
                      */
@@ -263,7 +264,7 @@ var RenderJs = (function () {
                     }
                 },
 
-                LocalStorageCachePlugin: (function() {
+                LocalStorageCachePlugin: (function () {
                     /*
                      * This plugin saves using HTML5 localStorage.
                      */
@@ -280,7 +281,7 @@ var RenderJs = (function () {
                     }
                 }()),
 
-                NameSpaceStorageCachePlugin: (function() {
+                NameSpaceStorageCachePlugin: (function () {
                     /*
                      * This plugin saves within current page namespace.
                      */
@@ -301,30 +302,30 @@ var RenderJs = (function () {
 
             }}()),
 
-        Gadget: (function (id, dom) {
+        Gadget: (function (gadget_id, dom) {
             /*
              * Javascript Gadget representation
              */
-            this.id = id;
+            this.id = gadget_id;
             this.dom = dom;
             this.is_ready = false;
 
-            this.getId = function() {
+            this.getId = function () {
                 return this.id;
             };
 
-            this.getDom = function() {
+            this.getDom = function () {
                 return this.dom;
             };
 
-            this.isReady = function() {
+            this.isReady = function () {
                 /*
                  * Return True if remote gadget is loaded into DOM.
                  */
                 return this.is_ready;
             };
 
-            this.setReady = function() {
+            this.setReady = function () {
                 /*
                  * Return True if remote gadget is loaded into DOM.
                  */
@@ -337,7 +338,7 @@ var RenderJs = (function () {
              * Generic tabular gadget
              */
             return {
-                toggleVisibility: function(visible_dom) {
+                toggleVisibility: function (visible_dom) {
                     /*
                      * Set tab as active visually and mark as not active rest.
                      */
@@ -347,11 +348,12 @@ var RenderJs = (function () {
                     visible_dom.removeClass("not_selected");
                 },
 
-                addNewTabGadget: function(dom_id, gadget, gadget_data_handler,
+                addNewTabGadget: function (dom_id, gadget, gadget_data_handler,
                                           gadget_data_source) {
                     /*
                      * add new gadget and render it
                      */
+                    var tab_gadget;
                     tab_gadget = RenderJs.addGadget(
                         dom_id, gadget, gadget_data_handler, gadget_data_source
                     );
@@ -366,22 +368,22 @@ var RenderJs = (function () {
              */
             var gadget_list = [];
 
-            return  {
-                getGadgetList: function() {
+            return {
+                getGadgetList: function () {
                     /*
                      * Return list of registered gadgets
                      */
                     return gadget_list;
                 },
 
-                registerGadget: function(gadget) {
+                registerGadget: function (gadget) {
                     /*
                      * Register gadget
                      */
                     gadget_list.push(gadget);
                 },
 
-                unregisterGadget: function(gadget) {
+                unregisterGadget: function (gadget) {
                     /*
                      * Unregister gadget
                      */
@@ -431,7 +433,7 @@ var RenderJs = (function () {
                     return result;
                 },
 
-                getSelf: function (){
+                getSelf: function () {
                     /*
                      * Return Gadget's Javascript representation
                      */
@@ -445,15 +447,16 @@ var RenderJs = (function () {
              * Basic gadget interaction gadget implementation.
              */
             return {
-                bind: function (gadget_dom){
+                bind: function (gadget_dom) {
                     /*
                      * Bind event between gadgets.
                      */
+                    var gadget_id;
                     var createMethodInteraction = function (
                         original_source_method_id, source_gadget_id,
                         source_method_id, destination_gadget_id,
                         destination_method_id) {
-                        var interaction = function() {
+                        var interaction = function () {
                             RenderJs.GadgetIndex.getGadgetById(
                                 source_gadget_id)[original_source_method_id].
                                 apply(null, arguments);
@@ -490,7 +493,7 @@ var RenderJs = (function () {
                         destination_gadget = RenderJs.GadgetIndex.
                             getGadgetById(destination_gadget_id);
 
-                        if (source_gadget.hasOwnProperty(source_method_id)){
+                        if (source_gadget.hasOwnProperty(source_method_id)) {
                             // direct javascript use case
                             original_source_method_id = "original_" +
                                 source_method_id;
@@ -505,7 +508,7 @@ var RenderJs = (function () {
                                     destination_method_id
                                 );
                         }
-                        else{
+                        else {
                             // this is a custom event attached to HTML gadget
                             // representation
                             source_gadget.dom.bind(
@@ -523,7 +526,7 @@ var RenderJs = (function () {
 }());
 
 // impliticly call RenderJs bootstrap
-$(document).ready(function() {
+$(document).ready(function () {
     if (RENDERJS_ENABLE_IMPLICIT_GADGET_RENDERING){
         RenderJs.bootstrap($('body'));
     }
