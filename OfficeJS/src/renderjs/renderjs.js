@@ -441,13 +441,6 @@ var RenderJs = (function () {
                         }
                     );
                     return result;
-                },
-
-                getSelf: function () {
-                    /*
-                     * Return Gadget's Javascript representation
-                     */
-                    // XXX:
                 }
             };
         }()),
@@ -489,8 +482,7 @@ var RenderJs = (function () {
                         var source, source_gadget_id, source_method_id,
                         source_gadget, destination, destination_gadget_id,
                         destination_method_id, destination_gadget,
-                        original_source_method_id,
-                        func_body, func;
+                        original_source_method_id;
                         source = $(value).attr("source").split(".");
                         source_gadget_id = source[0];
                         source_method_id = source[1];
