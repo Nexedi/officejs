@@ -1,11 +1,13 @@
-
+/*
+ * RenderJs tests
+ */
 
 function setupRenderJSTest(){
   /*
   * Main RenderJS test entry point
   */
   module("Cache");
-  test('Cache', function(){
+  test('Cache', function () {
                 cache_id = 'my_test';
                 data = {'gg':1};
                 RenderJs.Cache.set(cache_id, data);
@@ -13,12 +15,12 @@ function setupRenderJSTest(){
   });
 
   module("GadgetIndex");
-  test('GadgetIndex', function(){
+  test('GadgetIndex', function () {
                // re-init GadgetIndex
               $.each(RenderJs.GadgetIndex.getGadgetList(), function () {
                 RenderJs.GadgetIndex.unregisterGadget(this);
               });
-              
+
               $("#qunit-fixture").append('<div data-gadget="" id="new">XXXXXXXXXXXX</div>');
               RenderJs.bootstrap($("#qunit-fixture"));
               RenderJs.GadgetIndex.getRootGadget().getDom().one("ready", function (){
@@ -38,10 +40,27 @@ function setupRenderJSTest(){
    });
 
    module("TabularGadget");
-   test('addNewTabGadget', function(){
+   test('addNewTabGadget', function () {
                RenderJs.TabbularGadget.addNewTabGadget("qunit-fixture", "test-gadget.html", "", "");
                equal($("#qunit-fixture").children(".gadget").length, 1);
                equal(RenderJs.GadgetIndex.getGadgetList().length, 1);
+   });
+
+  module("GadgetInitialization");
+  test('GadgetInitialization', function () {
+               // re-init GadgetIndex
+              $.each(RenderJs.GadgetIndex.getGadgetList(), function () {
+                RenderJs.GadgetIndex.unregisterGadget(this);
+              });
+
+              $("#qunit-fixture").append('<div data-gadget="" id="new-init" data-gadget-property="{&quot;name&quot;: &quot;Ivan&quot;, &quot;age&quot;: 33}">XXXXXXXXXXXX</div>');
+              RenderJs.bootstrap($("#qunit-fixture"));
+              RenderJs.GadgetIndex.getRootGadget().getDom().one("ready", function (){
+                RenderJs.update($("#qunit-fixture"));
+              });
+              // test that gadget get a proper initialization from data-gadget-property
+              equal('Ivan', RenderJs.GadgetIndex.getGadgetById("new-init").name);
+              equal(33, RenderJs.GadgetIndex.getGadgetById("new-init").age);
    });
 
    // XXX: test InteractionGadget
