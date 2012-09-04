@@ -1,16 +1,18 @@
+/*global console, require, $, localStorage, document */
+
 // by default RenderJs will render all gadgets when page is loaded
 // still it's possible to override this and use explicit gadget rendering
 var RENDERJS_ENABLE_IMPLICIT_GADGET_RENDERING = true;
 
 // Add required by RenderJs jstorage library only if used HTML application
 // uses requirejs
-if (typeof require!=='undefined') {
+if (typeof require !== 'undefined') {
     require(["../../../../lib/jstorage/jstorage.js"], function (util) {
     });
 }
 
 // fallback for IE
-if (typeof console==="undefined" || typeof console.log==="undefined") {
+if (typeof console === "undefined" || typeof console.log === "undefined") {
     console = {};
     console.log = function () {};
 }
@@ -49,7 +51,7 @@ var RenderJs = (function () {
         loadGadgetFromUrl: function (gadget) {
             /* Load gadget's SPECs from URL */
             var url, gadget_id, gadget_property, cacheable, cache_id,
-            app_cache, data, gadget_js;
+                app_cache, data, gadget_js;
             url = gadget.attr("data-gadget");
             gadget_id = gadget.attr("id");
 
@@ -63,7 +65,7 @@ var RenderJs = (function () {
                 cacheable = gadget.attr("data-gadget-cacheable");
                 cache_id = gadget.attr("data-gadget-cache-id");
                 if (cacheable !== undefined && cache_id !== undefined) {
-                    cacheable = Boolean(parseInt(cacheable));
+                    cacheable = Boolean(parseInt(cacheable, 10));
                 }
                 //cacheable = false ; // to develop faster
                 if (cacheable) {
@@ -200,7 +202,8 @@ var RenderJs = (function () {
             RenderJs.loadGadgetFromUrl(tab_gadget);
             // clear previous events
             RenderJs.GadgetIndex.getRootGadget().getDom().bind(
-                "ready", function () {
+                "ready",
+                function () {
                     if (!is_ready) {
                         RenderJs.updateGadgetData(tab_gadget);
                         is_ready = true;
@@ -278,7 +281,7 @@ var RenderJs = (function () {
                             /* Set cache key value */
                             $.jStorage.set(cache_id, data);
                         }
-                    }
+                    };
                 }()),
 
                 NameSpaceStorageCachePlugin: (function () {
@@ -297,10 +300,10 @@ var RenderJs = (function () {
                             /* Set cache key value */
                             namespace[cache_id] = data;
                         }
-
-                    }}())
-
-            }}()),
+                    };
+                }())
+            };
+        }()),
 
         Gadget: (function (gadget_id, dom) {
             /*
@@ -359,7 +362,7 @@ var RenderJs = (function () {
                     );
                     // XXX: we should unregister all gadgets (if any we replace now in DOM)
                 }
-            }
+            };
         }()),
 
         GadgetIndex: (function () {
@@ -439,7 +442,7 @@ var RenderJs = (function () {
                      */
                     // XXX:
                 }
-            }
+            };
         }()),
 
         InteractionGadget : (function () {
@@ -520,14 +523,14 @@ var RenderJs = (function () {
                         }
                     });
                 }
-            }
+            };
         }())
-    }
+    };
 }());
 
 // impliticly call RenderJs bootstrap
 $(document).ready(function () {
-    if (RENDERJS_ENABLE_IMPLICIT_GADGET_RENDERING){
+    if (RENDERJS_ENABLE_IMPLICIT_GADGET_RENDERING) {
         RenderJs.bootstrap($('body'));
     }
 });
