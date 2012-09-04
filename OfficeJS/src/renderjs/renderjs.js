@@ -59,7 +59,14 @@ var RenderJs = (function () {
             gadget_js = new RenderJs.Gadget(gadget_id, gadget);
             RenderJs.GadgetIndex.registerGadget(gadget_js);
 
-            // XXX: update Gadget's instance with contents of "data-gadget-property"
+            // update Gadget's instance with contents of "data-gadget-property"
+            gadget_property = gadget.attr("data-gadget-property");
+            if (gadget_property !== undefined) {
+              gadget_property = $.parseJSON(gadget_property);
+              $.each(gadget_property, function (key, value) {
+                gadget_js[key] = value;
+              });
+            }
 
             if (url !== undefined && url !== "") {
                 cacheable = gadget.attr("data-gadget-cacheable");
