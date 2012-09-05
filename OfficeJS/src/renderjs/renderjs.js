@@ -1,25 +1,26 @@
 /*global console, require, $, localStorage, document */
 
+/*
+ * RenderJs - Generic Gadget library renderer.
+ * http://www.renderjs.org/documentation
+ */
+
 // by default RenderJs will render all gadgets when page is loaded
 // still it's possible to override this and use explicit gadget rendering
 var RENDERJS_ENABLE_IMPLICIT_GADGET_RENDERING = true;
 
-// Add required by RenderJs jstorage library only if used HTML application
-// uses requirejs
 if (typeof require !== 'undefined') {
-    require(["../../../../lib/jstorage/jstorage.js"], function (util) {
-    });
+  // example of how we can use requirejs to load external libraries
+  //require(["../../../../lib/jstorage/jstorage.js"], function (util) {
+  //});
 }
 
 // fallback for IE
 if (typeof console === "undefined" || typeof console.log === "undefined") {
-    console = {};
-    console.log = function () {};
+  console = {};
+  console.log = function () {};
 }
 
-/*
- * Generic Gadget library renderer
- */
 var RenderJs = (function () {
     // a variable indicating if current gadget loading is over or not
     var is_ready = false;
@@ -281,12 +282,17 @@ var RenderJs = (function () {
                     return {
                         get: function (cache_id, default_value) {
                             /* Get cache key value */
-                            return $.jStorage.get(cache_id, default_value);
+                            if (cache_id in localStorage) {
+                              return JSON.parse(localStorage.getItem(cache_id));
+                            }
+                            else {
+                              return default_value;
+                            }
                         },
 
                         set: function (cache_id, data) {
                             /* Set cache key value */
-                            $.jStorage.set(cache_id, data);
+                            localStorage.setItem(cache_id, JSON.stringify(data));
                         }
                     };
                 }()),

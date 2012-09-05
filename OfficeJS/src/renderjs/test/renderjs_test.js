@@ -23,6 +23,8 @@ function setupRenderJSTest(){
     data = {'gg':1};
     RenderJs.Cache.set(cache_id, data);
     deepEqual(data, RenderJs.Cache.get(cache_id));
+    // test return default value if key is missing works
+    equal("no such key", RenderJs.Cache.get("no_such_key", "no such key"));
   });
 
   module("GadgetIndex");
@@ -73,7 +75,7 @@ function setupRenderJSTest(){
     cleanUp();
     RenderJs.addGadget("qunit-fixture", "interactions/index.html", "", "");
     stop();
-    
+
     // we need to wait for all gadgets loading ...
     window.setTimeout(function () {
       RenderJs.InteractionGadget.bind($("#main-interactor"));
