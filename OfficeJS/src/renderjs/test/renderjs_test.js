@@ -77,7 +77,7 @@ function setupRenderJSTest(){
     stop();
 
     // we need to wait for all gadgets loading ...
-    window.setTimeout(function () {
+    RenderJs.GadgetIndex.getRootGadget().getDom().bind("ready", function () {
       RenderJs.InteractionGadget.bind($("#main-interactor"));
       start();
       equal(0, counter);
@@ -86,8 +86,23 @@ function setupRenderJSTest(){
       equal(2, counter);
       // fire pure HTML event on A and test it calls respective B method
       $('#A').trigger('htmlEvent1');
-      equal(3, counter); 
-    }, 500);
+      equal(3, counter);
+    });
+   });
+
+  module("GadgetReadyEvent");
+  test('GadgetReadyEvent', function () {
+    cleanUp();
+    RenderJs.addGadget("qunit-fixture", "interactions/index.html", "", "");
+    stop();
+
+    // we need to wait for all gadgets loading ...
+    RenderJs.GadgetIndex.getRootGadget().getDom().bind("ready", function () {
+      start();
+      equal(true, RenderJs.GadgetIndex.isGadgetListLoaded());
+      equal(true, RenderJs.isReady());
+    });
+
    });
 };
 

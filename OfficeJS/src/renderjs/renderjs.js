@@ -28,7 +28,11 @@ var RenderJs = (function () {
     return {
         bootstrap: function (root) {
             /* initial load application gadget */
-            RenderJs.loadGadgetFromUrl(root);
+            gadget_id = root.attr("id");
+            if (gadget_id!==undefined) {
+              // bootstart root gadget only if it is indeed a gadget
+              RenderJs.loadGadgetFromUrl(root);
+            }
             RenderJs.load(root);
         },
 
@@ -55,7 +59,6 @@ var RenderJs = (function () {
                 app_cache, data, gadget_js;
             url = gadget.attr("data-gadget");
             gadget_id = gadget.attr("id");
-
             // register gadget in javascript namespace
             gadget_js = new RenderJs.Gadget(gadget_id, gadget);
             RenderJs.GadgetIndex.registerGadget(gadget_js);
@@ -152,7 +155,6 @@ var RenderJs = (function () {
                         trigger("ready");
                     RenderJs.setReady(true);
                 }
-                //is_ready = true;
             }
             return is_gadget_list_loaded;
         },

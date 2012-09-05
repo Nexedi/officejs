@@ -35,13 +35,9 @@
     <script type="text/javascript" language="javascript">
       //<![CDATA[
         $(document).ready(function() {
-        // XXX: using setTimeout is ugly, see non working example below to be fixed
-        window.setTimeout(function () {
-             RenderJs.InteractionGadget.bind($("#main-interactor"));}, 1000);
-//           RenderJs.GadgetIndex.getRootGadget().getDom().bind("ready", function () {
-//             RenderJs.InteractionGadget.bind($("#main-interactor"));});
-
-          });
+        RenderJs.GadgetIndex.getRootGadget().getDom().bind("ready", function () {
+          RenderJs.InteractionGadget.bind($("#main-interactor"));});
+        });
 
       //]]>
     </script>
