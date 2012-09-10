@@ -462,7 +462,7 @@ var RenderJs = (function () {
                     /*
                      * Bind event between gadgets.
                      */
-                    var gadget_id;
+                    var gadget_id, gadget_connection_list;
                     var createMethodInteraction = function (
                         original_source_method_id, source_gadget_id,
                         source_method_id, destination_gadget_id,
@@ -486,18 +486,20 @@ var RenderJs = (function () {
                         return interaction;
                     };
                     gadget_id = gadget_dom.attr("id");
-                    gadget_dom.find("connect").each(function (key, value) {
+                    gadget_connection_list = gadget_dom.attr("data-gadget-connection");
+                    gadget_connection_list = $.parseJSON(gadget_connection_list);
+                    $.each(gadget_connection_list, function (key, value) {
                         var source, source_gadget_id, source_method_id,
                         source_gadget, destination, destination_gadget_id,
                         destination_method_id, destination_gadget,
                         original_source_method_id;
-                        source = $(value).attr("source").split(".");
+                        source = value['source'].split(".");
                         source_gadget_id = source[0];
                         source_method_id = source[1];
                         source_gadget = RenderJs.GadgetIndex.
                             getGadgetById(source_gadget_id);
 
-                        destination = $(value).attr("destination").split(".");
+                        destination = value['destination'].split(".");
                         destination_gadget_id = destination[0];
                         destination_method_id = destination[1];
                         destination_gadget = RenderJs.GadgetIndex.

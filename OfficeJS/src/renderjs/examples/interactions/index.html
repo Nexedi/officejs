@@ -17,19 +17,13 @@
          data-gadget-cache-id="B"></div>
 
     <div data-gadget=""
-         id="main-interactor">
-
-      <connect source="A.jsCall1"
-               destination="B.jsCall1"></connect>
-      <connect source="A.htmlEvent1"
-               destination="B.htmlEvent1"></connect>
-      <connect source="A.htmlEvent1"
-               destination="A.myOwnHtmlEvent1"></connect>
-      <connect source="A.htmlEvent2"
-               destination="B.htmlEvent2"></connect>
-      <connect source="B.jsCall2"
-               destination="A.jsCall2"></connect>
-
+         id="main-interactor"
+         data-gadget-connection="[
+          {&quot;source&quot;: &quot;A.jsCall1&quot;, &quot;destination&quot;: &quot;B.jsCall1&quot;},
+          {&quot;source&quot;: &quot;A.htmlEvent1&quot;, &quot;destination&quot;: &quot;B.htmlEvent1&quot;},
+          {&quot;source&quot;: &quot;A.htmlEvent1&quot;, &quot;destination&quot;: &quot;A.myOwnHtmlEvent1&quot;},
+          {&quot;source&quot;: &quot;A.htmlEvent2&quot;, &quot;destination&quot;: &quot;B.htmlEvent2&quot;},
+          {&quot;source&quot;: &quot;B.jsCall2&quot;, &quot;destination&quot;: &quot;A.jsCall2&quot;}]">
     </div>
 
     <script type="text/javascript" language="javascript">
@@ -38,7 +32,6 @@
         RenderJs.GadgetIndex.getRootGadget().getDom().bind("ready", function () {
           RenderJs.InteractionGadget.bind($("#main-interactor"));});
         });
-
       //]]>
     </script>
 

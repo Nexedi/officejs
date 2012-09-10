@@ -70,6 +70,21 @@ function setupRenderJSTest(){
     equal(33, RenderJs.GadgetIndex.getGadgetById("new-init").age);
   });
 
+
+  module("GadgetReadyEvent");
+  test('GadgetReadyEvent', function () {
+    cleanUp();
+    RenderJs.addGadget("qunit-fixture", "interactions/index.html", "", "");
+    stop();
+
+    // we need to wait for all gadgets loading ...
+    RenderJs.GadgetIndex.getRootGadget().getDom().bind("ready", function () {
+      start();
+      equal(true, RenderJs.GadgetIndex.isGadgetListLoaded());
+      equal(true, RenderJs.isReady());
+    });
+   });
+
   module("InteractionGadget");
   test('InteractionGadget', function () {
     cleanUp();
@@ -88,21 +103,6 @@ function setupRenderJSTest(){
       $('#A').trigger('htmlEvent1');
       equal(3, counter);
     });
-   });
-
-  module("GadgetReadyEvent");
-  test('GadgetReadyEvent', function () {
-    cleanUp();
-    RenderJs.addGadget("qunit-fixture", "interactions/index.html", "", "");
-    stop();
-
-    // we need to wait for all gadgets loading ...
-    RenderJs.GadgetIndex.getRootGadget().getDom().bind("ready", function () {
-      start();
-      equal(true, RenderJs.GadgetIndex.isGadgetListLoaded());
-      equal(true, RenderJs.isReady());
-    });
-
    });
 };
 
