@@ -1,4 +1,5 @@
 /*global console, require, $, localStorage, document */
+"use strict";
 
 /*
  * RenderJs - Generic Gadget library renderer.
@@ -28,6 +29,7 @@ var RenderJs = (function () {
     return {
         bootstrap: function (root) {
             /* initial load application gadget */
+            var gadget_id;
             gadget_id = root.attr("id");
             if (gadget_id!==undefined) {
               // bootstart root gadget only if it is indeed a gadget
