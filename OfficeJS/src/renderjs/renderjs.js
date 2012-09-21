@@ -464,8 +464,8 @@ var RenderJs = (function () {
                     /*
                      * Bind event between gadgets.
                      */
-                    var gadget_id, gadget_connection_list;
-                    var createMethodInteraction = function (
+                    var gadget_id, gadget_connection_list, 
+                      createMethodInteraction = function (
                         original_source_method_id, source_gadget_id,
                         source_method_id, destination_gadget_id,
                         destination_method_id) {
@@ -495,13 +495,13 @@ var RenderJs = (function () {
                         source_gadget, destination, destination_gadget_id,
                         destination_method_id, destination_gadget,
                         original_source_method_id;
-                        source = value['source'].split(".");
+                        source = value.source.split(".");
                         source_gadget_id = source[0];
                         source_method_id = source[1];
                         source_gadget = RenderJs.GadgetIndex.
                             getGadgetById(source_gadget_id);
 
-                        destination = value['destination'].split(".");
+                        destination = value.destination.split(".");
                         destination_gadget_id = destination[0];
                         destination_method_id = destination[1];
                         destination_gadget = RenderJs.GadgetIndex.
