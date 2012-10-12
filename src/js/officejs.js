@@ -17,6 +17,7 @@
 
     //////////////////////////////////////////////////////////////////////
 
+    OfficeJS.system.component_folder_path = 'src/component';
     OfficeJS.system.preferences = {};
     OfficeJS.system.applications = {};
     OfficeJS.system.mime = {};
@@ -25,7 +26,8 @@
     // Top Nav Bar //
     OfficeJS.system.applications['top_nav_bar'] = {
         name:          'top_nav_bar',
-        componentpath: 'component/top_nav_bar.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/top_nav_bar.html',
         gadgetid:      'page-top_nav_bar',
         varname:       'OfficeJS_top_nav_bar',
         api: {
@@ -85,7 +87,8 @@
     // Left Nav Bar //
     OfficeJS.system.applications['left_nav_bar'] = {
         name:          'left_nav_bar',
-        componentpath: 'component/left_nav_bar.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/left_nav_bar.html',
         gadgetid:      'page-left_nav_bar',
         varname:       'OfficeJS_left_nav_bar',
         api: {
@@ -137,7 +140,8 @@
     // login //
     OfficeJS.system.applications['login'] = {
         name:          'login',
-        componentpath: 'component/login.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/login.html',
         gadgetid:      'page-content',
         varname:       'OfficeJS_login',
         api: {
@@ -161,7 +165,8 @@
         type:          'about',
         'class':       'viewer',
         name:          'about',
-        componentpath: 'component/about.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/about.html',
         gadgetid:      'page-content'
     };
     // End about //
@@ -171,7 +176,8 @@
         type:          'contact',
         'class':       'viewer',
         name:          'contact',
-        componentpath: 'component/contact.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/contact.html',
         gadgetid:      'page-content'
     };
     // End contact //
@@ -181,7 +187,8 @@
         type:          'html-editor',
         name:          'elrte',
         'class':       'editor',
-        componentpath: 'component/elrte.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/elrte.html',
         gadgetid:      'page-content',
         varname:       'OfficeJS_elrte',
         exts:          ['html'],
@@ -264,7 +271,8 @@
         type:          'svg-editor',
         name:          'svg-edit',
         'class':       'editor',
-        componentpath: 'component/svg-edit.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/svg-edit.html',
         gadgetid:      'page-content',
         varname:       'OfficeJS_svgedit',
         exts:          ['svg'],
@@ -339,7 +347,8 @@
         type:          'jqs-sheet',
         name:          'jquery-sheet',
         'class':       'editor',
-        componentpath: 'component/jquery-sheet.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/jquery-sheet.html',
         gadgetid:      'page-content',
         varname:       'OfficeJS_jquerysheet',
         exts:          ['jqs'],
@@ -436,7 +445,8 @@
                     title: '',
                     inlineMenu: OfficeJS.system.applications[
                         'jquery-sheet'].lib.inlineMenu($.sheet.instance),
-                    urlGet: 'component/newspreadsheet.html',
+                    urlGet: OfficeJS.system.component_folder_path +
+                        '/newspreadsheet.html',
                     // buildSheet: true,
                     editable: true,
                     autoFiller: true
@@ -483,7 +493,8 @@
         type:          'documentlister',
         name:          'slickgrid',
         'class':       'viewer',
-        componentpath: 'component/slickgrid_document_lister.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/slickgrid_document_lister.html',
         gadgetid:      'page-content',
         varname:       'OfficeJS_slickgrid',
         list_elmnt:    '#slickgrid_documentlist',
@@ -688,7 +699,8 @@
         type:          'activities',
         name:          'workinprogress',
         'class':       'viewer',
-        componentpath: 'component/workinprogress.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/workinprogress.html',
         gadgetid:      'page-content',
         main_elmnt:    '#workinprogress_activities',
         api: {},
@@ -751,7 +763,8 @@
         type:          'conflictsolver',
         'class':       'editor',
         name:          'basic_conflict_solver',
-        componentpath: 'component/basic_conflict_solver.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/basic_conflict_solver.html',
         gadgetid:      'page-conflict',
         varname:       'OfficeJS_basic_conflict_solver',
         docid_elmnt:   '#basic_conflict_solver_docid',
@@ -897,7 +910,8 @@
     // End basic conflict solver //
 
     OfficeJS.system.applications['close_conflict_solver'] = {
-        componentpath: 'component/empty.html',
+        componentpath: OfficeJS.system.component_folder_path +
+            '/empty.html',
         gadgetid:      'page-conflict'
     };
     //////////////////////////////////////////////////////////////////////
