@@ -1,27 +1,5 @@
-/UNGProject/dojo/
-/UNGProject/xinha/
-/UNGProject/nbproject/
-/UNGProject/jquery_sheet_editor/
-/UNGProject/css/images/
-/UNGProject/svg-edit/
-/UNGProject/dav
-/UNGProject/aloha
-/UNGProject/nicEdit
-/storage-dav
-apache2.conf
-
-# buildout
-/bin/
-/develop-eggs/
-/downloads/
-/eggs/
-/.installed.cfg
-/.mr.developer.cfg
-/parts/
+deploy
 
 #vi
 *.swp
 *~
-
-#dolphin
-.directory
