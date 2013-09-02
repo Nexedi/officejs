@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+    <title>Nexedi ERP5 | Computers</title>
+
+    <!-- TODO: gadget mobile meta -->
+    <!-- TODO: schema.org? -->
+    <!-- TODO: all JQM widgets should have enhanced markup vs
+         letting JQM enhance -->
+    <!-- normalize -->
+    <link rel="stylesheet" href="../lib/normalize.css">
+    <!-- JQM structure -->
+    <link rel="stylesheet" href="../lib/jquery.mobile.css">
+    <!-- JQM extensions -->
+    <link rel="stylesheet" href="../css/extensions.css">
+    <!-- fontawesome icons -->
+    <link rel="stylesheet" href="../css/fontawesome.css">
+    <!-- JQM custom themes (slapos-white, slapos-black, slapos-active) -->
+    <link rel="stylesheet" href="../css/themes.css">
+    <!-- generic CSS -->
+    <link rel="stylesheet" href="../css/css.css">
+
+  </head>
+  <body>
+
+    <div class="popup_element logo_wrap">
+      <img src="../img/slapos.png" alt="slapos logo" />
+    </div>
+    <div class="popup_element">
+      <p>Sign in using</p>
+      <div data-role="controlgroup">
+        <a href="#" data-role="button" class="signin_google"
+           data-iconpos="left" data-icon="google-plus-sign">Google</a>
+        <a href="#" data-role="button" class="signin_fb" data-iconpos="left"
+           data-icon="facebook-sign">Facebook</a>
+      </div>
+      <p>Classic login</p>
+      <div data-role="controlgroup" data-type="horizontal" class="input_board">
+        <label class="ui-hidden-accessible">Login</label>
+        <input name="login" type="text" value="" placeholder="Login"
+               data-icon="user" />
+        <label class="ui-hidden-accessible">Password</label>
+        <input name="password" type="password" value="" placeholder="Password"
+               data-icon="lock" />
+      </div>
+      <span class="mini right note">
+      <a href="#">Forgot Password</a>
+      </span>
+    </div>
+
+    <div class="popup_element">
+      <p class="mini">
+      <span class="note">Please note:</span>
+      To maintain sufficient resources, a minimal fee of 1 EUR will be
+      charged if you use SlapOS services for <strong>more than 24
+      hours</strong>. By clicking on one of the signup buttons, you
+      agree that you are subscribing to a payable service. All services
+      you request will be invoiced to you at the end of the month.
+      </p>
+
+      <p>
+      To find out more, please refer to
+      </p>
+
+      <a href="pricing.html" data-role="button" data-iconpos="left"
+         data-icon="euro">SlapOS Pricing</a>
+    </div>
+  </body>
+</html>
