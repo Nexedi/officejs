@@ -2,19 +2,10 @@
 "use strict";
 (function (window, $, rJS, undefined) {
 
-  var gk = rJS(window);
-
   $.mobile.ajaxEnabled = false;
   $.mobile.linkBindingEnabled = false;
   $.mobile.hashListeningEnabled = false;
   $.mobile.pushStateEnabled = false;
-
-  // Set the header title
-  gk.declareMethod('setTitle', function (title) {
-    var g = rJS(this);
-    g.context.find("#headergadget").find("h1").text(title);
-    $('title').text(title);
-  });
 
   rJS(window).ready(function () {
     var g = rJS(this),
@@ -22,53 +13,58 @@
       main_context = g.context.find('.ui-content').first();
 
     function setTitle(title) {
-      return g.setTitle(title);
+      g.context.find("#headergadget").find("h1").text(title);
+      return $('title').text("OfficeJS | " + title);
+    }
+
+    function enhanceGadgetRendering(gadget) {
+      gadget.context.enhanceWithin();
+      return gadget.getTitle()
+                   .then(setTitle);
     }
 
     function initializeRoute() {
       body
         .route("add", "", 1)
         .done(function () {
-          $.url.redirect('/about/');
+          $.url.redirect('/login/');
         });
 
       body
         .route("add", "/about/", 1)
         .done(function () {
           g.declareGadget('./about.html', main_context)
-            .done(function (main_gadget) {
-              main_gadget.context.enhanceWithin();
-              main_gadget.getTitle()
-                         .then(setTitle);
-            });
+            .then(enhanceGadgetRendering);
         });
 
       body
         .route("add", "/contact/", 1)
         .done(function () {
           g.declareGadget('./contact.html', main_context)
-            .done(function (main_gadget) {
-              main_gadget.context.enhanceWithin();
-              main_gadget.getTitle()
-                         .then(setTitle);
-            });
+            .then(enhanceGadgetRendering);
+        });
+
+      body
+        .route("add", "/login/", 1)
+        .done(function () {
+          g.declareGadget('./login.html', main_context)
+            .then(enhanceGadgetRendering);
         });
     }
 
-    // Trigger route change
-    initializeRoute();
-    $.url.onhashchange(function () {
-      body.route("go", $.url.getPath())
-        .fail(function () {
-          g.declareGadget('./error.html', main_context)
-            .done(function (main_gadget) {
-              main_gadget.context.enhanceWithin();
-              main_gadget.getTitle()
-                         .then(setTitle);
-              initializeRoute();
+    g.declareGadget('./io.html', g.context.find("iogadget"))
+      .done(function (io_gadget) {
+        // Trigger route change
+        initializeRoute();
+        $.url.onhashchange(function () {
+          body.route("go", $.url.getPath())
+            .fail(function () {
+              g.declareGadget('./error.html', main_context)
+                .then(enhanceGadgetRendering)
+                .then(initializeRoute);
             });
         });
-    });
+      });
 
   });
 

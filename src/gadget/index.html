@@ -32,12 +32,6 @@
     <!-- route -->
     <script src="../lib/route.js" type="text/javascript"></script>
     <script src="../lib/url.js" type="text/javascript"></script>
-
-    <!-- JIO -->
-    <!--script src="../lib/md5.amd.js" type="text/javascript"></script>
-    <script src="../lib/jio.js" type="text/javascript"></script>
-    <script src="../lib/complex_queries.js" type="text/javascript"></script>
-    <script src="../lib/erp5storage.js" type="text/javascript"></script-->
     <!-- custom script -->
     <!--script src="../js/erp5_loader.js" type="text/javascript"></script-->
     <script src="../js/gadget_index.js" type="text/javascript"></script>
@@ -75,6 +69,14 @@
 
         <div class="panel_element">
           <ul data-role="listview" class="listview" data-theme="slapos-black">
+            <li data-role="list-divider">Connection</li>
+            <li class="listview_item listview_icon">
+              <a href="#/login/">
+    <span class="ui-li-icon ui-li-icon-custom ui-icon-folder-open-alt ui-icon"
+      >&nbsp;</span>
+                <h3>Login</h3>
+              </a>
+            </li>
             <li data-role="list-divider">General</li>
             <li class="listview_item listview_icon">
               <a href="#/about/">
@@ -133,6 +135,13 @@
           </div>
         </div>
         <h1 class="ui-title"></h1>
+        <div class="wrap right">
+          <div data-role="controlgroup" data-type="horizontal"
+               class="buttongroup">
+            <a href="#/login/" data-position-to="window" data-role="button"
+               data-icon="user" class="responsive">Login</a>
+          </div>
+        </div>
       </div>
 
       <!-- content -->
