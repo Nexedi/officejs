@@ -2,20 +2,72 @@
 "use strict";
 (function (window, $, rJS, undefined) {
 
+  var gk = rJS(window);
+
+  $.mobile.ajaxEnabled = false;
+  $.mobile.linkBindingEnabled = false;
+  $.mobile.hashListeningEnabled = false;
+  $.mobile.pushStateEnabled = false;
+
+  // Set the header title
+  gk.declareMethod('setTitle', function (title) {
+    var g = rJS(this);
+    g.context.find("#headergadget").find("h1").text(title);
+    $('title').text(title);
+  });
+
   rJS(window).ready(function () {
     var g = rJS(this),
-      footer_context = g.context.find("#footergadget").last(),
-      header_context = g.context.find("#headergadget").last(),
-      left_panel_context = g.context.find(".panel").first();
+      body = g.context,
+      main_context = g.context.find('.ui-content').first();
 
-    $.when(
-      g.declareGadget('./header.html', header_context),
-      g.declareGadget('./left_panel.html', left_panel_context),
-      g.declareGadget('./footer.html', footer_context)
-    ).done(function (footer_gadget, header_gadget, left_panel_gadget) {
-      footer_gadget.context.enhanceWithin();
-      header_gadget.context.enhanceWithin();
-      left_panel_gadget.context.enhanceWithin();
+    function setTitle(title) {
+      return g.setTitle(title);
+    }
+
+    function initializeRoute() {
+      body
+        .route("add", "", 1)
+        .done(function () {
+          $.url.redirect('/about/');
+        });
+
+      body
+        .route("add", "/about/", 1)
+        .done(function () {
+          g.declareGadget('./about.html', main_context)
+            .done(function (main_gadget) {
+              main_gadget.context.enhanceWithin();
+              main_gadget.getTitle()
+                         .then(setTitle);
+            });
+        });
+
+      body
+        .route("add", "/contact/", 1)
+        .done(function () {
+          g.declareGadget('./contact.html', main_context)
+            .done(function (main_gadget) {
+              main_gadget.context.enhanceWithin();
+              main_gadget.getTitle()
+                         .then(setTitle);
+            });
+        });
+    }
+
+    // Trigger route change
+    initializeRoute();
+    $.url.onhashchange(function () {
+      body.route("go", $.url.getPath())
+        .fail(function () {
+          g.declareGadget('./error.html', main_context)
+            .done(function (main_gadget) {
+              main_gadget.context.enhanceWithin();
+              main_gadget.getTitle()
+                         .then(setTitle);
+              initializeRoute();
+            });
+        });
     });
 
   });
