@@ -28,7 +28,7 @@ prod: external_lib \
 
 ${PRODDIR}/gadget/%.html: ${SRCDIR}/gadget/%.html
 	@mkdir -p $(@D)
-	${JSLINT} ${LINTOPTS} $<
+#	${JSLINT} ${LINTOPTS} $<
 # 	${MINIFY} $< $@
 	cp $< $@
 
