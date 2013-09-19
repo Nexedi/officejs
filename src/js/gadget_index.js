@@ -20,7 +20,7 @@
     function enhanceGadgetRendering(gadget) {
       gadget.context.enhanceWithin();
       return gadget.getTitle()
-                   .then(setTitle);
+        .then(setTitle);
     }
 
     function initializeRoute() {
@@ -50,6 +50,14 @@
           g.declareGadget('./login.html', main_context)
             .then(enhanceGadgetRendering);
         });
+
+      body
+        .route("add", "/spreadsheet/", 1)
+        .done(function () {
+          g.declareIframedGadget('./spreadsheet.html', main_context)
+            .then(enhanceGadgetRendering);
+        });
+
     }
 
     g.declareGadget('./io.html', g.context.find("iogadget"))

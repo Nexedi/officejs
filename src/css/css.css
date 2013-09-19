@@ -262,3 +262,8 @@ a.confirm, a.action {
 .navbar ul li a.ui-btn-active.clone_item span.navbar_clone {
   font-weight: bold;
 }
+
+div.ui-content > iframe {
+    height: 1000px;
+    min-width: 1300px;
+}
