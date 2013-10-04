@@ -70,12 +70,12 @@ external_lib: ${SRCDIR}/lib/jquery.js \
 ${PRODDIR}/lib/%.js: ${SRCDIR}/lib/%.js
 	@mkdir -p $(@D)
 # 	cat $< | ${UGLIFYJS} -nc -c -o $@
-	cp $< $@
+	cp -R $< $@
 
 ${PRODDIR}/lib/%: ${SRCDIR}/lib/%
 	@mkdir -p $(@D)
 # 	cat $< | ${UGLIFYJS} -nc -c -o $@
-	cp $< $@
+	cp -R $< $@
 
 ${SRCDIR}/lib/jquery.js:
 	@mkdir -p $(@D)
