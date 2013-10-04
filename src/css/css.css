@@ -264,6 +264,11 @@ a.confirm, a.action {
 }
 
 div.ui-content > iframe {
-    height: 1000px;
+    height: 500px;
+    min-width: 1300px;
+}
+
+div.ui-content2 > iframe {
+    height: 500px;
     min-width: 1300px;
 }

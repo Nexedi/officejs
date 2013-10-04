@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
-    <meta http-equiv="Pragma" content="no-cache"/>
-    <meta http-equiv="Expires" content="-1"/>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
     <meta content="utf-8" http-equiv="encoding"/>
 
@@ -13,11 +10,16 @@
     <link rel="stylesheet" type="text/css" href="../lib/jquery.sheet/jquery-ui/theme/jquery-ui.min.css">
 
     <script type="text/javascript" src="../lib/jquery.sheet/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="../lib/jschannel.js"></script>
+    <script type="text/javascript" src="../lib/renderjs.js"></script>
     <script type="text/javascript" src="../lib/jquery.sheet/plugins/globalize.js"></script>
     <script type="text/javascript" src="../lib/jquery.sheet/parser/formula/formula.js"></script>
     <script type="text/javascript" src="../lib/jquery.sheet/parser/tsv/tsv.js"></script>
     <script type="text/javascript" src="../lib/jquery.sheet/jquery.sheet.min.js"></script>
+    <script type="text/javascript" src="../lib/jquery.sheet/plugins/jquery.sheet.dts.js"></script>
 
+    <script type="text/javascript" src="../js/gadget_jqs.js"></script>
+    
     <!--Page styles-->
     <style>
       body {
@@ -73,22 +75,9 @@
     </style>
   </head>
   <body>
-    <h1 id="header" class="ui-state-default">
-      <a href="http://visop-dev.com/Project+jQuery.sheet">
-        <img src="images/logo.png" style="position: absolute;top: -20px; left: 20px; border: none;" />
-        jQuery.sheet - The Ajax Spreadsheet, Demo
-      </a>
-      <br />
-      <span id="themeSwitcher"></span>
-    </h1>
-    <div id="mainWrapper" class="ui-corner-all wrapper">
-    
-      <div id="sheet" class="jQuerySheet" style="height: 450px;"></div>
-            
-    </div>
-    <script type="text/javascript">
-      $('#sheet').sheet().getSheet().newSheet();
-    </script>
+   
+      <div class="jQuerySheet" style="height: 450px;"></div>
+     
   </body>
 
 </html>

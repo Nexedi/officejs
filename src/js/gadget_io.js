@@ -7,6 +7,8 @@
   gk.declareMethod('configureIO', function (json_configuration, key) {
     rJS(this).jio = jIO.newJio(json_configuration);
     rJS(this).jio_key = key;
+    console.log(rJS(this).jio);
+    return key;
   })
 
     .declareMethod('getIO', function () {
@@ -25,6 +27,7 @@
             deferred.reject(err);
           }
         } else {
+          console.log("getIO:" + response);
           deferred.resolve(response || default_value);
         }
       });
@@ -33,11 +36,10 @@
     })
 
     .declareMethod('setIO', function (value) {
-
       var deferred = $.Deferred(),
         default_value = "",
         gadget = rJS(this);
-
+      console.log(this);
       gadget.jio.put({"_id": gadget.jio_key},
         function (err, response) {
           if (err) {
@@ -47,11 +49,13 @@
               "_id": gadget.jio_key,
               "_attachment": "body.txt",
               "_data": value,
+
               "_mimetype": "text/plain"
             }, function (err, response) {
               if (err) {
                 deferred.reject(err);
               } else {
+                console.log("putIO: " + value);
                 deferred.resolve();
               }
             });

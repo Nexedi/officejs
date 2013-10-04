@@ -20,8 +20,7 @@
     <!-- JQM custom themes (slapos-white, slapos-black, slapos-active) -->
     <link rel="stylesheet" href="../css/themes.css">
     <!-- generic CSS -->
-    <link rel="stylesheet" href="../css/css.css">
-
+    <link rel="stylesheet" href="../css/css.css"> 
     <!-- Jquery, JQM, JQM extensions -->
     <script src="../lib/jquery.js" type="text/javascript"></script>
     <script src="../lib/jquery.mobile.js" type="text/javascript"></script>
@@ -35,7 +34,6 @@
     <!-- custom script -->
     <!--script src="../js/erp5_loader.js" type="text/javascript"></script-->
     <script src="../js/gadget_index.js" type="text/javascript"></script>
-
   </head>
   <body>
 
@@ -152,14 +150,28 @@
         </div>
       </div>
 
+      <div id="iogadget"></div>
+      
       <!-- content -->
       <div class="ui-content">
           <!--table class="erp5_table" data-type="Computer">
           </table-->
       </div>
-
       <!-- IO manager -->
-      <div id="iogadget"></div>
+      <!-- <div id="io" class="wrap left buttongroup" data-type="horizontal" data-role="controlgroup"> -->
+      <!--   <div data-role="fieldcontain"> -->
+      <!--     <textarea name="Filename" id="io-doc" placeholder="Filename"></textarea> -->
+      <!--   </div> -->
+      <!--   <span href="" id="save-doc" data-role="button" href="#page1"> -->
+      <!--     Save -->
+      <!--   </span> -->
+      <!--   <span href="" id="load-doc" data-role="button" href="#page1"> -->
+      <!--     Load -->
+      <!--   </span> -->
+      <!--   <span href="" id="new-doc" data-role="button" href="#page1"> -->
+      <!--     New -->
+      <!--   </span>   -->
+      <!-- </div> -->
       <!-- Interactor -->
       <div id="interactorgadget"></div>
 
@@ -186,5 +198,9 @@
         </div>
       </div>
     </div>
+    <script type="text/javascript">
+      // force reload iframe in development environment
+      $('#ui-content iframe').first().contentWindow.location.reload(true);
+    </script>
   </body>
 </html>
