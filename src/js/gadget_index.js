@@ -91,7 +91,7 @@
       body
         .route("add", "/spreadsheet/", 1)
         .done(function () {
-          g.declareIframedGadget('./spreadsheet.html', main_context)
+          g.declareIframedGadget('./jqs.html', main_context)
             .then(registerSaveButton)
             .then(registerLoadButton)
             .then(registerCleanButton);
