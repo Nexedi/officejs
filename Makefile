@@ -26,6 +26,9 @@ prod: external_lib \
   $(patsubst ${SRCDIR}/lib/%, ${PRODDIR}/lib/%, $(wildcard ${SRCDIR}/lib/*)) \
   $(patsubst ${SRCDIR}/shared/%.js, ${PRODDIR}/shared/%.js, $(wildcard ${SRCDIR}/shared/*.js))
 
+test: test/index.html
+	$(PHANTOMJS) test/run_qunit.js $<
+
 ${PRODDIR}/gadget/%.html: ${SRCDIR}/gadget/%.html
 	@mkdir -p $(@D)
 #	${JSLINT} ${LINTOPTS} $<
@@ -65,9 +68,14 @@ external_lib: ${SRCDIR}/lib/jquery.js \
   ${SRCDIR}/lib/fontawesome-webfont.eot \
   ${SRCDIR}/lib/fontawesome-webfont.ttf \
   ${SRCDIR}/lib/fontawesome-webfont.ff \
-  ${SRCDIR}/lib/fontawesome-webfont.woff
+  ${SRCDIR}/lib/fontawesome-webfont.woff \
 
 ${PRODDIR}/lib/%.js: ${SRCDIR}/lib/%.js
+	@mkdir -p $(@D)
+# 	cat $< | ${UGLIFYJS} -nc -c -o $@
+	cp -R $< $@
+
+${PRODDIR}/lib/%.css: ${SRCDIR}/lib/%.css
 	@mkdir -p $(@D)
 # 	cat $< | ${UGLIFYJS} -nc -c -o $@
 	cp -R $< $@
@@ -75,7 +83,7 @@ ${PRODDIR}/lib/%.js: ${SRCDIR}/lib/%.js
 ${PRODDIR}/lib/%: ${SRCDIR}/lib/%
 	@mkdir -p $(@D)
 # 	cat $< | ${UGLIFYJS} -nc -c -o $@
-	cp -R $< $@
+	if [ -d $< ]; then mkdir -p $@; cp -R $< $@/..; else cp $< $@; fi
 
 ${SRCDIR}/lib/jquery.js:
 	@mkdir -p $(@D)

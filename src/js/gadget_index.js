@@ -38,7 +38,7 @@
       $("#save-doc").click(function () {
         var fileName = $("#iogadget input").val();
         jioGadget.configureIO(ioGadgetConfig, fileName)
-          .then(gadget.get)
+          .then(gadget.getContent)
           .then(function (o) {jioGadget.setIO(o); });
       });
       return gadget;
@@ -49,14 +49,14 @@
         var fileName = $("#iogadget input").val();
         jioGadget.configureIO(ioGadgetConfig, fileName)
           .then(jioGadget.getIO)
-          .then(gadget.put);
+          .then(gadget.putContent);
       });
       return gadget;
     }
 
     function registerCleanButton(gadget) {
       $("#new-doc").click(function () {
-        gadget.clean();
+        gadget.resetSheet();
       });
     }
 

@@ -2,43 +2,63 @@
 "use strict";
 (function (window, $, rJS) {
 
-  var gk = rJS(window);
+  var gk = rJS(window),
+    default_config = {
+      id: "jquerysheet-div",
+      style: '',
+      jquerySheet: true,
+      jquerySheetCss: true,
+      parser: true,
+      jqueryUiCss: true,
+      scrollTo: false,
+      jQueryUI: false,
+      raphaelJs: false,
+      gRaphaelJs: false,
+      colorPicker: false,
+      colorPickerCss: false,
+      elastic: false,
+      advancedMath: false,
+      finance: false,
+      editable: true,
+      autoFiller: true,
+      urlGet: '../lib/jquery.sheet-2.0.0/new_spreadsheet.html'
+    };
 
-  gk.declareMethod('init', function () {
+  gk.declareMethod('init', function (config) {
     rJS(this).parent = rJS(this).context.find('.jQuerySheet');
-    rJS(this).parent.sheet();
+    rJS(this).parent.sheet(config);
     rJS(this).updateInstance();
-    rJS(this).instance.newSheet();
   })
 
-    .declareMethod('get', function (name) {
-      rJS(this).updateInstance();
-      var json = $.sheet.dts.fromTables.json(rJS(this).instance, true);
-      console.log("get: " + JSON.stringify(json));
-      return JSON.stringify(json);
+    .declareMethod('getContent', function () {
+      var content = JSON.stringify($.sheet.instance[0].exportSheet.json());
+      //console.log("getContent: " + content);
+      console.log("function getContent" + content);
+      return content;
     })
 
-    .declareMethod('put', function (spreadsheetString) {
-      var json = JSON.parse(spreadsheetString),
-        html = $.sheet.dts.toTables.json(json, true);
-      console.log("put: " + JSON.stringify(json));
-      rJS(this).parent.html(html).sheet();
+    .declareMethod('putContent', function (content) {
+      var config = $.extend({
+        buildSheet: $.sheet.makeTable.json(JSON.parse(content))
+      }, default_config);
+      rJS(this).init(config);
     })
 
-    .declareMethod('clean', function () {
-      delete (rJS(this).instance);
-      rJS(this).parent.html("");
-      rJS(this).parent.sheet();
-      rJS(this).instance = rJS(this).parent.getSheet();
-      rJS(this).instance.newSheet();
+    .declareMethod('resetSheet', function () {
+      $.sheet.killAll();
+      rJS(this).init(default_config);
     })
 
     .declareMethod('updateInstance', function () {
       rJS(this).instance = rJS(this).parent.getSheet();
     })
 
+    .declareMethod('getParent', function () {
+      return rJS(this).parent;
+    })
+
     .ready(function () {
-      rJS(this).init();
+      rJS(this).init(default_config);
     });
 
 }(window, jQuery, rJS));
