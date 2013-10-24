@@ -1,6 +1,6 @@
 /*global window, jQuery, rJS */
 "use strict";
-(function (window, $, rJS, undefined) {
+(function (window, $, rJS) {
 
   $.mobile.ajaxEnabled = false;
   $.mobile.linkBindingEnabled = false;
@@ -15,12 +15,7 @@
                         "username": "officejs",
                         "application_name": "officejs"
                        },
-      jioGadget,
-      jqsGadget;
-
-    function log(x) {
-      console.log(x);
-    }
+      jioGadget;
 
     function setTitle(title) {
       g.context.find("#headergadget").find("h1").text(title);

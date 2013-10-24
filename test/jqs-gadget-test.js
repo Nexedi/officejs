@@ -2,17 +2,18 @@
 /*jslint indent: 2, maxerr: 3, maxlen: 79 */
 "use strict";
 
-QUnit.config.testTimeout = 500;
+QUnit.config.testTimeout = 1000;
 
-(function (window, $, QUnit, sinon, rJS) {
-  var test = QUnit.test,
-    stop = QUnit.stop,
-    start = QUnit.start,
-    ok = QUnit.ok,
-    equal = QUnit.equal,
-    expect = QUnit.expect,
-    throws = QUnit.throws,
-    deepEqual = QUnit.deepEqual;
+(function (window, $, QUnit, rJS) {
+  //var test = QUnit.test,
+  var asyncTest = QUnit.asyncTest,
+  //stop = QUnit.stop,
+  start = QUnit.start,
+  ok = QUnit.ok,
+  equal = QUnit.equal,
+  expect = QUnit.expect;
+  //throws = QUnit.throws,
+  //deepEqual = QUnit.deepEqual;
   
   function iframeSelector(selectorString) {
     return $('iframe').contents().find(selectorString);
@@ -37,14 +38,18 @@ QUnit.config.testTimeout = 500;
       expect(2);
       g.declareIframedGadget('../src/gadget/jqs.html', jqs_context)
         .then(function (gadget) {
-          iframeSelector("table.jSheet td#0_table0_cell_c0_r0").html('c0r0Value');
-          iframeSelector("table.jSheet td#0_table0_cell_c1_r1").html('c1r1Value');
+          iframeSelector("table.jSheet td#0_table0_cell_c0_r0")
+            .html('c0r0Value');
+          iframeSelector("table.jSheet td#0_table0_cell_c1_r1")
+            .html('c1r1Value');
           return gadget;
         })
         .then(function (gadget) {
           gadget.resetSheet().then(function () {
-            equal(iframeSelector("table.jSheet td#0_table0_cell_c0_r0").text(),"");
-            equal(iframeSelector("table.jSheet td#0_table0_cell_c1_r1").text(),"");
+            equal(iframeSelector(
+              "table.jSheet td#0_table0_cell_c0_r0").text(),"");
+            equal(iframeSelector(
+              "table.jSheet td#0_table0_cell_c1_r1").text(),"");
             start();
           });
         });
@@ -52,11 +57,12 @@ QUnit.config.testTimeout = 500;
     
     asyncTest("get content of sheet", function () {
       expect(2);
-      var c0r0selector, c1r1selector;
       g.declareIframedGadget('../src/gadget/jqs.html', jqs_context)
         .then(function (gadget) {
-          iframeSelector("table.jSheet td#0_table0_cell_c0_r0").html('c0r0Value');
-          iframeSelector("table.jSheet td#0_table0_cell_c1_r1").html('c1r1Value');
+          iframeSelector(
+            "table.jSheet td#0_table0_cell_c0_r0").html('c0r0Value');
+          iframeSelector(
+            "table.jSheet td#0_table0_cell_c1_r1").html('c1r1Value');
           return gadget;
         })
         .then(function (gadget) {
@@ -75,8 +81,10 @@ QUnit.config.testTimeout = 500;
 
       g.declareIframedGadget('../src/gadget/jqs.html', jqs_context)
         .then(function (gd) {
-          iframeSelector("table.jSheet td#0_table0_cell_c0_r0").html('c0r0Value');
-          iframeSelector("table.jSheet td#0_table0_cell_c1_r1").html('c1r1Value');
+          iframeSelector(
+            "table.jSheet td#0_table0_cell_c0_r0").html('c0r0Value');
+          iframeSelector(
+            "table.jSheet td#0_table0_cell_c1_r1").html('c1r1Value');
           gadget = gd;
         })
         .always(function () {
@@ -84,14 +92,20 @@ QUnit.config.testTimeout = 500;
             .then(function (c) {content = c;})
             .always(function () {
               gadget.resetSheet().then(function () {
-                equal(iframeSelector("table.jSheet td#0_table0_cell_c0_r0").text(),"");
-                equal(iframeSelector("table.jSheet td#0_table0_cell_c1_r1").text(),"");
+                equal(iframeSelector(
+                  "table.jSheet td#0_table0_cell_c0_r0").text(),"");
+                equal(iframeSelector(
+                  "table.jSheet td#0_table0_cell_c1_r1").text(),"");
               })
                 .always(function () {
                   gadget.putContent(content)
                     .always(function () {
-                      equal(iframeSelector("table.jSheet td#2_table0_cell_c0_r0").text(),"c0r0Value");
-                      equal(iframeSelector("table.jSheet td#2_table0_cell_c1_r1").text(),"c1r1Value");
+                      equal(iframeSelector(
+                        "table.jSheet td#2_table0_cell_c0_r0").text(),
+                            "c0r0Value");
+                      equal(iframeSelector(
+                        "table.jSheet td#2_table0_cell_c1_r1").text(),
+                            "c1r1Value");
                       start();
                     });
                 });
@@ -99,5 +113,5 @@ QUnit.config.testTimeout = 500;
         });
     });
   });
-} (window, jQuery, QUnit, sinon, rJS));
+} (window, jQuery, QUnit, rJS));
     

@@ -1,5 +1,5 @@
 /*global jQuery, window, document, jIO, confirm, alert */
-/*jslint nomen: true */
+/*jslint nomen: true, todo: true, unparam: true */
 "use strict";
 (function (window, document, $, jIO) {
 
@@ -222,11 +222,11 @@
     * @return {string} The property value
     */
   // NOTE: need a different way because this triggers a ton of http requests!
-  priv.getERP5property = function (id, lookup) {
-    var key = id + "/" + lookup;
-    // return $.ajax(priv.makeAjaxObject(key));
-    return {"error": "foo"};
-  };
+  // priv.getERP5property = function (id, lookup) {
+  //   var key = id + "/" + lookup;
+  //   // return $.ajax(priv.makeAjaxObject(key));
+  //   return {"error": "foo"};
+  // };
 
 
   /**
@@ -244,9 +244,9 @@
     * Create a checkbox to select table rows
     * @method createCheckbox
     */
-  priv.createCheckbox = function () {
+  // priv.createCheckbox = function () {
 
-  };
+  // };
 
   /**
     * Create full table
@@ -273,7 +273,7 @@
       console.log(response);
       var i,
         j,
-        k,
+        // k,
         l,
         // table setup
         fragment_container,
@@ -293,7 +293,7 @@
         configure_slot,
         pagination_elements,
         pagination_label,
-        pagination_number_of_items,
+        // pagination_number_of_items,
         pagination_link,
         pagination_clone,
         pagination_option,
@@ -301,7 +301,7 @@
         pagination_slot,
         // table
         table,
-        table_head,
+        // table_head,
         table_row,
         table_body,
         table_tick_label,
@@ -309,7 +309,7 @@
         table_cell,
         table_header,
         table_header_cell,
-        fields,
+        // fields,
         property,
         cell,
         row,
@@ -815,31 +815,31 @@
     * @param  {string} item Element to show
     */
   // NOTE: this should be in another gadget/file
-  priv.generateItem = function (mode, item) {
+  // priv.generateItem = function (mode, item) {
 
-    if (item) {
-      // fetch data
-      priv.erp5.get({"_id": item}, function (error, response) {
-        var property, value, abort;
+  //   if (item) {
+  //     // fetch data
+  //     priv.erp5.get({"_id": item}, function (error, response) {
+  //       var property, value, abort;
 
-        if (response) {
-          for (property in response) {
-            if (response.hasOwnProperty(property)) {
-              value = response[property];
-              priv.setValue(response.type.toLowerCase(), property, value);
-            }
-          }
-        } else {
-          abort = confirm(
-            "Error trying to retrieve data! Go back to overview?"
-          );
-          if (abort === true) {
-            $.mobile.changePage("computers.html");
-          }
-        }
-      });
-    }
-  };
+  //       if (response) {
+  //         for (property in response) {
+  //           if (response.hasOwnProperty(property)) {
+  //             value = response[property];
+  //             priv.setValue(response.type.toLowerCase(), property, value);
+  //           }
+  //         }
+  //       } else {
+  //         abort = confirm(
+  //           "Error trying to retrieve data! Go back to overview?"
+  //         );
+  //         if (abort === true) {
+  //           $.mobile.changePage("computers.html");
+  //         }
+  //       }
+  //     });
+  //   }
+  // };
 
   /**
     * Create a serialized object from all values in the form
@@ -1005,7 +1005,6 @@
 
     return $.mobile.path.parseUrl(path).search.slice(1).split("&");
   };
-
   // BINDINGS
   // NOTE: done in a hurry...
   $(document).on("pagebeforeshow", "#computers", function () {
@@ -1133,4 +1132,5 @@
 //     // select all
 //     .on("change", "table thead th input[type=checkbox]", function (e) {
     });
+
 }(window, document, jQuery, jIO));
