@@ -11,106 +11,116 @@ QUnit.config.testTimeout = 1000;
   start = QUnit.start,
   ok = QUnit.ok,
   equal = QUnit.equal,
-  expect = QUnit.expect;
+  expect = QUnit.expect,
   //throws = QUnit.throws,
   //deepEqual = QUnit.deepEqual;
-  
+  gadgetURL = '../deploy/gadget/jqs.html';
+
   function iframeSelector(selectorString) {
     return $('iframe').contents().find(selectorString);
+  }
+
+  function buildSelector(n,i,j) {
+    var res = "table.jSheet td#";
+    return res+n+"_table0_cell_c"+i+"_r"+j;
   }
 
   rJS(window).ready(function () {
     var g = rJS(this),
       jqs_context = g.context.find('.jqs-gadget').first();
    
-    asyncTest("jquery.sheet loading", function () {
-      expect(2);
-      g.declareIframedGadget('../src/gadget/jqs.html', jqs_context);
+    asyncTest("jquery.sheet loading : sheet loads", 2, function () {
+      g.declareIframedGadget(gadgetURL, jqs_context);
       
       setTimeout(function () {
-        ok(iframeSelector("table.jSheet td#0_table0_cell_c0_r0").length != 0);
-        ok(iframeSelector("table.jSheet td#0_table0_cell_c1_r1").length != 0);
+        var c0r0 = buildSelector(0,0,0);
+        var c1r1 = buildSelector(0,1,1);
+        ok(iframeSelector(c0r0).length != 0);
+        ok(iframeSelector(c1r1).length != 0);
         start();
       },100);
     });
-
-    asyncTest("reset sheet", function () {
-      expect(2);
-      g.declareIframedGadget('../src/gadget/jqs.html', jqs_context)
+      
+    asyncTest("jquery.sheet loading : sheet is empty", 2, function () {
+      g.declareIframedGadget(gadgetURL, jqs_context);
+      var c0r0 = buildSelector(0,0,0);
+      var c1r1 = buildSelector(0,1,1);
+      
+      setTimeout(function () {
+        equal(iframeSelector(c0r0).html(),"");
+        equal(iframeSelector(c1r1).html(),"");
+        start();
+      },100);
+    });
+      
+    asyncTest("clear content", 2, function () {
+      var c0r0 = buildSelector(0,0,0);
+      var c1r1 = buildSelector(0,1,1);
+ 
+      g.declareIframedGadget(gadgetURL, jqs_context)
         .then(function (gadget) {
-          iframeSelector("table.jSheet td#0_table0_cell_c0_r0")
-            .html('c0r0Value');
-          iframeSelector("table.jSheet td#0_table0_cell_c1_r1")
-            .html('c1r1Value');
+          iframeSelector(c0r0).html('c0r0Value');
+          iframeSelector(c1r1).html('c1r1Value');
           return gadget;
         })
         .then(function (gadget) {
-          gadget.resetSheet().then(function () {
-            equal(iframeSelector(
-              "table.jSheet td#0_table0_cell_c0_r0").text(),"");
-            equal(iframeSelector(
-              "table.jSheet td#0_table0_cell_c1_r1").text(),"");
-            start();
+          return gadget.clearContent().then(function () {
+            equal(iframeSelector(c0r0).text(),"");
+            equal(iframeSelector(c1r1).text(),"");
           });
-        });
+        })
+        .always(start);
     });
     
-    asyncTest("get content of sheet", function () {
-      expect(2);
-      g.declareIframedGadget('../src/gadget/jqs.html', jqs_context)
+    asyncTest("get content of sheet", 2, function () {
+      var c0r0 = buildSelector(0,0,0);
+      var c1r1 = buildSelector(0,1,1);
+ 
+      g.declareIframedGadget(gadgetURL, jqs_context)
         .then(function (gadget) {
-          iframeSelector(
-            "table.jSheet td#0_table0_cell_c0_r0").html('c0r0Value');
-          iframeSelector(
-            "table.jSheet td#0_table0_cell_c1_r1").html('c1r1Value');
+          iframeSelector(c0r0).html('c0r0Value');
+          iframeSelector(c1r1).html('c1r1Value');
           return gadget;
         })
         .then(function (gadget) {
-          gadget.getContent().then(function (content) {
+          return gadget.getContent().then(function (content) {
             var json = JSON.parse(content)[0];
             equal(json.data.r0.c0.value,"c0r0Value");
             equal(json.data.r1.c1.value,"c1r1Value");
-            start();
           });
-        });
+        })
+        .always(start);
     });
 
     asyncTest("set content of sheet", function () {
       expect(4);
-      var gadget, content; 
+      var gadget, content,
+      t0c0r0 = buildSelector(0,0,0),
+      t0c1r1 = buildSelector(0,1,1),
+      t2c0r0 = buildSelector(2,0,0),
+      t2c1r1 = buildSelector(2,1,1);
 
-      g.declareIframedGadget('../src/gadget/jqs.html', jqs_context)
+      g.declareIframedGadget(gadgetURL, jqs_context)       
         .then(function (gd) {
-          iframeSelector(
-            "table.jSheet td#0_table0_cell_c0_r0").html('c0r0Value');
-          iframeSelector(
-            "table.jSheet td#0_table0_cell_c1_r1").html('c1r1Value');
+          iframeSelector(t0c0r0).html('c0r0Value');
+          iframeSelector(t0c1r1).html('c1r1Value');
           gadget = gd;
+          return gadget.getContent();
         })
-        .always(function () {
-          gadget.getContent()
-            .then(function (c) {content = c;})
-            .always(function () {
-              gadget.resetSheet().then(function () {
-                equal(iframeSelector(
-                  "table.jSheet td#0_table0_cell_c0_r0").text(),"");
-                equal(iframeSelector(
-                  "table.jSheet td#0_table0_cell_c1_r1").text(),"");
-              })
-                .always(function () {
-                  gadget.putContent(content)
-                    .always(function () {
-                      equal(iframeSelector(
-                        "table.jSheet td#2_table0_cell_c0_r0").text(),
-                            "c0r0Value");
-                      equal(iframeSelector(
-                        "table.jSheet td#2_table0_cell_c1_r1").text(),
-                            "c1r1Value");
-                      start();
-                    });
-                });
-            });
-        });
+        .then(function (c) {
+          content = c;
+          return gadget.clearContent();
+        })
+        .then(function () {
+          equal(iframeSelector(t0c0r0).text(),"");
+          equal(iframeSelector(t2c1r1).text(),"");
+          return gadget.setContent(content);
+        })
+        .then(function () {
+          equal(iframeSelector(t2c0r0).text(),"c0r0Value");
+          equal(iframeSelector(t2c1r1).text(),"c1r1Value");
+        })
+        .always(start); 
     });
   });
 } (window, jQuery, QUnit, rJS));

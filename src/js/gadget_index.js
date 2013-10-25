@@ -44,15 +44,21 @@
         var fileName = $("#iogadget input").val();
         jioGadget.configureIO(ioGadgetConfig, fileName)
           .then(jioGadget.getIO)
-          .then(gadget.putContent);
+          .then(gadget.setContent);
       });
       return gadget;
     }
 
-    function registerCleanButton(gadget) {
+    function registerClearButton(gadget) {
       $("#new-doc").click(function () {
-        gadget.resetSheet();
+        gadget.clearContent();
       });
+    }
+
+    function registerIOButtons(gadget) {
+      registerSaveButton(gadget);
+      registerLoadButton(gadget);
+      registerClearButton(gadget);
     }
 
     function initializeRoute() {
@@ -87,9 +93,14 @@
         .route("add", "/spreadsheet/", 1)
         .done(function () {
           g.declareIframedGadget('./jqs.html', main_context)
-            .then(registerSaveButton)
-            .then(registerLoadButton)
-            .then(registerCleanButton);
+            .then(registerIOButtons);
+        });
+
+      body
+        .route("add", "/bootstrap-wysiwyg/", 1)
+        .done(function () {
+          g.declareIframedGadget('./bootstrap-wysiwyg.html', main_context)
+            .then(registerIOButtons);
         });
     }
 

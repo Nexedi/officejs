@@ -32,25 +32,25 @@
 
   rJS(window).declareMethod('getContent', function () {
     var content = JSON.stringify($.sheet.instance[0].exportSheet.json());
-    //console.log("getContent: " + content);
     console.log("function getContent" + content);
     return content;
   })
 
-    .declareMethod('putContent', function (content) {
+    .declareMethod('setContent', function (content) {
       var config = $.extend({
         buildSheet: $.sheet.makeTable.json(JSON.parse(content))
       }, default_config);
-      rJS(this).init(config);
+      console.log(config.buildSheet);
+      init.apply(rJS(this), [config]);
     })
 
-    .declareMethod('resetSheet', function () {
+    .declareMethod('clearContent', function () {
       $.sheet.killAll();
-      rJS(this).init(default_config);
+      init.apply(rJS(this), [default_config]);
     })
 
     .ready(function () {
-      init.apply(rJS(this), default_config);
+      init.apply(rJS(this), [default_config]);
     });
 
 }(window, jQuery, rJS));
