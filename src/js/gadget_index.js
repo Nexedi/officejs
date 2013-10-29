@@ -102,6 +102,13 @@
           g.declareIframedGadget('./bootstrap-wysiwyg.html', main_context)
             .then(registerIOButtons);
         });
+
+      body
+        .route("add", "/mercury/", 1)
+        .done(function () {
+          g.declareIframedGadget('./mercury.html', main_context)
+            .then(registerIOButtons);
+        });
     }
 
     g.declareGadget('./io.html', g.context.find("#iogadget"))
