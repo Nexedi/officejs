@@ -32,7 +32,7 @@
 
   rJS(window).declareMethod('getContent', function () {
     var content = JSON.stringify($.sheet.instance[0].exportSheet.json());
-    console.log("function getContent" + content);
+    //console.log("function getContent" + content);
     return content;
   })
 
@@ -40,7 +40,7 @@
       var config = $.extend({
         buildSheet: $.sheet.makeTable.json(JSON.parse(content))
       }, default_config);
-      console.log(config.buildSheet);
+      //console.log(config.buildSheet);
       init.apply(rJS(this), [config]);
     })
 

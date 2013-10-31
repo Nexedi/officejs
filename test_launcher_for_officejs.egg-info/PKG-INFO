@@ -1,0 +1,14 @@
+Metadata-Version: 1.1
+Name: test-launcher-for-officejs
+Version: 0.0.4
+Summary: only launch officejs test.
+Home-page: http://j-io.org
+Author: Sebastien Robin
+Author-email: andrewjcarter@gmail.com
+License: GPL
+Description: UNKNOWN
+Keywords: officejs test
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Topic :: Utilities
+Classifier: License :: OSI Approved :: GPL License

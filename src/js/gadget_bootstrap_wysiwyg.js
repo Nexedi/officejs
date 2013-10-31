@@ -13,7 +13,7 @@
   })
 
     .declareMethod('setContent', function (content) {
-      console.log('setcontent:' + content);
+      //console.log('setcontent:' + content);
       rJS(this).editor.html(content);
     })
 

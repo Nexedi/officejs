@@ -1,4 +1,5 @@
 /*global window, jQuery, jIO, rJS */
+/*jslint unparam: true*/
 "use strict";
 (function (window, $, jIO, rJS) {
 
@@ -27,7 +28,7 @@
             deferred.reject(err);
           }
         } else {
-          console.log("getIO: " + response);
+          //console.log("getIO: " + response);
           deferred.resolve(response || default_value);
         }
       });
@@ -38,7 +39,6 @@
     .declareMethod('setIO', function (value) {
       //console.log("couscous");
       var deferred = $.Deferred(),
-        default_value = "",
         gadget = rJS(this);
       gadget.jio.put({"_id": gadget.jio_key},
         function (err, response) {
@@ -55,7 +55,7 @@
               if (err) {
                 deferred.reject(err);
               } else {
-                console.log("putIO: " + value);
+                //console.log("putIO: " + value);
                 deferred.resolve();
               }
             });
