@@ -3,5 +3,6 @@ deploy
 #vi
 *.swp
 *~
+*.pyc
 
 node_modules
