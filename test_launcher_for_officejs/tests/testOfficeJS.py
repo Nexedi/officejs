@@ -15,7 +15,7 @@ class OFFICEJSTest(TestCase):
     """
     root_directory = __file__[0:-len("/test_launcher_for_officejs/tests/testOfficeJS.py")]
     command = ["%s %s %s; exit 0" % (
-          '%s/node_modules/.bin/phantomjs' % root_directory,
+          '%s/test/phantomjs' % root_directory,
           '%s/test/run-qunit.js' % root_directory,
           '%s/test/officejs.html' % root_directory)]
     print command
