@@ -18,7 +18,7 @@
    */
   function waitFor(testFx, onReady, time_out_millis) {
     var maxtime_out_millis, start, condition, interval;
-    maxtime_out_millis = time_out_millis || 10001;
+    maxtime_out_millis = time_out_millis || 300000;
     start = new Date().getTime();
     condition = false;
     interval = setInterval(function () {
