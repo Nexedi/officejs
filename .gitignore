@@ -4,5 +4,6 @@ deploy
 *.swp
 *~
 *.pyc
+test_launcher_for_officejs.egg-info
 
 node_modules
