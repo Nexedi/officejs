@@ -13,7 +13,7 @@ class OFFICEJSTest(TestCase):
     """
     Launch officejs test without requirejs
     """
-    root_directory = __file__[0:-len("parts/officejs/test_launcher_for_officejs/tests/testOfficeJS.py")]
+    root_directory = __file__[0:-len("/parts/officejs/test_launcher_for_officejs/tests/testOfficeJS.py")]
     command = ["%s %s %s; exit 0" % (
           '%s/bin/phantomjs' % root_directory,
           '%s/parts/officejs/test/run-qunit.js' % root_directory,

@@ -14,7 +14,7 @@ QUnit.config.testTimeout = 1000;
   //expect = QUnit.expect,
   //throws = QUnit.throws,
   //deepEqual = QUnit.deepEqual;
-  bwGadgetURL = '../deploy/gadget/bootstrap-wysiwyg.html';
+  bwGadgetURL = '../src/gadget/bootstrap-wysiwyg.html';
 
   function iframeSelector(selectorString) {
     return $('iframe').contents().find(selectorString);
