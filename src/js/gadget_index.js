@@ -109,6 +109,13 @@
           g.declareIframedGadget('./mercury.html', main_context)
             .then(registerIOButtons);
         });
+
+      body
+        .route("add", "/codemirror/", 1)
+        .done(function () {
+          g.declareIframedGadget('./codemirror.html', main_context)
+            .then(registerIOButtons);
+        });
     }
 
     g.declareGadget('./io.html', g.context.find("#iogadget"))

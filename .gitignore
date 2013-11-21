@@ -5,5 +5,6 @@ deploy
 *~
 *.pyc
 test_launcher_for_officejs.egg-info
+.tern-port
 
 node_modules
