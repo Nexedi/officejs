@@ -116,6 +116,13 @@
           g.declareIframedGadget('./codemirror.html', main_context)
             .then(registerIOButtons);
         });
+
+      body
+        .route("add", "/svgedit/", 1)
+        .done(function () {
+          g.declareIframedGadget('./svg-editor.html', main_context)
+            .then(registerIOButtons);
+        });
     }
 
     g.declareGadget('./io.html', g.context.find("#iogadget"))
