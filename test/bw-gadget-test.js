@@ -20,12 +20,12 @@ QUnit.config.testTimeout = 1000;
     return $('iframe').contents().find(selectorString);
   }
 
-  rJS(window).ready(function () {
-    var g = rJS(this),
-      gadget_context = g.context.find('#gadget').first();
+  rJS(window).ready(function (g) {
+    var gadget_context = document.getElementById('qunit-fixture');
   
-    asyncTest("Bootstrap wysiwyg loading", 1, function () {
-      g.declareIframedGadget(bwGadgetURL, gadget_context)
+    asyncTest("[bootstrap wysiwyg] loading (iframed)", 1, function () {
+      g.declareGadget(bwGadgetURL,
+                      {sandbox: "iframe", element: gadget_context})
         .then(function () {
           var edattr = iframeSelector("#editor").attr('contenteditable');
           equal(edattr,"true");
@@ -33,8 +33,10 @@ QUnit.config.testTimeout = 1000;
         .always(start);       
     });
       
-    asyncTest("Bootstrap wysiwyg loading : textarea is empty", 1, function () {
-      g.declareIframedGadget(bwGadgetURL, gadget_context)
+    asyncTest("[bootstrap wysiwyg] textarea start empty (iframed)", 1,
+              function () {
+      g.declareGadget(bwGadgetURL,
+                      {sandbox: "iframe", element: gadget_context})
         .then(function () {
           var ed = iframeSelector("#editor");
           equal(ed.html(),"");
@@ -42,8 +44,9 @@ QUnit.config.testTimeout = 1000;
         .always(start);
     });
     
-    asyncTest("clear content of editor", 1, function () {
-      g.declareIframedGadget(bwGadgetURL, gadget_context)
+    asyncTest("[bootstrap wysiwyg] clear content (iframed)", 1, function () {
+      g.declareGadget(bwGadgetURL,
+                      {sandbox: "iframe", element: gadget_context})
         .then(function (gadget) {
           iframeSelector('#editor').html('A value');
           return gadget;
@@ -56,8 +59,10 @@ QUnit.config.testTimeout = 1000;
         .always(start);
     });
 
-    asyncTest("get content of editor", 1, function () {
-      g.declareIframedGadget(bwGadgetURL, gadget_context)
+    asyncTest("[bootstrap wysiwyg] get content (iframed)", 1,
+              function () {
+      g.declareGadget(bwGadgetURL,
+                      {sandbox: "iframe", element: gadget_context})
         .then(function (gadget) {
           iframeSelector('#editor').html('A value');
           return gadget;
@@ -70,10 +75,11 @@ QUnit.config.testTimeout = 1000;
         .always(start);
     });
 
-    asyncTest("set content of sheet", 2, function () {
+    asyncTest("[bootstrap wysiwyg] set content (iframed)", 2, function () {
       var gadget, content;
 
-      g.declareIframedGadget(bwGadgetURL, gadget_context)       
+      g.declareGadget(bwGadgetURL,
+                      {sandbox: "iframe", element: gadget_context})       
         .then(function (gd) {
           iframeSelector('#editor').html('A value');
           gadget = gd;

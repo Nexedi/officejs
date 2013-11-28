@@ -4,7 +4,7 @@
 (function (window, $, rJS) {
 
   function init(config) {
-    this.parent = this.context.find('.jQuerySheet');
+    this.parent = $(window.document.getElementById('jQuerySheet'));
     this.parent.sheet(config);
     this.instance = this.parent.getSheet();
   }
@@ -49,8 +49,9 @@
       init.apply(rJS(this), [default_config]);
     })
 
-    .ready(function () {
-      init.apply(rJS(this), [default_config]);
+    .ready(function (g) {
+      console.log('truc');
+      init.apply(g, [default_config]);
     });
 
 }(window, jQuery, rJS));

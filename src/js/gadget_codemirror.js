@@ -20,9 +20,9 @@
       return rJS(this).cmInstance;
     })
 
-    .ready(function () {
+    .ready(function (g) {
       var textarea = $("textarea#codemirror")[0];
-      rJS(this).cmInstance = CodeMirror.fromTextArea(textarea);
+      g.cmInstance = CodeMirror.fromTextArea(textarea);
     });
 
 }(window, jQuery, rJS, CodeMirror));

@@ -21,8 +21,8 @@
       rJS(this).editor.html('');
     })
 
-    .ready(function () {
-      init.apply(rJS(this));
+    .ready(function (g) {
+      init.apply(g);
     });
 
 }(window, jQuery, rJS));

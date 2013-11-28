@@ -20,20 +20,21 @@ QUnit.config.testTimeout = 1000;
     return $('iframe').contents().find(selectorString);
   }
 
-  rJS(window).ready(function () {
-    var g = rJS(this),
-      gadget_context = g.context.find('#gadget').first();
+  rJS(window).ready(function (g) {
+    var gadget_context = document.getElementById('qunit-fixture');
   
-    asyncTest("[codemirror gadget] loading", 1, function () {
-      g.declareIframedGadget(codemirrorGadgetURL, gadget_context)
+    asyncTest("[codemirror gadget] loading (iframed)", 1, function () {
+      g.declareGadget(codemirrorGadgetURL,
+                      {sandbox: "iframe", element: gadget_context})
         .then(function () {
           ok(iframeSelector(".CodeMirror")[0]);
         })
         .always(start);       
     });
       
-    asyncTest("[codemirror gadget] empty initial textarea", 1, function () {
-      g.declareIframedGadget(codemirrorGadgetURL, gadget_context)
+    asyncTest("[codemirror gadget] empty initial textarea (iframed)", 1, function () {
+      g.declareGadget(codemirrorGadgetURL,
+                      {sandbox: "iframe", element: gadget_context})
         .then(function (gadget) {
           return gadget.getContent();
         })
@@ -43,9 +44,10 @@ QUnit.config.testTimeout = 1000;
         .always(start);
     });
     
-    asyncTest("[codemirror gadget] clear content", 1, function () {
+    asyncTest("[codemirror gadget] clear content (iframed)", 1, function () {
       var gadget;
-      g.declareIframedGadget(codemirrorGadgetURL, gadget_context)
+      g.declareGadget(codemirrorGadgetURL,
+                      {sandbox: "iframe", element: gadget_context})
         .then(function (g) {
           gadget = g;
           return gadget.setContent("A content");
@@ -62,9 +64,10 @@ QUnit.config.testTimeout = 1000;
         .always(start);
     });
 
-    asyncTest("[codemirror gadget] set/get content", 1, function () {
+    asyncTest("[codemirror gadget] set/get content (iframed)", 1, function () {
       var gadget;
-      g.declareIframedGadget(codemirrorGadgetURL, gadget_context)
+      g.declareGadget(codemirrorGadgetURL,
+                      {sandbox: "iframe", element: gadget_context})
         .then(function (g) {
           gadget = g;
           return gadget.setContent("A content");
