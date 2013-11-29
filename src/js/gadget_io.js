@@ -1,67 +1,67 @@
-/*global window, jQuery, jIO, rJS */
+/*global window, jIO, rJS, RSVP */
 /*jslint unparam: true*/
 "use strict";
-(function (window, $, jIO, rJS) {
+(function (window, jIO, rJS, RSVP) {
 
   var gk = rJS(window);
 
   gk.declareMethod('configureIO', function (json_configuration, key) {
     rJS(this).jio = jIO.newJio(json_configuration);
     rJS(this).jio_key = key;
-    //console.log(rJS(this).jio);
     return key;
   })
 
     .declareMethod('getIO', function () {
-      var deferred = $.Deferred(),
-        default_value = "",
-        gadget = rJS(this);
 
-      gadget.jio.getAttachment({
-        "_id": gadget.jio_key,
-        "_attachment": "body.txt"
-      }, function (err, response) {
-        if (err) {
-          if (err.status === 404) {
-            deferred.resolve(default_value);
+      return new RSVP.Promise(function(resolve, reject) {
+        var default_value = "",
+          gadget = rJS(this);
+        
+        gadget.jio.getAttachment({
+          "_id": gadget.jio_key,
+          "_attachment": "body.txt"
+        }, function (err, response) {
+          if (err) {
+            if (err.status === 404) {
+              resolve(default_value);
+            } else {
+              reject(err);
+            }
           } else {
-            deferred.reject(err);
+            resolve(response || default_value);
           }
-        } else {
-          //console.log("getIO: " + response);
-          deferred.resolve(response || default_value);
-        }
+        });
       });
-
-      return deferred.promise();
     })
 
     .declareMethod('setIO', function (value) {
-      //console.log("couscous");
-      var deferred = $.Deferred(),
-        gadget = rJS(this);
-      gadget.jio.put({"_id": gadget.jio_key},
-        function (err, response) {
+
+      return new RSVP.Promise(function(resolve, reject) {
+        var gadget = rJS(this);
+        
+        gadget.jio.put({
+          "_id": gadget.jio_key
+        }, function (err, response) {
           if (err) {
-            deferred.reject(err);
+            reject(err);
           } else {
             gadget.jio.putAttachment({
               "_id": gadget.jio_key,
               "_attachment": "body.txt",
               "_data": value,
-
               "_mimetype": "text/plain"
             }, function (err, response) {
               if (err) {
-                deferred.reject(err);
+                reject(err);
               } else {
                 //console.log("putIO: " + value);
-                deferred.resolve();
+                resolve();
               }
             });
           }
         });
-      return deferred.promise();
+      });
+      
     });
 
-}(window, jQuery, jIO, rJS));
+}(window, jIO, rJS, RSVP));
