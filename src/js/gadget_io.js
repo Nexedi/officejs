@@ -1,5 +1,5 @@
+/*jslint indent: 2, unparam: true*/
 /*global window, jIO, rJS, RSVP */
-/*jslint unparam: true*/
 "use strict";
 (function (window, jIO, rJS, RSVP) {
 
@@ -13,10 +13,10 @@
 
     .declareMethod('getIO', function () {
 
-      return new RSVP.Promise(function(resolve, reject) {
+      return new RSVP.Promise(function (resolve, reject) {
         var default_value = "",
           gadget = rJS(this);
-        
+
         gadget.jio.getAttachment({
           "_id": gadget.jio_key,
           "_attachment": "body.txt"
@@ -36,9 +36,9 @@
 
     .declareMethod('setIO', function (value) {
 
-      return new RSVP.Promise(function(resolve, reject) {
+      return new RSVP.Promise(function (resolve, reject) {
         var gadget = rJS(this);
-        
+
         gadget.jio.put({
           "_id": gadget.jio_key
         }, function (err, response) {
@@ -61,7 +61,7 @@
           }
         });
       });
-      
+
     });
 
 }(window, jIO, rJS, RSVP));

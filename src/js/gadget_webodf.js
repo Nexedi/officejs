@@ -1,3 +1,4 @@
+/*jslint indent: 2 */
 /*global window, jQuery, rJS, odf*/
 "use strict";
 

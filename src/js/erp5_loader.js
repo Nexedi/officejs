@@ -1,5 +1,5 @@
+/*jslint indent: 2, nomen: true, todo: true, unparam: true */
 /*global jQuery, window, document, jIO, confirm, alert */
-/*jslint nomen: true, todo: true, unparam: true */
 "use strict";
 (function (window, document, $, jIO) {
 

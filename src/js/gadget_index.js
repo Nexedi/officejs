@@ -1,3 +1,4 @@
+/*jslint indent: 2 */
 /*global window, jQuery, rJS */
 "use strict";
 (function (window, $, rJS) {
@@ -130,7 +131,7 @@
     }
 
     g.declareGadget('./io.html',
-                    {element: document.getElementById("iogadget")})
+                    {element: window.document.getElementById("iogadget")})
       .then(function (ioGadget) {
         window.jio = ioGadget;
         jioGadget = ioGadget;
