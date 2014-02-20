@@ -28,6 +28,7 @@
     finance: false,
     editable: true,
     autoFiller: true,
+    urlMenu: '../lib/jquery.sheet-2.0.0/menu.html',
     urlGet: '../lib/jquery.sheet-2.0.0/new_spreadsheet.html'
   };
 
