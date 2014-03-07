@@ -1,5 +1,5 @@
 /*global window, jQuery, rJS, CodeMirror*/
-/*jslint evil: true*/
+/*jslint indent: 2 */
 "use strict";
 
 (function (window, $, rJS, CodeMirror) {

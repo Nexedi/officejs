@@ -1,5 +1,5 @@
 /*global window, jQuery, rJS*/
-/*jslint evil: true*/
+/*jslint indent: 2, evil: true*/
 "use strict";
 
 (function (window, $, rJS) {

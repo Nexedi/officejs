@@ -1,5 +1,5 @@
 /*global window, jQuery, jIO, rJS */
-/*jslint unparam: true*/
+/*jslint indent: 2, unparam: true*/
 "use strict";
 (function (window, $, jIO, rJS) {
 

@@ -1,8 +1,7 @@
-/*global window, jQuery, rJS */
+/*jslint indent: 2, unparam: true */
+/*global window, rJS */
 "use strict";
-(function (window, $, rJS, undefined) {
-
-  var gk = rJS(window);
+(function (window, rJS, undefined) {
 
   rJS(window).ready(function () {
     var g = rJS(this),
@@ -23,4 +22,4 @@
 
   });
 
-}(window, jQuery, rJS));
+}(window, rJS));
