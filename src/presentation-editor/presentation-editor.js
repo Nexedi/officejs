@@ -1,6 +1,6 @@
-/*globals window, document, $, html_beautify, FileReader,  */
+/*globals window, document, $, html_beautify, FileReader, rJS*/
 /*jslint unparam: true */
-$(function (window, $, html_beautify, rJS) {
+(function (window, $, html_beautify, rJS) {
   "use strict";
 
   var presentation = null,
@@ -73,8 +73,10 @@ $(function (window, $, html_beautify, rJS) {
 
   Slide.prototype = {
 
-    dataTemplate: document.querySelector('template#slide-data').content.firstElementChild,
-    htmlTemplate: document.querySelector('template#slide-html').content.firstElementChild,
+    dataTemplate: document.querySelector('template#slide-data')
+      .content.firstElementChild,
+    htmlTemplate: document.querySelector('template#slide-html')
+      .content.firstElementChild,
 
     editBtn: function () {return this.html.querySelector("button.edit"); },
     deleteBtn: function () {return this.html.querySelector("button.delete"); },
@@ -215,7 +217,11 @@ $(function (window, $, html_beautify, rJS) {
     },
 
     reset: function () {
-      this.attrAll({title: "", type: "basic", content: "", details: "", image: ""});
+      this.attrAll({title: "",
+                    type: "basic",
+                    content: "",
+                    details: "",
+                    image: ""});
       this.currentSlide = null;
       $(this.elt).off("submit");
     },
@@ -286,7 +292,7 @@ $(function (window, $, html_beautify, rJS) {
         oldIndex,
         i,
         tmp;
-      for (i = 0; i < this.slides.length; i++) {
+      for (i = 0; i < this.slides.length; i += 1) {
         if (this.slides[i].html === DOMElement[0]) {
           oldIndex = i;
           break;
@@ -298,7 +304,7 @@ $(function (window, $, html_beautify, rJS) {
 
     getContent: function () {
       var i, container = document.createElement('div');
-      for (i = 0; i < this.slides.length; i++) {
+      for (i = 0; i < this.slides.length; i += 1) {
         container.appendChild(this.slides[i].data());
       }
       return html_beautify(container.innerHTML);
@@ -308,7 +314,7 @@ $(function (window, $, html_beautify, rJS) {
       var i, sections, container = document.createElement('div');
       container.innerHTML = content;
       sections = container.children;
-      for (i = 0; i < sections.length; i++) {
+      for (i = 0; i < sections.length; i += 1) {
         this.addSlide(readSlide(sections[i]));
       }
     }
@@ -323,17 +329,17 @@ $(function (window, $, html_beautify, rJS) {
   });
 
   rJS(window)
-  
+
     .declareMethod('setContent', function (content) {
       rJS(this).editor.setContent(content);
     })
-  
+
     .declareMethod('getContent', function () {
       return rJS(this).editor.getContent();
     })
-  
+
     .ready(function (g) {
       g.editor = $('#slide-list').presentation();
     });
-  
+
 }(window, $, html_beautify, rJS));
