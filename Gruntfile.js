@@ -85,6 +85,14 @@ module.exports = function (grunt) {
           strictMath: true,
           strictUnits: true,
           syncImport: true
+        },
+        files: {
+          "<%= global_config.dest %>/editor_ace/aceeditor.css":
+            "<%= global_config.src %>/editor_ace/aceeditor.less",
+          "<%= global_config.dest %>/erp5/erp5.css":
+            "<%= global_config.src %>/erp5/erp5.less",
+          "<%= global_config.dest %>/twin_erp5/superindex.css":
+            "<%= global_config.src %>/twin_erp5/superindex.less"
         }
       }
     },
@@ -175,6 +183,11 @@ module.exports = function (grunt) {
     },
 
     curl: {
+      ace: {
+        src: 'https://github.com/ajaxorg/ace-builds/archive/3bfda31096cf3f42b77aac64eb788584ea796822.zip',
+        relative_url: "lib/ace-builds-3bfda31096cf3f42b77aac64eb788584ea796822/src-min/ace.js",
+        dest: '<%= global_config.tmp %>/ace.zip'
+      },
       jqueryte: {
         src: 'http://jqueryte.com/jqte/<%= curl.jqueryte.directory %>.zip',
         version: "1.4.0",
@@ -215,6 +228,10 @@ module.exports = function (grunt) {
     },
 
     unzip: {
+      ace: {
+        src: '<%= curl.ace.dest %>',
+        dest: '<%= global_config.dest %>/lib/'
+      },
       jqueryte: {
         src: '<%= curl.jqueryte.dest %>',
         dest: '<%= global_config.dest %>/lib/'
