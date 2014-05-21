@@ -25,3 +25,12 @@ apache2.conf
 
 #dolphin
 .directory
+
+#vi
+*.swp
+*~
+
+node_modules/
+dev/
+tmp/
+.tern-port
