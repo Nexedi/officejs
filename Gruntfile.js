@@ -9,6 +9,7 @@ module.exports = function (grunt) {
     global_config = {
       src: "src",
       lib: "lib",
+      tmp: "tmp",
       dest: "dev"
     };
 
@@ -41,6 +42,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-curl');
   grunt.loadNpmTasks('grunt-open');
   grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-zip');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -173,6 +175,14 @@ module.exports = function (grunt) {
     },
 
     curl: {
+      jqueryte: {
+        src: 'http://jqueryte.com/jqte/<%= curl.jqueryte.directory %>.zip',
+        version: "1.4.0",
+        directory: "jQuery-TE_v.<%= curl.jqueryte.version %>",
+        css_relative_url: "lib/<%= curl.jqueryte.directory %>/jquery-te-<%= curl.jqueryte.version %>.css",
+        js_relative_url: "lib/<%= curl.jqueryte.directory %>/jquery-te-<%= curl.jqueryte.version %>.min.js",
+        dest: '<%= global_config.tmp %>/jQuery-TE.zip'
+      },
       jquery: {
         src: 'http://code.jquery.com/jquery-2.0.3.js',
         relative_dest: 'lib/jquery.js',
@@ -204,6 +214,13 @@ module.exports = function (grunt) {
 //       all: ['test/index.html']
     },
 
+    unzip: {
+      jqueryte: {
+        src: '<%= curl.jqueryte.dest %>',
+        dest: '<%= global_config.dest %>/lib/'
+      }
+    },
+
     connect: {
       client: {
         options: {
@@ -228,6 +245,7 @@ module.exports = function (grunt) {
   grunt.registerTask('default', ['all']);
   grunt.registerTask('all', ['lint', 'build']);
   grunt.registerTask('lint', ['jslint']);
+  grunt.registerTask('dep', ['curl', 'unzip']);
 //   grunt.registerTask('test', ['qunit']);
   grunt.registerTask('server', ['connect:client', 'open', 'watch']);
   grunt.registerTask('build', ['concat', 'uglify', 'copy', 'less']);

@@ -21,7 +21,8 @@
     "connect-livereload": "~0.3.0",
     "grunt-open": "~0.2.2",
     "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-less": "~0.9.0"
+    "grunt-contrib-less": "~0.9.0",
+    "grunt-zip": "~0.13.0"
   },
   "scripts": {
     "test": "./node_modules/.bin/grunt test",
