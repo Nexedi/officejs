@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+    <title>ERP5</title>
+
+    <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
+    <link rel="stylesheet" href="erp5.css">
+
+    <!-- renderjs -->
+    <script src="../<%= copy.rsvp.relative_dest %>" type="text/javascript"></script>
+    <script src="../<%= copy.renderjs.relative_dest %>" type="text/javascript"></script>
+
+    <script src="../<%= copy.uri.relative_dest %>" type="text/javascript"></script>
+
+    <script src="../<%= curl.jquery.relative_dest %>" type="text/javascript"></script>
+    <script src="../<%= curl.jquerymobilejs.relative_dest %>" type="text/javascript"></script>
+
+    <!-- custom script -->
+    <script src="gadget_index_url.js" type="text/javascript"></script>
+
+  </head>
+  <body>
+
+  <div data-role="panel" id="leftpanel" data-display="overlay"></div>
+  <!--div data-role="panel" id="rightpanel" data-display="overlay"
+      data-position="right"></div-->
+
+  <header data-role="header">
+    <a href="#leftpanel">Open panel</a>
+    <h1>ERP5</h1>
+    <!--form><input type="text" name="couscous"
+        value="couscous"></input><button type="submit">Search</button></form-->
+    <a href="#">Home</a>
+    <!--a href="#rightpanel">Open panel</a-->
+  </header>
+
+  <article id="mainarticle">
+  </article>
+
+  </body>
+</html>
