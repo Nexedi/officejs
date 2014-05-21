@@ -223,10 +223,20 @@ module.exports = function (grunt) {
         relative_dest: 'lib/jquerymobile.css',
         dest: '<%= global_config.dest %>/<%= curl.jquerymobilecss.relative_dest %>'
       },
-      htmlbeautify: {
+      jqueryuijs: {
+        src: 'https://code.jquery.com/ui/1.10.4/jquery-ui.js',
+        relative_dest: 'lib/jquery-ui.js',
+        dest: '<%= global_config.dest %>/<%= curl.jqueryuijs.relative_dest %>'
+      },
+      jqueryuicss: {
+        src: 'https://code.jquery.com/ui/1.11.0-beta.1/themes/base/jquery-ui.css',
+        relative_dest: 'lib/jquery-ui.css',
+        dest: '<%= global_config.dest %>/<%= curl.jqueryuicss.relative_dest %>'
+      },
+      beautifyhtml: {
         src: 'https://raw.githubusercontent.com/einars/js-beautify/master/js/lib/beautify-html.js',
-        relative_dest: 'lib/html-beautify.js',
-        dest: '<%= global_config.dest %>/<%= curl.htmlbeautify.relative_dest %>'
+        relative_dest: 'lib/beautify-html.js',
+        dest: '<%= global_config.dest %>/<%= curl.beautifyhtml.relative_dest %>'
       },
       animatecss: {
         src: 'https://raw.github.com/daneden/animate.css/master/animate.css',
