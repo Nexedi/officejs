@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">        
+    <title>Presentation editor</title>
+
+    <!-- Presentation editor dependencies -->
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/jquery-ui.min.js"></script>
+    <script src="../lib/jquery.mobile.min.js"></script>
+    <script src="../lib/beautify-html.js"></script>
+
+    <!-- Renderjs -->
+    <script src="../lib/rsvp.min.js"></script>
+    <script src="../lib/renderjs.js"></script>
+
+    <!-- Jquery ui and jquery-mobile stylesheet -->
+    <link rel="stylesheet" href="../lib/jquery-ui.min.css">
+    <link rel="stylesheet" href="../lib/jquery.mobile.min.css">
+    <link rel="stylesheet" href="../lib/animate.min.css">
+
+    <!-- Presentation editor stylesheet -->
+    <link rel="stylesheet" href="presentation-editor.css">    
+
+    <!-- Presentation editor gadget -->
+    <script src="presentation-editor.js"></script>
+    
+  </head>
+  <body>
+    
+    <div data-role="page">
+
+      <div id="form-panel" data-role="panel" data-display="push">
+        <div class="panel-content page">
+          <form id="slide-form">
+            <div data-role="fieldcontain">  
+              <label for="title" ><strong>Title</strong></label>
+              <input type="text" name="title" id="title" placeholder="Type here the slide title" data-clear-btn="true" required/>
+            </div>
+
+            <br/>
+
+            <div data-role="fieldcontain">
+              <label for="type"><strong>Type</strong></label>
+              <fieldset data-role="controlgroup" data-mini="true" id="type">
+                <input type="radio" name="type" id="basic-type" value="" checked="checked" />
+                <label for="basic-type">basic</label>
+                <input type="radio" name="type" id="chapter-type" value="chapter" />
+                <label for="chapter-type">chapter</label>
+                <input type="radio" name="type" id="screenshot-type" value="screenshot" />
+                <label for="screenshot-type">screenshot</label>
+                <input type="radio" name="type" id="illustration-type" value="illustration" />
+                <label for="illustration-type">illustration</label>
+                <input type="radio" name="type" id="code-type" value="code" />
+                <label for="code-type">code</label>
+                <input type="radio" name="type" id="master-type" value="master" />
+                <label for="master-type">master</label>  
+              </fieldset>
+            </div>
+            
+            <br/>
+
+            <div data-role="fieldcontain" id="image-field">  
+              <label for="image"><strong>Image URL</strong></label>
+              <input type="text" name="image" id="image-url" />
+              <img id="image-preview" class="ui-shadow ui-corner-all">
+              <br/>
+            </div>
+
+            <br/>
+            
+            <div data-role="fieldcontain">  
+              <label for="content"><strong>Slide text</strong></label>
+              <textarea name="content" id="content" placeholder="This text will appear in the slide"></textarea>
+            </div>
+
+            <div data-role="fieldcontain">  
+              <label for="details"><strong>Slide details</strong></label>
+              <textarea name="details" id="details" placeholder="This text will be hidden"></textarea>
+            </div>
+            
+            <br/>
+            
+            <div id="slide-form-buttons" class="ui-grid-a">
+              <div class="ui-block-a"><input type="button" id="cancel" value="Cancel" data-theme="b"></div>
+              <div class="ui-block-b"><input type="submit" id="submit" value="Add slide" class="ui-block-b"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+        
+      <div role="main" class="ui-content">        
+        <div id="slide-list">
+        </div>
+
+        <section id="add-slide" class="block ui-shadow ui-corner-all ui-btn">
+          <div class="dummy"></div>
+          <div class="slide">
+            New slide
+          </div>
+        </section>
+      </div>
+
+      <template id="slide-html">
+        <section class="block slide-thumb ui-shadow ui-corner-all">
+          <button class="edit ui-shadow ui-corner-all ui-btn ui-btn-inline ui-icon-edit ui-btn-icon-notext"
+                  data-inline="true">
+          </button>
+          <button class="delete ui-shadow ui-corner-all ui-btn ui-btn-inline ui-icon-delete ui-btn-icon-notext"
+                  data-inline="true">
+          </button>
+          <div class="dummy"></div>
+          <div class="slide">
+            <h1></h1>
+            <img>
+            <div class="content"></div>
+          </div>
+        </section>
+      </template>
+      
+      <template id="slide-data">
+        <section>
+          <h1></h1>
+        </section>
+      </template>
+      
+    </div>
+  </body>
+</html>

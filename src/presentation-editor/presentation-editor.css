@@ -1,0 +1,112 @@
+.block {
+    display: inline-block;
+    float: left;
+    margin: 1%;
+    position: relative;
+    padding: 2%;
+    cursor: pointer;
+    position: relative;
+    width: 7.9vw;
+    min-width: 150px;
+    z-index: 10;
+    overflow: hidden; 
+}
+
+.block.slide-thumb {
+    background-color: white;
+    /* box-shadow: 2px 2px 2px 3px #ccc; */
+    border: 2px solid grey;
+}
+
+.block#add-slide .slide {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 30%;
+    font-size: 150%;
+}
+
+.block > .dummy {
+    margin-top: 100%;
+}
+
+.block > .slide {
+    position: absolute;
+    top: 2%;
+    bottom: 2%;
+    left: 2%;
+    right: 2%;
+}
+
+.block > button.edit {
+    position: absolute;
+    bottom: -2%;
+    right: -2%;
+    z-index: 20;
+}
+
+.block > button.delete {
+    position: absolute;
+    top: -2%;
+    right: -2%;
+    z-index: 20;
+}
+
+.block .slide > h1 {
+    text-align: center;
+}
+
+.block > .slide * {
+    position: relative;
+    max-width: 98%;
+    word-wrap: break-word;
+}
+
+.ui-panel-page-content-open.ui-panel-page-content-position-left.ui-panel-page-content-display-push {
+    padding-right: 35vw;
+}
+
+.ui-panel-page-content-open.ui-panel-page-content-display-push {
+    width: auto;
+}
+ 
+.ui-panel-dismiss-display-push {
+    display: none;
+}
+
+body {
+    background: url('images/tweed.png');
+    background-repeat: repeat;
+    background-position: center center;
+    background-attachment: scroll;
+    background-size: 100% 100%;
+}
+
+.ui-page  .ui-overlay-a, .ui-page-theme-a, .ui-page-theme-a .ui-panel-wrapper{
+    background: url('images/tweed.png');
+}
+.ui-content{
+    background: transparent;
+}
+
+@media (max-width: 1000px) {
+    .ui-panel {
+        width: 100%;
+    }
+
+    .ui-panel-position-left {
+        left: 100%;
+    }
+    
+    .ui-panel-animate.ui-panel-page-content-position-left {
+        -webkit-transform: translate3d(100%,0,0);
+        -moz-transform: translate3d(100%,0,0);
+        transform: translate3d(100%,0,0);
+    }
+}
+
+#image-preview {
+    position: relative;
+    float: right;
+    width: 24%;
+    margin: 3%
+}

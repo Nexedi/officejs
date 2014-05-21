@@ -189,8 +189,17 @@ module.exports = function (grunt) {
         src: '<%= curl.jquerymobilejs.src_base %>.css',
         relative_dest: 'lib/jquerymobile.css',
         dest: '<%= global_config.dest %>/<%= curl.jquerymobilecss.relative_dest %>'
+      },
+      html-beautify: {
+        src: 'https://raw.githubusercontent.com/einars/js-beautify/master/js/lib/beautify-html.js'
+        relative_dest: 'lib/html-beautify.js',
+        dest: '<%= global_config.dest %>/<%= curl.html-beautify.relative_dest %>'
+      },
+      animatecss: {
+        src: 'https://raw.github.com/daneden/animate.css/master/animate.css'
+        relative_dest: 'lib/animate.css',
+        dest: '<%= global_config.dest %>/<%= curl.animatecss.relative_dest %>'
       }
-
 //     qunit: {
 //       all: ['test/index.html']
     },
