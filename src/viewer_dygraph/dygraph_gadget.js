@@ -8,15 +8,13 @@
     })
 
     .declareMethod('render', function (data) {
-      var gadget = this,
-        graph = new Dygraph(
-          data || NoisyData,
-          {
-            roolPeriod: 7,
-            errorBars: true
-          }
-        );
-      return graph;
-
+      return new Dygraph(
+        this.__element,
+        data || NoisyData,
+        {
+          roolPeriod: 7,
+          errorBars: true
+        }
+      );
     });
 }(window, rJS, Dygraph, NoisyData));
