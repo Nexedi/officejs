@@ -183,6 +183,16 @@ module.exports = function (grunt) {
     },
 
     curl: {
+      dygraph: {
+        src: "http://dygraphs.com/dygraph-combined.js",
+        relative_dest: 'lib/dygraph.js',
+        dest: '<%= global_config.dest %>/<%= curl.dygraph.relative_dest %>'
+      },
+      dygraphdata: {
+        src: "http://dygraphs.com/gallery/data.js",
+        relative_dest: 'lib/dygraphdata.js',
+        dest: '<%= global_config.dest %>/<%= curl.dygraphdata.relative_dest %>'
+      },
       ace: {
         src: 'https://github.com/ajaxorg/ace-builds/archive/3bfda31096cf3f42b77aac64eb788584ea796822.zip',
         relative_url: "lib/ace-builds-3bfda31096cf3f42b77aac64eb788584ea796822/src-min/ace.js",
