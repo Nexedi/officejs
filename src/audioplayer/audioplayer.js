@@ -5,7 +5,14 @@
 
   rJS(window).ready(function (g) {
     // First, load the progress gadget
-    g.declareGadget('../audioplayer_progress/index.html')
+    var div_context = g.__element.getElementsByTagName('div')[0];
+    g.declareGadget(
+      '../audioplayer_progress/index.html',
+      {
+        element: div_context
+       // sandbox: 'iframe'
+      }
+    )
       .then(function (progress) {
         progress.setValue(50);
         progress.setMax(100);
