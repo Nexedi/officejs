@@ -87,6 +87,8 @@ module.exports = function (grunt) {
           syncImport: true
         },
         files: {
+          "<%= global_config.dest %>/jio_drive/jio_drive.css":
+            "<%= global_config.src %>/jio_drive/jio_drive.less",
           "<%= global_config.dest %>/editor_ace/aceeditor.css":
             "<%= global_config.src %>/editor_ace/aceeditor.less",
           "<%= global_config.dest %>/erp5/erp5.css":
