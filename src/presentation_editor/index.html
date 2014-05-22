@@ -5,19 +5,19 @@
     <title>Presentation editor</title>
 
     <!-- Presentation editor dependencies -->
-    <script src="../lib/jquery.js"></script>
-    <script src="../lib/jquery-ui.js"></script>
-    <script src="../lib/jquerymobile.js"></script>
-    <script src="../lib/beautify-html.js"></script>
+    <script src="../<%= curl.jquery.relative_dest %>"></script>
+    <script src="../<%= curl.jqueryuijs.relative_dest %>"></script>
+    <script src="../<%= curl.jquerymobilejs.relative_dest %>"></script>
+    <script src="../<%= curl.beautifyhtml.relative_dest %>"></script>
 
     <!-- Renderjs -->
-    <script src="../lib/rsvp.min.js"></script>
-    <script src="../lib/renderjs.min.js"></script>
+    <script src="../<%= copy.rsvp.relative_dest %>"></script>
+    <script src="../<%= copy.renderjs.relative_dest %>"></script>
 
     <!-- Jquery ui and jquery-mobile stylesheet -->
-    <link rel="stylesheet" href="../lib/jquery-ui.css">
-    <link rel="stylesheet" href="../lib/jquerymobile.css">
-    <link rel="stylesheet" href="../lib/animate.css">
+    <link rel="stylesheet" href="../<%= curl.jqueryuicss.relative_dest %>">
+    <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
+    <link rel="stylesheet" href="../<%= curl.animatecss.relative_dest %>">
 
     <!-- Presentation editor stylesheet -->
     <link rel="stylesheet" href="presentation_editor.css">    
