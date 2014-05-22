@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Aloha Editor</title>
+  <!-- Load Aloha Editor css and js -->
+  <link rel="stylesheet" href="../<%= curl.aloha.css_relative_dest %>" type="text/css"/>
+  <!-- exports require() and define() into the global namespace -->
+  <script src="../<%= curl.aloha.require_relative_dest %>" type="text/javascript"></script>
+  <!-- defines the 'jquery' module -->
+  <script src="../<%= curl.aloha.jquery_relative_dest %>" type="text/javascript"></script>
+  <!-- uses the 'jquery' module defined above -->
+  <script src="../<%= curl.aloha.js_relative_dest %>"
+	  data-aloha-plugins="common/ui,common/format,common/highlighteditables,common/link,common/image,common/list,common/table"></script>
+  <script src="../<%= copy.rsvp.relative_dest %>" type="text/javascript"></script>
+  <script src="../<%= copy.renderjs.relative_dest %>" type="text/javascript"></script>
+  <script src="aloha.js"></script>
+
+</head>
+<body>
+
+<div id="editor"></div>
+    
+
+</body>
+</html>

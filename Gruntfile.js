@@ -193,6 +193,16 @@ module.exports = function (grunt) {
         relative_dest: 'lib/dygraphdata.js',
         dest: '<%= global_config.dest %>/<%= curl.dygraphdata.relative_dest %>'
       },
+      aloha: {
+        src: 'http://aloha-editor.org/builds/stable/alohaeditor-0.25.7.zip',
+        relative_url: "lib/ace-builds-3bfda31096cf3f42b77aac64eb788584ea796822/src-min/ace.js",
+        directory: "alohaeditor-0.25.7/aloha",
+        css_relative_dest: "lib/<%= curl.aloha.directory %>/css/aloha.css",
+        require_relative_dest: "lib/<%= curl.aloha.directory %>/lib/require.js",
+        jquery_relative_dest: "lib/<%= curl.aloha.directory %>/lib/vendor/jquery-1.7.2.js",
+        js_relative_dest: "lib/<%= curl.aloha.directory %>/lib/aloha.js",
+        dest: '<%= global_config.tmp %>/alohaeditor.zip'
+      },
       ace: {
         src: 'https://github.com/ajaxorg/ace-builds/archive/3bfda31096cf3f42b77aac64eb788584ea796822.zip',
         relative_url: "lib/ace-builds-3bfda31096cf3f42b77aac64eb788584ea796822/src-min/ace.js",
@@ -248,6 +258,10 @@ module.exports = function (grunt) {
     },
 
     unzip: {
+      aloha: {
+        src: '<%= curl.aloha.dest %>',
+        dest: '<%= global_config.dest %>/lib/'
+      },
       ace: {
         src: '<%= curl.ace.dest %>',
         dest: '<%= global_config.dest %>/lib/'
