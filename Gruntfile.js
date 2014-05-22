@@ -226,6 +226,10 @@ module.exports = function (grunt) {
         js_relative_url: "lib/<%= curl.jqueryte.directory %>/jquery-te-<%= curl.jqueryte.version %>.min.js",
         dest: '<%= global_config.tmp %>/jQuery-TE.zip'
       },
+      jquerysheet: {
+        src: 'https://jquerysheet.googlecode.com/files/jquery.sheet-2.0.0.zip',
+        dest: '<%= global_config.tmp %>/jquery_sheet.zip'
+      },
       jquery: {
         src: 'http://code.jquery.com/jquery-2.0.3.js',
         relative_dest: 'lib/jquery.js',
@@ -278,6 +282,10 @@ module.exports = function (grunt) {
       },
       jqueryte: {
         src: '<%= curl.jqueryte.dest %>',
+        dest: '<%= global_config.dest %>/lib/'
+      },
+      jquery_sheet: {
+        src: '<%= curl.jquerysheet.dest %>',
         dest: '<%= global_config.dest %>/lib/'
       }
     },
