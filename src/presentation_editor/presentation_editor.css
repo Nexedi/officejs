@@ -110,3 +110,66 @@ body {
     width: 24%;
     margin: 3%
 }
+
+.ui-panel {
+    width: 35%;
+}
+
+.ui-panel-position-left {
+    left: -35%;
+}
+
+.ui-panel-animate.ui-panel-position-left.ui-panel-display-overlay,
+.ui-panel-animate.ui-panel-position-left.ui-panel-display-push {
+    -webkit-transform: translate3d(-35%,0,0);
+    -moz-transform: translate3d(-35%,0,0);
+    transform: translate3d(-35%,0,0);
+}
+
+.ui-panel-position-right {
+    right: -35%;
+}
+
+.ui-panel-animate.ui-panel-position-right.ui-panel-display-overlay,
+.ui-panel-animate.ui-panel-position-right.ui-panel-display-push {
+    -webkit-transform: translate3d(35%,0,0);
+    -moz-transform: translate3d(35%,0,0);
+    transform: translate3d(35%,0,0);
+}
+
+.ui-panel-page-content-position-left,
+.ui-panel-dismiss-open.ui-panel-dismiss-position-left {
+	left: 35%;
+	right: -35%;
+}
+
+.ui-panel-animate.ui-panel-page-content-position-left.ui-panel-page-content-display-reveal,
+.ui-panel-animate.ui-panel-page-content-position-left.ui-panel-page-content-display-push {
+    -webkit-transform: translate3d(35%,0,0);
+    -moz-transform: translate3d(35%,0,0);
+    transform: translate3d(35%,0,0);
+}
+/* panel right open */
+.ui-panel-page-content-position-right,
+.ui-panel-dismiss-open.ui-panel-dismiss-position-right {
+	left: -35%;
+	right: 35%;
+}
+/* animated: panel right open (for reveal and push) */
+.ui-panel-animate.ui-panel-page-content-position-right.ui-panel-page-content-display-reveal, 
+.ui-panel-animate.ui-panel-page-content-position-right.ui-panel-page-content-display-push {
+	-webkit-transform: translate3d(-35%,0,0);
+	-moz-transform: translate3d(-35%,0,0);
+	transform: translate3d(-35%,0,0);
+}
+
+@media (min-width:55em) {
+    .ui-responsive-panel .ui-panel-page-content-open.ui-panel-page-content-position-left.ui-panel-page-content-display-push,
+    .ui-responsive-panel .ui-panel-page-content-open.ui-panel-page-content-position-left.ui-panel-page-content-display-reveal {
+	margin-right: 35%;
+    }
+    .ui-responsive-panel .ui-panel-page-content-open.ui-panel-page-content-position-right.ui-panel-page-content-display-push,
+    .ui-responsive-panel .ui-panel-page-content-open.ui-panel-page-content-position-right.ui-panel-page-content-display-reveal {
+	margin-left: 35%;
+    }
+}

@@ -94,7 +94,9 @@ module.exports = function (grunt) {
           "<%= global_config.dest %>/erp5/erp5.css":
             "<%= global_config.src %>/erp5/erp5.less",
           "<%= global_config.dest %>/twin_erp5/superindex.css":
-            "<%= global_config.src %>/twin_erp5/superindex.less"
+            "<%= global_config.src %>/twin_erp5/superindex.less",
+          "<%= global_config.dest %>/presentation_editor/presentation_editor.css":
+            "<%= global_config.src %>/presentation_editor/presentation_editor.css"
         }
       }
     },
@@ -148,6 +150,12 @@ module.exports = function (grunt) {
             return grunt.template.process(content);
           }
         }
+      },
+      images: {
+        expand: true,
+        cwd: "<%= global_config.src %>/",
+        src: "**/images/*.*",
+        dest: "<%= global_config.dest %>/"
       },
       rsvp: {
         src: "node_modules/rsvp/dist/rsvp-2.0.4.min.js",
