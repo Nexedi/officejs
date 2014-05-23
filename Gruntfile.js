@@ -98,7 +98,9 @@ module.exports = function (grunt) {
           "<%= global_config.dest %>/presentation_editor/presentation_editor.css":
             "<%= global_config.src %>/presentation_editor/presentation_editor.css",
           "<%= global_config.dest %>/presentation_viewer/presentation_viewer.css":
-            "<%= global_config.src %>/presentation_viewer/presentation_viewer.css"
+            "<%= global_config.src %>/presentation_viewer/presentation_viewer.css",
+          "<%= global_config.dest %>/jabber_login/jabber_login.css":
+            "<%= global_config.src %>/jabber_login/jabber_login.css"
         }
       }
     },
@@ -291,6 +293,11 @@ module.exports = function (grunt) {
         src: 'https://svg-edit.googlecode.com/files/svg-edit-2.6.zip',
         relative_dest: 'lib/svg-edit-2.6',
         dest: '<%= global_config.tmp %>/svgedit.zip'
+      },
+      strophejs: {
+        src: 'https://raw.github.com/strophe/strophe.im/gh-pages/strophejs/downloads/strophejs-1.1.3.zip',
+        relative_dest: 'lib/strophejs-1.1.3/strophe.min.js',
+        dest: '<%= global_config.tmp %>/strophejs.zip'
       }
       //     qunit: {
 //       all: ['test/index.html']
@@ -319,6 +326,10 @@ module.exports = function (grunt) {
       },
       svgedit: {
         src: '<%= global_config.tmp %>/svgedit.zip',
+        dest: '<%= global_config.dest %>/lib/'
+      },
+      strophejs: {
+        src: '<%= global_config.tmp %>/strophejs.zip',
         dest: '<%= global_config.dest %>/lib/'
       }
     },

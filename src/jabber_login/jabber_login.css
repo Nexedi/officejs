@@ -1,0 +1,10 @@
+.login-box {
+    margin: 0 auto;
+    max-width: 35ch !important;
+    text-align: center;
+    padding: 1%;
+}
+
+.login-box form {
+    margin: 1%;
+}
