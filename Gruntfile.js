@@ -109,10 +109,12 @@ module.exports = function (grunt) {
         src: [
           'node_modules/jio/src/sha1.amd.js',
           'node_modules/jio/src/sha2.amd.js',
+          'node_modules/jio/src/sha256.amd.js',    //xxx
           'node_modules/jio/jio.js',
           'node_modules/jio/complex_queries.js',
           'node_modules/jio/src/jio.storage/localstorage.js',
-          'node_modules/jio/src/jio.storage/erp5storage.js'
+          'node_modules/jio/src/jio.storage/erp5storage.js',
+          'node_modules/jio/src/jio.storage/indexeddbstorage.js'   //xxx
         ],
         relative_dest: "lib/jio.js",
         dest: "<%= global_config.dest %>/<%= concat.jio.relative_dest %>"
