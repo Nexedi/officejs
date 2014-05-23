@@ -1,0 +1,28 @@
+html {
+    height: 100%;
+}
+body {
+    height: 100%;
+}
+#talk {
+    padding: 10px;
+    height: 82%;
+    border: solid 1px #aaa;
+    font-family: monospace;
+    overflow: auto;
+}
+
+#talk-input { 
+    width: 80%;
+    height: 5%;
+    border: solid 1px #aaa;
+    font-family: monospace;
+    overflow: auto;
+    float: left;
+}
+
+#send-button {
+    width: 10%;
+    height: 5%;
+    float: left;
+}
