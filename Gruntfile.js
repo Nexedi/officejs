@@ -96,7 +96,9 @@ module.exports = function (grunt) {
           "<%= global_config.dest %>/twin_erp5/superindex.css":
             "<%= global_config.src %>/twin_erp5/superindex.less",
           "<%= global_config.dest %>/presentation_editor/presentation_editor.css":
-            "<%= global_config.src %>/presentation_editor/presentation_editor.css"
+            "<%= global_config.src %>/presentation_editor/presentation_editor.css",
+          "<%= global_config.dest %>/presentation_viewer/presentation_viewer.css":
+            "<%= global_config.src %>/presentation_viewer/presentation_viewer.css"
         }
       }
     },
