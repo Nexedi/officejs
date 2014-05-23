@@ -100,7 +100,9 @@ module.exports = function (grunt) {
           "<%= global_config.dest %>/presentation_viewer/presentation_viewer.css":
             "<%= global_config.src %>/presentation_viewer/presentation_viewer.css",
           "<%= global_config.dest %>/jabber_login/jabber_login.css":
-            "<%= global_config.src %>/jabber_login/jabber_login.css"
+            "<%= global_config.src %>/jabber_login/jabber_login.css",
+          "<%= global_config.dest %>/jabber_contactlist/jabber_contactlist.css":
+            "<%= global_config.src %>/jabber_contactlist/jabber_contactlist.css"
         }
       }
     },
@@ -182,6 +184,11 @@ module.exports = function (grunt) {
         src: "<%= global_config.lib %>/URI.js",
         relative_dest: "lib/URI.js",
         dest: "<%= global_config.dest %>/<%= copy.uri.relative_dest %>"
+      },
+      handlebars: {
+        src: 'node_modules/handlebars/dist/handlebars.min.js',
+        relative_dest: 'lib/handlebars.min.js',
+        dest: "<%= global_config.dest %>/<%= copy.handlebars.relative_dest %>"
       }
     },
 

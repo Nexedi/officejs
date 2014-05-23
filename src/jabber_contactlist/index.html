@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Jabber client</title>
+
+    <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
+    <link rel="stylesheet" href="jabber_contactlist.css">
+
+    <script src="../<%= curl.jquery.relative_dest %>"></script>
+    <script src="../<%= curl.jquerymobilejs.relative_dest %>"></script>
+    <script src="../<%= copy.rsvp.relative_dest %>"></script>
+    <script src="../<%= copy.renderjs.relative_dest %>"></script>
+    <script src="../<%= curl.strophejs.relative_dest %>"></script>
+    <script src="../<%= copy.handlebars.relative_dest %>"></script>
+    
+    <script src="jabber_contactlist.js"></script>
+    
+  </head>
+  <body>
+    <div id=contact-list><ul data-role="listview" data-inset="true"></ul></div>
+    <script id="contact-template" type="text/x-handlebars-template">
+      <li>
+        {{#if offline}}
+        <img src="images/offline.png">
+        {{else}}
+        {{#if status}}
+        <img src="images/misc.png">
+        {{else}}
+        <img src="images/online.png">
+        {{/if}}
+        {{/if}}
+        <h2>{{name}}&nbsp&nbsp{{#if status}}({{status}}){{/if}}</h2>
+      </li>
+    </script>
+  </body>
+</html>

@@ -4,10 +4,11 @@
   "version": "0.2.0",
   "description": "The Free HTML5 Cloud Office",
   "dependencies": {
-    "rsvp": "git+http://git.erp5.org/repos/rsvp.js.git",
+    "handlebars": "^2.0.0-alpha.4",
+    "jio": "git+http://git.erp5.org/repos/jio.git",
     "renderjs": "git+http://git.erp5.org/repos/renderjs.git",
-    "uritemplate": "git+http://git.erp5.org/repos/uritemplate-js.git",
-    "jio": "git+http://git.erp5.org/repos/jio.git"
+    "rsvp": "git+http://git.erp5.org/repos/rsvp.js.git",
+    "uritemplate": "git+http://git.erp5.org/repos/uritemplate-js.git"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
