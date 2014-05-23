@@ -10,13 +10,12 @@
     gadget.analyser.connect(gadget.gain);
     gadget.gain.gain.value = gadget.volume;
     gadget.gain.connect(gadget.audioCtx.destination);
-    gadget.audio.stop();
     gadget.audio.src = URL.createObjectURL(file);
     gadget.audio.load();
     gadget.decoded = true;
   })
     .declareMethod('stopSong', function () {
-      this.audio.stop();
+      this.audio.pause();
     })
     .declareMethod('playSong', function () {
       this.audio.play();
