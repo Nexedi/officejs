@@ -1,28 +1,22 @@
 /*global window, rJS, RSVP, console */
-/*jslint maxlen:80, nomen: true */
+/*jslint nomen: true*/
 (function (window, rJS) {
   "use strict";
 
   rJS(window).ready(function (g) {
     // First, load the progress gadget
-    var div_context = g.__element.getElementsByTagName('div')[0];
+    var input_context = g.__element.getElementsByTagName('input')[0];
     g.declareGadget(
-      '../audioplayer_progress/index.html',
-      {
-        element: div_context
-       // sandbox: 'iframe'
-      }
+      '../audioplayer_control/index.html'
     )
-      .then(function (progress) {
-        progress.setValue(50);
-        progress.setMax(100);
-        return [50, 100];
-      })
-      .then(function (e) {
-        console.log(e[0] + e[1]);
+      .then(function (control) {
+        input_context.onchange = function () {
+          control.setSong(input_context.files[0]);
+          control.playSong();
+        };
       })
       .fail(function (e) {
-        console.log("error" + e);
+        console.log("[ERROR]: " + e);
       });
   });
 }(window, rJS));
