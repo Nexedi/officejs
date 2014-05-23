@@ -1,29 +1,30 @@
 #visualizer {
-    text-align: center;
+    text-align: relative;
 }
 
 #visualizer #canvas {
     margin-top: 2%;
     position: relative;
 }
+
 canvas#mirror{
     opacity: 0.5;
     position: relative;
-    top: -66px;
-    -webkit-transform: scaleY(-0.5);
-    -moz-transform: scaleY(-0.5);
-    -ms-transform: scaleY(-0.5);
-    transform: scaleY(-0.5);
+    top: -90px;
+    -webkit-transform: scaleY(-0.3);
+    -moz-transform: scaleY(-0.3);
+    -ms-transform: scaleY(-0.3);
+    transform: scaleY(-0.3);
 }
 div#mirrorWrapper{
-    height: 150px;
+    height: 100px;
 }
 
-/*
+
 div#mirrorWrapper:after {
     display: block;
     height: 100px;
-    width: 25%;
+    width: 30%;
     position: relative;
     top: -257px;
     content: " ";
@@ -33,4 +34,4 @@ div#mirrorWrapper:after {
     background: -ms-linear-gradient(top,rgba(39,40,34,0) 0%, rgba(39,40,34,1) 75%);
     background: linear-gradient(top,rgba(39,40,34,0) 0%, rgba(39,40,34,1) 75%);
 }
-*/
+
