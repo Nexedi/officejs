@@ -284,8 +284,13 @@ module.exports = function (grunt) {
         src: 'https://raw.githubusercontent.com/mindmup/bootstrap-wysiwyg/master/bootstrap-wysiwyg.js',
         relative_dest: 'lib/bootstrap-wysiwyg.js',
         dest: '<%= global_config.dest %>/<%= curl.bootstrapwysiwyg.relative_dest %>'
+      },
+      svgedit: {
+        src: 'https://svg-edit.googlecode.com/files/svg-edit-2.6.zip',
+        relative_dest: 'lib/svg-edit-2.6',
+        dest: '<%= global_config.tmp %>/svgedit.zip'
       }
-//     qunit: {
+      //     qunit: {
 //       all: ['test/index.html']
     },
 
@@ -308,6 +313,10 @@ module.exports = function (grunt) {
       },
       bootstrap: {
         src: '<%= global_config.tmp %>/bootstrap.zip',
+        dest: '<%= global_config.dest %>/lib/'
+      },
+      svgedit: {
+        src: '<%= global_config.tmp %>/svgedit.zip',
         dest: '<%= global_config.dest %>/lib/'
       }
     },
