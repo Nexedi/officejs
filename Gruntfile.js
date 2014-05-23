@@ -235,7 +235,11 @@ module.exports = function (grunt) {
         relative_dest: 'lib/jquery.js',
         dest: '<%= global_config.dest %>/<%= curl.jquery.relative_dest %>'
       },
-
+      jqueryhotkeysjs: {
+        src: 'https://raw.githubusercontent.com/jeresig/jquery.hotkeys/master/jquery.hotkeys.js',
+        relative_dest: 'lib/jquery.hotkeys.j',
+        dest: '<%= global_config.dest %>/<%= curl.jqueryhotkeysjs.relative_dest %>'
+      },
       jquerymobilejs: {
         src_base: 'http://code.jquery.com/mobile/1.4.0-alpha.2/jquery.mobile-1.4.0-alpha.2',
         src: '<%= curl.jquerymobilejs.src_base %>.js',
@@ -266,6 +270,18 @@ module.exports = function (grunt) {
         src: 'https://raw.github.com/daneden/animate.css/master/animate.css',
         relative_dest: 'lib/animate.css',
         dest: '<%= global_config.dest %>/<%= curl.animatecss.relative_dest %>'
+      },
+      bootstrap: {
+        src: 'https://github.com/twbs/bootstrap/releases/download/v3.1.1/bootstrap-3.1.1-dist.zip',
+        relative_dest: 'lib/bootstrap-3.1.1-dist',
+        js_relative_dest: '<%= curl.bootstrap.relative_dest %>/js/bootstrap.min.js',
+        css_relative_dest: '<%= curl.bootstrap.relative_dest %>/css/bootstrap.min.css',
+        dest: '<%= global_config.tmp %>/bootstrap.zip'
+      },
+      bootstrapwysiwyg: {
+        src: 'https://raw.githubusercontent.com/mindmup/bootstrap-wysiwyg/master/bootstrap-wysiwyg.js',
+        relative_dest: 'lib/bootstrap-wysiwyg.js',
+        dest: '<%= global_config.dest %>/<%= curl.bootstrapwysiwyg.relative_dest %>'
       }
 //     qunit: {
 //       all: ['test/index.html']
@@ -286,6 +302,10 @@ module.exports = function (grunt) {
       },
       jquery_sheet: {
         src: '<%= curl.jquerysheet.dest %>',
+        dest: '<%= global_config.dest %>/lib/'
+      },
+      bootstrap: {
+        src: '<%= global_config.tmp %>/bootstrap.zip',
         dest: '<%= global_config.dest %>/lib/'
       }
     },
