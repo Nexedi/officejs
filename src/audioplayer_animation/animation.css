@@ -24,7 +24,7 @@ div#mirrorWrapper{
 div#mirrorWrapper:after {
     display: block;
     height: 100px;
-    width: 30%;
+    width: 400px;
     position: relative;
     top: -257px;
     content: " ";
