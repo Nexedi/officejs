@@ -191,6 +191,16 @@ module.exports = function (grunt) {
         src: 'node_modules/handlebars/dist/handlebars.min.js',
         relative_dest: 'lib/handlebars.min.js',
         dest: "<%= global_config.dest %>/<%= copy.handlebars.relative_dest %>"
+      },
+      qunitjs: {
+        src: 'node_modules/qunitjs/qunit/qunit.js',
+        relative_dest: 'lib/qunit.js',
+        dest: "<%= global_config.dest %>/<%= copy.qunitjs.relative_dest %>"
+      },
+      qunitcss: {
+        src: 'node_modules/qunitjs/qunit/qunit.css',
+        relative_dest: 'lib/qunit.css',
+        dest: "<%= global_config.dest %>/<%= copy.qunitcss.relative_dest %>"
       }
     },
 
