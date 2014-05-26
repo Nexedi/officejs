@@ -5,6 +5,9 @@
   var gk = rJS(window);
   gk.declareMethod('setSong', function (file) {  //configure a song
     var gadget = this;
+    if (gadget.file !== file) {
+      gadget.decoded = true;
+    }
     gadget.file = file;
     gadget.source.connect(gadget.analyser);
     gadget.analyser.connect(gadget.gain);
@@ -12,7 +15,6 @@
     gadget.gain.connect(gadget.audioCtx.destination);
     gadget.audio.src = URL.createObjectURL(file);
     gadget.audio.load();
-    gadget.decoded = true;
   })
     .declareMethod('stopSong', function () {
       this.audio.pause();
@@ -40,11 +42,20 @@
     .declareMethod('getVolume', function () {
       return Math.round(this.volume * 100) + "%";
     })
+    .declareMethod('isPaused', function () {
+      return this.audio.paused;
+    })
     .declareMethod('getCurrentTime', function () {
       return this.audio.currentTime;
     })
+    .declareMethod('setCurrentTime', function (currentTime) {
+      this.audio.currentTime = currentTime;
+    })
     .declareMethod('getTotalTime', function () {
-      return this.getDecodeValue().duration;
+      return this.getDecodeValue().
+        then(function (e) {
+          return e.duration;
+        });
     })
     .declareMethod('getFFTValue', function () {
       var gadget = this,
