@@ -15,6 +15,13 @@
     })
     .declareMethod('stopAnimation', function () {
       this.animation.stop();
+    })
+    .declareMethod('setAction', function (type, Action) {
+      var that = this;
+      that.canvas[type] = function () {
+        Action.call(that);
+        that.showAnimation();
+      };
     });
   gk.ready(function (g) {
     g.canvas = g.__element.getElementsByTagName('canvas')[0];
