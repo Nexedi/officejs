@@ -87,6 +87,7 @@
       return promiseReadFile.then(function (response) {
         return new Promise(function (resolve, reject) {
           gadget.audioCtx.decodeAudioData(response, function (buffer) {
+            gadget.buffer = buffer;
             resolve(buffer);
           }, function () {
             reject(-1);
