@@ -22,22 +22,9 @@
     .declareMethod('playSong', function () {
       this.audio.play();
     })
-    .declareMethod('volumeUp', function () {
-      var gadget = this;
-      if (gadget.volume < 3) {
-        gadget.volume += 0.2;
-      }
-      gadget.gain.gain.value = gadget.volume;
-    })
-    .declareMethod('volumeDowm', function () {
-      var gadget = this;
-      if (gadget.volume > 0) {
-        gadget.volume -= 0.2;
-        if (gadget.volume < 0) {
-          gadget.volume = 0;
-        }
-      }
-      gadget.gain.gain.value = gadget.volume;
+    .declareMethod('setVolume', function (volume) {
+      this.volume = volume;
+      this.gain.gain.value = volume;
     })
     .declareMethod('getVolume', function () {
       return Math.round(this.volume * 100) + "%";
@@ -90,7 +77,7 @@
             gadget.buffer = buffer;
             resolve(buffer);
           }, function () {
-            reject(-1);
+            reject("decode error");
           });
         });
       }).then(function (response) {
