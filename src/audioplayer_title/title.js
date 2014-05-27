@@ -7,7 +7,7 @@
   var gk = rJS(window),
     scroll;
   function BannerObject() {
-    this.msg = "it's a test";
+    this.msg = " ";
     this.out = " ";
     this.Position = 50;
     this.pos = this.Position;

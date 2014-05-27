@@ -1,6 +1,6 @@
-/*global window, rJS, RSVP, console */
+/*global window, rJS, RSVP, console, $, jQuery */
 /*jslint nomen: true*/
-(function (window, rJS) {
+(function (window, rJS, $) {
   "use strict";
   function AnimationClass(control) {
     this.canvas = null;
@@ -86,9 +86,6 @@
       ),
       g.getDeclaredGadget(
         "title"
-      ),
-      g.getDeclaredGadget(
-        "log"
       )
     ])
       .then(function (all_param) {
@@ -97,15 +94,65 @@
           time = all_param[2],
           volume = all_param[3],
           title = all_param[4],
-          log = all_param[5],
           animationObject = new AnimationClass(control);
-
+        window.setInterval(function () {    //double click to play
+          control.getCurrentTime()
+            .then(function (e) {
+              time.setValue(e);
+            });
+        }, 1000);
+        volume.setMax(3);
+        function nextToPlay() {
+          g.currentPlayId = Math.floor(Math.random()
+                                       * g.playlist.length);
+          control.setSong(g.playlist[g.currentPlayId]);
+          control.playSong();
+          animation.showAnimation();
+          title.setMessage(g.playlist[g.currentPlayId].name);
+          control.getTotalTime()
+            .then(function (e) {
+              time.setMax(e);
+            });
+        }
         input_context.onchange = function () {
-          var tmp;
-          for (tmp = 0; tmp < input_context.files.length; tmp += 1) {
-            g.playlist.push(input_context.files[tmp]);
+          var tmp,
+            index,
+            found;
+          for (index = 0; index < input_context.files.length; index += 1) {
+            found = false;
+            for (tmp = 0; tmp < g.playlist.length; tmp += 1) {
+              if (g.playlist[tmp].name === input_context.files[index].name) {
+                found = true;
+                break;
+              }
+            }
+            if (found === false) {
+              g.playlist.push(input_context.files[index]);
+            }
           }
         };
+
+        //time configure
+        time.setAction('onclick', function (e) {
+          time.getPositionValue(e).
+            then(function (value) {
+              control.setCurrentTime(value);
+              time.setValue(value);
+            });
+        });
+        //volume configure
+        volume.setMax(3);
+        volume.setAction('onclick', function (e) {
+          volume.getPositionValue(e).
+            then(function (value) {
+              volume.setValue(value);
+              control.setVolume(value);
+            });
+        });
+
+        //control configure
+        control.onended(nextToPlay);
+        //animation configure
         animation.setAnimation(animationObject);
         animation.setAction('onclick', function () {
           control.isPaused()
@@ -117,28 +164,10 @@
               }
             });
         });
-        animation.setAction('ondblclick', function () {
-          g.currentPlayId = Math.floor(Math.random()
-                                       * g.playlist.length);
-          control.setSong(g.playlist[g.currentPlayId]);
-          control.playSong();
-          animation.showAnimation();
-          title.setMessage(g.playlist[g.currentPlayId].name);
-          window.setInterval(function () {    //double click to play
-            control.getCurrentTime()
-              .then(function (e) {
-                time.setValue(e);
-              });
-          }, 1000);
-          control.getTotalTime()
-            .then(function (e) {
-              time.setMax(e);
-            });
-        });
-        log.showMessage(volume);
+        animation.setAction('ondblclick', nextToPlay);
       })
       .fail(function (e) {
         console.log("[ERROR]: " + e);
       });
   });
-}(window, rJS));
+}(window, rJS, jQuery));

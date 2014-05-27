@@ -1,5 +1,5 @@
 /*global window, rJS, RSVP, console, document, JSON, Uint8Array */
-/*jslint maxlen:80, nomen: true */
+/*jslint nomen: true */
 
 
 (function (window, rJS) {
@@ -16,10 +16,10 @@
     .declareMethod('stopAnimation', function () {
       this.animation.stop();
     })
-    .declareMethod('setAction', function (type, Action) {
+    .declareMethod('setAction', function (type, action) {
       var that = this;
       that.canvas[type] = function () {
-        Action.call(that);
+        action.call(that);
         that.showAnimation();
       };
     });

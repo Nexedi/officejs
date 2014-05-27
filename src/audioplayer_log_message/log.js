@@ -34,13 +34,5 @@
 
   gk.ready(function (g) {
     g.log = g.__element.getElementsByTagName('div')[0];
-    var node = document.createElement("pre");
-    node.setAttribute(
-      "style",
-      "background-color:" + logGetColor() +
-        ";margin:0;padding:0;"
-    );
-    node.textContent = "use for show message";
-    g.log.appendChild(node);
   });
 }(window, rJS));
