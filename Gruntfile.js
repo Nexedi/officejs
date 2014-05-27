@@ -72,7 +72,8 @@ module.exports = function (grunt) {
             'window',
             'document'
           ]
-        }
+        },
+        exclude: '<%= global_config.src %>/webodf_editor/**/*.*'
       }
     },
 
@@ -149,18 +150,6 @@ module.exports = function (grunt) {
     },
 
     copy: {
-      gadget: {
-        expand: true,
-        cwd: "<%= global_config.src %>/",
-        src: "**/*.html",
-        dest: "<%= global_config.dest %>/",
-        nonull: true,
-        options: {
-          process: function (content) {
-            return grunt.template.process(content);
-          }
-        }
-      },
       images: {
         expand: true,
         cwd: "<%= global_config.src %>/",
@@ -201,6 +190,24 @@ module.exports = function (grunt) {
         src: 'node_modules/qunitjs/qunit/qunit.css',
         relative_dest: 'lib/qunit.css',
         dest: "<%= global_config.dest %>/<%= copy.qunitcss.relative_dest %>"
+      },
+      webodf_editor: {
+        expand: true,
+        cwd: '<%= global_config.src %>/webodf_editor/',
+        src: ['**'],
+        dest: '<%= global_config.dest %>/webodf_editor/'
+      },
+      gadget: {
+        expand: true,
+        cwd: "<%= global_config.src %>/",
+        src: "**/*.html",
+        dest: "<%= global_config.dest %>/",
+        nonull: true,
+        options: {
+          process: function (content) {
+            return grunt.template.process(content);
+          }
+        }
       }
     },
 
@@ -380,6 +387,6 @@ module.exports = function (grunt) {
   grunt.registerTask('dep', ['curl', 'unzip']);
 //   grunt.registerTask('test', ['qunit']);
   grunt.registerTask('server', ['connect:client', 'open', 'watch']);
-  grunt.registerTask('build', ['concat', 'uglify', 'copy', 'less']);
+  grunt.registerTask('build', ['concat', 'copy', 'uglify', 'less']);
 
 };
