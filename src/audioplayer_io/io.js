@@ -1,4 +1,4 @@
-/*global window, rJS, RSVP, jIO, JSON */
+/*global window, rJS, RSVP, jIO, JSON, console, indexedDB */
 
 (function (window, jIO, rJS) {
   "use strict";
@@ -6,15 +6,16 @@
   var gk = rJS(window);
 
   gk.declareMethod('createIO', function (description, key) {
+    indexedDB.deleteDatabase("jio:test");
     this.jio = jIO.createJIO(description);
     this.key = key;
     this.jio.put({
       "_id" : key
     }).then(function () {
       description = JSON.stringify(description, null, "  ");
-      return ("JIO created: " + description + "\nwith key: " + key);
+      console.log("JIO created: " + description + "\nwith key: " + key);
     }).catch(function (e) {
-      return "jio created error: " + e.target.result;
+      console.log("jio created error: " + e.target.result);
     });
   })
     .declareMethod('getIO', function (attachment) {
@@ -30,10 +31,12 @@
     })
     .declareMethod('setIO', function (attachment, file) {
       var gadget = this;
-      return gadget.jio.putAttachment({
+      gadget.jio.putAttachment({
         "_id": gadget.key,
         "_attachment": attachment,
         "_blob": file
+      }).then(function (e) {
+        console.log(e);
       });
     })
     .declareMethod('showAllIO', function () {

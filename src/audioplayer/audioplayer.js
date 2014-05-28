@@ -32,7 +32,7 @@
       return nextId();
     })
     .allowPublicAcquisition("sendTotalId", function (value) {
-      totalId = value;
+      totalId = value[0];  //array parameter
     })
     .allowPublicAcquisition("allNotify", function () {
       control.getTotalTime().then(function (value) {
@@ -83,11 +83,12 @@
           volume.setMax(3);
 
           next_context.onclick = function () {
-            control.setSong(nextId());
-            control.playSong();
-            animation.showAnimation();
-            control.getTotalTime().then(function (value) {
-              time.setMax(value);
+            control.setSong(nextId()).then(function () {
+              control.playSong();
+              animation.showAnimation();
+              control.getTotalTime().then(function (value) {
+                time.setMax(value);
+              });
             });
           };
           command_context.onclick = function () {

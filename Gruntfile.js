@@ -123,7 +123,7 @@ module.exports = function (grunt) {
           'node_modules/jio/complex_queries.js',
           'node_modules/jio/src/jio.storage/localstorage.js',
           'node_modules/jio/src/jio.storage/erp5storage.js',
-          'node_modules/jio/src/jio.storage/indexeddbstorage.js'   //xxx
+          'node_modules/jio/src/jio.storage/indexeddbstorage1.js'   //xxx
         ],
         relative_dest: "lib/jio.js",
         dest: "<%= global_config.dest %>/<%= concat.jio.relative_dest %>"

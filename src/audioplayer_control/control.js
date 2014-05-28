@@ -19,9 +19,12 @@
     gadget.analyser.connect(gadget.gain);
     gadget.gain.gain.value = gadget.volume;
     gadget.gain.connect(gadget.audioCtx.destination);
-    gadget.audio.src =  URL.createObjectURL(gadget.playlist[id]);
-    gadget.audio.load();
-    gadget.allNotify();
+    return gadget.io.getIO(gadget.playlist[id]).then(function (file) {
+      gadget.audio.src =  URL.createObjectURL(file);
+      gadget.file = file;
+      gadget.audio.load();
+      gadget.allNotify();
+    });
   })
     .declareMethod('stopSong', function () {
       this.audio.pause();
@@ -39,7 +42,7 @@
       return this.volume;
     })
     .declareMethod('getTitle', function () {
-      return this.playlist[this.currentPlayId].name;
+      return this.playlist[this.currentPlayId];
     })
     .declareMethod('isPaused', function () {
       return this.audio.paused;
@@ -83,7 +86,7 @@
             resolve(event.target.result);
           }
         };
-        reader.readAsArrayBuffer(gadget.playlist[gadget.currentPlayId]);
+        reader.readAsArrayBuffer(gadget.file);
       });
 
 
@@ -121,6 +124,12 @@
         "ERROR:[configure] Tour browser does not support AudioContext"
       );
     }
+    g.getDeclaredGadget("io").then(function (e) {
+      g.io = e;
+      g.io.createIO({ "type" : "indexeddb",
+                      "database": "test"},
+                    "m");
+    });
     g.audio = new window.Audio();
     g.source = g.audioCtx.createMediaElementSource(g.audio);
     g.analyser = g.audioCtx.createAnalyser();
@@ -145,7 +154,9 @@
           }
         }
         if (found === false) {
-          g.playlist.push(input_context.files[index]);
+          g.io.setIO(input_context.files[index].name,
+                     input_context.files[index]);
+          g.playlist.push(input_context.files[index].name);
         }
       }
       g.sendTotalId(g.playlist.length);
