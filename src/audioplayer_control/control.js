@@ -1,33 +1,45 @@
-/*global window, rJS, RSVP, console, URL, Math, FileReader, Uint8Array */
+/*global window, rJS, RSVP, console, URL, Math,
+  FileReader, Uint8Array, File */
+/*jslint nomen: true*/
 
 (function (window, rJS) {
   "use strict";
   var gk = rJS(window);
-  gk.declareMethod('setSong', function (file) {  //configure a song
+  gk.declareMethod('setSong', function (id) {  //configure a song
     var gadget = this;
-    if (gadget.file !== file) {
+    if ((id >= gadget.lenght) || (id < 0)) {
+      console.log("invalide play id");
+      return;
+    }
+    if (gadget.currentPlayId !== id) {
       gadget.decoded = true;
     }
-    gadget.file = file;
+    gadget.currentPlayId = id;
     gadget.source.connect(gadget.analyser);
     gadget.analyser.connect(gadget.gain);
     gadget.gain.gain.value = gadget.volume;
     gadget.gain.connect(gadget.audioCtx.destination);
-    gadget.audio.src = URL.createObjectURL(file);
+    gadget.audio.src =  URL.createObjectURL(gadget.playlist[id]);
     gadget.audio.load();
+    gadget.allNotify();
   })
     .declareMethod('stopSong', function () {
       this.audio.pause();
+      this.stopAnimation();
     })
     .declareMethod('playSong', function () {
       this.audio.play();
+      this.showAnimation();
     })
     .declareMethod('setVolume', function (volume) {
       this.volume = volume;
       this.gain.gain.value = volume;
     })
     .declareMethod('getVolume', function () {
-      return Math.round(this.volume * 100) + "%";
+      return this.volume;
+    })
+    .declareMethod('getTitle', function () {
+      return this.playlist[this.currentPlayId].name;
     })
     .declareMethod('isPaused', function () {
       return this.audio.paused;
@@ -37,6 +49,7 @@
     })
     .declareMethod('setCurrentTime', function (currentTime) {
       this.audio.currentTime = currentTime;
+      this.audio.play();
     })
     .declareMethod('getTotalTime', function () {
       return this.getDecodeValue().
@@ -46,9 +59,12 @@
     })
     .declareMethod('getFFTValue', function () {
       var gadget = this,
+        tmp = {},
         array = new Uint8Array(gadget.analyser.frequencyBinCount);
       gadget.analyser.getByteFrequencyData(array);
-      return array;
+      tmp.array = array;
+      tmp.length = array.length;
+      return tmp;
     })
     .declareMethod('getDecodeValue', function () {
       var gadget = this,
@@ -67,7 +83,7 @@
             resolve(event.target.result);
           }
         };
-        reader.readAsArrayBuffer(gadget.file);
+        reader.readAsArrayBuffer(gadget.playlist[gadget.currentPlayId]);
       });
 
 
@@ -86,16 +102,16 @@
         return error;
       });
     })
-    .declareMethod('onended', function (end) {
-      if (typeof end === "function") {
-        this.audio.onended = end;
-      } else {
-        console.log("ERROR:[onended] parameter shoude be a function\n");
-      }
-    });
-
+    .declareAcquiredMethod("sendTotalId", "sendTotalId")
+    .declareAcquiredMethod("nextToPlay", "nextToPlay")
+    .declareAcquiredMethod("allNotify", "allNotify")
+    .declareAcquiredMethod("showAnimation", "showAnimation")
+    .declareAcquiredMethod("stopAnimation", "stopAnimation");
   gk.ready(function (g) {
+    var input_context = g.__element.getElementsByTagName('input')[0];
     g.volume = 1;
+    g.playlist = [];
+    g.currentPlayId = 0;
     window.AudioContext = window.AudioContext || window.webkitAudioContext
       || window.mozAudiocontext || window.msAudioContext;
     try {
@@ -110,5 +126,29 @@
     g.analyser = g.audioCtx.createAnalyser();
     g.gain = g.audioCtx.createGain();
     g.decoded = true;
+    g.audio.onended = function () {
+      g.nextToPlay().then(function (id) {
+        g.setSong(id);
+        g.playSong(id);
+      });
+    };
+    input_context.onchange = function () {
+      var tmp,
+        index,
+        found;
+      for (index = 0; index < input_context.files.length; index += 1) {
+        found = false;
+        for (tmp = 0; tmp < g.playlist.length; tmp += 1) {
+          if (g.playlist[tmp].name === input_context.files[index].name) {
+            found = true;
+            break;
+          }
+        }
+        if (found === false) {
+          g.playlist.push(input_context.files[index]);
+        }
+      }
+      g.sendTotalId(g.playlist.length);
+    };
   });
 }(window, rJS));

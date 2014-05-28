@@ -4,13 +4,12 @@
 
 (function (window, rJS) {
   "use strict";
-  var gk = rJS(window),
-    scroll;
+  var gk = rJS(window);
   function BannerObject() {
-    this.msg = " ";
+    this.msg = "";
     this.out = " ";
-    this.Position = 50;
-    this.pos = this.Position;
+    this.Position = 0;
+    this.pos = 0;
     this.delay = 100;
     this.i = 0;
     this.size = 0;
@@ -20,48 +19,49 @@
   }
 
   gk.declareMethod('setMessage', function (msg) {
-    scroll.msg = msg;
+    this.scroll.msg = msg;
   })
     .declareMethod('setDelay', function (delay) {
-      scroll.delay = delay;
+      this.scroll.delay = delay;
     })
     .declareMethod('setPosition', function (position) {
-      if (position > this.size) {
-        position = this.size;
-      }
-      scroll.Position = position;
+      this.scroll.Position = position;
+      this.scroll.pos = position;
     })
     .declareMethod('setMaxSize', function (size) {
       this.input.size = size;
-      scroll.size = size;
+      this.scroll.size = size;
+    })
+    .declareMethod('getSize', function (size) {
+      return this.input.size;
     });
   gk.ready(function (g) {
-    scroll = new BannerObject();
+    g.scroll = new BannerObject();
     g.input = g.__element.getElementsByTagName('input')[0];
-    scroll.size = g.input.size;
+    g.scroll.size = g.input.size;
     function scroller() {
-      scroll.out += " ";
-      if (scroll.pos > 0) {
-        for (scroll.i = 0; scroll.i < scroll.pos; scroll.i += 1) {
-          scroll.out += " ";
+      g.scroll.out += " ";
+      if (g.scroll.pos > 0) {
+        for (g.scroll.i = 0; g.scroll.i < g.scroll.pos; g.scroll.i += 1) {
+          g.scroll.out += " ";
         }
       }
-      if (scroll.pos >= 0) {
-        scroll.out += scroll.msg;
+      if (g.scroll.pos >= 0) {
+        g.scroll.out += g.scroll.msg;
       } else {
-        scroll.out = scroll.msg.substring(-scroll.pos,
-                                          scroll.msg.length);
+        g.scroll.out = g.scroll.msg.substring(-g.scroll.pos,
+                                          g.scroll.msg.length);
       }
-      g.input.value = scroll.out;
-      scroll.out = " ";
-      scroll.pos -= 2;
-      if (scroll.pos < -(scroll.msg.length)) {
-        scroll.reset();
+      g.input.value = g.scroll.out;
+      g.scroll.out = " ";
+      g.scroll.pos -= 2;
+      if (g.scroll.pos < -(g.scroll.msg.length)) {
+        g.scroll.reset();
       }
     }
 
     window.setInterval(function () {
       scroller();
-    }, scroll.delay);
+    }, g.scroll.delay);
   });
 }(window, rJS));

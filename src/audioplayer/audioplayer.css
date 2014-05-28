@@ -1,0 +1,20 @@
+.title {
+    position: absolute;
+    top: 10px;
+    margin: 50px 0 20px 0;
+}
+input.notice{
+    width:400px;
+    background: black;
+    color: white;
+}
+
+.progress_time{
+    position: absolute;
+    top: 420px;
+    margin: 50px 0 20px 0;
+}
+
+progress.pro{
+    width:400px;
+}

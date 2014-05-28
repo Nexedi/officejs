@@ -18,16 +18,17 @@
     .declareMethod('getMax', function () {
       return this.bar.max;
     })
-    .declareAcquiredMethod("setCurrentTime", "setCurrentTime");
+    .declareAcquiredMethod("setVolume", "setVolume")
+    .declareAcquiredMethod("getVolume", "getVolume");   //xxxx
   gk.ready(function (g) {
     g.bar = g.__element.getElementsByTagName('progress')[0];
-    g.bar.value = 0;
     g.bar.max = 1000;
     g.bar.onclick = function (e) {
       var posX = e.clientX,
         targetLeft = $(g.bar).offset().left;
-      posX = ((posX - targetLeft) / $(g.bar).width());
-      g.setCurrentTime(posX * g.bar.max);
+      posX = ((posX - targetLeft) / $(g.bar).width()) * g.bar.max;
+      g.setValue(posX);
+      g.setVolume(posX);
     };
   });
 }(window, rJS, jQuery));

@@ -16,27 +16,25 @@
   </head>
   <body>
     
-
-    
-    <input type = "file" multiple /> 
-    
-
-
-    <div class = "control" data-gadget-url= "../audioplayer_control/index.html" data-gadget-scope= "control" >
-    </div>
+    <div class = "audioplayer">
+      <button type="button">next</button>
+      <button type="button">play/pause</button>
+      <div class = "control" data-gadget-url="../audioplayer_control/index.html" data-gadget-scope="control" >
+      </div>
+      
+      <div class = "animation" data-gadget-url="../audioplayer_animation/index.html" data-gadget-scope="animation" >
+      </div> 
    
-    <div class = "animation" data-gadget-url= "../audioplayer_animation/index.html" data-gadget-scope= "animation" >
-    </div>    
+      <div class = "progress_time" data-gadget-url="../audioplayer_progress/index.html" data-gadget-scope="time" >
+      </div>          
+
+
+      <div class = "progress_volume" data-gadget-url="../audioplayer_volume/index.html" data-gadget-scope="volume" >
+      </div>
     
-    <div class = "progress_time" data-gadget-url= "../audioplayer_progress/index.html" data-gadget-scope= "time" >
-    </div>          
-    
-    <div class = "progress_volume" data-gadget-url= "../audioplayer_progress/index.html" data-gadget-scope= "volume" >  
+      <div class = "title" data-gadget-url="../audioplayer_title/index.html" data-gadget-scope="title">
+      </div>
     </div>
-    
-    <div class = "title" data-gadget-url= "../audioplayer_title/index.html" data-gadget-scope= "title" >
-    </div>
-    
     
   </body>
 </html>
