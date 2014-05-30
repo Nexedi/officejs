@@ -52,8 +52,10 @@
     })
     .ready(function (g) {
       var  next_context = g.__element.getElementsByTagName('button')[0],
-        command_context = g.__element.getElementsByTagName('button')[1];
-      initialUrl = location.href;
+        command_context = g.__element.getElementsByTagName('button')[1],
+        index;
+      index = location.href.indexOf('#');
+      initialUrl = location.href.slice(0, index);
       RSVP.all([
         g.getDeclaredGadget(
           "control"
@@ -89,7 +91,7 @@
             control.setSong(id).then(function () {
               control.playSong();
               control.getTitle().then(function (value) {
-                window.history.pushState(null, null, initialUrl + value);
+                window.history.pushState(null, null, initialUrl + "#" + value);
               });
             });
           };
@@ -116,7 +118,7 @@
           window.addEventListener("popstate", function (e) {
             var href = location.href,
               name,
-              lastIndex = href.lastIndexOf('/') + 1;
+              lastIndex = href.lastIndexOf('#') + 1;
             if (lastIndex !== href.length) {
               name = href.slice(lastIndex);
               control.setSong(name).then(function () {
@@ -128,6 +130,10 @@
               title.setMessage("audio player");
             }
           }, false);
+          //xxx
+          window.onhashchange = function () {
+            console.log("hash change\n");
+          };
         })
         .fail(function (e) {
           console.log("[ERROR]: " + e);
