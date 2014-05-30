@@ -7,6 +7,9 @@
   var gk = rJS(window);
   gk.declareMethod('setSong', function (id) {  //configure a song
     var gadget = this;
+    if (typeof id === "string") {
+      id = gadget.playlist.indexOf(id);
+    }
     if ((id >= gadget.lenght) || (id < 0)) {
       console.log("invalide play id");
       return;

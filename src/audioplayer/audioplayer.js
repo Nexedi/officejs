@@ -1,4 +1,4 @@
-/*global window, rJS, RSVP, console, $, jQuery, URL */
+/*global window, rJS, RSVP, console, $, jQuery, URL, location */
 /*jslint nomen: true*/
 (function (window, rJS, $) {
   "use strict";
@@ -7,7 +7,8 @@
     time,
     volume,
     title,
-    totalId = 0;
+    totalId = 0,
+    initialUrl;
   function nextId() {
     return Math.floor(Math.random() * totalId);
   }
@@ -41,6 +42,7 @@
       control.getTitle().then(function (value) {
         title.setMessage(value);
       });
+      animation.showAnimation();
     })
     .allowPublicAcquisition("showAnimation", function () {
       animation.showAnimation();
@@ -51,6 +53,7 @@
     .ready(function (g) {
       var  next_context = g.__element.getElementsByTagName('button')[0],
         command_context = g.__element.getElementsByTagName('button')[1];
+      initialUrl = location.href;
       RSVP.all([
         g.getDeclaredGadget(
           "control"
@@ -81,13 +84,12 @@
               });
           }, 1000);
           volume.setMax(3);
-
           next_context.onclick = function () {
-            control.setSong(nextId()).then(function () {
+            var id = nextId();
+            control.setSong(id).then(function () {
               control.playSong();
-              animation.showAnimation();
-              control.getTotalTime().then(function (value) {
-                time.setMax(value);
+              control.getTitle().then(function (value) {
+                window.history.pushState(null, null, initialUrl + value);
               });
             });
           };
@@ -111,6 +113,25 @@
           title.getSize().then(function (size) {
             title.setPosition(size * 2);
           });
+          window.addEventListener("popstate", function (e) {
+            var href = location.href,
+              name,
+              lastIndex = href.lastIndexOf('/') + 1;
+            if (lastIndex !== href.length) {
+              name = href.slice(lastIndex);
+              control.setSong(name).then(function () {
+                control.playSong();
+                animation.showAnimation();
+                control.getTotalTime().then(function (value) {
+                  time.setMax(value);
+                });
+              });
+            } else {
+              control.stopSong();
+              animation.stopAnimation();
+              title.setMessage("audio player");
+            }
+          }, false);
         })
         .fail(function (e) {
           console.log("[ERROR]: " + e);
