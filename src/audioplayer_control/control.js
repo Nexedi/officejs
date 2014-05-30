@@ -128,7 +128,17 @@
       g.io = e;
       g.io.createIO({ "type" : "indexeddb",
                       "database": "test"},
-                    "m");
+                    "m")
+        .then(function () {
+          g.io.showAllIO().then(function (result) {
+            var array = Object.keys(result),
+              i;
+            for (i = 0; i < array.length; i += 1) {
+              g.playlist.push(array[i]);
+            }
+            g.sendTotalId(g.playlist.length);
+          });
+        });
     });
     g.audio = new window.Audio();
     g.source = g.audioCtx.createMediaElementSource(g.audio);
@@ -137,8 +147,9 @@
     g.decoded = true;
     g.audio.onended = function () {
       g.nextToPlay().then(function (id) {
-        g.setSong(id);
-        g.playSong(id);
+        g.setSong(id).then(function () {
+          g.playSong(id);
+        });
       });
     };
     input_context.onchange = function () {
