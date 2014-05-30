@@ -121,10 +121,6 @@
               name = href.slice(lastIndex);
               control.setSong(name).then(function () {
                 control.playSong();
-                animation.showAnimation();
-                control.getTotalTime().then(function (value) {
-                  time.setMax(value);
-                });
               });
             } else {
               control.stopSong();
