@@ -5,33 +5,46 @@
     <title>Jabber login gadget</title>
 
     <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
-    <link rel="stylesheet" href="jabber_login.css">
+    <link rel="stylesheet" href="jabberclient_login.css">
     
     <script src="../<%= curl.jquery.relative_dest %>"></script>
     <script src="../<%= curl.jquerymobilejs.relative_dest %>"></script>
     <script src="../<%= copy.rsvp.relative_dest %>"></script>
     <script src="../<%= copy.renderjs.relative_dest %>"></script>
     <script src="../<%= curl.strophejs.relative_dest %>"></script>
+    <script src="../<%= copy.handlebars.relative_dest %>"></script>
     
-    <script src="jabber_login.js"></script>
+    <script src="jabberclient_login.js"></script>
   </head>
   <body>
     <div class="login-box ui-corner-all ui-shadow">
-      <h3 class="title">Log in to your jabber account:&nbsp</h3><br/>
+      <h3>Status: Not connected</h3><br/>
       <form class="login-form" data-ajax="false">
         <div class="ui-field-contain">
           <input type="url" name="server" placeholder="Jabber server url" value="https://mail.tiolive.com/chat/http-bind/" required>
         </div>
         <div class="ui-field-contain">
-          <input type="text" name="jid" placeholder="Jabber ID" required>
+          <input type="text" name="jid" placeholder="Jabber ID" value="thibaut.frain@tiolive.com" required>
         </div>
         <div class="ui-field-contain">
-          <input type="password" name="passwd" placeholder="Password" required>
+          <input type="password" name="passwd" placeholder="Password" value="&Cg8)Rl9" required>
         </div>
         <fieldset class="ui-btn-inline">
           <input type="submit" value="Log In">
         </fieldset>
       </form>
+    </div>
+    <div class="logout-box ui-corner-all ui-shadow" style="display: none;">
+      <h3>Status: Authenticated</h3>
+      <div class="ui-grid-a">
+        <div class="ui-block-a"><h4>Server URL</h4></div>
+        <div class="ui-block-b"><h5 class="server"></h5></div>
+      </div>
+      <div class="ui-grid-a">
+        <div class="ui-block-a"><h4>Jabber ID</h4></div>
+        <div class="ui-block-b"><h5 class="jid"></h5></div>
+      </div>
+      <button class="ui-btn ui-btn-b ui-btn-inline ui-corner-all">Logout</button>
     </div>
   </body>
 </html>

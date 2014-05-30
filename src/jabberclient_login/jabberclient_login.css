@@ -1,4 +1,4 @@
-.login-box {
+.login-box, .logout-box {
     margin: 0 auto;
     max-width: 35ch !important;
     text-align: center;

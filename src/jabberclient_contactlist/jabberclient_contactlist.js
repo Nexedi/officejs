@@ -69,7 +69,6 @@
     });
     main.send($pres().toString());
   }
-
   ContactList.prototype.update = function (presence) {
     var jid = Strophe.getBareJidFromJid($(presence).attr('from')),
       contact = this.list[jid];
@@ -118,7 +117,12 @@
 
     .ready(function (g) {
       main = g;
-      contactTemplate = Handlebars.compile($('#contact-template').html());
+      g.getElement()
+        .then(function (element) {
+          contactTemplate = Handlebars.compile(
+            $(element).find('#contact-template').html()
+          );
+        });
     });
 
 }($, Strophe, rJS(window)));

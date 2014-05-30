@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Jabber Client</title>
+    
+    <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
+    <link rel="stylesheet" href="jabberclient.css">
+
+    <script src="../<%= curl.jquery.relative_dest %>"></script>
+    <script src="../<%= curl.jquerymobilejs.relative_dest %>"></script>
+    <script src="../<%= curl.strophejs.relative_dest %>"></script>
+    <script src="../<%= copy.rsvp.relative_dest %>"></script>
+    <script src="../<%= copy.renderjs.relative_dest %>"></script>
+
+    <script src="jabberclient.js"></script>
+  </head>
+  <body>
+    <div data-role="header" data-position="fixed" data-theme="a"><h1>Jabber Client</h1></div>
+    <div data-role="page" class="login-page">
+      <div role="main" class="ui-content"></div>
+    </div>
+    <div data-role="page" class="contactlist-page">
+      <div role="main" class="ui-content"></div>
+    </div>
+    <div data-role="page" class="chatboxes-page">
+      <div role="main" class="ui-content"></div>
+    </div>
+  </body>
+</html>

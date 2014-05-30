@@ -100,12 +100,14 @@ module.exports = function (grunt) {
             "<%= global_config.src %>/presentation_editor/presentation_editor.css",
           "<%= global_config.dest %>/presentation_viewer/presentation_viewer.css":
             "<%= global_config.src %>/presentation_viewer/presentation_viewer.css",
-          "<%= global_config.dest %>/jabber_login/jabber_login.css":
-            "<%= global_config.src %>/jabber_login/jabber_login.css",
-          "<%= global_config.dest %>/jabber_contactlist/jabber_contactlist.css":
-            "<%= global_config.src %>/jabber_contactlist/jabber_contactlist.css",
-          "<%= global_config.dest %>/jabber_chatbox/jabber_chatbox.css":
-            "<%= global_config.src %>/jabber_chatbox/jabber_chatbox.css"
+          "<%= global_config.dest %>/jabberclient/jabberclient.css":
+            "<%= global_config.src %>/jabberclient/jabberclient.css",
+          "<%= global_config.dest %>/jabberclient_login/jabberclient_login.css":
+            "<%= global_config.src %>/jabberclient_login/jabberclient_login.css",
+          "<%= global_config.dest %>/jabberclient_contactlist/jabberclient_contactlist.css":
+            "<%= global_config.src %>/jabberclient_contactlist/jabberclient_contactlist.css",
+          "<%= global_config.dest %>/jabberclient_chatbox/jabberclient_chatbox.css":
+            "<%= global_config.src %>/jabberclient_chatbox/jabberclient_chatbox.css"
         }
       }
     },

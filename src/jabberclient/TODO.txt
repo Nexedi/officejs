@@ -1,0 +1,5 @@
+- improve navigation between the different views (aka sub gadgets) in jabberclient (add buttons to close a chatbox, show the 
+contactlist, show the logout page of login gadget, ,..)
+- show bad credentials
+- add logger gadget
+- make chatbox gadget working with the main gadget by correct methods "openChat", "processReceivedDatas"..

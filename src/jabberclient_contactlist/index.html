@@ -5,7 +5,7 @@
     <title>Jabber client</title>
 
     <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
-    <link rel="stylesheet" href="jabber_contactlist.css">
+    <link rel="stylesheet" href="jabberclient_contactlist.css">
 
     <script src="../<%= curl.jquery.relative_dest %>"></script>
     <script src="../<%= curl.jquerymobilejs.relative_dest %>"></script>
@@ -14,7 +14,7 @@
     <script src="../<%= curl.strophejs.relative_dest %>"></script>
     <script src="../<%= copy.handlebars.relative_dest %>"></script>
     
-    <script src="jabber_contactlist.js"></script>
+    <script src="jabberclient_contactlist.js"></script>
     
   </head>
   <body>
@@ -22,12 +22,12 @@
     <script id="contact-template" type="text/x-handlebars-template">
       <li>
         {{#if offline}}
-        <img src="images/offline.png">
+        <img src="../jabberclient_contactlist/images/offline.png">
         {{else}}
         {{#if status}}
-        <img src="images/misc.png">
+        <img src="../jabberclient_contactlist/images/misc.png">
         {{else}}
-        <img src="images/online.png">
+        <img src="../jabberclient_contactlist/images/online.png">
         {{/if}}
         {{/if}}
         <h2>{{name}}&nbsp&nbsp{{#if status}}({{status}}){{/if}}</h2>
