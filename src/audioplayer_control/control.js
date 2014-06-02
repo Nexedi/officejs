@@ -8,7 +8,11 @@
   gk.declareMethod('setSong', function (id) {  //configure a song
     var gadget = this;
     if (typeof id === "string") {
-      id = gadget.playlist.indexOf(id);
+      if (id === "start") {
+        id = 0;
+      } else {
+        id = gadget.playlist.indexOf(id);
+      }
     }
     if ((id >= gadget.lenght) || (id < 0)) {
       console.log("invalide play id");
@@ -44,8 +48,11 @@
     .declareMethod('getVolume', function () {
       return this.volume;
     })
-    .declareMethod('getTitle', function () {
-      return this.playlist[this.currentPlayId];
+    .declareMethod('getTitle', function (id) {
+      if (id === undefined) {
+        id = this.currentPlayId;
+      }
+      return this.playlist[id];
     })
     .declareMethod('isPaused', function () {
       return this.audio.paused;
@@ -110,6 +117,7 @@
     })
     .declareAcquiredMethod("sendTotalId", "sendTotalId")
     .declareAcquiredMethod("nextToPlay", "nextToPlay")
+    .declareAcquiredMethod("nextTitle", "nextTitle")
     .declareAcquiredMethod("allNotify", "allNotify")
     .declareAcquiredMethod("showAnimation", "showAnimation")
     .declareAcquiredMethod("stopAnimation", "stopAnimation");
@@ -150,9 +158,7 @@
     g.decoded = true;
     g.audio.onended = function () {
       g.nextToPlay().then(function (id) {
-        g.setSong(id).then(function () {
-          g.playSong(id);
-        });
+        g.nextTitle(g.playlist[id]);
       });
     };
     input_context.onchange = function () {

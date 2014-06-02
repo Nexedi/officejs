@@ -1,5 +1,6 @@
 /*global window, rJS, RSVP, console, $, jQuery, URL, location */
 /*jslint nomen: true*/
+
 (function (window, rJS, $) {
   "use strict";
   var control,
@@ -8,11 +9,20 @@
     volume,
     title,
     totalId = 0,
-    initialUrl;
+    that,
+    next_context,
+    command_context,
+    currentId;
   function nextId() {
-    return Math.floor(Math.random() * totalId);
+    var tmp;
+    do {
+      tmp =  Math.floor(Math.random() * totalId);
+    } while (currentId === tmp);
+    currentId = tmp;
+    return tmp;
   }
   rJS(window)
+    .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
     .allowPublicAcquisition("setCurrentTime", function (value) {
       control.setCurrentTime(value);
     })
@@ -31,6 +41,12 @@
     })
     .allowPublicAcquisition("nextToPlay", function () {
       return nextId();
+    })
+    .allowPublicAcquisition("nextTitle", function (tab) {
+      this.aq_pleasePublishMyState({page: tab[0]})
+        .then(function (url) {
+          that.pleaseRedirectMyHash(url);
+        });
     })
     .allowPublicAcquisition("sendTotalId", function (value) {
       totalId = value[0];  //array parameter
@@ -51,11 +67,9 @@
       animation.stopAnimation();
     })
     .ready(function (g) {
-      var  next_context = g.__element.getElementsByTagName('button')[0],
-        command_context = g.__element.getElementsByTagName('button')[1],
-        index;
-      index = location.href.indexOf('#');
-      initialUrl = location.href.slice(0, index);
+      next_context = g.__element.getElementsByTagName('a')[0];
+      command_context = g.__element.getElementsByTagName('a')[1];
+      that = g;
       RSVP.all([
         g.getDeclaredGadget(
           "control"
@@ -86,15 +100,6 @@
               });
           }, 1000);
           volume.setMax(3);
-          next_context.onclick = function () {
-            var id = nextId();
-            control.setSong(id).then(function () {
-              control.playSong();
-              control.getTitle().then(function (value) {
-                window.history.pushState(null, null, initialUrl + "#" + value);
-              });
-            });
-          };
           command_context.onclick = function () {
             control.isPaused().then(function (paused) {
               if (paused) {
@@ -115,28 +120,28 @@
           title.getSize().then(function (size) {
             title.setPosition(size * 2);
           });
-          window.addEventListener("popstate", function (e) {
-            var href = location.href,
-              name,
-              lastIndex = href.lastIndexOf('#') + 1;
-            if (lastIndex !== href.length) {
-              name = href.slice(lastIndex);
-              control.setSong(name).then(function () {
-                control.playSong();
-              });
-            } else {
-              control.stopSong();
-              animation.stopAnimation();
-              title.setMessage("audio player");
-            }
-          }, false);
-          //xxx
-          window.onhashchange = function () {
-            console.log("hash change\n");
-          };
         })
         .fail(function (e) {
           console.log("[ERROR]: " + e);
         });
+    });
+
+  rJS(window)
+    .declareMethod("render", function (options) {
+      if (options.page !== undefined) {
+        control.setSong(options.page).then(function () {
+          control.playSong();
+          control.getTitle();
+        });
+      }
+      control.getTitle(nextId()).then(function (title) {
+        if (title === undefined) {
+          title = "start";
+        }
+        that.aq_pleasePublishMyState({page: title})
+          .then(function (result) {
+            next_context.href = result;
+          });
+      });
     });
 }(window, rJS, jQuery));
