@@ -7,40 +7,38 @@
     .ready(function (gadget) {
       // Initialize the gadget local parameters
       gadget.state_parameter_dict = {};
-      gadget.state_parameter_dict.jio_storage = jIO.createJIO({
-        "type": "localstorage"
-      });
-//     })
-// 
-//     .declareMethod('render', function () {
-//       var gadget = this;
-//       // Create the Jio storage only the first time
-//       if (!gadget.state_parameter_dict.hasOwnProperty("jio_storage")) {
-//       }
+    })
+
+    .declareMethod('createJio', function (jio_options) {
+      this.state_parameter_dict.jio_storage = jIO.createJIO(jio_options);
     })
     .declareMethod('allDocs', function () {
       var storage = this.state_parameter_dict.jio_storage;
-      console.log("allDocs");
       return storage.allDocs.apply(storage, arguments);
     })
     .declareMethod('get', function () {
       var storage = this.state_parameter_dict.jio_storage;
-      console.log("get");
       return storage.get.apply(storage, arguments);
+    })
+    .declareMethod('getAttachment', function () {
+      var storage = this.state_parameter_dict.jio_storage;
+      return storage.getAttachment.apply(storage, arguments)
+        // XXX Where to put this &@! blob reading
+        .then(function (response) {
+          return jIO.util.readBlobAsText(response.data);
+        })
+        .then(function (lala) {
+          console.log(lala.target.result);
+          return lala.target.result;
+        });
+    })
+    .declareMethod('putAttachment', function () {
+      var storage = this.state_parameter_dict.jio_storage;
+      return storage.putAttachment.apply(storage, arguments);
+    })
+    .declareMethod('post', function () {
+      var storage = this.state_parameter_dict.jio_storage;
+      return storage.post.apply(storage, arguments);
     });
-
-//     return jio_storage.allDocs({"query": '__root__'})
-//         // XXX How to get root information?
-//         return jio_storage.get({"_id": undefined});
-//                 return jio_storage.get(
-//                   {"_id": options.jio_key},
-//                   {"_view": options.action_view}
-//                 );
-//                   jio_storage.get(
-//                     {"_id": uri.segment(2)},
-//                     {"_view": options.action_view}
-//                   )
-// 
-//       window.jio_storage = jio_storage;
 
 }(rJS, jIO));

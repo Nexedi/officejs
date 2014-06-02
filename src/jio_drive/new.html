@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Jio Drive | Document List</title>
+    <script src="../<%= copy.rsvp.relative_dest %>" type="text/javascript"></script>
+    <script src="../<%= copy.renderjs.relative_dest %>" type="text/javascript"></script>
+    <script src="jio_drive_new_document.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <h2>New document</h2>
+    <form class="new_web_page_form">
+      <div data-role='fieldcontain'>
+        <label for="document_name">Filename</label>
+        <input name="document_name" type="text" spellcheck="false" required
+               value="my_first_page.html" class="filename_input"></input>
+      </div>
+      <input type="submit" value="Add web page" />
+    </form>
+  </body>
+</html>

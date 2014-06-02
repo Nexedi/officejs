@@ -9,53 +9,23 @@
     <script src="../<%= copy.rsvp.relative_dest %>" type="text/javascript"></script>
     <script src="../<%= copy.renderjs.relative_dest %>" type="text/javascript"></script>
     <script src="../<%= curl.jquery.relative_dest %>" type="text/javascript"></script>
-    <script src="jio_drive.js" type="text/javascript"></script>
     <script src="../<%= curl.jquerymobilejs.relative_dest %>" type="text/javascript"></script>
-    <link rel="http://www.renderjs.org/rel/interface"
-          href="http://www.renderjs.org/interface/officejs"/>
+    <script src="jio_drive.js" type="text/javascript"></script>
   </head>
   <body>
-    <div data-role="page" id="index">
+    <header data-role="header">
+      <a class="home_link">Home</a>
+      <h1>Office JS</h1>
+      <a class="about_link">About</a>
+    </header>
 
-      <!-- header -->
-      <div data-role="header">
+    <article class="gadget_container"></article>
 
-        <a href="#menu"
-          data-rel="panel"
-          data-role="button"
-          data-icon="bars"
-          data-iconpos="notext"
-          data-dismissable="false">Menu</a>
-
-        <h1>Office JS</h1>
-      </div>
-
-      <!-- panel -->
-      <div data-role="panel" id="menu" data-theme="a" class="bare_panel"></div>
-      <!--div class="catalog_location"></div-->
-
-      <!-- content -->
-      <div data-role="content">
-
-        <!-- editor A -->
-        <div class="editor_a">
-          <div data-role="fieldcontain" class="editor_a_safe">
-          </div>
-
-          <div data-role="fieldcontain" class="editor_a">
-          </div>
-        </div>
-
-        <!-- editor B -->
-        <div class="editor_b">
-          <div data-role="fieldcontain" class="editor_b_safe">
-          </div>
-
-          <div data-role="fieldcontain" class="editor_b">
-          </div>
-        </div>
-
-      </div>
-    </div>
+    <aside>
+      <section data-gadget-url="../catalog_static/index.html"
+               data-gadget-scope="catalog"></section>
+      <section data-gadget-url="../jio_bridge/index.html"
+               data-gadget-scope="jio"></section>
+    </aside>
   </body>
 </html>
