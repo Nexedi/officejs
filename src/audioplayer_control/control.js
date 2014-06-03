@@ -158,7 +158,10 @@
     g.decoded = true;
     g.audio.onended = function () {
       g.nextToPlay().then(function (id) {
-        g.nextTitle(g.playlist[id]);
+        g.setSong(id).then(function () {
+          g.playSong();
+          g.allNotify();
+        });
       });
     };
     input_context.onchange = function () {
