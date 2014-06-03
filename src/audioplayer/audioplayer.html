@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>audioPlayer</title>
+    
+
+  <!-- renderjs  -->
+  <script src="../<%= copy.rsvp.relative_dest %>" type="text/javascript"></script>
+  <script src="../<%= copy.renderjs.relative_dest %>" type="text/javascript"></script>
+  <script src="../<%= curl.jquery.relative_dest %>" type="text/javascript"></script>
+  
+  <!-- custom script -->
+  <script src="./audioplayer.js" type="text/javascript"></script>
+  
+  <link rel="stylesheet" href="../../src/audioplayer/audioplayer.css" media="screen" ></link>  
+  </head>
+  <body>
+    
+    <div class = "audioplayer">
+      <a class = "next">next</a>
+      <a class = "command">play/pause</a>
+      <!-- data-gadget-sandbox="iframe" -->
+      <div class = "control" data-gadget-url="../audioplayer_control/index.html" data-gadget-scope="control">
+      </div>
+      
+      <div class = "animation" data-gadget-url="../audioplayer_animation/index.html" data-gadget-scope="animation">
+      </div> 
+   
+      <div class = "progress_time" data-gadget-url="../audioplayer_progress/index.html" data-gadget-scope="time">
+      </div>          
+
+
+      <div class = "progress_volume" data-gadget-url="../audioplayer_volume/index.html" data-gadget-scope="volume">
+      </div>
+    
+      <div class = "title" data-gadget-url="../audioplayer_title/index.html" data-gadget-scope="title" >
+      </div>
+    </div>
+    
+  </body>
+</html>

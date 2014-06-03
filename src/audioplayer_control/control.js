@@ -8,15 +8,11 @@
   gk.declareMethod('setSong', function (id) {  //configure a song
     var gadget = this;
     if (typeof id === "string") {
-      if (id === "start") {
-        id = 0;
-      } else {
-        id = gadget.playlist.indexOf(id);
-      }
+      id = gadget.playlist.indexOf(id);
     }
     if ((id >= gadget.lenght) || (id < 0)) {
       console.log("invalide play id");
-      return;
+      return -1;
     }
     if (gadget.currentPlayId !== id) {
       gadget.decoded = true;
@@ -28,6 +24,9 @@
     gadget.gain.connect(gadget.audioCtx.destination);
     return gadget.io.getIO(gadget.playlist[id]).then(function (file) {
       gadget.audio.src =  URL.createObjectURL(file);
+      gadget.audio.onloadedmetadata = function () {
+        gadget.sendTotalTime(gadget.audio.duration);
+      };
       gadget.file = file;
       gadget.audio.load();
       gadget.allNotify();
@@ -65,10 +64,8 @@
       this.audio.play();
     })
     .declareMethod('getTotalTime', function () {
-      return this.getDecodeValue().
-        then(function (e) {
-          return e.duration;
-        });
+      console.log(this.audio.duration);
+      return this.audio.duration;
     })
     .declareMethod('getFFTValue', function () {
       var gadget = this,
@@ -79,7 +76,7 @@
       tmp.length = array.length;
       return tmp;
     })
-    .declareMethod('getDecodeValue', function () {
+    .declareMethod('getDecodeValue', function () {  //unused
       var gadget = this,
         promiseReadFile;
       if (gadget.decoded === false) {  //if decoded,return buffer saved 
@@ -119,6 +116,7 @@
     .declareAcquiredMethod("nextToPlay", "nextToPlay")
     .declareAcquiredMethod("nextTitle", "nextTitle")
     .declareAcquiredMethod("allNotify", "allNotify")
+    .declareAcquiredMethod("sendTotalTime", "sendTotalTime")
     .declareAcquiredMethod("showAnimation", "showAnimation")
     .declareAcquiredMethod("stopAnimation", "stopAnimation");
   gk.ready(function (g) {
@@ -132,7 +130,7 @@
       g.audioCtx = new window.AudioContext();
     } catch (e) {
       console.log(
-        "ERROR:[configure] Tour browser does not support AudioContext"
+        "ERROR:[configure] Your browser does not support AudioContext"
       );
     }
     g.getDeclaredGadget("io").then(function (e) {

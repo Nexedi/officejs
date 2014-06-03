@@ -16,7 +16,7 @@
         cheight = canvas.height - 2,
         meterWidth = 10, //width of the meters in the spectrum
         capHeight = 2,
-        meterNum = 3800 / (10 + 2),
+        meterNum = 50,
         array,
         drawFrame,
         step,
