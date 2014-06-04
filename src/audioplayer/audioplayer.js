@@ -11,7 +11,8 @@
     totalId = -1,
     that,
     next_context,
-    command_context,
+    play_context,
+    stop_context,
     currentId,
     initializeFlag = false;
   function nextId() {
@@ -77,7 +78,8 @@
     })
     .ready(function (g) {
       next_context = g.__element.getElementsByTagName('a')[0];
-      command_context = g.__element.getElementsByTagName('a')[1];
+      play_context = g.__element.getElementsByTagName('a')[1];
+      stop_context = g.__element.getElementsByTagName('a')[2];
       that = g;
       initializeFlag = false;
       RSVP.all([
@@ -110,15 +112,12 @@
               });
           }, 1000);
           volume.setMax(3);
-          command_context.onclick = function () {
-            control.isPaused().then(function (paused) {
-              if (paused) {
-                control.playSong();
-              } else {
-                control.stopSong();
-              }
-            });
-          };
+          that.showPage("play").then(function (result) {
+            play_context.href = result;
+          });
+          that.showPage("stop").then(function (result) {
+            stop_context.href = result;
+          });
           //volume configure
           control.getVolume().then(function (value) {
             volume.setValue(value);
@@ -148,6 +147,14 @@
           });
       });
       if (options.page !== undefined) {
+        if (options.page === "play") {
+          control.playSong();
+          return;
+        }
+        if (options.page === "stop") {
+          control.stopSong();
+          return;
+        }
         control.setSong(options.page).then(function (result) {
           if (result === -1) {
             control.stopSong()

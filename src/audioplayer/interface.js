@@ -6,7 +6,7 @@
     top;
   rJS(window)
     .allowPublicAcquisition("ErrorPage", function () {
-      top.__element.innerHTML = "ERROR";
+      top.__element.innerHTML = "ERROR:music does't exist";
       top.error = true;
     })
     .allowPublicAcquisition("showPage", function (param_list) {
@@ -27,8 +27,7 @@
     .declareMethod("render", function (options) {
       if (top.error === true) {
         top.__element.innerHTML = " ";
-        top.dropGadget("audioplayer").then(function (e) {
-          console.log(e);
+        top.dropGadget("audioplayer").then(function () {
           top.declareGadget("./audioplayer.html",
                             { element: top.__element,
                               scope : "audioplayer"}
