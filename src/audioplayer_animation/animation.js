@@ -26,10 +26,11 @@
       gradient.addColorStop(1, '#0f0');
       gradient.addColorStop(0.5, '#ff0');
       gradient.addColorStop(0, '#f00');
-      window.cancelAnimationFrame(
-        that.animationPlayId
-      ); //stop the previous animation
+      that.play = true;
       drawFrame = function () {
+        window.cancelAnimationFrame(
+          that.animationPlayId
+        ); //stop the previous animation
         that.getFFTValue()
           .then(function (e) {
             array = e.array;
@@ -46,21 +47,22 @@
             //draw the mirror
             mirrorCtx.clearRect(0, 0, cwidth, cheight);
             mirrorCtx.drawImage(canvas, 0, -100, cwidth, cheight);
-            that.animationPlayId = window.requestAnimationFrame(drawFrame);
+            if (that.play === true) {
+              that.animationPlayId = window.requestAnimationFrame(drawFrame);
+            }
           });
       };
       that.animationPlayId = window.requestAnimationFrame(drawFrame);
     })
     .declareMethod('stopAnimation', function () {
-      var that = this;
+      this.play = false;
       window.cancelAnimationFrame(
-        that.animationPlayId
-      );
+        this.animationPlayId
+      ); //stop the previous animation
     });
 
   gk.ready(function (g) {
     g.canvas = g.__element.getElementsByTagName('canvas')[0];
     g.mirror = g.__element.getElementsByTagName('canvas')[1];
-    g.animationPlayId = -1;
   });
 }(window, rJS));

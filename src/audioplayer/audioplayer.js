@@ -8,27 +8,28 @@
     time,
     volume,
     title,
+    io,
     totalId = -1,
     that,
     next_context,
     play_context,
     stop_context,
-    currentId,
-    initializeFlag = false;
+    addMusic_context,
+    currentId = -1,
+    initializeFlag = false,
+    playlist = [];
   function nextId() {
-    var tmp;
     if (totalId === -1) {
       return -1;
     }
-    do {
-      tmp =  Math.floor(Math.random() * totalId);
-    } while (currentId === tmp);
-    currentId = tmp;
-    return tmp;
+    currentId += 1;
+    currentId %= totalId;
+    return currentId;
   }
   rJS(window)
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
     .declareAcquiredMethod("showPage", "showPage")
+    .declareAcquiredMethod("addPage", "addPage")
     .declareAcquiredMethod("ErrorPage", "ErrorPage")
     .allowPublicAcquisition("setCurrentTime", function (value) {
       control.setCurrentTime(value[0]);
@@ -47,16 +48,20 @@
       });
     })
     .allowPublicAcquisition("nextToPlay", function () {
-      return nextId();
-    })
-    .allowPublicAcquisition("nextTitle", function (tab) { //unused
-      this.aq_pleasePublishMyState({page: tab[0]})
-        .then(function (url) {
-          that.pleaseRedirectMyHash(url);
+      var id = nextId(),
+        name = playlist[id];
+
+      io.getIO(name).then(function (file) {
+        control.setSong(URL.createObjectURL(file)).then(function () {
+          control.playSong();
+          title.setMessage(name);
+          animation.showAnimation();
         });
+      });
     })
-    .allowPublicAcquisition("sendTotalId", function (value) {
-      totalId = value[0];  //array parameter
+    .allowPublicAcquisition("sendPlaylist", function (value) {
+      playlist = value[0];
+      totalId =  playlist.length;  //array parameter
       if (initializeFlag === false) {
         that.render();
         initializeFlag = true;
@@ -65,21 +70,11 @@
     .allowPublicAcquisition("sendTotalTime", function (value) {
       time.setMax(value[0]);
     })
-    .allowPublicAcquisition("allNotify", function () {
-      control.getTitle().then(function (value) {
-        title.setMessage(value);
-      });
-    })
-    .allowPublicAcquisition("showAnimation", function () {
-      animation.showAnimation();
-    })
-    .allowPublicAcquisition("stopAnimation", function () {
-      animation.stopAnimation();
-    })
     .ready(function (g) {
       next_context = g.__element.getElementsByTagName('a')[0];
       play_context = g.__element.getElementsByTagName('a')[1];
       stop_context = g.__element.getElementsByTagName('a')[2];
+      addMusic_context = g.__element.getElementsByTagName('a')[3];
       that = g;
       initializeFlag = false;
       RSVP.all([
@@ -97,6 +92,9 @@
         ),
         g.getDeclaredGadget(
           "title"
+        ),
+        g.getDeclaredGadget(
+          "io"
         )
       ])
         .then(function (all_param) {
@@ -105,6 +103,7 @@
           time = all_param[2];
           volume = all_param[3];
           title = all_param[4];
+          io = all_param[5];
           window.setInterval(function () {
             control.getCurrentTime()
               .then(function (e) {
@@ -117,6 +116,10 @@
           });
           that.showPage("stop").then(function (result) {
             stop_context.href = result;
+          });
+
+          that.showPage("addMusic").then(function (result) {
+            addMusic_context.href = result;
           });
           //volume configure
           control.getVolume().then(function (value) {
@@ -137,39 +140,50 @@
 
   rJS(window)
     .declareMethod("render", function (options) {
+      var id = nextId(),
+        name = playlist[id];
       if (initializeFlag === false) {
         return;
       }
-      control.getTitle(nextId()).then(function (title) {
-        that.showPage(title)
-          .then(function (result) {
-            next_context.href = result;
-          });
-      });
+
+      that.showPage(name)
+        .then(function (result) {
+          next_context.href = result;
+        });
+
       if (options.page !== undefined) {
         if (options.page === "play") {
           control.playSong();
+          animation.showAnimation();
           return;
         }
         if (options.page === "stop") {
           control.stopSong();
+          animation.stopAnimation();
           return;
         }
-        control.setSong(options.page).then(function (result) {
-          if (result === -1) {
-            control.stopSong()
-              .then(that.dropGadget("title"))
-              .then(that.dropGadget("control"))
-              .then(that.dropGadget("animation"))
-              .then(that.dropGadget("time"))
-              .then(that.dropGadget("volume"))
-              .then(that.ErrorPage())
-              .fail(function () {
-                console.log("error drop gadget");
-              });
-            return;
-          }
-          control.playSong();
+        if (options.page === "addMusic") {
+          animation.stopAnimation();
+          control.stopSong()
+            .then(that.addPage());
+          return;
+        }
+
+        if (playlist.indexOf(options.page) === -1) {
+          animation.stopAnimation();
+          control.stopSong()
+            .then(that.ErrorPage())
+            .fail(function (e) {
+              console.log("error drop gadget " + e);
+            });
+          return;
+        }
+        io.getIO(options.page).then(function (file) {
+          control.setSong(URL.createObjectURL(file)).then(function () {
+            control.playSong();
+            title.setMessage(options.page);
+            animation.showAnimation();
+          });
         });
       }
     });

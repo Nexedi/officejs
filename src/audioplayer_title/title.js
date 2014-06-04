@@ -10,7 +10,7 @@
     this.out = " ";
     this.Position = 0;
     this.pos = 0;
-    this.delay = 100;
+    this.delay = 200;
     this.i = 0;
     this.size = 0;
     this.reset = function () {

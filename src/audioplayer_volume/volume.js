@@ -5,7 +5,6 @@
 (function (window, rJS, $) {
   "use strict";
   var gk = rJS(window);
-
   gk.declareMethod('setValue', function (value) {
     this.bar.value = value;
   })

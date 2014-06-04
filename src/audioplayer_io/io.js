@@ -52,5 +52,44 @@
       }).fail(function (error) {
         return "ERROR : " + error;
       });
-    });
+    })
+    .declareAcquiredMethod("sendPlaylist", "sendPlaylist");
+  gk.ready(function (g) {
+    var input_context = g.__element.getElementsByTagName('input')[0];
+    g.playlist = [];
+    g.createIO({ "type" : "indexeddb",
+                 "database": "test"},
+               "m")
+      .then(function () {
+        g.showAllIO().then(function (result) {
+          var array = Object.keys(result),
+            i;
+          for (i = 0; i < array.length; i += 1) {
+            g.playlist.push(array[i]);
+          }
+          g.sendPlaylist(g.playlist);
+        });
+      });
+
+    input_context.onchange = function () {
+      var tmp,
+        index,
+        found;
+      for (index = 0; index < input_context.files.length; index += 1) {
+        found = false;
+        for (tmp = 0; tmp < g.playlist.length; tmp += 1) {
+          if (g.playlist[tmp].name === input_context.files[index].name) {
+            found = true;
+            break;
+          }
+        }
+        if (found === false) {
+          g.setIO(input_context.files[index].name,
+                     input_context.files[index]);
+          g.playlist.push(input_context.files[index].name);
+        }
+      }
+      g.sendPlaylist(g.playlist);
+    };
+  });
 }(window, jIO, rJS));
