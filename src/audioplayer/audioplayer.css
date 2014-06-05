@@ -11,10 +11,21 @@ input.notice{
 
 .progress_time{
     position: absolute;
-    top: 420px;
+    top: 400px;
     margin: 50px 0 20px 0;
 }
 
+.progress_volume{
+    position: absolute;
+    top: 310px;
+    margin: 50px 0 20px 0;
+}
+
+
 progress.pro{
+    width:400px;
+}
+
+progress.volume{
     width:400px;
 }
