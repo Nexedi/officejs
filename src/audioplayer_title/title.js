@@ -34,6 +34,12 @@
     })
     .declareMethod('getSize', function (size) {
       return this.input.size;
+    })
+    .declareMethod('display', function (attachment) {
+      this.input.style.display = "";
+    })
+    .declareMethod('noDisplay', function (attachment) {
+      this.input.style.display = "none";
     });
   gk.ready(function (g) {
     g.scroll = new BannerObject();

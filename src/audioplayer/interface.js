@@ -1,26 +1,19 @@
-/*global console, jQuery, rJS, RSVP, alert */
+/*global window, rJS, RSVP*/
 /*jslint nomen: true*/
-(function (window, rJS, $) {
+(function (window, rJS) {
   "use strict";
   var gadget,
     top,
-    innerHTML;
+    error;
   rJS(window)
     .allowPublicAcquisition("ErrorPage", function () {
-      top.__element.innerHTML = "ERROR:music does't exist";
-      top.dropGadget("audioplayer");
+      error.display();
+      gadget.noDisplay();
       top.newPage = true;
     })
     .allowPublicAcquisition("addPage", function () {
-      innerHTML = top.__element.innerHTML;
-      top.__element.innerHTML = " ";
-      top.declareGadget("../audioplayer_io/index.html",
-                        { element: top.__element,
-                          scope : "io"
-                        }
-                       );
+      gadget.noDisplay("addPage");
       top.newPage = true;
-      top.addPage = true;
     })
     .allowPublicAcquisition("showPage", function (param_list) {
       return this.aq_pleasePublishMyState({page: param_list[0]});
@@ -29,25 +22,29 @@
       top = g;
       top.newPage = false;
       top.addPage = false;
-      top.declareGadget("./audioplayer.html",
-                        {element: top.__element}
-                       )
-        .then(function (result) {
-          gadget = result;
+      RSVP.all([
+        g.getDeclaredGadget(
+          "audioplayer"
+        ),
+        g.getDeclaredGadget(
+          "error"
+        )
+      ])
+        .then(function (all_param) {
+          gadget = all_param[0];
+          error = all_param[1];
+          error.noDisplay();
         });
     })
     .declareMethod("render", function (options) {
       if (top.newPage === true) {
-        if (top.addPage === true) {
-          top.addPage = false;
-          top.dropGadget("io");
-        }
-        top.__element.innerHTML = innerHTML;
         top.newPage = false;
-      } else {
-        if (gadget !== undefined) {
-          gadget.render(options);
-        }
+        error.noDisplay();
+        gadget.display();
+        return;
+      }
+      if (gadget !== undefined) {
+        gadget.render(options);
       }
     });
-}(window, rJS, jQuery));
+}(window, rJS));

@@ -59,6 +59,14 @@
       window.cancelAnimationFrame(
         this.animationPlayId
       ); //stop the previous animation
+    })
+    .declareMethod("display", function (options) {
+      this.canvas.style.display = "";
+      this.mirror.style.display = "";
+    })
+    .declareMethod("noDisplay", function (options) {
+      this.canvas.style.display = "none";
+      this.mirror.style.display = "none";
     });
 
   gk.ready(function (g) {

@@ -18,6 +18,12 @@
     .declareMethod('getMax', function () {
       return this.bar.max;
     })
+    .declareMethod('display', function (attachment) {
+      this.bar.style.display = "";
+    })
+    .declareMethod('noDisplay', function (attachment) {
+      this.bar.style.display = "none";
+    })
     .declareAcquiredMethod("setCurrentTime", "setCurrentTime");
   gk.ready(function (g) {
     g.bar = g.__element.getElementsByTagName('progress')[0];

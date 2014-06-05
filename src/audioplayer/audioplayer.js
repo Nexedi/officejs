@@ -104,6 +104,7 @@
           volume = all_param[3];
           title = all_param[4];
           io = all_param[5];
+          that.display();
           window.setInterval(function () {
             control.getCurrentTime()
               .then(function (e) {
@@ -139,6 +140,30 @@
     });
 
   rJS(window)
+    .declareMethod("display", function (options) {
+      io.noDisplay();
+      title.display();
+      time.display();
+      volume.display();
+      animation.display();
+      next_context.style.display = "";
+      play_context.style.display = "";
+      stop_context.style.display = "";
+      addMusic_context.style.display = "";
+    })
+    .declareMethod("noDisplay", function (options) {
+      if (options === "addPage") {
+        io.display();
+      }
+      title.noDisplay();
+      time.noDisplay();
+      volume.noDisplay();
+      animation.noDisplay();
+      next_context.style.display = "none";
+      play_context.style.display = "none";
+      stop_context.style.display = "none";
+      addMusic_context.style.display = "none";
+    })
     .declareMethod("render", function (options) {
       var id = nextId(),
         name = playlist[id];

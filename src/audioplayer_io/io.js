@@ -3,7 +3,8 @@
 (function (window, jIO, rJS) {
   "use strict";
 
-  var gk = rJS(window);
+  var gk = rJS(window),
+    input_context;
 
   gk.declareMethod('createIO', function (description, key) {
    // indexedDB.deleteDatabase("jio:test");
@@ -31,6 +32,12 @@
         return "jio getIO error : " + response.target.result;
       });
     })
+    .declareMethod('display', function (attachment) {
+      input_context.style.display = "";
+    })
+    .declareMethod('noDisplay', function (attachment) {
+      input_context.style.display = "none";
+    })
     .declareMethod('setIO', function (attachment, file) {
       var gadget = this;
       return gadget.jio.putAttachment({
@@ -55,7 +62,7 @@
     })
     .declareAcquiredMethod("sendPlaylist", "sendPlaylist");
   gk.ready(function (g) {
-    var input_context = g.__element.getElementsByTagName('input')[0];
+    input_context = g.__element.getElementsByTagName('input')[0];
     g.playlist = [];
     g.createIO({ "type" : "indexeddb",
                  "database": "test"},
@@ -70,7 +77,6 @@
           g.sendPlaylist(g.playlist);
         });
       });
-
     input_context.onchange = function () {
       var tmp,
         index,

@@ -17,11 +17,18 @@
     .declareMethod('getMax', function () {
       return this.bar.max;
     })
+    .declareMethod('display', function (attachment) {
+      this.bar.style.display = "";
+    })
+    .declareMethod('noDisplay', function (attachment) {
+      this.bar.style.display = "none";
+    })
     .declareAcquiredMethod("setVolume", "setVolume")
     .declareAcquiredMethod("getVolume", "getVolume");   //xxxx
   gk.ready(function (g) {
     g.bar = g.__element.getElementsByTagName('progress')[0];
     g.bar.max = 1000;
+    //g.bar.style.display = "none";
     g.bar.onclick = function (e) {
       var posX = e.clientX,
         targetLeft = $(g.bar).offset().left;
