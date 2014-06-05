@@ -1,14 +1,19 @@
 /*global window, rJS, RSVP, console, $, jQuery, URL, location */
 /*jslint nomen: true*/
 
-(function (window, rJS, $) {
+(function (window, rJS, $, RSVP) {
   "use strict";
+  $.mobile.ajaxEnabled = false;
+  $.mobile.linkBindingEnabled = false;
+  $.mobile.hashListeningEnabled = false;
+  $.mobile.pushStateEnabled = false;
   var control,
     animation,
     time,
     volume,
     title,
     io,
+    error,
     totalId = -1,
     that,
     next_context,
@@ -17,6 +22,7 @@
     addMusic_context,
     currentId = -1,
     initializeFlag = false,
+    newPage,
     playlist = [];
   function nextId() {
     if (totalId === -1) {
@@ -28,9 +34,6 @@
   }
   rJS(window)
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
-    .declareAcquiredMethod("showPage", "showPage")
-    .declareAcquiredMethod("addPage", "addPage")
-    .declareAcquiredMethod("ErrorPage", "ErrorPage")
     .allowPublicAcquisition("setCurrentTime", function (value) {
       control.setCurrentTime(value[0]);
     })
@@ -75,6 +78,7 @@
       play_context = g.__element.getElementsByTagName('a')[1];
       stop_context = g.__element.getElementsByTagName('a')[2];
       addMusic_context = g.__element.getElementsByTagName('a')[3];
+      newPage = false;
       that = g;
       initializeFlag = false;
       RSVP.all([
@@ -95,6 +99,9 @@
         ),
         g.getDeclaredGadget(
           "io"
+        ),
+        g.getDeclaredGadget(
+          "error"
         )
       ])
         .then(function (all_param) {
@@ -104,6 +111,9 @@
           volume = all_param[3];
           title = all_param[4];
           io = all_param[5];
+          error = all_param[6];
+          error.noDisplay();
+          io.noDisplay();
           that.display();
           window.setInterval(function () {
             control.getCurrentTime()
@@ -164,9 +174,18 @@
       stop_context.style.display = "none";
       addMusic_context.style.display = "none";
     })
+    .declareMethod("showPage", function (param) {
+      return this.aq_pleasePublishMyState({page: param});
+    })
     .declareMethod("render", function (options) {
       var id = nextId(),
         name = playlist[id];
+      if (newPage === true) {
+        newPage = false;
+        error.noDisplay();
+        that.display();
+        return;
+      }
       if (initializeFlag === false) {
         return;
       }
@@ -190,14 +209,21 @@
         if (options.page === "addMusic") {
           animation.stopAnimation();
           control.stopSong()
-            .then(that.addPage());
+            .then(function () {
+              that.noDisplay("addPage");
+              newPage = true;
+            });
           return;
         }
 
         if (playlist.indexOf(options.page) === -1) {
           animation.stopAnimation();
           control.stopSong()
-            .then(that.ErrorPage())
+            .then(function () {
+              error.display();
+              that.noDisplay();
+              newPage = true;
+            })
             .fail(function (e) {
               console.log("error drop gadget " + e);
             });
@@ -212,4 +238,4 @@
         });
       }
     });
-}(window, rJS, jQuery));
+}(window, rJS, jQuery, RSVP));

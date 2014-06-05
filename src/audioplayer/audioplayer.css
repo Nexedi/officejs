@@ -1,31 +1,21 @@
+.progress_volume{
+    position: absolute;
+    top: 0%;
+    margin: 30px 0 20px 0; 
+}
 .title {
     position: absolute;
-    top: 10px;
-    margin: 50px 0 20px 0;
+    top: 1%;
+    margin: 30px 0 20px 0;
 }
 input.notice{
-    width:400px;
     background: black;
     color: white;
 }
 
 .progress_time{
     position: absolute;
-    top: 400px;
+    top: 65%;
     margin: 50px 0 20px 0;
 }
 
-.progress_volume{
-    position: absolute;
-    top: 310px;
-    margin: 50px 0 20px 0;
-}
-
-
-progress.pro{
-    width:400px;
-}
-
-progress.volume{
-    width:400px;
-}

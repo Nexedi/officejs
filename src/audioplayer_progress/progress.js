@@ -29,6 +29,7 @@
     g.bar = g.__element.getElementsByTagName('progress')[0];
     g.bar.value = 0;
     g.bar.max = 1000;
+    g.bar.style.width = window.screen.availWidth + "px";
     g.bar.onclick = function (e) {
       var posX = e.clientX,
         targetLeft = $(g.bar).offset().left;

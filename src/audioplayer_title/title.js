@@ -10,7 +10,7 @@
     this.out = " ";
     this.Position = 0;
     this.pos = 0;
-    this.delay = 200;
+    this.delay = 50;
     this.i = 0;
     this.size = 0;
     this.reset = function () {
@@ -44,6 +44,7 @@
   gk.ready(function (g) {
     g.scroll = new BannerObject();
     g.input = g.__element.getElementsByTagName('input')[0];
+    g.input.style.width =  window.screen.availWidth + "px";
     g.scroll.size = g.input.size;
     function scroller() {
       g.scroll.out += " ";

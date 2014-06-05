@@ -1,10 +1,9 @@
 #visualizer {
-    text-align: relative;
+    text-align: center;
 }
 
 #visualizer #canvas {
-    margin-top: 2%;
-    position: relative;
+    margin-top: 4%;
 }
 
 canvas#mirror{
@@ -17,14 +16,14 @@ canvas#mirror{
     transform: scaleY(-0.3);
 }
 div#mirrorWrapper{
-    height: 100px;
+    height: 150px;
 }
 
 
 div#mirrorWrapper:after {
     display: block;
     height: 100px;
-    width: 400px;
+    width: 100%;
     position: relative;
     top: -257px;
     content: " ";

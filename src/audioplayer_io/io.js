@@ -63,6 +63,7 @@
     .declareAcquiredMethod("sendPlaylist", "sendPlaylist");
   gk.ready(function (g) {
     input_context = g.__element.getElementsByTagName('input')[0];
+    input_context.style.display = "none";
     g.playlist = [];
     g.createIO({ "type" : "indexeddb",
                  "database": "test"},

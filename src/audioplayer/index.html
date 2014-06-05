@@ -8,15 +8,59 @@
   <script src="../<%= copy.rsvp.relative_dest %>" type="text/javascript"></script>
   <script src="../<%= copy.renderjs.relative_dest %>" type="text/javascript"></script>
   <script src="../<%= curl.jquery.relative_dest %>" type="text/javascript"></script>
+
+  <script src="../<%= curl.jquerymobilejs.relative_dest %>"></script>  
+  <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
   
   <!-- custom script -->
-  <script src="./interface.js" type="text/javascript"></script>
+  <script src="./audioplayer.js" type="text/javascript"></script>
+  
+  <link rel="stylesheet" href="../../src/audioplayer/audioplayer.css" media="screen" ></link>  
   </head>
   <body>
-    <div class = "audioplayer" data-gadget-url="./audioplayer.html" data-gadget-scope="audioplayer">
-    </div>
-    <div class = "error" data-gadget-url="./error.html" data-gadget-scope="error">
+    <div data-role="page">
+    <div data-role="header" data-position="fullscreen">
+      <div data-role="navbar">
+        <ul>
+          <li> <a class ="next" data-transition="slide" >next</a></li>
+          <li> <a class ="play" data-transition="slide" >play</a></li>
+        </ul>
+      </div>
     </div>
     
+    <div class = "audioplayer">
+      <!-- data-gadget-sandbox="iframe" -->
+      <div class = "control" data-gadget-url="../audioplayer_control/index.html" data-gadget-scope="control">
+      </div>
+      
+      <div class = "animation" data-gadget-url="../audioplayer_animation/index.html" data-gadget-scope="animation">
+      </div> 
+      
+      <div class = "progress_time" data-gadget-url="../audioplayer_progress/index.html" data-gadget-scope="time">
+      </div>          
+      
+      
+      <div class = "progress_volume" data-gadget-url="../audioplayer_volume/index.html" data-gadget-scope="volume">
+      </div>
+      
+      <div class = "title" data-gadget-url="../audioplayer_title/index.html" data-gadget-scope="title" >
+      </div>
+      
+      <div class = "io" data-gadget-url="../audioplayer_io/index.html" data-gadget-scope="io" >
+      </div>
+
+      <div class = "error" data-gadget-url="./error.html" data-gadget-scope="error">
+      </div>
+      
+      <div data-role="footer" data-position="fullscreen">
+        <div data-role="navbar">
+          <ul>
+            <li> <a class ="stop" data-transition="slide" >stop</a></li>
+            <li> <a class ="addMusic" data-transition="slide">addMusic</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    </div>
   </body>
 </html>
