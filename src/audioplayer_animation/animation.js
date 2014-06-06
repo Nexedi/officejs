@@ -54,6 +54,8 @@
       };
       that.animationPlayId = window.requestAnimationFrame(drawFrame);
     })
+
+
     .declareMethod('stopAnimation', function () {
       this.play = false;
       window.cancelAnimationFrame(

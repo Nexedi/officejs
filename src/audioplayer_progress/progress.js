@@ -44,9 +44,11 @@
     })
     .declareMethod('display', function (attachment) {
       this.bar.style.display = "";
+      this.time.style.display = "";
     })
     .declareMethod('noDisplay', function (attachment) {
       this.bar.style.display = "none";
+      this.time.style.display = "none";
     })
     .declareAcquiredMethod("setCurrentTime", "setCurrentTime");
   gk.ready(function (g) {

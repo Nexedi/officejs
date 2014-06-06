@@ -27,21 +27,15 @@
     .declareAcquiredMethod("getVolume", "getVolume");   //xxxx
   gk.ready(function (g) {
     g.bar = g.__element.getElementsByTagName('progress')[0];
-    g.box = g.__element.getElementsByTagName('div')[0];
     g.bar.max = 1000;
-    g.bar.style.width = window.screen.availWidth + "px";
+   // g.bar.style.width =  + "px";
     g.bar.onclick = function (e) {
-      var posX = e.clientX,
-        targetLeft = $(g.bar).offset().left;
-      posX = ((posX - targetLeft) / $(g.bar).width()) * g.bar.max;
-      g.setValue(posX);
-      g.setVolume(posX);
-    };
-    g.bar.onmousemove = function (e) {
-      g.box.style.left = e.clientX + "px";
-      g.box.style.top = e.clientY + "px";
-      g.box.style.display = 'block';
-      g.box.innerHTML = e.clientX;
+      var posY = e.clientY,
+        targetTop = $(g.bar).offset().top;
+      posY = (($(g.bar).width() - posY + targetTop)
+              / $(g.bar).width()) * g.bar.max;
+      g.setValue(posY);
+      g.setVolume(posY);
     };
   });
 }(window, rJS, jQuery));

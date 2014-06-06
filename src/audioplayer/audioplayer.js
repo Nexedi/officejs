@@ -20,9 +20,11 @@
     play_context,
     stop_context,
     addMusic_context,
+    list_context,
     currentId = -1,
     initializeFlag = false,
-    newPage,
+    list,
+    titleSave,
     playlist = [];
   function nextId() {
     if (totalId === -1) {
@@ -74,11 +76,12 @@
       time.setMax(value[0]);
     })
     .ready(function (g) {
-      next_context = g.__element.getElementsByTagName('a')[0];
-      play_context = g.__element.getElementsByTagName('a')[1];
-      stop_context = g.__element.getElementsByTagName('a')[2];
-      addMusic_context = g.__element.getElementsByTagName('a')[3];
-      newPage = false;
+      var array = g.__element.getElementsByTagName('a');
+      next_context = array[0];
+      play_context = array[1];
+      stop_context = array[array.length - 3];
+      addMusic_context = array[array.length - 2];
+      list_context = array[array.length - 1];
       that = g;
       initializeFlag = false;
       RSVP.all([
@@ -102,6 +105,9 @@
         ),
         g.getDeclaredGadget(
           "error"
+        ),
+        g.getDeclaredGadget(
+          "playlist"
         )
       ])
         .then(function (all_param) {
@@ -112,10 +118,11 @@
           title = all_param[4];
           io = all_param[5];
           error = all_param[6];
+          list = all_param[7];
           error.noDisplay();
           io.noDisplay();
           that.display();
-          $(volume.__element).trigger("create");
+          list.noDisplay();
           window.setInterval(function () {
             control.getCurrentTime()
               .then(function (e) {
@@ -152,7 +159,6 @@
 
   rJS(window)
     .declareMethod("display", function (options) {
-      io.noDisplay();
       title.display();
       time.display();
       volume.display();
@@ -161,11 +167,9 @@
       play_context.style.display = "";
       stop_context.style.display = "";
       addMusic_context.style.display = "";
+      list_context.style.display = "";
     })
     .declareMethod("noDisplay", function (options) {
-      if (options === "addPage") {
-        io.display();
-      }
       title.noDisplay();
       time.noDisplay();
       volume.noDisplay();
@@ -174,6 +178,7 @@
       play_context.style.display = "none";
       stop_context.style.display = "none";
       addMusic_context.style.display = "none";
+      list_context.style.display = "none";
     })
     .declareMethod("showPage", function (param) {
       return this.aq_pleasePublishMyState({page: param});
@@ -181,12 +186,6 @@
     .declareMethod("render", function (options) {
       var id = nextId(),
         name = playlist[id];
-      if (newPage === true) {
-        newPage = false;
-        error.noDisplay();
-        that.display();
-        return;
-      }
       if (initializeFlag === false) {
         return;
       }
@@ -197,6 +196,26 @@
         });
 
       if (options.page !== undefined) {
+        if (options.page === "addMusic") {
+          animation.stopAnimation();
+          that.noDisplay();
+          io.display();
+          return;
+        }
+
+        if (options.page === "playlist") {
+          animation.stopAnimation();
+          that.noDisplay();
+          list.initList(playlist);
+          list.display();
+          return;
+        }
+
+        error.noDisplay();
+        list.noDisplay();
+        io.noDisplay();
+        that.display();
+
         if (options.page === "play") {
           control.playSong();
           animation.showAnimation();
@@ -207,38 +226,23 @@
           animation.stopAnimation();
           return;
         }
-        if (options.page === "addMusic") {
-          animation.stopAnimation();
-          control.stopSong()
-            .then(function () {
-              that.noDisplay("addPage");
-              newPage = true;
-            });
-          return;
-        }
-        if (options.page === "playlist") {
-          control.stopSong();
-          animation.stopAnimation();
-          newPage = true;
-          return;
-        }
+
         if (playlist.indexOf(options.page) === -1) {
           animation.stopAnimation();
-          control.stopSong()
-            .then(function () {
-              error.display();
-              that.noDisplay();
-              newPage = true;
-            })
-            .fail(function (e) {
-              console.log("error drop gadget " + e);
-            });
+          error.display();
+          that.noDisplay();
+          return;
+        }
+        if (titleSave === options.page) {
+          control.playSong();
+          animation.showAnimation();
           return;
         }
         io.getIO(options.page).then(function (file) {
           control.setSong(URL.createObjectURL(file)).then(function () {
             control.playSong();
             title.setMessage(options.page);
+            titleSave = options.page;
             animation.showAnimation();
           });
         });

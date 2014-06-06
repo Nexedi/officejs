@@ -1,12 +1,19 @@
-progress {
+progress.volume {
     height: 25px;
     padding: 5px;
     margin: 50px 0 20px 0;
+    width:250px;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
     border-radius: 5px;
     -moz-box-shadow: 0 1px 5px #000 inset,0 1px 0 #444;
     -webkit-box-shadow: 0 1px 5px #000 inset,0 1px 0 #444;
     box-shadow: 0 1px 5px #000 inset,0 1px 0 #444;
+
+
+    -webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    -o-transform: rotate(270deg);
+
 }
 
