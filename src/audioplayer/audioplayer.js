@@ -115,6 +115,7 @@
           error.noDisplay();
           io.noDisplay();
           that.display();
+          $(volume.__element).trigger("create");
           window.setInterval(function () {
             control.getCurrentTime()
               .then(function (e) {
@@ -215,7 +216,12 @@
             });
           return;
         }
-
+        if (options.page === "playlist") {
+          control.stopSong();
+          animation.stopAnimation();
+          newPage = true;
+          return;
+        }
         if (playlist.indexOf(options.page) === -1) {
           animation.stopAnimation();
           control.stopSong()
