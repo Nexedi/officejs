@@ -205,6 +205,15 @@
           return;
         }
 
+        if (options.id === "delete") {
+          io.removeIO(options.page)
+            .then(function () {
+              list.initList(playlist);
+             // list.display();
+            });
+          return;
+        }
+
         error.noDisplay();
         list.noDisplay();
         io.noDisplay();

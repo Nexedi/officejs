@@ -26,7 +26,7 @@
           + "</a> "
           + " <a href=#page="
           + array[i]
-          + "delete "
+          + "&id=delete "
           + "data-rel=popup "
           + "data-position-to=window "
           + "</a>";

@@ -32,6 +32,18 @@
         return "jio getIO error : " + response.target.result;
       });
     })
+    .declareMethod('removeIO', function (attachment) {
+      var gadget = this;
+      return gadget.jio.removeAttachment({
+        "_id": gadget.key,
+        "_attachment": attachment
+      }).then(function () {
+        gadget.playlist.splice(gadget.playlist.indexOf(attachment), 1);
+        gadget.sendPlaylist(gadget.playlist);
+      }).fail(function (response) {
+        return "jio removeIO error : " + response.target.result;
+      });
+    })
     .declareMethod('display', function (attachment) {
       input_context.style.display = "";
     })
@@ -87,7 +99,7 @@
       for (index = 0; index < input_context.files.length; index += 1) {
         found = false;
         for (tmp = 0; tmp < g.playlist.length; tmp += 1) {
-          if (g.playlist[tmp].name === input_context.files[index].name) {
+          if (g.playlist[tmp] === input_context.files[index].name) {
             found = true;
             break;
           }
