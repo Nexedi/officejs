@@ -7,7 +7,7 @@
     input_context;
 
   gk.declareMethod('createIO', function (description, key) {
-   // indexedDB.deleteDatabase("jio:test");
+//    indexedDB.deleteDatabase("jio:test");
     this.jio = jIO.createJIO(description);
     this.key = key;
     return this.jio.put({
@@ -70,10 +70,12 @@
                "m")
       .then(function () {
         g.showAllIO().then(function (result) {
-          var array = Object.keys(result),
-            i;
-          for (i = 0; i < array.length; i += 1) {
-            g.playlist.push(array[i]);
+          if (result !== undefined) {
+            var array = Object.keys(result),
+              i;
+            for (i = 0; i < array.length; i += 1) {
+              g.playlist.push(array[i]);
+            }
           }
           g.sendPlaylist(g.playlist);
         });

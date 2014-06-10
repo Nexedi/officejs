@@ -65,13 +65,16 @@
     .declareMethod("display", function (options) {
       this.canvas.style.display = "";
       this.mirror.style.display = "";
+      this.visualize.style.display = "";
     })
     .declareMethod("noDisplay", function (options) {
       this.canvas.style.display = "none";
       this.mirror.style.display = "none";
+      this.visualize.style.display = "none";
     });
 
   gk.ready(function (g) {
+    g.visualize = g.__element.getElementsByTagName('div')[0];
     g.canvas = g.__element.getElementsByTagName('canvas')[0];
     g.mirror = g.__element.getElementsByTagName('canvas')[1];
   });

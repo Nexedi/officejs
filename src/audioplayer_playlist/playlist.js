@@ -15,7 +15,7 @@
       var i,
         docFragment = document.createDocumentFragment(),
         li;
-    //  this.list.innerHTML = "";
+      this.list.innerHTML = "";
       for (i = 0; i < array.length; i += 1) {
         li = document.createElement("li");
         li.innerHTML =

@@ -18,7 +18,6 @@
     that,
     next_context,
     play_context,
-    stop_context,
     addMusic_context,
     list_context,
     currentId = -1,
@@ -27,7 +26,7 @@
     titleSave,
     playlist = [];
   function nextId() {
-    if (totalId === -1) {
+    if (totalId <= 0) {
       return -1;
     }
     currentId += 1;
@@ -79,7 +78,6 @@
       var array = g.__element.getElementsByTagName('a');
       next_context = array[0];
       play_context = array[1];
-      stop_context = array[array.length - 3];
       addMusic_context = array[array.length - 2];
       list_context = array[array.length - 1];
       that = g;
@@ -130,13 +128,9 @@
               });
           }, 1000);
           volume.setMax(3);
-          that.showPage("play").then(function (result) {
+          that.showPage("stop").then(function (result) {
             play_context.href = result;
           });
-          that.showPage("stop").then(function (result) {
-            stop_context.href = result;
-          });
-
           that.showPage("addMusic").then(function (result) {
             addMusic_context.href = result;
           });
@@ -165,7 +159,6 @@
       animation.display();
       next_context.style.display = "";
       play_context.style.display = "";
-      stop_context.style.display = "";
       addMusic_context.style.display = "";
       list_context.style.display = "";
     })
@@ -176,7 +169,6 @@
       animation.noDisplay();
       next_context.style.display = "none";
       play_context.style.display = "none";
-      stop_context.style.display = "none";
       addMusic_context.style.display = "none";
       list_context.style.display = "none";
     })
@@ -199,6 +191,7 @@
         if (options.page === "addMusic") {
           animation.stopAnimation();
           that.noDisplay();
+          list.noDisplay();
           io.display();
           return;
         }
@@ -206,6 +199,7 @@
         if (options.page === "playlist") {
           animation.stopAnimation();
           that.noDisplay();
+          io.noDisplay();
           list.initList(playlist);
           list.display();
           return;
@@ -217,11 +211,19 @@
         that.display();
 
         if (options.page === "play") {
+          that.showPage("stop").then(function (result) {
+            play_context.href = result;
+            play_context.innerHTML = "stop";
+          });
           control.playSong();
           animation.showAnimation();
           return;
         }
         if (options.page === "stop") {
+          that.showPage("play").then(function (result) {
+            play_context.href = result;
+            play_context.innerHTML = "play";
+          });
           control.stopSong();
           animation.stopAnimation();
           return;
@@ -246,6 +248,11 @@
             animation.showAnimation();
           });
         });
+      } else {
+        error.noDisplay();
+        list.noDisplay();
+        io.noDisplay();
+        that.display();
       }
     });
 }(window, rJS, jQuery, RSVP));
