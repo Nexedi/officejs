@@ -7,9 +7,11 @@
   var gk = rJS(window);
   gk.declareMethod('display', function (attachment) {
     this.playlist.style.display = "";
+    this.home.style.display = "";
   })
     .declareMethod('noDisplay', function (attachment) {
       this.playlist.style.display = "none";
+      this.home.style.display = "none";
     })
     .declareMethod('initList', function (array) {
       var i,
@@ -36,8 +38,9 @@
       $(this.list).listview("refresh");
     });
   gk.ready(function (g) {
-    g.playlist = g.__element.getElementsByTagName('div')[0];
-    g.list = g.__element.getElementsByTagName('ul')[0];
+    g.playlist = g.__element.getElementsByTagName('div')[2];
+    g.list = g.__element.getElementsByTagName('ul')[1];
+    g.home = g.__element.getElementsByTagName('div')[0];
     $(g.__element).trigger("create");
   });
 }(window, rJS, jQuery));

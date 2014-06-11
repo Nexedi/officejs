@@ -51,6 +51,9 @@
         return value;
       });
     })
+    .allowPublicAcquisition("plShowPage", function (param_list) {
+      return this.aq_pleasePublishMyState({page: param_list[0]});
+    })
     .allowPublicAcquisition("nextToPlay", function () {
       var id = nextId(),
         name = playlist[id];
@@ -262,6 +265,11 @@
         list.noDisplay();
         io.noDisplay();
         that.display();
+        control.isPaused().then(function (paused) {
+          if (!paused) {
+            animation.showAnimation();
+          }
+        });
       }
     });
 }(window, rJS, jQuery, RSVP));
