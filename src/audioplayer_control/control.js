@@ -30,12 +30,6 @@
     .declareMethod('getVolume', function () {
       return this.volume;
     })
-    .declareMethod('getTitle', function (id) {
-      if (id === undefined) {
-        id = this.currentPlayId;
-      }
-      return this.playlist[id];
-    })
     .declareMethod('isPaused', function () {
       return this.audio.paused;
     })

@@ -41,11 +41,6 @@
     .allowPublicAcquisition("setVolume", function (value) {
       control.setVolume(value[0]);
     })
-    .allowPublicAcquisition("getVolume", function () {
-      return control.getVolume().then(function (value) {
-        return value;
-      });
-    })
     .allowPublicAcquisition("getFFTValue", function () {
       return control.getFFTValue().then(function (value) {
         return value;
@@ -212,7 +207,6 @@
           io.removeIO(options.page)
             .then(function () {
               list.initList(playlist);
-             // list.display();
             });
           return;
         }
