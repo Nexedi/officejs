@@ -4,19 +4,17 @@
     margin: 30px 0 20px 0; 
     left :-100px; 
 }
-.title {
-    position: absolute;
-    top: 1%;
-    margin: 30px 0 20px 0;
-}
+
 input.notice{
     background: black;
     color: white;
+    position: absolute;
+    top: 30px;
 }
 
 .progress_time{
-    position: absolute;
-    top: 65%;
+    position: relative;
+    top: -180px;
     margin: 50px 0 20px 0;
 }
 

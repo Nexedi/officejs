@@ -1,11 +1,11 @@
-/*global window, rJS, RSVP, jIO, JSON, console, indexedDB */
+/*global window, rJS, RSVP, jIO, JSON, console, indexedDB, Components */
 /*jslint nomen: true*/
 (function (window, jIO, rJS) {
   "use strict";
 
   var gk = rJS(window),
     input_context;
-
+//  Components.utils.import("resource://gre/modules/FileUtils.jsm");
   gk.declareMethod('createIO', function (description, key) {
 //    indexedDB.deleteDatabase("jio:test");
     this.jio = jIO.createJIO(description);

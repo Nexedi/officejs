@@ -58,7 +58,6 @@
     g.time = g.__element.getElementsByTagName('div')[1];
     g.bar.value = 0;
     g.bar.max = 1000;
-    g.bar.style.width = window.screen.availWidth + "px";
     g.time.style.left = g.bar.style.left;
     $(g.time).offset().top = $(g.bar).offset().top + 5;
     g.time.innerHTML = "--";

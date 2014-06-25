@@ -13,21 +13,21 @@
       this.playlist.style.display = "none";
       this.home.style.display = "none";
     })
-    .declareMethod('initList', function (array) {
+    .declareMethod('initList', function (playlist) {
       var i,
         docFragment = document.createDocumentFragment(),
         li;
       this.list.innerHTML = "";
-      for (i = 0; i < array.length; i += 1) {
+      for (i = 0; i < playlist.url.length; i += 1) {
         li = document.createElement("li");
         li.innerHTML =
           "<a href=#page="
-          + array[i]
+          + playlist.url[i]
           + ">"
-          + array[i]
+          + playlist.name[i]
           + "</a> "
           + " <a href=#page="
-          + array[i]
+          + playlist.name[i]
           + "&id=delete "
           + "data-rel=popup "
           + "data-position-to=window "

@@ -44,7 +44,6 @@
   gk.ready(function (g) {
     g.scroll = new BannerObject();
     g.input = g.__element.getElementsByTagName('input')[0];
-    g.input.style.width =  window.screen.availWidth + "px";
     g.scroll.size = g.input.size;
     function scroller() {
       g.scroll.out += " ";
