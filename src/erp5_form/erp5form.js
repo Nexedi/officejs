@@ -1,73 +1,89 @@
+/*global rJS, RSVP, jQuery, Handlebars,
+  promiseEventListener, console */
+/*jslint nomen: true */
 /*global window, rJS, RSVP, StatelessJS, alert, FormData, document, console */
-/*jslint maxlen:80, nomen: true */
-(function (rJS) {
+/*jslint maxlen:200, nomen: true */
+(function (window, rJS, RSVP, $, promiseEventListener) {
   "use strict";
 
-//   function loopEventListener(target, type, useCapture, callback) {
-//     //////////////////////////
-//     // Infinite event listener (promise is never resolved)
-//     // eventListener is removed when promise is cancelled/rejected
-//     //////////////////////////
-//     var handle_event_callback,
-//       callback_promise;
+// //   function loopEventListener(target, type, useCapture, callback) {
+// //     //////////////////////////
+// //     // Infinite event listener (promise is never resolved)
+// //     // eventListener is removed when promise is cancelled/rejected
+// //     //////////////////////////
+// //     var handle_event_callback,
+// //       callback_promise;
+// // 
+// //     function cancelResolver() {
+// //       if ((callback_promise !== undefined) &&
+// //           (typeof callback_promise.cancel === "function")) {
+// //         callback_promise.cancel();
+// //       }
+// //     }
+// // 
+// //     function canceller() {
+// //       if (handle_event_callback !== undefined) {
+// //         target.removeEventListener(type, handle_event_callback, useCapture);
+// //       }
+// //       cancelResolver();
+// //     }
+// //     function itsANonResolvableTrap(resolve, reject) {
+// // 
+// //       handle_event_callback = function (evt) {
+// //         evt.stopPropagation();
+// //         evt.preventDefault();
+// //         cancelResolver();
+// //         callback_promise = new RSVP.Queue()
+// //           .push(function () {
+// //             return callback(evt);
+// //           })
+// //           .push(undefined, function (error) {
+// //             if (!(error instanceof RSVP.CancellationError)) {
+// //               canceller();
+// //               reject(error);
+// //             }
+// //           });
+// //       };
+// // 
+// //       target.addEventListener(type, handle_event_callback, useCapture);
+// //     }
+// //     return new RSVP.Promise(itsANonResolvableTrap, canceller);
+// //   }
 // 
-//     function cancelResolver() {
-//       if ((callback_promise !== undefined) &&
-//           (typeof callback_promise.cancel === "function")) {
-//         callback_promise.cancel();
-//       }
-//     }
-// 
-//     function canceller() {
-//       if (handle_event_callback !== undefined) {
-//         target.removeEventListener(type, handle_event_callback, useCapture);
-//       }
-//       cancelResolver();
-//     }
-//     function itsANonResolvableTrap(resolve, reject) {
-// 
-//       handle_event_callback = function (evt) {
-//         evt.stopPropagation();
-//         evt.preventDefault();
-//         cancelResolver();
-//         callback_promise = new RSVP.Queue()
-//           .push(function () {
-//             return callback(evt);
-//           })
-//           .push(undefined, function (error) {
-//             if (!(error instanceof RSVP.CancellationError)) {
-//               canceller();
-//               reject(error);
-//             }
-//           });
-//       };
-// 
-//       target.addEventListener(type, handle_event_callback, useCapture);
-//     }
-//     return new RSVP.Promise(itsANonResolvableTrap, canceller);
+//   function clearPreviousGadgetList(form_gadget, element) {
+//     // Drop the previous gadget fields
+//     form_gadget.private_gadget_list = [];
 //   }
+// 
+//   rJS(window)
 
-  function clearPreviousGadgetList(form_gadget, element) {
-    // Drop the previous gadget fields
-    form_gadget.private_gadget_list = [];
-  }
+  /////////////////////////////////////////////////////////////////
+  // Handlebars
+  /////////////////////////////////////////////////////////////////
+  // Precompile the templates while loading the first gadget instance
+  var gadget_klass = rJS(window);
 
-  rJS(window)
+  gadget_klass
+    /////////////////////////////////////////////////////////////////
+    // ready
+    /////////////////////////////////////////////////////////////////
+    // Init local properties
     .ready(function (g) {
-      g.private_gadget_list = [];
+      g.props = {};
     })
 
+    // Assign the element to a variable
     .ready(function (g) {
-      return new RSVP.Queue()
-        .push(function () {
-          return g.getElement();
-        })
+      return g.getElement()
         .push(function (element) {
-          g.element = element;
+          g.props.element = element;
         });
     })
 
-    .declareMethod('render', function (options) {
+    /////////////////////////////////////////////////////////////////
+    // declared methods
+    /////////////////////////////////////////////////////////////////
+    .declareMethod('render2', function (options) {
       console.log(options.form_definition);
       var i,
         erp5_document = options.erp5_document,
@@ -89,8 +105,6 @@
 
       options = options.form_gadget || {};
       form_gadget.state_parameter_dict = options;
-      clearPreviousGadgetList(form_gadget,
-        form_gadget.element.getElementsByTagName('form')[0]);
 
       for (i = 0; i < group_list.length; i += 1) {
         group = group_list[i][1];
@@ -301,7 +315,102 @@
 //         formSubmit
 //       );
 
+    })
+
+    .declareMethod('render', function (options) {
+      var i,
+        erp5_document = options.erp5_document,
+        form_definition = options.form_definition,
+        rendered_form = erp5_document._embedded._view,
+        group_list = form_definition.group_list,
+        queue = new RSVP.Queue(),
+        form_gadget = this,
+        parent_element = document.createElement("div");
+
+      delete options.erp5_document;
+      delete options.form_definition;
+
+      options = options.form_gadget || {};
+      form_gadget.state_parameter_dict = options;
+
+      form_gadget.props.gadget_list = [];
+
+      function addGroup(group) {
+        queue
+          .push(function () {
+            var j,
+              fieldset_element = document.createElement("fieldset"),
+              group_queue = new RSVP.Queue();
+
+            function addField(field, scope) {
+              group_queue.push(function () {
+                if (rendered_form.hasOwnProperty(field[0])) {
+                  // Field is enabled in this context
+                  var field_queue = new RSVP.Queue(),
+                    field_url = '../erp5_string_field/index.html',
+                    field_element = document.createElement("div"),
+                    gadget_element = document.createElement("div"),
+                    label_element = document.createElement("label"),
+                    renderered_field = rendered_form[field[0]];
+
+//                   field_element.setAttribute('data-role', 'fieldcontain');
+                  label_element.setAttribute('for', renderered_field.key);
+                  label_element.textContent = renderered_field.title;
+                  field_element.appendChild(label_element);
+                  field_element.appendChild(gadget_element);
+                  fieldset_element.appendChild(field_element);
+
+                  if ((renderered_field.type === 'ListField') ||
+                      (renderered_field.type === 'ParallelListField') ||
+                      (renderered_field.type === 'MultiListField')) {
+                    field_url = '../erp5_list_field/index.html';
+                  } else if (renderered_field.type === 'ListBox') {
+                    field_url = '../erp5_listbox/index.html';
+                  }
+
+                  return field_queue
+                    .push(function () {
+                      return form_gadget.declareGadget(field_url, {
+                        scope: renderered_field.key,
+                        element: gadget_element
+                      });
+                    })
+                    .push(function (field_gadget) {
+                      form_gadget.props.gadget_list.push(field_gadget);
+                      var suboptions = options[renderered_field.key] || {};
+                      suboptions.field_json = renderered_field;
+                      return field_gadget.render(suboptions);
+                    });
+                }
+              });
+            }
+
+            fieldset_element.setAttribute("class", group[0]);
+            for (j = 0; j < group[1].length; j += 1) {
+              addField(group[1][j]);
+            }
+            return group_queue.push(function () {
+              parent_element.appendChild(fieldset_element);
+            });
+          });
+      }
+
+      for (i = 0; i < group_list.length; i += 1) {
+        addGroup(group_list[i]);
+      }
+
+      return queue
+        .push(function () {
+          var dom_element = form_gadget.props.element
+            .querySelector(".field_container");
+          while (dom_element.firstChild) {
+            dom_element.removeChild(dom_element.firstChild);
+          }
+          dom_element.appendChild(parent_element);
+          return $(parent_element).trigger("create");
+
+        });
     });
 
 
-}(rJS));
+}(window, rJS, RSVP, jQuery, promiseEventListener));

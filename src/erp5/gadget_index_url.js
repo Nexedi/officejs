@@ -4,20 +4,6 @@
   "use strict";
 
   /////////////////////////////////////////////////////////////////
-  // Custom Stop Error
-  /////////////////////////////////////////////////////////////////
-  function StopRenderingError(message) {
-    this.name = "StopRenderingError";
-    if ((message !== undefined) && (typeof message !== "string")) {
-      throw new TypeError('You must pass a string.');
-    }
-    this.message = message || "StopRendering failed";
-  }
-  StopRenderingError.prototype = new Error();
-  StopRenderingError.prototype.constructor =
-    StopRenderingError;
-
-  /////////////////////////////////////////////////////////////////
   // Desactivate jQuery Mobile URL management
   /////////////////////////////////////////////////////////////////
   $.mobile.ajaxEnabled = false;
@@ -29,88 +15,96 @@
   // Gadget behaviour
   /////////////////////////////////////////////////////////////////
 
-  function getCachedGadgetOrLoad(gadget, url, scope, element) {
-    return gadget.getDeclaredGadget(scope)
-      .fail(function () {
-        return gadget.declareGadget(url, {
-          scope: scope,
-          element: element
-        });
-      });
-  }
-
-  var JIO_GADGET = "../jio_bridge/index.html",
-    FORM_GADGET = "../erp5_form/index.html";
-
   rJS(window)
+    /////////////////////////////////////////////////////////////////
+    // ready
+    /////////////////////////////////////////////////////////////////
+    // Configure jIO to use localstorage
+    // And load configuration from server
     .ready(function (g) {
-      g.render();
+      return g.getDeclaredGadget("jio_gadget")
+        .push(function (jio_gadget) {
+          return jio_gadget.createJio({
+            type: "erp5",
+            url: "http://192.168.242.62:12002/erp5/web_site_module/hateoas"
+          });
+        });
     })
-    .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
 
+    /////////////////////////////////////////////////////////////////
+    // handle acquisition
+    /////////////////////////////////////////////////////////////////
+    .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
+    // Bridge to jio gadget
+    .allowPublicAcquisition("jio_allDocs", function (param_list) {
+      return this.getDeclaredGadget("jio_gadget")
+        .push(function (jio_gadget) {
+          return jio_gadget.allDocs.apply(jio_gadget, param_list);
+        });
+    })
+    .allowPublicAcquisition("jio_ajax", function (param_list) {
+      return this.getDeclaredGadget("jio_gadget")
+        .push(function (jio_gadget) {
+          return jio_gadget.ajax.apply(jio_gadget, param_list);
+        });
+    })
+    .allowPublicAcquisition("jio_post", function (param_list) {
+      return this.getDeclaredGadget("jio_gadget")
+        .push(function (jio_gadget) {
+          return jio_gadget.post.apply(jio_gadget, param_list);
+        });
+    })
+    .allowPublicAcquisition("jio_remove", function (param_list) {
+      return this.getDeclaredGadget("jio_gadget")
+        .push(function (jio_gadget) {
+          return jio_gadget.remove.apply(jio_gadget, param_list);
+        });
+    })
+    .allowPublicAcquisition("jio_get", function (param_list) {
+      return this.getDeclaredGadget("jio_gadget")
+        .push(function (jio_gadget) {
+          return jio_gadget.get.apply(jio_gadget, param_list);
+        });
+    })
+    .allowPublicAcquisition("jio_putAttachment", function (param_list) {
+      return this.getDeclaredGadget("jio_gadget")
+        .push(function (jio_gadget) {
+          return jio_gadget.putAttachment.apply(jio_gadget, param_list);
+        });
+    })
+    .allowPublicAcquisition("jio_getAttachment", function (param_list) {
+      return this.getDeclaredGadget("jio_gadget")
+        .push(function (jio_gadget) {
+          return jio_gadget.getAttachment.apply(jio_gadget, param_list);
+        });
+    })
+
+    .allowPublicAcquisition("whoWantToDisplayThis", function (param_list) {
+      // Hey, I want to display some URL
+      return this.aq_pleasePublishMyState({jio_key: param_list[0]});
+    })
+
+    /////////////////////////////////////////////////////////////////
+    // declared methods
+    /////////////////////////////////////////////////////////////////
+    // Render the page
     .declareMethod('render', function (options) {
       var gadget = this;
-      gadget.state_parameter_dict = options;
-      return RSVP.Queue()
-        .push(function () {
-          return RSVP.all([
-            getCachedGadgetOrLoad(gadget, JIO_GADGET, "jio_gadget"),
-            getCachedGadgetOrLoad(gadget, FORM_GADGET, "form_gadget",
-                                  document.getElementById('mainarticle'))
-          ]);
-        })
-        .push(function (gadget_list) {
-          gadget.sub_gadget_dict = {
-            jio_gadget: gadget_list[0],
-            form_gadget: gadget_list[1]
-          };
-          if (options.jio_key === undefined) {
-            // 
-//           ///////////////////////////////////////////////
-//           // Default view
-//           ///////////////////////////////////////////////
-//           return gadget.sub_gadget_dict.jio_gadget.allDocs(
-//             {"query": '__root__'}
-//           );
-//         })
-//         .push(function (result) {
-//           console.log("tructruc");
-//           // return the default jio_key
-//           // return result.data.rows[0].id;
-//           // return "person_module";
-//           return "computer_module/20130611-5BFC";
-//         })
-//         .push(function (jio_key) {
-//
-//             jio_key_hash = "jio_key=" +
-// //               encodeURIComponent("computer_module/20130611-5BFC");
-//               encodeURIComponent("person_module");
 
-            // XXX TODO try no to wrap into anonymous function
-            return new RSVP.Queue()
-              .push(function () {
-                return gadget.aq_pleasePublishMyState(
-                  {jio_key: "person_module"}
-                );
-              })
-              .push(function (lala) {
-                return gadget.pleaseRedirectMyHash(lala);
-              })
-              .push(function () {
-                throw new StopRenderingError("No need to do more");
-              });
-          }
-        })
-        .push(function () {
+//       $.mobile.loading('show');
+      if (options.jio_key === undefined) {
+        // Redirect to the default view
+        return gadget.aq_pleasePublishMyState({jio_key: "person_module"})
+          .push(gadget.pleaseRedirectMyHash.bind(gadget));
+      }
+      return gadget.getDeclaredGadget("jio_gadget")
+        .push(function (jio_gadget) {
           var jio_key = options.jio_key,
             view = options.view || "view";
           ///////////////////////////////////////////////
           // Display erp5 document view
           ///////////////////////////////////////////////
-          return gadget.sub_gadget_dict.jio_gadget.get(
-            {"_id": jio_key},
-            {"_view": view}
-          );
+          return jio_gadget.get({"_id": jio_key}, {"_view": view});
         })
         .push(function (result) {
           var uri = new URI(
@@ -122,11 +116,13 @@
 //           }
           return RSVP.all([
             result,
-            // XXX
-            gadget.sub_gadget_dict.jio_gadget.get(
-              {"_id": uri.segment(2)},
-              {"_view": "view"}
-            )
+            gadget.getDeclaredGadget("jio_gadget")
+              .push(function (jio_gadget) {
+                return jio_gadget.get(
+                  {"_id": uri.segment(2)},
+                  {"_view": "view"}
+                );
+              })
           ]);
         })
         .push(function (result) {
@@ -134,30 +130,28 @@
           sub_options.erp5_document = result[0].data;
           sub_options.form_definition = result[1].data;
 
-          return gadget.sub_gadget_dict.form_gadget.render(sub_options);
+          return gadget.getDeclaredGadget("form_gadget")
+            .push(function (form_gadget) {
+              return form_gadget.render(sub_options);
+            });
         })
         .push(function () {
-          // XXX JQuery mobile
-          $(gadget.sub_gadget_dict.form_gadget.element).trigger('create');
+          return gadget.getDeclaredGadget("form_gadget");
         })
+        .push(function (form_gadget) {
+          return form_gadget.getElement();
+        })
+//         .push(function (element) {
+//           // XXX JQuery mobile
+// //           $.mobile.loading('hide');
+// //           return $(element).trigger("create");
+//         })
         .push(undefined, function (error) {
-          if (error instanceof StopRenderingError) {
-            return;
-          }
+          console.error(error);
+          console.error(error.stack);
+          $.mobile.loading('hide');
           throw error;
         });
-    })
-
-    .allowPublicAcquisition("pleaseAllDocsXXX", function (param_list) {
-      return this.sub_gadget_dict.jio_gadget.allDocs.apply(
-        this.sub_gadget_dict.jio_gadget,
-        param_list
-      );
-    })
-
-    .allowPublicAcquisition("whoWantToDisplayThis", function (param_list) {
-      // Hey, I want to display some URL
-      return this.aq_pleasePublishMyState({jio_key: param_list[0]});
     });
 
 }(rJS, jQuery, RSVP, URI));
