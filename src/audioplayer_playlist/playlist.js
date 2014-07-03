@@ -1,46 +1,70 @@
-/*global window, rJS, RSVP, console, jQuery, $ */
+/*global window, rJS, RSVP, console, jQuery, $, JSON, Handlebars,
+  promiseEventListener, RegExp */
 /*jslint maxlen:80, nomen: true */
 
 
-(function (window, rJS, $) {
+(function (window, rJS, $, Handlebars, promiseEventListener) {
   "use strict";
-  var gk = rJS(window);
-  gk.declareMethod('display', function (attachment) {
-    this.playlist.style.display = "";
-    this.home.style.display = "";
-  })
-    .declareMethod('noDisplay', function (attachment) {
-      this.playlist.style.display = "none";
-      this.home.style.display = "none";
+  var gk = rJS(window),
+    rows_template_source = gk.__template_element
+      .getElementById('rows-template').innerHTML,
+    rows_template = Handlebars.compile(rows_template_source);
+  gk.declareAcquiredMethod("allDocs", "allDocs")
+    .declareAcquiredMethod("displayThisPage", "displayThisPage")
+    .declareAcquiredMethod("displayThisTitle", "displayThisTitle")
+    .declareAcquiredMethod("plEnablePage", "plEnablePage")
+    .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
+    .declareMethod('render', function (options) {
+      var gadget = this,
+        list = gadget.__element.getElementsByTagName('ul')[0];
+      return new RSVP.Queue()
+        .push(function () {
+          return gadget.displayThisTitle("playlist");
+        })
+        .push(function () {
+          return gadget.allDocs({"include_docs": true});
+        })
+        .push(function (e) {
+          var tmp = [],
+            i,
+            j,
+            exp;
+          if (options.id !== undefined) {
+            for (i = 0, j = 0; i < e.data.rows.length; i += 1) {
+              exp = new RegExp(options.id, "i");
+              if (e.data.rows[i].doc.title.search(exp) !== -1) {
+                tmp[j] = e.data.rows[i];
+                j += 1;
+              }
+            }
+            e.data.rows = tmp;
+          }
+          gadget.id = options.id;
+          list.innerHTML = rows_template({
+            "rows" : e.data.rows
+          });
+          $(list).listview("refresh");
+        });
     })
-    .declareMethod('initList', function (playlist) {
-      var i,
-        docFragment = document.createDocumentFragment(),
-        li;
-      this.list.innerHTML = "";
-      for (i = 0; i < playlist.url.length; i += 1) {
-        li = document.createElement("li");
-        li.innerHTML =
-          "<a href=#page="
-          + playlist.url[i]
-          + ">"
-          + playlist.name[i]
-          + "</a> "
-          + " <a href=#page="
-          + playlist.name[i]
-          + "&id=delete "
-          + "data-rel=popup "
-          + "data-position-to=window "
-          + "</a>";
-        docFragment.appendChild(li);
+    .declareMethod('startService', function () {
+      var g = this,
+        research = g.__element.getElementsByClassName('research')[0];
+      if (g.id !== undefined) {
+        research.value = g.id;
       }
-      this.list.appendChild(docFragment);
-      $(this.list).listview("refresh");
+      return new RSVP.Queue()
+        .push(function () {
+          return g.plEnablePage();
+        })
+        .push(function () {
+          return promiseEventListener(research, "change", false);
+        })
+        .push(function (e) {
+          return g.displayThisPage({page: "playlist",
+                                    id: research.value});
+        })
+        .push(function (url) {
+          window.location = url;
+        });
     });
-  gk.ready(function (g) {
-    g.playlist = g.__element.getElementsByTagName('div')[2];
-    g.list = g.__element.getElementsByTagName('ul')[1];
-    g.home = g.__element.getElementsByTagName('div')[0];
-    $(g.__element).trigger("create");
-  });
-}(window, rJS, jQuery));
+}(window, rJS, jQuery, Handlebars, promiseEventListener));

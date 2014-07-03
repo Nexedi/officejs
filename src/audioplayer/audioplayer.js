@@ -7,287 +7,120 @@
   $.mobile.linkBindingEnabled = false;
   $.mobile.hashListeningEnabled = false;
   $.mobile.pushStateEnabled = false;
-  var control,
-    animation,
-    time,
-    volume,
-    title,
-    io,
-    error,
-    totalId = -1,
-    that,
-    next_context,
-    play_context,
-    addMusic_context,
-    list_context,
-    currentId = -1,
-    initializeFlag = false,
-    list,
-    titleSave,
-    playlist = {};
-
-  function nextId() {
-    if (totalId <= 0) {
-      return -1;
+  function disablePage(g) {
+    var overlay = document.createElement('div'),
+      loader = document.createElement('div'),
+      controlPanel = g.__element.getElementsByClassName("page")[0],
+      i = 0,
+      circle;
+    overlay.className = 'overlay';
+    loader.className = 'loader';
+    while (i < 5) {
+      circle = document.createElement('div');
+      circle.className = 'circle';
+      loader.appendChild(circle);
+      i += 1;
     }
-    currentId += 1;
-    currentId %= totalId;
-    return currentId;
-  }
-
-  function orient() {
-    if (window.orientation === 0 || window.orientation === 180) {
-      $("body").attr("class", "portrait");
-      window.orientation = 'portrait';
-      return;
-    }
-    if (window.orientation === 90 || window.orientation === -90) {
-      $("body").attr("class", "landscape");
-      window.orientation = 'landscape';
-    }
+    overlay.appendChild(loader);
+    controlPanel.appendChild(overlay);
   }
 
   rJS(window)
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
-    .allowPublicAcquisition("setCurrentTime", function (value) {
-      control.setCurrentTime(value[0]);
+    .allowPublicAcquisition("plEnablePage", function () {
+      var controlPanel = this.__element.getElementsByClassName('page')[0];
+      while (controlPanel.firstChild) {
+        controlPanel.removeChild(controlPanel.firstChild);
+      }
     })
-    .allowPublicAcquisition("setVolume", function (value) {
-      control.setVolume(value[0]);
+    .allowPublicAcquisition("plDisablePage", function () {
+      disablePage(this);
     })
-    .allowPublicAcquisition("getFFTValue", function () {
-      return control.getFFTValue().then(function (value) {
-        return value;
-      });
+    .allowPublicAcquisition("displayThisPage", function (param_list) {
+      // Hey, I want to display this page
+      return this.aq_pleasePublishMyState(param_list[0]);
     })
-    .allowPublicAcquisition("plShowPage", function (param_list) {
-      return this.aq_pleasePublishMyState({page: param_list[0]});
-    })
-    .allowPublicAcquisition("nextToPlay", function () {
-      var id = nextId(),
-        name = playlist.url[id];
-      control.setSong("http://localhost:8080/" + name)
-        .then(function () {
-          control.playSong();
-          title.setMessage(playlist.name[id]);
-          animation.showAnimation();
+    .allowPublicAcquisition("allDocs", function (param_list) {
+      return this.getDeclaredGadget("jio")
+        .push(function (jio_gadget) {
+          return jio_gadget.allDocs.apply(jio_gadget, param_list);
         });
-      /*      io.getIO(name).then(function (file) {
-        control.setSong(URL.createObjectURL(file)).then(function () {
-          control.playSong();
-          title.setMessage(playlist.name[id]);
-          animation.showAnimation();
+    })
+    .allowPublicAcquisition("jio_post", function (param_list) {
+      return this.getDeclaredGadget("jio")
+        .push(function (jio_gadget) {
+          return jio_gadget.post.apply(jio_gadget, param_list);
         });
-      });*/
     })
-    .allowPublicAcquisition("sendPlaylist", function (value) {
-      playlist = value[0];
-      totalId =  playlist.url.length;  //array parameter
-      initializeFlag = true;
-      that.render();
-    })
-    .allowPublicAcquisition("sendTotalTime", function (value) {
-      time.setMax(value[0]);
-    })
-    .ready(function (g) {
-      var array = g.__element.getElementsByTagName('a');
-      next_context = array[0];
-      play_context = array[1];
-      addMusic_context = array[array.length - 2];
-      list_context = array[array.length - 1];
-      that = g;
-      window.addEventListener("orientationchange", function (e) {
-        orient();
-      });
-      RSVP.all([
-        g.getDeclaredGadget(
-          "control"
-        ),
-        g.getDeclaredGadget(
-          "animation"
-        ),
-        g.getDeclaredGadget(
-          "time"
-        ),
-        g.getDeclaredGadget(
-          "volume"
-        ),
-        g.getDeclaredGadget(
-          "title"
-        ),
-        g.getDeclaredGadget(
-          "io"
-        ),
-        g.getDeclaredGadget(
-          "error"
-        ),
-        g.getDeclaredGadget(
-          "playlist"
-        )
-      ])
-        .then(function (all_param) {
-          control = all_param[0];
-          animation = all_param[1];
-          time = all_param[2];
-          volume = all_param[3];
-          title = all_param[4];
-          io = all_param[5];
-          error = all_param[6];
-          list = all_param[7];
-          error.noDisplay();
-          io.noDisplay();
-          that.display();
-          list.noDisplay();
-          window.setInterval(function () {
-            control.getCurrentTime()
-              .then(function (e) {
-                time.setValue(e);
-              });
-          }, 1000);
-          volume.setMax(3);
-          that.showPage("stop").then(function (result) {
-            play_context.href = result;
-          });
-          that.showPage("addMusic").then(function (result) {
-            addMusic_context.href = result;
-          });
-          //volume configure
-          control.getVolume().then(function (value) {
-            volume.setValue(value);
-          });
-
-
-        //title configure
-          title.setMessage("audio player");
-          title.getSize().then(function (size) {
-            title.setPosition(size * 2);
-          });
-        })
-        .fail(function (e) {
-          console.log("[ERROR]: " + e);
+    .allowPublicAcquisition("jio_putAttachment", function (param_list) {
+      return this.getDeclaredGadget("jio")
+        .push(function (jio_gadget) {
+          return jio_gadget.putAttachment.apply(jio_gadget, param_list);
         });
+    })
+    .allowPublicAcquisition("jio_getAttachment", function (param_list) {
+      return this.getDeclaredGadget("jio")
+        .push(function (jio_gadget) {
+          return jio_gadget.getAttachment.apply(jio_gadget, param_list);
+        });
+    })
+    .allowPublicAcquisition("jio_get", function (param_list) {
+      return this.getDeclaredGadget("jio")
+        .push(function (jio_gadget) {
+          return jio_gadget.get.apply(jio_gadget, param_list);
+        });
+    })
+    .allowPublicAcquisition("displayThisTitle", function (param_list) {
+      var header = this.__element.getElementsByTagName("h1")[0];
+      header.innerHTML = param_list[0];
     });
 
   rJS(window)
-    .declareMethod("display", function (options) {
-      title.display();
-      time.display();
-      volume.display();
-      animation.display();
-      next_context.style.display = "";
-      play_context.style.display = "";
-      addMusic_context.style.display = "";
-      list_context.style.display = "";
-    })
-    .declareMethod("noDisplay", function (options) {
-      title.noDisplay();
-      time.noDisplay();
-      volume.noDisplay();
-      animation.noDisplay();
-      next_context.style.display = "none";
-      play_context.style.display = "none";
-      addMusic_context.style.display = "none";
-      list_context.style.display = "none";
-    })
-    .declareMethod("showPage", function (param) {
-      return this.aq_pleasePublishMyState({page: param});
+    .ready(function (g) {
+      var jio_gadget;
+      return g.getDeclaredGadget("jio")
+        .push(function (gadget) {
+          jio_gadget = gadget;
+          return jio_gadget.createJio(
+            { "type" : "indexeddb",
+              "database": "test"}
+          );
+        });
     })
     .declareMethod("render", function (options) {
-      var id,
-        name,
-        urlDemand;
-      if (initializeFlag === false) {
-        return;
+      var gadget = this,
+        page_gadget,
+        element,
+        page_element;
+      element = gadget.__element
+        .getElementsByClassName("gadget_container")[0];
+      if (options.page === undefined) {
+        // Redirect to the about page
+        return gadget.aq_pleasePublishMyState({page: "playlist"})
+          .push(gadget.pleaseRedirectMyHash.bind(gadget));
       }
-      id = nextId();
-      name = playlist.name[id];
-      that.showPage(name)
-        .then(function (result) {
-          next_context.href = result;
-        });
-
-      if (options.page !== undefined) {
-        if (options.page === "addMusic") {
-          animation.stopAnimation();
-          that.noDisplay();
-          list.noDisplay();
-          io.display();
-          return;
+      return gadget.declareGadget(
+        "../audioplayer_" + options.page + "/index.html"
+      ).push(function (g) {
+        disablePage(gadget);
+        page_gadget = g;
+        return page_gadget.getElement();
+      }).push(function (result) {
+        page_element = result;
+        while (element.firstChild) {
+          element.removeChild(element.firstChild);
         }
-
-        if (options.page === "playlist") {
-          animation.stopAnimation();
-          that.noDisplay();
-          io.noDisplay();
-          list.initList(playlist);
-          list.display();
-          return;
+        element.appendChild(page_element);
+        $(element).trigger('create');
+        if (page_gadget.render !== undefined) {
+          return page_gadget.render(options);
         }
-
-        if (options.id === "delete") {
-          io.removeIO(options.page)
-            .then(function () {
-              list.initList(playlist);
-            });
-          return;
+      }).push(function () {
+        // XXX RenderJS hack to start sub gadget services
+        // Only work if this gadget has no parent.
+        if (page_gadget.startService !== undefined) {
+          return page_gadget.startService(options);
         }
-
-        error.noDisplay();
-        list.noDisplay();
-        io.noDisplay();
-        that.display();
-
-        if (options.page === "play") {
-          that.showPage("stop").then(function (result) {
-            play_context.href = result;
-            play_context.innerHTML = "stop";
-          });
-          control.playSong();
-          animation.showAnimation();
-          return;
-        }
-        if (options.page === "stop") {
-          that.showPage("play").then(function (result) {
-            play_context.href = result;
-            play_context.innerHTML = "play";
-          });
-          control.stopSong();
-          animation.stopAnimation();
-          return;
-        }
-
-        if (playlist.name.indexOf(options.page) === -1) {
-          animation.stopAnimation();
-          error.display();
-          that.noDisplay();
-          return;
-        }
-        if (titleSave === options.page) {
-          control.playSong();
-          animation.showAnimation();
-          return;
-        }
-        urlDemand = playlist.url[
-          playlist.name.indexOf(options.page)
-        ];
-        control.setSong("http://localhost:8080/" +
-                        urlDemand)
-          .then(function () {
-            control.playSong();
-            title.setMessage(options.page);
-            titleSave = options.page;
-            animation.showAnimation();
-          });
-      } else {
-        error.noDisplay();
-        list.noDisplay();
-        io.noDisplay();
-        that.display();
-        control.isPaused().then(function (paused) {
-          if (!paused) {
-            animation.showAnimation();
-          }
-        });
-      }
+      });
     });
 }(window, rJS, jQuery, RSVP));
