@@ -38,12 +38,16 @@
               }
             }
             e.data.rows = tmp;
+            gadget.id = options.id;
           }
-          gadget.id = options.id;
           list.innerHTML = rows_template({
             "rows" : e.data.rows
           });
           $(list).listview("refresh");
+        })
+        .fail(function (error) {
+          document.getElementsByTagName('body')[0].textContent =
+            JSON.stringify(error);
         });
     })
     .declareMethod('startService', function () {

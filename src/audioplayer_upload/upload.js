@@ -1,4 +1,4 @@
-/*global window, rJS, RSVP, jIO, JSON, promiseEventListener */
+/*global window, rJS, RSVP, jIO, JSON, promiseEventListener, console, Error*/
 /*jslint nomen: true*/
 (function (window, jIO, rJS) {
   "use strict";
@@ -11,8 +11,6 @@
     .declareAcquiredMethod("plEnablePage", "plEnablePage")
     .declareAcquiredMethod("plDisablePage", "plDisablePage")
     .declareMethod("render", function () {
-      this.__element.getElementsByClassName('info')[0]
-        .innerHTML = "";
       return this.displayThisTitle("upload");
     })
     .declareMethod("startService", function () {
@@ -52,6 +50,10 @@
             if (uploaded === length) {
               return g.plEnablePage();
             }
+          })
+          .fail(function (e) {
+            document.getElementsByTagName('body')[0].textContent =
+              JSON.stringify(e);
           });
       }
       queue = new RSVP.Queue();

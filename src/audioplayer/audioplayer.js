@@ -1,6 +1,5 @@
 /*global window, rJS, RSVP, console, $, jQuery, URL, location, webkitURL */
 /*jslint nomen: true*/
-
 (function (window, rJS, $, RSVP) {
   "use strict";
   $.mobile.ajaxEnabled = false;
@@ -82,8 +81,8 @@
         .push(function (gadget) {
           jio_gadget = gadget;
           return jio_gadget.createJio(
-            { "type" : "indexeddb",
-              "database": "test"}
+            { "type" : "http",
+              "database" : "http://192.168.242.63:8080/"}
           );
         });
     })

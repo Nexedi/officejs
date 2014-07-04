@@ -3,7 +3,6 @@
   "use strict";
 
   rJS(window)
-
     .ready(function (gadget) {
       // Initialize the gadget local parameters
       gadget.state_parameter_dict = {};
