@@ -155,6 +155,8 @@
   }
   gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment")
     .declareAcquiredMethod("jio_get", "jio_get")
+    .declareAcquiredMethod("plSave", "plSave")
+    .declareAcquiredMethod("plGive", "plGive")
     .declareAcquiredMethod("displayThisPage", "displayThisPage")
     .declareAcquiredMethod("displayThisTitle", "displayThisTitle")
     .declareAcquiredMethod("allDocs", "allDocs")
@@ -164,6 +166,16 @@
       var g = this;
       if (options.id) {
         return new RSVP.Queue()
+          .push(function () {
+            return g.plGive("type");
+          })
+          .push(function (value) {
+            g.filter.type = value;
+            return g.plGive("value");
+          })
+          .push(function (value) {
+            g.filter.frequency = value;
+          })
           .push(function () {
             g.currentId = options.id;
             return g.jio_get({"_id" : options.id});
@@ -258,9 +270,12 @@
 
             myLoopEventListener($(filter_context), "change", function () {
               g.filter.frequency.value = filter_context.value;
+              return g.plSave({"value": filter_context.value});
             }),
             myLoopEventListener(filter_type, "change", function () {
-              g.filter.type = parseInt(filter_type.val(), 10);
+              var type = parseInt(filter_type.val(), 10);
+              g.filter.type = type;
+              return g.plSave({"type": type});
             })
           ]);
         });
@@ -272,8 +287,6 @@
     g.analyser = audioCtx.createAnalyser();
     g.gain = audioCtx.createGain();
     g.filter = audioCtx.createBiquadFilter();
-    g.filter.type = 0;
-    g.filter.frequency.value = 5000;
     g.canvas = g.__element.getElementsByTagName('canvas')[0];
   });
 }(window, rJS, RSVP, loopEventListener, jQuery, promiseEventListener));

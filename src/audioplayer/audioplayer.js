@@ -39,6 +39,17 @@
       // Hey, I want to display this page
       return this.aq_pleasePublishMyState(param_list[0]);
     })
+    .allowPublicAcquisition("plSave", function (param_list) {
+      this.save = this.save || [];
+      var key = Object.keys(param_list[0]);
+      this.save[key[0]] = param_list[0][key[0]];
+    })
+    .allowPublicAcquisition("plGive", function (param_list) {
+      if (this.save === undefined) {
+        return 0;
+      }
+      return this.save[param_list[0]];
+    })
     .allowPublicAcquisition("allDocs", function (param_list) {
       return this.getDeclaredGadget("jio")
         .push(function (jio_gadget) {
