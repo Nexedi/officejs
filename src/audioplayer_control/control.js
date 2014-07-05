@@ -6,7 +6,9 @@
 (function (window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
   "use strict";
   var gk = rJS(window),
-    audioCtx = new window.AudioContext(),
+    AudioContext = window.AudioContext || window.webkitAudioContext
+      || window.mozAudiocontext || window.msAudioContext,
+    audioCtx = new AudioContext(),
     myLoopEventListener = function (target, type, callback,
                                     allowDefault) {
       //////////////////////////

@@ -6,6 +6,18 @@
   $.mobile.linkBindingEnabled = false;
   $.mobile.hashListeningEnabled = false;
   $.mobile.pushStateEnabled = false;
+  var gadget_list = {
+    "upload" : {"0" : "../audioplayer_upload/index.html",
+                "1" : "../audioplayer_playlist/index.html"},
+    "playlist" : {"0" : "../audioplayer_playlist/index.html",
+                  "1" : "../audioplayer_playlist/index.html"},
+    "control" : {"0" : "../audioplayer_control/index.html",
+                 "1" : "../audioplayer_control/index.html"}
+  },
+    allStorageType = ["indexeddbStorage", "httpStorage"];
+  function storageType(type) {
+    return allStorageType[type];
+  }
   function disablePage(g) {
     var overlay = document.createElement('div'),
       loader = document.createElement('div'),
@@ -51,31 +63,31 @@
       return this.save[param_list[0]];
     })
     .allowPublicAcquisition("allDocs", function (param_list) {
-      return this.getDeclaredGadget("jio")
+      return this.getDeclaredGadget(storageType(this.storageType))
         .push(function (jio_gadget) {
           return jio_gadget.allDocs.apply(jio_gadget, param_list);
         });
     })
     .allowPublicAcquisition("jio_post", function (param_list) {
-      return this.getDeclaredGadget("jio")
+      return this.getDeclaredGadget(storageType(this.storageType))
         .push(function (jio_gadget) {
           return jio_gadget.post.apply(jio_gadget, param_list);
         });
     })
     .allowPublicAcquisition("jio_putAttachment", function (param_list) {
-      return this.getDeclaredGadget("jio")
+      return this.getDeclaredGadget(storageType(this.storageType))
         .push(function (jio_gadget) {
           return jio_gadget.putAttachment.apply(jio_gadget, param_list);
         });
     })
     .allowPublicAcquisition("jio_getAttachment", function (param_list) {
-      return this.getDeclaredGadget("jio")
+      return this.getDeclaredGadget(storageType(this.storageType))
         .push(function (jio_gadget) {
           return jio_gadget.getAttachment.apply(jio_gadget, param_list);
         });
     })
     .allowPublicAcquisition("jio_get", function (param_list) {
-      return this.getDeclaredGadget("jio")
+      return this.getDeclaredGadget(storageType(this.storageType))
         .push(function (jio_gadget) {
           return jio_gadget.get.apply(jio_gadget, param_list);
         });
@@ -87,13 +99,20 @@
 
   rJS(window)
     .ready(function (g) {
-      var jio_gadget;
-      return g.getDeclaredGadget("jio")
+      return g.getDeclaredGadget("httpStorage")
         .push(function (gadget) {
-          jio_gadget = gadget;
-          return jio_gadget.createJio(
-            { "type" : "http",
-              "database" : "http://192.168.242.63:8080/"}
+          return gadget.createJio(
+            { "type" : "http",//indexeddb
+              "database" : "http://localhost:8080/"} //test
+          );
+        })
+        .push(function () {
+          return g.getDeclaredGadget("indexeddbStorage");
+        })
+        .push(function (gadget) {
+          return gadget.createJio(
+            { "type" : "indexeddb",
+              "database" : "test"}
           );
         });
     })
@@ -109,8 +128,16 @@
         return gadget.aq_pleasePublishMyState({page: "playlist"})
           .push(gadget.pleaseRedirectMyHash.bind(gadget));
       }
+      gadget.storageType = gadget.storageType || 0;
+      if (options.page === "playlist") {
+        if (options.id === "indexeddbStorage") {
+          gadget.storageType = 0;
+        } else if (options.id === "httpStorage") {
+          gadget.storageType = 1;
+        }
+      }
       return gadget.declareGadget(
-        "../audioplayer_" + options.page + "/index.html"
+        gadget_list[options.page][gadget.storageType]
       ).push(function (g) {
         disablePage(gadget);
         page_gadget = g;

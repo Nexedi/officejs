@@ -22,6 +22,20 @@
           return gadget.displayThisTitle("playlist");
         })
         .push(function () {
+          return RSVP.all([
+            gadget.displayThisPage({page: "playlist",
+                                    id : "indexeddbStorage"}),
+            gadget.displayThisPage({page: "playlist",
+                                    id : "httpStorage"})
+          ]);
+        })
+        .push(function (param_list) {
+          gadget.__element.getElementsByClassName('indexeddbStorage')[0]
+            .href = param_list[0];
+          gadget.__element.getElementsByClassName('httpStorage')[0]
+            .href = param_list[1];
+        })
+        .push(function () {
           return gadget.allDocs({"include_docs": true});
         })
         .push(function (e) {
@@ -29,7 +43,8 @@
             i,
             j,
             exp;
-          if (options.id !== undefined) {
+          if (options.id !== undefined && options.id !== "indexeddbStorage"
+              && options.id !== "httpStorage") {
             for (i = 0, j = 0; i < e.data.rows.length; i += 1) {
               exp = new RegExp(options.id, "i");
               if (e.data.rows[i].doc.title.search(exp) !== -1) {
