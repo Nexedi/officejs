@@ -8,13 +8,16 @@
   $.mobile.pushStateEnabled = false;
   var gadget_list = {
     "upload" : {"0" : "../audioplayer_upload/index.html",
-                "1" : "../audioplayer_playlist/index.html"},
+                "1" : "../audioplayer_playlist/index.html",
+                "2" : "../audioplayer_playlist/index.html"},
     "playlist" : {"0" : "../audioplayer_playlist/index.html",
-                  "1" : "../audioplayer_playlist/index.html"},
+                  "1" : "../audioplayer_playlist/index.html",
+                  "2" : "../audioplayer_playlist/index.html"},
     "control" : {"0" : "../audioplayer_control/index.html",
-                 "1" : "../audioplayer_control/index.html"}
+                 "1" : "../audioplayer_control/index.html",
+                 "2" : "../audioplayer_control/index.html"}
   },
-    allStorageType = ["indexeddbStorage", "httpStorage"];
+    allStorageType = ["offline", "localhost", "online"];
   function storageType(type) {
     return allStorageType[type];
   }
@@ -40,8 +43,10 @@
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
     .allowPublicAcquisition("plEnablePage", function () {
       var controlPanel = this.__element.getElementsByClassName('page')[0];
-      while (controlPanel.firstChild) {
-        controlPanel.removeChild(controlPanel.firstChild);
+      if (controlPanel) {
+        while (controlPanel.firstChild) {
+          controlPanel.removeChild(controlPanel.firstChild);
+        }
       }
     })
     .allowPublicAcquisition("plDisablePage", function () {
@@ -99,15 +104,24 @@
 
   rJS(window)
     .ready(function (g) {
-      return g.getDeclaredGadget("httpStorage")
+      return g.getDeclaredGadget("online")
         .push(function (gadget) {
           return gadget.createJio(
-            { "type" : "http",//indexeddb
-              "database" : "http://localhost:8080/"} //test
+            { "type" : "http",
+              "database" : "http://192.168.242.63:8080/"}
           );
         })
         .push(function () {
-          return g.getDeclaredGadget("indexeddbStorage");
+          return g.getDeclaredGadget("localhost");
+        })
+        .push(function (gadget) {
+          return gadget.createJio(
+            { "type" : "http",
+              "database" : "http://localhost:8080/"}
+          );
+        })
+        .push(function () {
+          return g.getDeclaredGadget("offline");
         })
         .push(function (gadget) {
           return gadget.createJio(
@@ -130,10 +144,12 @@
       }
       gadget.storageType = gadget.storageType || 0;
       if (options.page === "playlist") {
-        if (options.id === "indexeddbStorage") {
+        if (options.id === "offline") {
           gadget.storageType = 0;
-        } else if (options.id === "httpStorage") {
+        } else if (options.id === "localhost") {
           gadget.storageType = 1;
+        } else if (options.id === "online") {
+          gadget.storageType = 2;
         }
       }
       return gadget.declareGadget(

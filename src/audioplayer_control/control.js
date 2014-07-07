@@ -1,6 +1,6 @@
 
-/*global window, rJS, RSVP, console, URL, Math, parseInt, document,
-  Uint8Array, File, Audio, loopEventListener, jQuery, promiseEventListener*/
+/*global window, rJS, RSVP, console, URL, Math, parseInt, document, jIO,
+  Uint8Array, Audio, loopEventListener, jQuery, promiseEventListener*/
 /*jslint nomen: true*/
 
 (function (window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
@@ -122,6 +122,9 @@
     gradient.addColorStop(0, '#f00');
     that.audio.play();
     drawFrame = function () {
+      if (that.audio.duration !== 0) {
+        bar_context.max = that.audio.duration;
+      }
       array = getFFTValue(that);
       canvasCtx.clearRect(0, 0, cwidth, cheight);
       step = Math.round(array.length / meterNum);
@@ -140,21 +143,7 @@
     };
     return promiseRequestAnimation(drawFrame);
   }
-  function nextToPlay(g) {
-    return new RSVP.Queue()
-      .push(function () {
-        return g.allDocs({"include_docs": true});
-      })
-      .push(function (e) {
-        var list =  e.data.rows,
-          id;
-        do {
-          id = list[Math.floor(Math.random() * list.length)].id;
-        } while (g.currentId === id);
-        return g.displayThisPage({page: "control",
-                                  id : id});
-      });
-  }
+
   gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment")
     .declareAcquiredMethod("jio_get", "jio_get")
     .declareAcquiredMethod("plSave", "plSave")
@@ -176,7 +165,10 @@
             return g.plGive("value");
           })
           .push(function (value) {
-            g.filter.frequency = value;
+            if (value === 0) {
+              value = 5000;
+            }
+            g.filter.frequency.value = value;
           })
           .push(function () {
             g.currentId = options.id;
@@ -190,7 +182,16 @@
             return g.displayThisTitle(result.data.title);
           })
           .push(function () {
-            return nextToPlay(g);
+            return g.allDocs({"include_docs": true});
+          })
+          .push(function (e) {
+            var list =  e.data.rows,
+              id;
+            do {
+              id = list[Math.floor(Math.random() * list.length)].id;
+            } while (g.currentId === id);
+            return g.displayThisPage({page: "control",
+                                      id : id});
           })
           .push(function (url) {
             g.__element.getElementsByClassName("next")[0].href = url;
@@ -224,7 +225,6 @@
           return g.plEnablePage();
         })
         .push(function () {
-          bar_context.max = g.audio.duration;
           time_context.style.left = bar_context.style.left;
           $(time_context).offset().top = $(bar_context).offset().top + 3;
           time_context.innerHTML = timeFormat(g.audio.duration);
@@ -235,10 +235,8 @@
             }),
 
             loopEventListener(g.audio, "ended", false, function () {
-              return nextToPlay(g)
-                .push(function (url) {
-                  window.location = url;
-                });
+              window.location = g.__element
+                .getElementsByClassName("next")[0].href;
             }),
 
             loopEventListener(command_context, "click", false, function () {

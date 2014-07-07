@@ -24,16 +24,20 @@
         .push(function () {
           return RSVP.all([
             gadget.displayThisPage({page: "playlist",
-                                    id : "indexeddbStorage"}),
+                                    id : "offline"}),
             gadget.displayThisPage({page: "playlist",
-                                    id : "httpStorage"})
+                                    id : "localhost"}),
+            gadget.displayThisPage({page: "playlist",
+                                    id : "online"})
           ]);
         })
         .push(function (param_list) {
-          gadget.__element.getElementsByClassName('indexeddbStorage')[0]
+          gadget.__element.getElementsByClassName('offline')[0]
             .href = param_list[0];
-          gadget.__element.getElementsByClassName('httpStorage')[0]
+          gadget.__element.getElementsByClassName('localhost')[0]
             .href = param_list[1];
+          gadget.__element.getElementsByClassName('online')[0]
+            .href = param_list[2];
         })
         .push(function () {
           return gadget.allDocs({"include_docs": true});
@@ -43,8 +47,9 @@
             i,
             j,
             exp;
-          if (options.id !== undefined && options.id !== "indexeddbStorage"
-              && options.id !== "httpStorage") {
+          if (options.id !== undefined && options.id !== "offline"
+              && options.id !== "localhost"
+              && options.id !== "online") {
             for (i = 0, j = 0; i < e.data.rows.length; i += 1) {
               exp = new RegExp(options.id, "i");
               if (e.data.rows[i].doc.title.search(exp) !== -1) {
