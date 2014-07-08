@@ -90,12 +90,28 @@
   }
 
   function promiseRequestAnimation(callback) {
-    var animationId;
+    var animationId,
+      callback_promise;
     function canceller() {
       window.cancelAnimationFrame(animationId);
+      if (callback_promise !== undefined) {
+        callback_promise.cancel();
+      }
     }
-    function resolver(resolve) {
-      animationId = window.requestAnimationFrame(callback);
+    //xxx
+    function resolver(resolve, reject) {
+      function tmp() {
+        callback_promise = new RSVP.Queue()
+          .push(function () {
+            callback();
+            animationId = window.requestAnimationFrame(tmp);
+          })
+          .push(undefined, function (error) {
+            canceller();
+            reject(error);
+          });
+      }
+      animationId = window.requestAnimationFrame(tmp);
     }
     return new RSVP.Promise(resolver, canceller);
   }
@@ -122,9 +138,6 @@
     gradient.addColorStop(0, '#f00');
     that.audio.play();
     drawFrame = function () {
-      if (that.audio.duration !== 0) {
-        bar_context.max = that.audio.duration;
-      }
       array = getFFTValue(that);
       canvasCtx.clearRect(0, 0, cwidth, cheight);
       step = Math.round(array.length / meterNum);
@@ -139,7 +152,6 @@
                            meterWidth,
                            cheight); //the meter
       }
-      return promiseRequestAnimation(drawFrame);
     };
     return promiseRequestAnimation(drawFrame);
   }
@@ -161,13 +173,11 @@
             return g.plGive("type");
           })
           .push(function (value) {
-            g.filter.type = value;
+            g.filter.type = value || 0;
             return g.plGive("value");
           })
           .push(function (value) {
-            if (value === 0) {
-              value = 5000;
-            }
+            value = value || 5000;
             g.filter.frequency.value = value;
           })
           .push(function () {
@@ -222,6 +232,7 @@
           return promiseEventListener(g.audio, "loadedmetadata", false);
         })
         .push(function () {
+          bar_context.max = g.audio.duration;
           return g.plEnablePage();
         })
         .push(function () {

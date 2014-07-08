@@ -13,6 +13,9 @@
     .declareMethod('createJio', function (jio_options) {
       this.state_parameter_dict.jio_storage = jIO.createJIO(jio_options);
     })
+    .declareMethod('invalideJioSave', function (jio_options) {
+      this.save = {};
+    })
     .declareMethod('allDocs', function () {
       var storage = this.state_parameter_dict.jio_storage,
         that = this;

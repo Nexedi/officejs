@@ -10,6 +10,7 @@
     .declareAcquiredMethod("displayThisTitle", "displayThisTitle")
     .declareAcquiredMethod("plEnablePage", "plEnablePage")
     .declareAcquiredMethod("plDisablePage", "plDisablePage")
+    .declareAcquiredMethod("invalideJioSave", "invalideJioSave")
     .declareMethod("render", function () {
       return this.displayThisTitle("upload");
     })
@@ -65,6 +66,9 @@
         })
         .push(function () {
           return g.plDisablePage();
+        })
+        .push(function () {
+          return g.invalideJioSave();
         })
         .push(function () {
           length = input_context.files.length;

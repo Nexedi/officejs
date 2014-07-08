@@ -72,7 +72,7 @@
     })
     .allowPublicAcquisition("plGive", function (param_list) {
       if (this.save === undefined) {
-        return 0;
+        return this.save;
       }
       return this.save[param_list[0]];
     })
@@ -86,6 +86,12 @@
       return this.getDeclaredGadget(storageType(this.storageType))
         .push(function (jio_gadget) {
           return jio_gadget.post.apply(jio_gadget, param_list);
+        });
+    })
+    .allowPublicAcquisition("invalideJioSave", function (param_list) {
+      return this.getDeclaredGadget(storageType(this.storageType))
+        .push(function (jio_gadget) {
+          return jio_gadget.invalideJioSave.apply(jio_gadget, param_list);
         });
     })
     .allowPublicAcquisition("jio_putAttachment", function (param_list) {
