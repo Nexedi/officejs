@@ -52,6 +52,15 @@
     .allowPublicAcquisition("plDisablePage", function () {
       disablePage(this);
     })
+    .allowPublicAcquisition("plCreateHttpStorage", function (list) {
+      return this.getDeclaredGadget("online")
+        .push(function (gadget) {
+          return gadget.createJio(
+            { "type" : "http",
+              "database" : list[0]}
+          );
+        });
+    })
     .allowPublicAcquisition("displayThisPage", function (param_list) {
       // Hey, I want to display this page
       return this.aq_pleasePublishMyState(param_list[0]);
@@ -104,16 +113,7 @@
 
   rJS(window)
     .ready(function (g) {
-      return g.getDeclaredGadget("online")
-        .push(function (gadget) {
-          return gadget.createJio(
-            { "type" : "http",
-              "database" : "http://192.168.242.63:8080/"}
-          );
-        })
-        .push(function () {
-          return g.getDeclaredGadget("localhost");
-        })
+      return g.getDeclaredGadget("localhost")
         .push(function (gadget) {
           return gadget.createJio(
             { "type" : "http",

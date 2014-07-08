@@ -1,9 +1,9 @@
 /*global window, rJS, RSVP, console, jQuery, $, JSON, Handlebars,
-  promiseEventListener, RegExp */
+  loopEventListener, RegExp */
 /*jslint maxlen:80, nomen: true */
 
 
-(function (window, rJS, $, Handlebars, promiseEventListener) {
+(function (window, rJS, $, Handlebars, loopEventListener) {
   "use strict";
   var gk = rJS(window),
     rows_template_source = gk.__template_element
@@ -12,6 +12,7 @@
   gk.declareAcquiredMethod("allDocs", "allDocs")
     .declareAcquiredMethod("displayThisPage", "displayThisPage")
     .declareAcquiredMethod("displayThisTitle", "displayThisTitle")
+    .declareAcquiredMethod("plCreateHttpStorage", "plCreateHttpStorage")
     .declareAcquiredMethod("plEnablePage", "plEnablePage")
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
     .declareMethod('render', function (options) {
@@ -43,13 +44,14 @@
           return gadget.allDocs({"include_docs": true});
         })
         .push(function (e) {
-          var tmp = [],
+          var tmp = e.data.rows,
             i,
             j,
             exp;
           if (options.id !== undefined && options.id !== "offline"
               && options.id !== "localhost"
               && options.id !== "online") {
+            tmp = [];
             for (i = 0, j = 0; i < e.data.rows.length; i += 1) {
               exp = new RegExp(options.id, "i");
               if (e.data.rows[i].doc.title.search(exp) !== -1) {
@@ -57,22 +59,22 @@
                 j += 1;
               }
             }
-            e.data.rows = tmp;
             gadget.id = options.id;
           }
           list.innerHTML = rows_template({
-            "rows" : e.data.rows
+            "rows" : tmp
           });
           $(list).listview("refresh");
         })
         .fail(function (error) {
           document.getElementsByTagName('body')[0].textContent =
-            JSON.stringify(error);
+            "network error: ip maybe not set";
         });
     })
     .declareMethod('startService', function () {
       var g = this,
-        research = g.__element.getElementsByClassName('research')[0];
+        research = g.__element.getElementsByClassName('research')[0],
+        ip = g.__element.getElementsByClassName('inputIp')[0];
       if (g.id !== undefined) {
         research.value = g.id;
       }
@@ -81,14 +83,21 @@
           return g.plEnablePage();
         })
         .push(function () {
-          return promiseEventListener(research, "change", false);
-        })
-        .push(function (e) {
-          return g.displayThisPage({page: "playlist",
-                                    id: research.value});
-        })
-        .push(function (url) {
-          window.location = url;
-        });
-    });
-}(window, rJS, jQuery, Handlebars, promiseEventListener));
+          return RSVP.any([
+            loopEventListener(research, "change", false, function () {
+              return new RSVP.Queue()
+                .push(function () {
+                  return g.displayThisPage({page: "playlist",
+                                            id: research.value});
+                })
+                .push(function (url) {
+                  window.location = url;
+                });
+            }),
+            loopEventListener(ip, "change", false, function () {
+              return g.plCreateHttpStorage(ip.value);
+            })
+          ]);//any
+        });//rsvp
+    });//startService
+}(window, rJS, jQuery, Handlebars, loopEventListener));
