@@ -197,9 +197,13 @@
           .push(function (e) {
             var list =  e.data.rows,
               id;
-            do {
-              id = list[Math.floor(Math.random() * list.length)].id;
-            } while (g.currentId === id);
+            if (list.length === 1) {
+              id = g.currentId;
+            } else {
+              do {
+                id = list[Math.floor(Math.random() * list.length)].id;
+              } while (g.currentId === id);
+            }
             return g.displayThisPage({page: "control",
                                       id : id});
           })
