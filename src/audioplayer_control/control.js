@@ -216,7 +216,8 @@
             g.url = URL.createObjectURL(blob);
           })
           .push(undefined, function (error) {
-            throw error;
+            window.location = g.__element
+              .getElementsByClassName("next")[0].href;
           });
       }
     })

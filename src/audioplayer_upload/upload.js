@@ -1,4 +1,5 @@
-/*global window, rJS, RSVP, jIO, JSON, promiseEventListener, console, Error*/
+/*global window, rJS, RSVP, jIO, JSON, promiseEventListener, console,
+  Error*/
 /*jslint nomen: true*/
 (function (window, jIO, rJS) {
   "use strict";
@@ -10,7 +11,6 @@
     .declareAcquiredMethod("displayThisTitle", "displayThisTitle")
     .declareAcquiredMethod("plEnablePage", "plEnablePage")
     .declareAcquiredMethod("plDisablePage", "plDisablePage")
-    .declareAcquiredMethod("invalideJioSave", "invalideJioSave")
     .declareMethod("render", function () {
       return this.displayThisTitle("upload");
     })
@@ -20,41 +20,43 @@
           g.__element.getElementsByTagName('input')[0],
         info_context =
           g.__element.getElementsByClassName('info')[0],
-        i,
         queue,
         uploaded = 0,
         length;
-
-
-
-      function post(index) {
+      function post() {
+        if (uploaded === length) {
+          return;
+        }
         var now = new Date();
-        return g.jio_post({"title" : input_context.files[index].name,
-                           "type" : "file",
-                           "format" :  input_context.files[index].type,
-                           "size" : input_context.files[index].size,
-                           "modified" : now.toUTCString(),
-                           "date" : now.getFullYear() + "-" +
-                           (now.getMonth() + 1) + "-" + now.getDate()
-                          })
-          .push(function (res) {
+        return g.jio_post({ "title" : input_context.files[uploaded].name,
+                            "type" : "file",
+                            "format" :  input_context.files[uploaded].type,
+                            "size" : input_context.files[uploaded].size,
+                            "modified" : now.toUTCString(),
+                            "date" : now.getFullYear() + "-" +
+                            (now.getMonth() + 1) + "-" + now.getDate()
+                          }, 0)
+          .then(function (res) {
             return g.jio_putAttachment({
               "_id" : res.id,
               "_attachment" : "enclosure",
-              "_blob": input_context.files[index]
-            });
+              "_blob": input_context.files[uploaded]
+            }, 0);
           })
-          .push(function () {
+          .then(function () {
             uploaded += 1;
-            info_context.innerHTML += "<li>" + input_context.files[index].name
+            info_context.innerHTML += "<li>" +
+              input_context.files[uploaded - 1].name
               + "  uploaded " + uploaded + "/" + length + " </li>";
             if (uploaded === length) {
               return g.plEnablePage();
             }
+            queue.push(post);
           })
           .fail(function (e) {
-            document.getElementsByTagName('body')[0].textContent =
-              JSON.stringify(e);
+            uploaded += 1;
+            console.log("error");
+            return post();
           });
       }
       queue = new RSVP.Queue();
@@ -68,13 +70,8 @@
           return g.plDisablePage();
         })
         .push(function () {
-          return g.invalideJioSave();
-        })
-        .push(function () {
           length = input_context.files.length;
-          for (i = 0; i < length; i += 1) {
-            queue.push(post(i));
-          }
+          queue.push(post);
         });
       return queue;
     });

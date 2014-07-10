@@ -83,19 +83,25 @@
         });
     })
     .allowPublicAcquisition("jio_post", function (param_list) {
-      return this.getDeclaredGadget(storageType(this.storageType))
+      var type;
+      if (param_list[1] === 0) {
+        type = 0;
+      } else {
+        type = this.storageType;
+      }
+      return this.getDeclaredGadget(storageType(type))
         .push(function (jio_gadget) {
           return jio_gadget.post.apply(jio_gadget, param_list);
         });
     })
-    .allowPublicAcquisition("invalideJioSave", function (param_list) {
-      return this.getDeclaredGadget(storageType(this.storageType))
-        .push(function (jio_gadget) {
-          return jio_gadget.invalideJioSave.apply(jio_gadget, param_list);
-        });
-    })
     .allowPublicAcquisition("jio_putAttachment", function (param_list) {
-      return this.getDeclaredGadget(storageType(this.storageType))
+      var type;
+      if (param_list[1] === 0) {
+        type = 0;
+      } else {
+        type = this.storageType;
+      }
+      return this.getDeclaredGadget(storageType(type))
         .push(function (jio_gadget) {
           return jio_gadget.putAttachment.apply(jio_gadget, param_list);
         });

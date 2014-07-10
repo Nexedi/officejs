@@ -1,0 +1,25 @@
+CACHE MANIFEST
+ 
+# v1
+ 
+CACHE:
+audioplayer.css
+audioplayer.js
+../audioplayer_bridge/index.html
+../audioplayer_bridge/audiogadget.js
+../audioplayer_control/index.html
+../audioplayer_control/control.js
+../audioplayer_control/control.css
+../audioplayer_playlist/index.html
+../audioplayer_playlist/playlist.js
+../audioplayer_upload/upload.js
+../audioplayer_upload/index.js
+../lib/URI.js
+../lib/handlebars.min.js
+../lib/jio.js
+../lib/jquery.js
+../lib/jquerymobile.css
+../lib/jquerymobile.js
+../lib/renderjs.min.js
+../lib/rsvp.min.js
+../lib/uritemplate.min.js

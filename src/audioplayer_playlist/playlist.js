@@ -68,7 +68,7 @@
         })
         .fail(function (error) {
           document.getElementsByTagName('body')[0].textContent =
-            "network error: ip maybe not set";
+            "network error: ip maybe not defined";
         });
     })
     .declareMethod('startService', function () {
