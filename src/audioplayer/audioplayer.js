@@ -77,6 +77,11 @@
       return this.save[param_list[0]];
     })
     .allowPublicAcquisition("allDocs", function (param_list) {
+      if (this.storageType !== 0) {
+        param_list[0].save = true;
+      } else {
+        param_list[0].save = false;
+      }
       return this.getDeclaredGadget(storageType(this.storageType))
         .push(function (jio_gadget) {
           return jio_gadget.allDocs.apply(jio_gadget, param_list);
@@ -117,6 +122,14 @@
         .push(function (jio_gadget) {
           return jio_gadget.get.apply(jio_gadget, param_list);
         });
+    })
+    .allowPublicAcquisition("jio_remove", function (param_list) {
+      if (this.storageType === 0) {
+        return this.getDeclaredGadget(storageType(this.storageType))
+          .push(function (jio_gadget) {
+            return jio_gadget.remove.apply(jio_gadget, param_list);
+          });
+      }
     })
     .allowPublicAcquisition("displayThisTitle", function (param_list) {
       var header = this.__element.getElementsByTagName("h1")[0];

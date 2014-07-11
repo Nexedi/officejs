@@ -57,7 +57,7 @@
             if (!(error instanceof RSVP.CancellationError)) {
               info_context.innerHTML +=
                 input_context.files[uploaded].name +
-                " failed : storage insufficient";
+                " failed : storage maybe insufficient";
               return g.plEnablePage();
             }
             document.getElementsByTagName('body')[0].textContent =

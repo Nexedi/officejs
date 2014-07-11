@@ -10,6 +10,7 @@
       .getElementById('rows-template').innerHTML,
     rows_template = Handlebars.compile(rows_template_source);
   gk.declareAcquiredMethod("allDocs", "allDocs")
+    .declareAcquiredMethod("jio_remove", "jio_remove")
     .declareAcquiredMethod("displayThisPage", "displayThisPage")
     .declareAcquiredMethod("displayThisTitle", "displayThisTitle")
     .declareAcquiredMethod("plCreateHttpStorage", "plCreateHttpStorage")
@@ -41,6 +42,13 @@
             .href = param_list[2];
         })
         .push(function () {
+          var id = options.id;
+          if (options.action === "delete") {
+            delete options.id;
+            return gadget.jio_remove({"_id" : id});
+          }
+        })
+        .push(function () {
           return gadget.allDocs({"include_docs": true});
         })
         .push(function (e) {
@@ -67,8 +75,10 @@
           $(list).listview("refresh");
         })
         .fail(function (error) {
-          document.getElementsByTagName('body')[0].textContent =
-            "network error: ip maybe not defined";
+          if ((error instanceof RSVP.CancellationError)) {
+            document.getElementsByTagName('body')[0].textContent =
+              JSON.stringify(error);
+          }
         });
     })
     .declareMethod('startService', function () {

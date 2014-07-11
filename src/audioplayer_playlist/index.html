@@ -14,7 +14,13 @@
       {{#each rows}}
       <li>
         <a href=#page=control&id={{this.id}}>
-          {{this.doc.title}} </a></li> 
+          {{this.doc.title}}
+        </a>
+        <a href=#page=playlist&id={{this.id}}&action=delete>
+          data-rel=popup
+          data-position-to=window 
+        </a>
+      </li> 
       {{/each}}
     </script>
     
@@ -30,12 +36,12 @@
       <input type="search" class="research" placeholder="research..."/>
 
       <div data-role="content">
-        <ul data-role="listview" data-split-theme="d">
+        <ul data-role="listview" data-split-icon="delete" data-split-theme="d">
         </ul>
       </div>
 
 
-      <div data-role="footer" data-position="fixed"  data-theme="b">
+      <div data-role="footer" data-position="fixed" data-theme="b">
         <div data-role="navbar" >
           <ul>
             <li><a data-role="button" class="offline" data-icon="search">offline</a></li>

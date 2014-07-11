@@ -13,15 +13,17 @@
     .declareMethod('createJio', function (jio_options) {
       this.state_parameter_dict.jio_storage = jIO.createJIO(jio_options);
     })
-    .declareMethod('allDocs', function () {
+    .declareMethod('allDocs', function (options) {
       var storage = this.state_parameter_dict.jio_storage,
         that = this;
-   /*   if (that.save.data !== undefined) {
+      if (that.save.data !== undefined) {
         return that.save;
-      }*/
-      return storage.allDocs.apply(storage, arguments)
+      }
+      return storage.allDocs(options)
         .then(function (result) {
-          that.save = result;
+          if (options.save) {
+            that.save = result;
+          }
           return result;
         });
     })
@@ -61,6 +63,10 @@
     .declareMethod('post', function () {
       var storage = this.state_parameter_dict.jio_storage;
       return storage.post.apply(storage, arguments);
+    })
+    .declareMethod('remove', function () {
+      var storage = this.state_parameter_dict.jio_storage;
+      return storage.remove.apply(storage, arguments);
     })
     .declareMethod('put', function () {
       var storage = this.state_parameter_dict.jio_storage;
