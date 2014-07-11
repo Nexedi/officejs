@@ -1,38 +1,39 @@
 <!DOCTYPE html>
-<html manifest="audioPlayer.appcache">
+<!--html manifest="audioPlayer.appcache"-->
   <head>
-  <!-- renderjs  -->
-  <script src="../<%= copy.rsvp.relative_dest %>" type="text/javascript"></script>
-  <script src="../<%= copy.renderjs.relative_dest %>" type="text/javascript"></script>
-  <script src="../<%= curl.jquery.relative_dest %>" type="text/javascript"></script>
-
-  <script src="../<%= curl.jquerymobilejs.relative_dest %>"></script>  
-  <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
-  
-  <!-- custom script -->
-  <script src="./audioplayer.js" type="text/javascript"></script>
-  <link rel="stylesheet" href="./audioplayer.css" media="screen" ></link>   </head>
+    <!-- renderjs  -->
+    <script src="../<%= copy.rsvp.relative_dest %>" type="text/javascript"></script>
+    <script src="../<%= copy.renderjs.relative_dest %>" type="text/javascript"></script>
+    <script src="../<%= curl.jquery.relative_dest %>" type="text/javascript"></script>
+    
+    <script src="../<%= curl.jquerymobilejs.relative_dest %>"></script>  
+    <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
+    
+    <!-- custom script -->
+    <script src="./audioplayer.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="./audioplayer.css" media="screen" ></link>   
+  </head>
   <body>
     <div class="nav" data-role="header" data-theme="b">
       <h1>music player</h1>
       <a data-icon="plus" href="#page=upload"  >add</a>     
       <a data-icon="grid" href="#page=playlist" >playlist</a>
     </div>
-
+    
     
     <div class="page">
     </div> 
-
+    
     
     <div class="offline" data-gadget-url="../audioplayer_bridge/index.html" data-gadget-scope="offline" >
     </div>
     
     <div class="localhost" data-gadget-url="../audioplayer_bridge/index.html" data-gadget-scope="localhost" >
     </div>
-
+    
     <div class="online" data-gadget-url="../audioplayer_bridge/index.html" data-gadget-scope="online" >
     </div>
-
-      <article class="gadget_container"></article>
+    
+    <article class="gadget_container"></article>
   </body>
 </html>

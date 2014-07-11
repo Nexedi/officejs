@@ -47,16 +47,21 @@
             uploaded += 1;
             info_context.innerHTML += "<li>" +
               input_context.files[uploaded - 1].name
-              + "  uploaded " + uploaded + "/" + length + " </li>";
+              + "  " + uploaded + "/" + length + "</li>";
             if (uploaded === length) {
               return g.plEnablePage();
             }
             queue.push(post);
           })
-          .fail(function (e) {
-            uploaded += 1;
-            console.log("error");
-            return post();
+          .fail(function (error) {
+            if (!(error instanceof RSVP.CancellationError)) {
+              info_context.innerHTML +=
+                input_context.files[uploaded].name +
+                " failed : storage insufficient";
+              return g.plEnablePage();
+            }
+            document.getElementsByTagName('body')[0].textContent =
+              JSON.stringify(error);
           });
       }
       queue = new RSVP.Queue();
