@@ -1,18 +1,27 @@
 /*global window, rJS, RSVP, console, jQuery, $, JSON, Handlebars,
-  loopEventListener, RegExp */
-/*jslint maxlen:80, nomen: true */
+  loopEventListener, RegExp, alert */
+/*jslint maxlen:180, nomen: true */
 
 
 (function (window, rJS, $, Handlebars, loopEventListener) {
   "use strict";
   var gk = rJS(window),
-    rows_template_source = gk.__template_element
-      .getElementById('rows-template').innerHTML,
-    rows_template = Handlebars.compile(rows_template_source);
+    network_source = gk.__template_element
+      .getElementById('network').innerHTML,
+    network = Handlebars.compile(network_source);
+
+
+  function checkIp(ip) {
+    var re = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
+    if (!re.test(ip)) {
+      return false;
+    }
+    return true;
+  }
+
   gk.declareAcquiredMethod("allDocs", "allDocs")
     .declareAcquiredMethod("plSave", "plSave")
     .declareAcquiredMethod("plGive", "plGive")
-    .declareAcquiredMethod("jio_remove", "jio_remove")
     .declareAcquiredMethod("displayThisPage", "displayThisPage")
     .declareAcquiredMethod("displayThisTitle", "displayThisTitle")
     .declareAcquiredMethod("plCreateHttpStorage", "plCreateHttpStorage")
@@ -20,6 +29,7 @@
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
     .declareMethod('render', function (options) {
       var gadget = this,
+        ipValue,
         list = gadget.__element.getElementsByTagName('ul')[0];
       return new RSVP.Queue()
         .push(function () {
@@ -27,9 +37,7 @@
             gadget.displayThisPage({page: "playlist",
                                     id : "offline"}),
             gadget.displayThisPage({page: "playlist",
-                                    id : "localhost"}),
-            gadget.displayThisPage({page: "playlist",
-                                    id : "online"})
+                                    id : "localhost"})
           ]);
         })
         .push(function (param_list) {
@@ -37,24 +45,16 @@
             .href = param_list[0];
           gadget.__element.getElementsByClassName('localhost')[0]
             .href = param_list[1];
-          gadget.__element.getElementsByClassName('online')[0]
-            .href = param_list[2];
         })
         .push(function () {
           return gadget.plGive("ip");
         })
         .push(function (value) {
-          var id = options.id;
           if (value !== undefined) {
+            ipValue = value;
             gadget.__element.getElementsByClassName('inputIp')[0]
               .value = value;
           }
-          if (options.action === "delete") {
-            delete options.id;
-            return gadget.jio_remove({"_id" : id});
-          }
-        })
-        .push(function () {
           return gadget.allDocs({"include_docs": true});
         })
         .push(function (e) {
@@ -62,9 +62,7 @@
             i,
             j,
             exp;
-          if (options.id !== undefined && options.id !== "offline"
-              && options.id !== "localhost"
-              && options.id !== "online") {
+          if (options.id !== undefined && options.id !== "online") {
             tmp = [];
             for (i = 0, j = 0; i < e.data.rows.length; i += 1) {
               exp = new RegExp(options.id, "i");
@@ -75,20 +73,21 @@
             }
             gadget.id = options.id;
           }
-          list.innerHTML = rows_template({
+          list.innerHTML = network({
             "rows" : tmp
           });
           $(list).listview("refresh");
-          return tmp.length;
-        })
-        .push(function (value) {
-          return gadget.displayThisTitle("playlist: " +
-                                         value + " music");
+          return gadget.displayThisTitle("online playlist: " +
+                                         tmp.length + " music");
         })
         .fail(function (error) {
           if (!(error instanceof RSVP.CancellationError)) {
-            document.getElementsByTagName('body')[0].textContent =
-              "network error";
+            if (ipValue) {
+              gadget.__element.getElementsByClassName('info')[0].innerHTML =
+                "network error";
+            }
+            return gadget.displayThisTitle("online playlist: " +
+                                           "0 music");
           }
         });
     })
@@ -116,12 +115,42 @@
                 });
             }),
             loopEventListener(ip, "change", false, function () {
+              var info = g.__element.getElementsByClassName('info')[0],
+                http,
+                port,
+                ipValue = ip.value;
+              http = ipValue.indexOf("http");
+              ipValue = ipValue.substring(ipValue.indexOf("//") + 2);
+              port = ipValue.indexOf(":");
+              if (port !== -1) {
+                ipValue = ipValue.substring(0, port);
+              }
+              if (http === -1) {
+                info.innerHTML = " please start ip with http";
+                return;
+              }
+              if (checkIp(ipValue) === false) {
+                info.innerHTML =
+                  "invalide ip: ip should like xxx.xxx.xxx.xxx(xxx is between 0 ~ 255)";
+                return;
+              }
+              if (port === -1) {
+                info.innerHTML = "input port number";
+                return;
+              }
               return new RSVP.Queue()
                 .push(function () {
                   return g.plCreateHttpStorage(ip.value);
                 })
                 .push(function () {
                   return g.plSave({"ip": ip.value});
+                })
+                .push(function () {
+                  return g.displayThisPage({page: "playlist",
+                                            action: ip.value});
+                })
+                .push(function (url) {
+                  window.location = url;
                 });
             })
           ]);//any

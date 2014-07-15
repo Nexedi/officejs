@@ -8,11 +8,11 @@
   $.mobile.pushStateEnabled = false;
   var gadget_list = {
     "upload" : {"0" : "../audioplayer_upload/index.html",
-                "1" : "../audioplayer_playlist/index.html",
-                "2" : "../audioplayer_playlist/index.html"},
-    "playlist" : {"0" : "../audioplayer_playlist/index.html",
-                  "1" : "../audioplayer_playlist/index.html",
-                  "2" : "../audioplayer_playlist/index.html"},
+                "1" : "../audioplayer_playlist_local/index.html",
+                "2" : "../audioplayer_playlist_online/index.html"},
+    "playlist" : {"0" : "../audioplayer_playlist_offline/index.html",
+                  "1" : "../audioplayer_playlist_local/index.html",
+                  "2" : "../audioplayer_playlist_online/index.html"},
     "control" : {"0" : "../audioplayer_control/index.html",
                  "1" : "../audioplayer_control/index.html",
                  "2" : "../audioplayer_control/index.html"}
@@ -69,6 +69,9 @@
       this.save = this.save || [];
       var key = Object.keys(param_list[0]);
       this.save[key[0]] = param_list[0][key[0]];
+    })
+    .allowPublicAcquisition("plGiveStorageType", function () {
+      return storageType(this.storageType);
     })
     .allowPublicAcquisition("plGive", function (param_list) {
       if (this.save === undefined) {

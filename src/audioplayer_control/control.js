@@ -1,4 +1,3 @@
-
 /*global window, rJS, RSVP, console, URL, Math, parseInt, document, jIO,
   Uint8Array, Audio, loopEventListener, jQuery, promiseEventListener*/
 /*jslint nomen: true*/
@@ -220,7 +219,7 @@
             if (!(error instanceof RSVP.CancellationError)) {
               window.location = g.__element
                 .getElementsByClassName("next")[0].href;
-              if ((error.status === "404")
+              if ((error.status === 404)
                   && (error.method === "getAttachment")) {
                 return g.jio_remove({"_id" : error.id});
               }
