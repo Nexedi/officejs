@@ -23,9 +23,6 @@
         list = gadget.__element.getElementsByTagName('ul')[0];
       return new RSVP.Queue()
         .push(function () {
-          return gadget.displayThisTitle("playlist");
-        })
-        .push(function () {
           return RSVP.all([
             gadget.displayThisPage({page: "playlist",
                                     id : "offline"}),
@@ -82,11 +79,16 @@
             "rows" : tmp
           });
           $(list).listview("refresh");
+          return tmp.length;
+        })
+        .push(function (value) {
+          return gadget.displayThisTitle("playlist: " +
+                                         value + " music");
         })
         .fail(function (error) {
           if (!(error instanceof RSVP.CancellationError)) {
             document.getElementsByTagName('body')[0].textContent =
-              "network ip not correct";
+              "network error";
           }
         });
     })
