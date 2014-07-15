@@ -158,6 +158,7 @@
 
   gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment")
     .declareAcquiredMethod("jio_get", "jio_get")
+    .declareAcquiredMethod("jio_remove", "jio_remove")
     .declareAcquiredMethod("plSave", "plSave")
     .declareAcquiredMethod("plGive", "plGive")
     .declareAcquiredMethod("displayThisPage", "displayThisPage")
@@ -216,8 +217,14 @@
             g.url = URL.createObjectURL(blob);
           })
           .push(undefined, function (error) {
-            window.location = g.__element
-              .getElementsByClassName("next")[0].href;
+            if (!(error instanceof RSVP.CancellationError)) {
+              window.location = g.__element
+                .getElementsByClassName("next")[0].href;
+              if ((error.status === "404")
+                  && (error.method === "getAttachment")) {
+                return g.jio_remove({"_id" : error.id});
+              }
+            }
           });
       }
     })

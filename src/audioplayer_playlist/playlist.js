@@ -10,6 +10,8 @@
       .getElementById('rows-template').innerHTML,
     rows_template = Handlebars.compile(rows_template_source);
   gk.declareAcquiredMethod("allDocs", "allDocs")
+    .declareAcquiredMethod("plSave", "plSave")
+    .declareAcquiredMethod("plGive", "plGive")
     .declareAcquiredMethod("jio_remove", "jio_remove")
     .declareAcquiredMethod("displayThisPage", "displayThisPage")
     .declareAcquiredMethod("displayThisTitle", "displayThisTitle")
@@ -42,7 +44,14 @@
             .href = param_list[2];
         })
         .push(function () {
+          return gadget.plGive("ip");
+        })
+        .push(function (value) {
           var id = options.id;
+          if (value !== undefined) {
+            gadget.__element.getElementsByClassName('inputIp')[0]
+              .value = value;
+          }
           if (options.action === "delete") {
             delete options.id;
             return gadget.jio_remove({"_id" : id});
@@ -75,9 +84,9 @@
           $(list).listview("refresh");
         })
         .fail(function (error) {
-          if ((error instanceof RSVP.CancellationError)) {
+          if (!(error instanceof RSVP.CancellationError)) {
             document.getElementsByTagName('body')[0].textContent =
-              JSON.stringify(error);
+              "network ip not correct";
           }
         });
     })
@@ -105,7 +114,13 @@
                 });
             }),
             loopEventListener(ip, "change", false, function () {
-              return g.plCreateHttpStorage(ip.value);
+              return new RSVP.Queue()
+                .push(function () {
+                  return g.plCreateHttpStorage(ip.value);
+                })
+                .push(function () {
+                  return g.plSave({"ip": ip.value});
+                });
             })
           ]);//any
         });//rsvp

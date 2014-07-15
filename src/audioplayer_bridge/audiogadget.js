@@ -12,6 +12,7 @@
 
     .declareMethod('createJio', function (jio_options) {
       this.state_parameter_dict.jio_storage = jIO.createJIO(jio_options);
+      this.save = {};
     })
     .declareMethod('allDocs', function (options) {
       var storage = this.state_parameter_dict.jio_storage,
@@ -35,7 +36,8 @@
       if (result.data !== undefined) {
         length = result.data.rows.length;
         for (i = 0; i < length; i += 1) {
-          if (result.data.rows[i].id === encodeURI(param._id)) {  //xxx
+          if ((result.data.rows[i].id === encodeURI(param._id))
+              || (result.data.rows[i].id === param._id)) {
             return ({"data": {"title" : result.data.rows[i].doc.title}});
           }
         }
