@@ -60,7 +60,8 @@
         })
         .fail(function (error) {
           if (!(error instanceof RSVP.CancellationError)) {
-            console.log("error");
+            gadget.__element.getElementsByClassName('info')[0].innerHTML =
+              "please enable local server";
           }
         });
     })

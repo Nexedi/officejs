@@ -235,6 +235,8 @@
         box_context = g.__element.getElementsByClassName("box")[0],
         filter_context = g.__element.getElementsByClassName("filter")[0],
         filter_type = $('select'),
+        loop_context = g.__element.getElementsByClassName("loop")[0],
+        loop = false,
         time_context = g.__element.getElementsByClassName("time")[0];
       bar_context.value = 0;
       return new RSVP.Queue()
@@ -244,9 +246,18 @@
         })
         .push(function () {
           bar_context.max = g.audio.duration;
-          return g.plEnablePage();
+          return RSVP.all([
+            g.plEnablePage(),
+            g.plGive("loop")
+          ]);
         })
-        .push(function () {
+        .push(function (list) {
+          if (list[1]) {
+            loop = true;
+            loop_context.innerHTML = "loop on";
+          } else {
+            loop_context.innerHTML = "loop off";
+          }
           time_context.style.left = bar_context.style.left;
           $(time_context).offset().top = $(bar_context).offset().top + 3;
           time_context.innerHTML = timeFormat(g.audio.duration);
@@ -257,8 +268,13 @@
             }),
 
             loopEventListener(g.audio, "ended", false, function () {
-              window.location = g.__element
-                .getElementsByClassName("next")[0].href;
+              if (loop) {
+                g.audio.load();
+                g.audio.play();
+              } else {
+                window.location = g.__element
+                  .getElementsByClassName("next")[0].href;
+              }
             }),
 
             loopEventListener(command_context, "click", false, function () {
@@ -289,6 +305,11 @@
                               false, function () {
                 box_context.style.display = "none";
               }),
+            loopEventListener(loop_context, "click", false, function () {
+              loop_context.innerHTML = loop ? "loop off" : "loop on";
+              loop = !loop;
+              return g.plSave({"loop": loop});
+            }),
 
             myLoopEventListener($(filter_context), "change", function () {
               g.filter.frequency.value = filter_context.value;
