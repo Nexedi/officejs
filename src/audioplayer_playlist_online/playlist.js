@@ -1,5 +1,5 @@
 /*global window, rJS, RSVP, console, jQuery, $, JSON, Handlebars,
-  loopEventListener, RegExp, alert */
+  loopEventListener, RegExp, alert, promiseEventListener */
 /*jslint maxlen:180, nomen: true */
 
 
@@ -19,6 +19,51 @@
     return true;
   }
 
+  function check(value) {
+    var g = this,
+      info = g.__element.getElementsByClassName('info')[0],
+      http,
+      port,
+      portEnd,
+      ipValue = value;
+    g.__element.getElementsByTagName('ul')[0].innerHTML = " ";
+    if (ipValue.indexOf("/", ipValue.length - 1) === -1) {
+      info.innerHTML = " not end with /";
+      return;
+    }
+    http = ipValue.indexOf("http://");
+    ipValue = ipValue.substring(ipValue.indexOf("//") + 2);
+    port = ipValue.indexOf(":");
+    portEnd = ipValue.indexOf(":/");
+    if (port !== -1) {
+      ipValue = ipValue.substring(0, port);
+    }
+    if (http === -1) {
+      info.innerHTML = " please start ip with http://";
+      return;
+    }
+    if (port === -1 || portEnd !== -1) {
+      info.innerHTML = "input port number";
+      return;
+    }
+    if (checkIp(ipValue) === false) {
+      info.innerHTML =
+        "invalide ip: ip should like xxx.xxx.xxx.xxx(xxx is between 0 ~ 255)";
+      return;
+    }
+    return new RSVP.Queue()
+      .push(function () {
+        return g.plSave({"ip": value});
+      })
+      .push(function () {
+        return g.displayThisPage({page: "playlist",
+                                  action: value});
+      })
+      .push(function (url) {
+        window.location = url;
+      });
+  }
+
   gk.declareAcquiredMethod("allDocs", "allDocs")
     .declareAcquiredMethod("plSave", "plSave")
     .declareAcquiredMethod("plGive", "plGive")
@@ -30,6 +75,8 @@
     .declareMethod('render', function (options) {
       var gadget = this,
         ipValue,
+        ip_context = gadget.
+          __element.getElementsByClassName('inputIp')[0],
         list = gadget.__element.getElementsByTagName('ul')[0];
       return new RSVP.Queue()
         .push(function () {
@@ -47,38 +94,49 @@
             .href = param_list[1];
         })
         .push(function () {
+          if (options.action) {
+            return options.action;
+          }
           return gadget.plGive("ip");
         })
         .push(function (value) {
           if (value !== undefined) {
             ipValue = value;
-            gadget.__element.getElementsByClassName('inputIp')[0]
-              .value = value;
+            ip_context.value = value;
+            return gadget.plCreateHttpStorage(value);
           }
-          return gadget.allDocs({"include_docs": true});
+        })
+        .push(function () {
+          return RSVP.any([
+            gadget.allDocs({"include_docs": true}),
+            promiseEventListener(ip_context, "change", false)
+          ]);
         })
         .push(function (e) {
-          var tmp = e.data.rows,
-            i,
-            j,
-            exp;
-          if (options.id !== undefined && options.id !== "online") {
-            tmp = [];
-            for (i = 0, j = 0; i < e.data.rows.length; i += 1) {
-              exp = new RegExp(options.id, "i");
-              if (e.data.rows[i].doc.title.search(exp) !== -1) {
-                tmp[j] = e.data.rows[i];
-                j += 1;
+          if (e.data) {
+            var tmp = e.data.rows,
+              i,
+              j,
+              exp;
+            if (options.id !== undefined && options.id !== "online") {
+              tmp = [];
+              for (i = 0, j = 0; i < e.data.rows.length; i += 1) {
+                exp = new RegExp(options.id, "i");
+                if (e.data.rows[i].doc.title.search(exp) !== -1) {
+                  tmp[j] = e.data.rows[i];
+                  j += 1;
+                }
               }
+              gadget.id = options.id;
             }
-            gadget.id = options.id;
+            list.innerHTML = network({
+              "rows" : tmp
+            });
+            $(list).listview("refresh");
+            return gadget.displayThisTitle("online playlist: " +
+                                           tmp.length + " music");
           }
-          list.innerHTML = network({
-            "rows" : tmp
-          });
-          $(list).listview("refresh");
-          return gadget.displayThisTitle("online playlist: " +
-                                         tmp.length + " music");
+          return check.call(gadget, ip_context.value);
         })
         .fail(function (error) {
           if (ipValue) {
@@ -113,50 +171,7 @@
                 });
             }),
             loopEventListener(ip, "change", false, function () {
-              var info = g.__element.getElementsByClassName('info')[0],
-                http,
-                port,
-                portEnd,
-                ipValue = ip.value;
-              g.__element.getElementsByTagName('ul')[0].innerHTML = " ";
-              if (ipValue.indexOf("/", ipValue.length - 1) === -1) {
-                info.innerHTML = " not end with /";
-                return;
-              }
-              http = ipValue.indexOf("http://");
-              ipValue = ipValue.substring(ipValue.indexOf("//") + 2);
-              port = ipValue.indexOf(":");
-              portEnd = ipValue.indexOf(":/");
-              if (port !== -1) {
-                ipValue = ipValue.substring(0, port);
-              }
-              if (http === -1) {
-                info.innerHTML = " please start ip with http://";
-                return;
-              }
-              if (port === -1 || portEnd !== -1) {
-                info.innerHTML = "input port number";
-                return;
-              }
-              if (checkIp(ipValue) === false) {
-                info.innerHTML =
-                  "invalide ip: ip should like xxx.xxx.xxx.xxx(xxx is between 0 ~ 255)";
-                return;
-              }
-              return new RSVP.Queue()
-                .push(function () {
-                  return g.plCreateHttpStorage(ip.value);
-                })
-                .push(function () {
-                  return g.plSave({"ip": ip.value});
-                })
-                .push(function () {
-                  return g.displayThisPage({page: "playlist",
-                                            action: ip.value});
-                })
-                .push(function (url) {
-                  window.location = url;
-                });
+              return check.call(g, ip.value);
             })
           ]);//any
         });//rsvp

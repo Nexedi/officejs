@@ -27,6 +27,9 @@
       controlPanel = g.__element.getElementsByClassName("page")[0],
       i = 0,
       circle;
+    if (controlPanel.firstChild) {
+      return;
+    }
     overlay.className = 'overlay';
     loader.className = 'loader';
     while (i < 5) {
