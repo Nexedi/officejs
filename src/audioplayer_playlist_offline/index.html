@@ -13,7 +13,7 @@
     <script id="rows-template" type="text/x-handlebars-template">
       {{#each rows}}
       <li>
-        <a href=#page=control&id={{this.id}}>
+        <a href=#page=control&id={{this.id}}&action=offline>
           {{this.doc.title}}
         </a>
         <a href=#page=playlist&id={{this.id}}&action=delete>

@@ -174,10 +174,16 @@
       if (options.page === "playlist") {
         if (options.id === "offline") {
           gadget.storageType = 0;
+          gadget.__element.getElementsByClassName('addMusic')[0].
+            style.display = "";
         } else if (options.id === "localhost") {
           gadget.storageType = 1;
+          gadget.__element.getElementsByClassName('addMusic')[0].
+            style.display = "none";
         } else if (options.id === "online") {
           gadget.storageType = 2;
+          gadget.__element.getElementsByClassName('addMusic')[0].
+            style.display = "none";
         }
       }
       return gadget.declareGadget(

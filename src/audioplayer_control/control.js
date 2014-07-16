@@ -189,7 +189,8 @@
             share_context.href =
               "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text="
               + result.data.title;
-            return g.displayThisTitle(result.data.title);
+            return g.displayThisTitle(options.action + " : "
+                                      + result.data.title);
           })
           .push(function () {
             return g.allDocs({"include_docs": true});
@@ -205,7 +206,8 @@
               } while (g.currentId === id);
             }
             return g.displayThisPage({page: "control",
-                                      id : id});
+                                      id : id,
+                                      action : options.action});
           })
           .push(function (url) {
             g.__element.getElementsByClassName("next")[0].href = url;
