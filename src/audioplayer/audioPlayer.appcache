@@ -1,6 +1,6 @@
 CACHE MANIFEST
  
-# v1
+# v1.2
  
 CACHE:
 audioplayer.css
@@ -10,10 +10,14 @@ audioplayer.js
 ../audioplayer_control/index.html
 ../audioplayer_control/control.js
 ../audioplayer_control/control.css
-../audioplayer_playlist/index.html
-../audioplayer_playlist/playlist.js
+../audioplayer_playlist_online/index.html
+../audioplayer_playlist_online/playlist.js
+../audioplayer_playlist_offline/index.html
+../audioplayer_playlist_offline/playlist.js
+../audioplayer_playlist_local/index.html
+../audioplayer_playlist_local/playlist.js
 ../audioplayer_upload/upload.js
-../audioplayer_upload/index.js
+../audioplayer_upload/index.html
 ../lib/URI.js
 ../lib/handlebars.min.js
 ../lib/jio.js
@@ -23,3 +27,8 @@ audioplayer.js
 ../lib/renderjs.min.js
 ../lib/rsvp.min.js
 ../lib/uritemplate.min.js
+../lib/images/ajax-loader.gif
+http://git.erp5.org/gitweb/dream.git/blob_plain/refs/heads/renderjs2:/dream/platform/src2/dream/mixin_promise.js 
+
+NETWORK:
+*

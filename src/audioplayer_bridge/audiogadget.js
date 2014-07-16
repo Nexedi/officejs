@@ -47,16 +47,9 @@
     .declareMethod('getAttachment', function () {
       var storage = this.state_parameter_dict.jio_storage;
       return storage.getAttachment.apply(storage, arguments)
-        // XXX Where to put this &@! blob reading
         .then(function (response) {
           return response.data;
-          //return jIO.util.readBlobAsText(response.data);
         });
-      /*
-        .then(function (lala) {
-        console.log(lala.target.result);
-        return lala.target.result;
-        });*/
     })
     .declareMethod('putAttachment', function () {
       var storage = this.state_parameter_dict.jio_storage;

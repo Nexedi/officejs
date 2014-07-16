@@ -81,14 +81,12 @@
                                          tmp.length + " music");
         })
         .fail(function (error) {
-          if (!(error instanceof RSVP.CancellationError)) {
-            if (ipValue) {
-              gadget.__element.getElementsByClassName('info')[0].innerHTML =
-                "network error";
-            }
-            return gadget.displayThisTitle("online playlist: " +
-                                           "0 music");
+          if (ipValue) {
+            gadget.__element.getElementsByClassName('info')[0].innerHTML =
+              "network error";
           }
+          return gadget.displayThisTitle("online playlist: " +
+                                         "0 music");
         });
     })
     .declareMethod('startService', function () {
@@ -118,24 +116,31 @@
               var info = g.__element.getElementsByClassName('info')[0],
                 http,
                 port,
+                portEnd,
                 ipValue = ip.value;
-              http = ipValue.indexOf("http");
+              g.__element.getElementsByTagName('ul')[0].innerHTML = " ";
+              if (ipValue.indexOf("/", ipValue.length - 1) === -1) {
+                info.innerHTML = " not end with /";
+                return;
+              }
+              http = ipValue.indexOf("http://");
               ipValue = ipValue.substring(ipValue.indexOf("//") + 2);
               port = ipValue.indexOf(":");
+              portEnd = ipValue.indexOf(":/");
               if (port !== -1) {
                 ipValue = ipValue.substring(0, port);
               }
               if (http === -1) {
-                info.innerHTML = " please start ip with http";
+                info.innerHTML = " please start ip with http://";
+                return;
+              }
+              if (port === -1 || portEnd !== -1) {
+                info.innerHTML = "input port number";
                 return;
               }
               if (checkIp(ipValue) === false) {
                 info.innerHTML =
                   "invalide ip: ip should like xxx.xxx.xxx.xxx(xxx is between 0 ~ 255)";
-                return;
-              }
-              if (port === -1) {
-                info.innerHTML = "input port number";
                 return;
               }
               return new RSVP.Queue()
