@@ -248,7 +248,8 @@
           bar_context.max = g.audio.duration;
           return RSVP.all([
             g.plEnablePage(),
-            g.plGive("loop")
+            g.plGive("loop"),
+            g.plGive("mute")
           ]);
         })
         .push(function (list) {
@@ -258,13 +259,20 @@
           } else {
             loop_context.innerHTML = "loop off";
           }
+          if (list[2] !== undefined) {
+            g.gain.gain.value = list[2];
+            mute_context.innerHTML = list[2] ? "mute off" : "mute on";
+          }
           time_context.style.left = bar_context.style.left;
           $(time_context).offset().top = $(bar_context).offset().top + 3;
           time_context.innerHTML = timeFormat(g.audio.duration);
           return RSVP.any([
             playSong.call(g),
             loopEventListener(mute_context, "click", false, function () {
+              mute_context.innerHTML = g.gain.gain.value ?
+                  "mute on" : "mute off";
               g.gain.gain.value = (g.gain.gain.value + 1) % 2;
+              return g.plSave({"mute": g.gain.gain.value});
             }),
 
             loopEventListener(g.audio, "ended", false, function () {
