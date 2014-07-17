@@ -1,6 +1,6 @@
 /*global window, rJS, RSVP, console, jQuery, $, JSON, Handlebars,
   loopEventListener, RegExp, alert, promiseEventListener */
-/*jslint maxlen:180, nomen: true */
+/*jslint maxlen:180, nomen: true, regexp: true */
 
 
 (function (window, rJS, $, Handlebars, loopEventListener) {
@@ -10,13 +10,21 @@
       .getElementById('network').innerHTML,
     network = Handlebars.compile(network_source);
 
+  function endWith(str, end) {
+    return (str.indexOf(end, str.length - end.length) !== -1);
+  }
+  function contain(str, s) {
+    return (str.indexOf(s) !== -1);
+  }
+
+  function checkUrl(url) {
+    return (contain(url, ".com") || contain(url, ".net") || contain(url, ".fr"));
+  }
+
 
   function checkIp(ip) {
     var re = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
-    if (!re.test(ip)) {
-      return false;
-    }
-    return true;
+    return re.test(ip);
   }
 
   function check(value) {
@@ -27,29 +35,40 @@
       portEnd,
       ipValue = value;
     g.__element.getElementsByTagName('ul')[0].innerHTML = " ";
-    if (ipValue.indexOf("/", ipValue.length - 1) === -1) {
-      info.innerHTML = " not end with /";
-      return;
-    }
-    http = ipValue.indexOf("http://");
-    ipValue = ipValue.substring(ipValue.indexOf("//") + 2);
-    port = ipValue.indexOf(":");
-    portEnd = ipValue.indexOf(":/");
-    if (port !== -1) {
-      ipValue = ipValue.substring(0, port);
-    }
-    if (http === -1) {
-      info.innerHTML = " please start ip with http://";
-      return;
-    }
-    if (port === -1 || portEnd !== -1) {
-      info.innerHTML = "input port number";
-      return;
-    }
-    if (checkIp(ipValue) === false) {
-      info.innerHTML =
-        "invalide ip: ip should like xxx.xxx.xxx.xxx(xxx is between 0 ~ 255)";
-      return;
+    http = ipValue.indexOf("http");
+    if (ipValue.indexOf("www.") !== -1) {
+      if (http === -1) {
+        info.innerHTML = "please start with http:// or https://";
+        return;
+      }
+      if (!checkUrl(ipValue)) {
+        info.innerHTML = "url invalide";
+        return;
+      }
+    } else {
+      ipValue = ipValue.substring(ipValue.indexOf("//") + 2);
+      port = ipValue.indexOf(":");
+      portEnd = ipValue.indexOf(":/");
+      if (port !== -1) {
+        ipValue = ipValue.substring(0, port);
+      }
+      if (http === -1) {
+        info.innerHTML = "please start ip with http:// or https://";
+        return;
+      }
+      if (checkIp(ipValue) === false) {
+        info.innerHTML =
+          "invalide ip: ip should like xxx.xxx.xxx.xxx(xxx is between 0 ~ 255)";
+        return;
+      }
+      if (port === -1 || portEnd !== -1) {
+        info.innerHTML = "input port number";
+        return;
+      }
+      if (!endWith(value, "/")) {
+        info.innerHTML = "not end with /";
+        return;
+      }
     }
     return new RSVP.Queue()
       .push(function () {
