@@ -122,7 +122,9 @@
           if (value !== undefined) {
             ipValue = value;
             ip_context.value = value;
-            return gadget.plCreateHttpStorage(value);
+            if (options.action) {
+              return gadget.plCreateHttpStorage(value);
+            }
           }
         })
         .push(function () {
