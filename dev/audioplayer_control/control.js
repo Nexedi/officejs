@@ -131,7 +131,7 @@
                 });
             }).push(function(result) {
                 var share_context = g.__element.getElementsByClassName("share")[0];
-                share_context.href = "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text=" + result.data.title;
+                share_context.href = "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text=" + encodeURI(result.data.title);
                 return g.displayThisTitle(options.action + " : " + result.data.title);
             }).push(function() {
                 return g.allDocs({
