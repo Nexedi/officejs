@@ -56,13 +56,13 @@
         info.innerHTML = "please start ip with http:// or https://";
         return;
       }
+      if (port === -1 || portEnd !== -1) {
+        info.innerHTML = "input port number";
+        return;
+      }
       if (checkIp(ipValue) === false) {
         info.innerHTML =
           "invalide ip: ip should like xxx.xxx.xxx.xxx(xxx is between 0 ~ 255)";
-        return;
-      }
-      if (port === -1 || portEnd !== -1) {
-        info.innerHTML = "input port number";
         return;
       }
       if (!endWith(value, "/")) {
