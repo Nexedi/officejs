@@ -240,9 +240,11 @@
             }), loopEventListener(bar_context, "click", false, function(event) {
                 g.audio.currentTime = getTime(bar_context, event.clientX);
                 bar_context.value = g.audio.currentTime;
-                g.video.currentTime = g.audio.currentTime;
                 g.audio.play();
-                g.video.play();
+                if (g.type === "video/mp4") {
+                    g.video.currentTime = g.audio.currentTime;
+                    g.video.play();
+                }
                 command_context.innerHTML = "stop";
             }), loopEventListener(bar_context, "mousemove", false, function(event) {
                 var time = getTime(bar_context, event.clientX);
