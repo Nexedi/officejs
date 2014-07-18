@@ -26,7 +26,7 @@
             var now = new Date();
             return g.jio_post({
                 title: input_context.files[uploaded].name,
-                type: "file",
+                type: input_context.files[uploaded].type,
                 format: input_context.files[uploaded].type,
                 size: input_context.files[uploaded].size,
                 modified: now.toUTCString(),

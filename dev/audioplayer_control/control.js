@@ -59,7 +59,7 @@
         gadget.analyser.getByteFrequencyData(array);
         return array;
     }
-    function setSong(url) {
+    function set(url) {
         //configure a song
         var gadget = this;
         gadget.source.connect(gadget.filter);
@@ -68,6 +68,10 @@
         gadget.gain.connect(audioCtx.destination);
         gadget.audio.src = url;
         gadget.audio.load();
+        if (gadget.type === "video/mp4") {
+            gadget.video.src = url;
+            gadget.video.load();
+        }
     }
     function promiseRequestAnimation(callback) {
         var animationId, callback_promise;
@@ -92,13 +96,14 @@
         }
         return new RSVP.Promise(resolver, canceller);
     }
-    function playSong() {
+    function play() {
         var that = this, canvas = that.canvas, canvasCtx = canvas.getContext("2d"), cwidth = canvas.width, cheight = canvas.height - 2, meterWidth = 8, //width of the meters in the spectrum
-        capHeight = 2, meterNum = 300, array, drawFrame, step, i, value, bar_context = that.__element.getElementsByClassName("bar")[0], time_context = that.__element.getElementsByClassName("time")[0], gradient = canvasCtx.createLinearGradient(0, 0, 0, 300);
+        capHeight = 2, meterNum = 300, array, drawFrame, showTime, step, i, value, bar_context = that.__element.getElementsByClassName("bar")[0], time_context = that.__element.getElementsByClassName("time")[0], gradient = canvasCtx.createLinearGradient(0, 0, 0, 300);
         gradient.addColorStop(1, "#0f0");
         gradient.addColorStop(.5, "#ff0");
         gradient.addColorStop(0, "#f00");
         that.audio.play();
+        that.video.play();
         drawFrame = function() {
             array = getFFTValue(that);
             canvasCtx.clearRect(0, 0, cwidth, cheight);
@@ -111,7 +116,18 @@
                 canvasCtx.fillRect(i * 12, cheight - value + capHeight, meterWidth, cheight);
             }
         };
-        return promiseRequestAnimation(drawFrame);
+        showTime = function() {
+            bar_context.value = that.audio.currentTime;
+            time_context.innerHTML = timeFormat(that.audio.duration - that.audio.currentTime);
+        };
+        if (that.type !== "video/mp4") {
+            canvas.style.display = "";
+            that.video.style.display = "none";
+            return promiseRequestAnimation(drawFrame);
+        }
+        that.video.style.display = "";
+        canvas.style.display = "none";
+        return promiseRequestAnimation(showTime);
     }
     gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment").declareAcquiredMethod("jio_get", "jio_get").declareAcquiredMethod("jio_remove", "jio_remove").declareAcquiredMethod("plSave", "plSave").declareAcquiredMethod("plGive", "plGive").declareAcquiredMethod("displayThisPage", "displayThisPage").declareAcquiredMethod("displayThisTitle", "displayThisTitle").declareAcquiredMethod("allDocs", "allDocs").declareAcquiredMethod("plEnablePage", "plEnablePage").declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").declareMethod("render", function(options) {
         var g = this;
@@ -132,6 +148,7 @@
             }).push(function(result) {
                 var share_context = g.__element.getElementsByClassName("share")[0];
                 share_context.href = "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text=" + encodeURI(result.data.title);
+                g.type = result.data.type;
                 return g.displayThisTitle(options.action + " : " + result.data.title);
             }).push(function() {
                 return g.allDocs({
@@ -174,7 +191,7 @@
         var g = this, command_context = g.__element.getElementsByClassName("command")[0], mute_context = g.__element.getElementsByClassName("mute")[0], bar_context = g.__element.getElementsByClassName("bar")[0], box_context = g.__element.getElementsByClassName("box")[0], filter_context = g.__element.getElementsByClassName("filter")[0], filter_type = $("select"), loop_context = g.__element.getElementsByClassName("loop")[0], loop = false, time_context = g.__element.getElementsByClassName("time")[0];
         bar_context.value = 0;
         return new RSVP.Queue().push(function() {
-            setSong.call(g, g.url);
+            set.call(g, g.url);
             return promiseEventListener(g.audio, "loadedmetadata", false);
         }).push(function() {
             bar_context.max = g.audio.duration;
@@ -193,7 +210,7 @@
             time_context.style.left = bar_context.style.left;
             $(time_context).offset().top = $(bar_context).offset().top + 3;
             time_context.innerHTML = timeFormat(g.audio.duration);
-            return RSVP.any([ playSong.call(g), loopEventListener(mute_context, "click", false, function() {
+            return RSVP.any([ play.call(g), loopEventListener(mute_context, "click", false, function() {
                 mute_context.innerHTML = g.gain.gain.value ? "mute on" : "mute off";
                 g.gain.gain.value = (g.gain.gain.value + 1) % 2;
                 return g.plSave({
@@ -203,21 +220,29 @@
                 if (loop) {
                     g.audio.load();
                     g.audio.play();
+                    if (g.type === "video/mp4") {
+                        g.video.load();
+                        g.video.play();
+                    }
                 } else {
                     window.location = g.__element.getElementsByClassName("next")[0].href;
                 }
             }), loopEventListener(command_context, "click", false, function() {
                 if (g.audio.paused) {
                     g.audio.play();
+                    g.video.play();
                     command_context.innerHTML = "stop";
                 } else {
                     g.audio.pause();
+                    g.video.pause();
                     command_context.innerHTML = "play";
                 }
             }), loopEventListener(bar_context, "click", false, function(event) {
                 g.audio.currentTime = getTime(bar_context, event.clientX);
                 bar_context.value = g.audio.currentTime;
+                g.video.currentTime = g.audio.currentTime;
                 g.audio.play();
+                g.video.play();
                 command_context.innerHTML = "stop";
             }), loopEventListener(bar_context, "mousemove", false, function(event) {
                 var time = getTime(bar_context, event.clientX);
@@ -254,5 +279,7 @@
         g.gain = audioCtx.createGain();
         g.filter = audioCtx.createBiquadFilter();
         g.canvas = g.__element.getElementsByTagName("canvas")[0];
+        g.video = g.__element.getElementsByTagName("video")[0];
+        g.video.volume = 0;
     });
 })(window, rJS, RSVP, loopEventListener, jQuery, promiseEventListener);
