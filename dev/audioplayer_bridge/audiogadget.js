@@ -28,7 +28,8 @@
                 if (result.data.rows[i].id === encodeURI(param._id) || result.data.rows[i].id === param._id) {
                     return {
                         data: {
-                            title: result.data.rows[i].doc.title
+                            title: result.data.rows[i].doc.title,
+                            type: result.data.rows[i].doc.type
                         }
                     };
                 }

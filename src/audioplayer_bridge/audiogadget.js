@@ -38,7 +38,8 @@
         for (i = 0; i < length; i += 1) {
           if ((result.data.rows[i].id === encodeURI(param._id))
               || (result.data.rows[i].id === param._id)) {
-            return ({"data": {"title" : result.data.rows[i].doc.title}});
+            return ({"data": {"title" : result.data.rows[i].doc.title,
+                              "type" : result.data.rows[i].doc.type}});
           }
         }
       }

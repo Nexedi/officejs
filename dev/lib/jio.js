@@ -9961,6 +9961,7 @@ decodeURI, encodeURI*/
       result,
       index,
       name,
+      type,
       that = this;
     return new Promise(function (resolve, reject) {
       xml.onerror = function (e) {
@@ -9981,10 +9982,17 @@ decodeURI, encodeURI*/
               if (url.indexOf(".mp3") === -1 && url.indexOf(".mp4") === -1) {
                 result = result.substring(index + 2);
               } else {
+                if (url.indexOf(".mp4") !== -1) {
+                  type = "video/mp4";
+                } else {
+                  type = "audio/mp3"
+                }
                 name = decodeURI(url);
                 rows.push({
                   "id": url,
-                  "doc": {"title" : name}
+                  "doc": {"title" : name,
+                          "type" : type        
+                         }
                 });
               }
             }
@@ -10011,7 +10019,8 @@ decodeURI, encodeURI*/
         for (i = 0; i < length; i += 1) {
           if ((result.data.rows[i].id === encodeURI(param._id)) 
               || (result.data.rows[i].id === param._id)) {  //xxx
-            return ({"data": {"title" : result.data.rows[i].doc.title}});
+            return ({"data": {"title" : result.data.rows[i].doc.title,
+                              "type": result.data.rows[i].doc.type}});
           }
         }
       })
