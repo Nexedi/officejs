@@ -9978,7 +9978,7 @@ decodeURI, encodeURI*/
               result = result.substring(index + 7);
               index = result.indexOf("\">");
               url = result.substring(0, index);
-              if (url.indexOf(".mp3") === -1) {
+              if (url.indexOf(".mp3") === -1 && url.indexOf(".mp4") === -1) {
                 result = result.substring(index + 2);
               } else {
                 name = decodeURI(url);
