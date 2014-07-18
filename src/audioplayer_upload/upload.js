@@ -4,6 +4,19 @@
 (function (window, jIO, rJS) {
   "use strict";
   var gk = rJS(window);
+
+  function exit(g) {
+    return RSVP.Queue()
+      .push(function () {
+        return g.plEnablePage();
+      })
+      .push(function () {
+        return g.displayThisPage({page: "playlist"});
+      })
+      .push(function (url) {
+        window.location = url;
+      });
+  }
   gk.declareAcquiredMethod("jio_post", "jio_post")
     .declareAcquiredMethod("jio_putAttachment", "jio_putAttachment")
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
@@ -49,7 +62,7 @@
               input_context.files[uploaded - 1].name
               + "  " + uploaded + "/" + length + "</li>";
             if (uploaded === length) {
-              return g.plEnablePage();
+              return exit(g);
             }
             queue.push(post);
           })

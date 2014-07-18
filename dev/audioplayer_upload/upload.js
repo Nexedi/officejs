@@ -4,6 +4,17 @@
 (function(window, jIO, rJS) {
     "use strict";
     var gk = rJS(window);
+    function exit(g) {
+        return RSVP.Queue().push(function() {
+            return g.plEnablePage();
+        }).push(function() {
+            return g.displayThisPage({
+                page: "playlist"
+            });
+        }).push(function(url) {
+            window.location = url;
+        });
+    }
     gk.declareAcquiredMethod("jio_post", "jio_post").declareAcquiredMethod("jio_putAttachment", "jio_putAttachment").declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").declareAcquiredMethod("displayThisPage", "displayThisPage").declareAcquiredMethod("displayThisTitle", "displayThisTitle").declareAcquiredMethod("plEnablePage", "plEnablePage").declareAcquiredMethod("plDisablePage", "plDisablePage").declareMethod("render", function() {
         return this.displayThisTitle("upload");
     }).declareMethod("startService", function() {
@@ -30,7 +41,7 @@
                 uploaded += 1;
                 info_context.innerHTML += "<li>" + input_context.files[uploaded - 1].name + "  " + uploaded + "/" + length + "</li>";
                 if (uploaded === length) {
-                    return g.plEnablePage();
+                    return exit(g);
                 }
                 queue.push(post);
             }).fail(function(error) {
