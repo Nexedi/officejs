@@ -46,7 +46,7 @@
                 rows: tmp
             });
             $(list).listview("refresh");
-            return gadget.displayThisTitle("offline playlist: " + tmp.length + " music");
+            return gadget.displayThisTitle("offline playlist: " + tmp.length + " media");
         }).fail(function(error) {
             if (!(error instanceof RSVP.CancellationError)) {
                 console.log("error");

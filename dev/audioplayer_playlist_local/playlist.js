@@ -38,7 +38,7 @@
                 rows: tmp
             });
             $(list).listview("refresh");
-            return gadget.displayThisTitle("localhost playlist: " + tmp.length + " music");
+            return gadget.displayThisTitle("localhost playlist: " + tmp.length + " media");
         }).fail(function(error) {
             if (!(error instanceof RSVP.CancellationError)) {
                 gadget.__element.getElementsByClassName("info")[0].innerHTML = "please enable local server";

@@ -115,14 +115,14 @@
                     rows: tmp
                 });
                 $(list).listview("refresh");
-                return gadget.displayThisTitle("online playlist: " + tmp.length + " music");
+                return gadget.displayThisTitle("online playlist: " + tmp.length + " media");
             }
             return check.call(gadget, ip_context.value);
         }).fail(function(error) {
             if (ipValue) {
                 gadget.__element.getElementsByClassName("info")[0].innerHTML = "network error";
             }
-            return gadget.displayThisTitle("online playlist: " + "0 music");
+            return gadget.displayThisTitle("online playlist: " + "0 media");
         });
     }).declareMethod("startService", function() {
         var g = this, research = g.__element.getElementsByClassName("research")[0], ip = g.__element.getElementsByClassName("inputIp")[0];

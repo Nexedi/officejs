@@ -155,7 +155,7 @@
             });
             $(list).listview("refresh");
             return gadget.displayThisTitle("online playlist: " +
-                                           tmp.length + " music");
+                                           tmp.length + " media");
           }
           return check.call(gadget, ip_context.value);
         })
@@ -165,7 +165,7 @@
               "network error";
           }
           return gadget.displayThisTitle("online playlist: " +
-                                         "0 music");
+                                         "0 media");
         });
     })
     .declareMethod('startService', function () {

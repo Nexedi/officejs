@@ -56,7 +56,7 @@
           });
           $(list).listview("refresh");
           return gadget.displayThisTitle("localhost playlist: " +
-                                         tmp.length + " music");
+                                         tmp.length + " media");
         })
         .fail(function (error) {
           if (!(error instanceof RSVP.CancellationError)) {
