@@ -1,6 +1,6 @@
 /*global window, rJS, RSVP, console, URL, Math, parseInt, document, jIO,
   Uint8Array, Audio, loopEventListener, jQuery, promiseEventListener*/
-/*jslint nomen: true*/
+/*jslint nomen: true, maxlen:180 */
 
 (function (window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
   "use strict";
@@ -334,10 +334,16 @@
               command_context.innerHTML = "stop";
             }),
             loopEventListener(video, "dblclick", false, function (event) {
-              if (document.webkitIsFullScreen) {
-                document.webkitCancelFullScreen();
+              var isFullScreen = document.mozFullScreen ||
+                document.webkitIsFullScreen,
+                cancelFullScreen = document.webkitCancelFullScreen.bind(document) ||
+                document.mozCancelFullScreen.bind(document),
+                requestFullScreen = video.webkitRequestFullScreen.bind(video) ||
+                video.mozRequestFullScreen.bind(video);
+              if (isFullScreen) {
+                cancelFullScreen();
               } else {
-                video.webkitRequestFullScreen();
+                requestFullScreen();
               }
             }),
 
