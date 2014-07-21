@@ -188,7 +188,7 @@
             });
         }
     }).declareMethod("startService", function() {
-        var g = this, command_context = g.__element.getElementsByClassName("command")[0], mute_context = g.__element.getElementsByClassName("mute")[0], bar_context = g.__element.getElementsByClassName("bar")[0], box_context = g.__element.getElementsByClassName("box")[0], filter_context = g.__element.getElementsByClassName("filter")[0], filter_type = $("select"), loop_context = g.__element.getElementsByClassName("loop")[0], loop = false, time_context = g.__element.getElementsByClassName("time")[0];
+        var g = this, command_context = g.__element.getElementsByClassName("command")[0], mute_context = g.__element.getElementsByClassName("mute")[0], bar_context = g.__element.getElementsByClassName("bar")[0], box_context = g.__element.getElementsByClassName("box")[0], filter_context = g.__element.getElementsByClassName("filter")[0], filter_type = $("select"), loop_context = g.__element.getElementsByClassName("loop")[0], loop = false, video = g.__element.getElementsByClassName("videoMP4")[0], time_context = g.__element.getElementsByClassName("time")[0];
         bar_context.value = 0;
         return new RSVP.Queue().push(function() {
             set.call(g, g.url);
@@ -246,6 +246,12 @@
                     g.video.play();
                 }
                 command_context.innerHTML = "stop";
+            }), loopEventListener(video, "dblclick", false, function(event) {
+                if (document.webkitIsFullScreen) {
+                    document.webkitCancelFullScreen();
+                } else {
+                    video.webkitRequestFullScreen();
+                }
             }), loopEventListener(bar_context, "mousemove", false, function(event) {
                 var time = getTime(bar_context, event.clientX);
                 box_context.style.left = (event.clientX - 20) / 16 + "em";

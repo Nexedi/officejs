@@ -258,6 +258,7 @@
         filter_type = $('select'),
         loop_context = g.__element.getElementsByClassName("loop")[0],
         loop = false,
+        video = g.__element.getElementsByClassName("videoMP4")[0],
         time_context = g.__element.getElementsByClassName("time")[0];
       bar_context.value = 0;
       return new RSVP.Queue()
@@ -332,6 +333,14 @@
               }
               command_context.innerHTML = "stop";
             }),
+            loopEventListener(video, "dblclick", false, function (event) {
+              if (document.webkitIsFullScreen) {
+                document.webkitCancelFullScreen();
+              } else {
+                video.webkitRequestFullScreen();
+              }
+            }),
+
 
             loopEventListener(bar_context, "mousemove",
                               false, function (event) {
