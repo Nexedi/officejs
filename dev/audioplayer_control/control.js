@@ -228,10 +228,22 @@
                 } else {
                     window.location = g.__element.getElementsByClassName("next")[0].href;
                 }
+            }), loopEventListener(g.video, "ended", false, function() {
+                if (loop) {
+                    g.audio.load();
+                    g.video.load();
+                    g.audio.play();
+                    g.video.play();
+                } else {
+                    window.location = g.__element.getElementsByClassName("next")[0].href;
+                }
             }), loopEventListener(command_context, "click", false, function() {
                 if (g.audio.paused) {
                     g.audio.play();
-                    g.video.play();
+                    if (g.type === "video/mp4") {
+                        g.video.currentTime = g.audio.currentTime;
+                        g.video.play();
+                    }
                     command_context.innerHTML = "stop";
                 } else {
                     g.audio.pause();
@@ -258,6 +270,13 @@
                 if (g.video.currentTime) {
                     g.audio.currentTime = g.video.currentTime;
                 }
+                g.audio.play();
+                g.video.currentTime = g.audio.currentTime;
+                //consistency
+                command_context.innerHTML = "stop";
+            }), loopEventListener(video, "pause", false, function(event) {
+                g.audio.pause();
+                command_context.innerHTML = "play";
             }), loopEventListener(bar_context, "mousemove", false, function(event) {
                 var time = getTime(bar_context, event.clientX);
                 box_context.style.left = (event.clientX - 20) / 16 + "em";
