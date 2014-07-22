@@ -159,9 +159,9 @@
       }
     };
     showTime = function () {
-      bar_context.value = that.video.currentTime;
-      time_context.innerHTML = timeFormat(that.video.duration -
-                                          that.video.currentTime);
+      bar_context.value = that.audio.currentTime;
+      time_context.innerHTML = timeFormat(that.audio.duration -
+                                          that.audio.currentTime);
       that.video.volume = 0;
     };
     if (that.type !== "video/mp4") {
@@ -349,7 +349,9 @@
             }),
 
             loopEventListener(video, "play", false, function (event) {
-              g.audio.currentTime = g.video.currentTime;
+              if (g.video.currentTime) {
+                g.audio.currentTime = g.video.currentTime;
+              }
             }),
 
             loopEventListener(bar_context, "mousemove",
