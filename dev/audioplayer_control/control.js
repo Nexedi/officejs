@@ -264,13 +264,14 @@
                 if (isFullScreen) {
                     cancelFullScreen();
                     g.audio.currentTime = g.video.currentTime;
+                    g.video.currentTime = g.audio.currentTime;
                 } else {
                     requestFullScreen();
                 }
             }), loopEventListener(video, "play", false, function(event) {
-                g.audio.play();
                 if (g.video.currentTime) {
                     g.audio.currentTime = g.video.currentTime;
+                    g.audio.play();
                     g.video.currentTime = g.audio.currentTime;
                 }
                 command_context.innerHTML = "stop";
