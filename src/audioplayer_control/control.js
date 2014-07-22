@@ -141,7 +141,6 @@
     gradient.addColorStop(0.5, '#ff0');
     gradient.addColorStop(0, '#f00');
     that.audio.play();
-    that.video.play();
     drawFrame = function () {
       array = getFFTValue(that);
       canvasCtx.clearRect(0, 0, cwidth, cheight);
@@ -169,6 +168,7 @@
       that.video.style.display = "none";
       return promiseRequestAnimation(drawFrame);
     }
+    that.video.play();
     that.video.style.display = "";
     canvas.style.display = "none";
     return promiseRequestAnimation(showTime);

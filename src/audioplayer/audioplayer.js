@@ -159,6 +159,14 @@
             { "type" : "indexeddb",
               "database" : "test"}
           );
+        })
+        .push(function () {
+          var controlPanel = g.__element.getElementsByClassName('page')[0];
+          if (controlPanel) {
+            while (controlPanel.firstChild) {
+              controlPanel.removeChild(controlPanel.firstChild);
+            }
+          }
         });
     })
     .declareMethod("render", function (options) {
