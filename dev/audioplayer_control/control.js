@@ -263,16 +263,16 @@
                 var isFullScreen = document.mozFullScreen || document.webkitIsFullScreen, cancelFullScreen = document.webkitCancelFullScreen.bind(document) || document.mozCancelFullScreen.bind(document), requestFullScreen = video.webkitRequestFullScreen.bind(video) || video.mozRequestFullScreen.bind(video);
                 if (isFullScreen) {
                     cancelFullScreen();
+                    g.audio.currentTime = g.video.currentTime;
                 } else {
                     requestFullScreen();
                 }
             }), loopEventListener(video, "play", false, function(event) {
+                g.audio.play();
                 if (g.video.currentTime) {
                     g.audio.currentTime = g.video.currentTime;
+                    g.video.currentTime = g.audio.currentTime;
                 }
-                g.audio.play();
-                g.video.currentTime = g.audio.currentTime;
-                //consistency
                 command_context.innerHTML = "stop";
             }), loopEventListener(video, "pause", false, function(event) {
                 g.audio.pause();
