@@ -86,7 +86,7 @@
     gadget.gain.connect(audioCtx.destination);
     gadget.audio.src = url;
     gadget.audio.load();
-    if (gadget.type === "video/mp4") {
+    if (gadget.type === "video/webm") {
       gadget.video.src = url;
       gadget.video.load();
     }
@@ -163,7 +163,7 @@
                                           that.audio.currentTime);
       that.video.volume = 0;
     };
-    if (that.type !== "video/mp4") {
+    if (that.type !== "video/webm") {
       canvas.style.display = "";
       that.video.style.display = "none";
       return promiseRequestAnimation(drawFrame);
@@ -302,7 +302,7 @@
               if (loop) {
                 g.audio.load();
                 g.audio.play();
-                if (g.type === "video/mp4") {
+                if (g.type === "video/webm") {
                   g.video.load();
                   g.video.play();
                 }
@@ -326,7 +326,7 @@
             loopEventListener(command_context, "click", false, function () {
               if (g.audio.paused) {
                 g.audio.play();
-                if (g.type === "video/mp4") {
+                if (g.type === "video/webm") {
                   g.video.currentTime = g.audio.currentTime;
                   g.video.play();
                 }
@@ -342,7 +342,7 @@
               g.audio.currentTime = getTime(bar_context, event.clientX);
               bar_context.value = g.audio.currentTime;
               g.audio.play();
-              if (g.type === "video/mp4") {
+              if (g.type === "video/webm") {
                 g.video.currentTime = g.audio.currentTime;
                 g.video.play();
               }

@@ -9979,11 +9979,11 @@ decodeURI, encodeURI*/
               result = result.substring(index + 7);
               index = result.indexOf("\">");
               url = result.substring(0, index);
-              if (url.indexOf(".mp3") === -1 && url.indexOf(".mp4") === -1) {
+              if (url.indexOf(".mp3") === -1 && url.indexOf(".webm") === -1) {
                 result = result.substring(index + 2);
               } else {
-                if (url.indexOf(".mp4") !== -1) {
-                  type = "video/mp4";
+                if (url.indexOf(".webm") !== -1) {
+                  type = "video/webm";
                 } else {
                   type = "audio/mp3"
                 }
