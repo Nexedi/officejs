@@ -3,6 +3,15 @@
   Audio, loopEventListener, jQuery, promiseEventListener, Blob*/
 /*jslint nomen: true, maxlen:180 */
 
+
+/* The MediaSource API only supports MPEG-DASH and 
+ * VP8 with keyframed segments currently (on Chrome 35).
+ * more info:
+ *https://dvcs.w3.org/hg/html-media/raw-file/tip/media-source/media-source.html
+ */
+
+
+
 (function (window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
   "use strict";
   var gk = rJS(window),
@@ -22,19 +31,54 @@
       if (options.id) {
         return new RSVP.Queue()
           .push(function () {
+            g.currentId = options.id;
+            return g.jio_get({"_id" : options.id});
+          })
+          .push(function (result) {
+            var share_context = g.__element.getElementsByClassName("share")[0];
+            share_context.href =
+              "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text="
+              + encodeURI(result.data.title);
+            g.length = Object.keys(result.data._attachment).length;
+            return g.displayThisTitle(options.action + " : "
+                                      + result.data.title);
+          })
+          .push(function () {
+            return g.allDocs({"include_docs": true});
+          })
+          .push(function (e) {
+            var list =  e.data.rows,
+              id,
+              index,
+              control = "control";
+            if (list.length === 1) {
+              id = g.currentId;
+            } else {
+              do {
+                index = Math.floor(Math.random() * list.length);
+                id = list[index].id;
+              } while (g.currentId === id);
+            }
+            if (list[index].doc.format === "video/webm") {
+              control = "video_control";
+            }
+            return g.displayThisPage({page: control,
+                                      id : id,
+                                      action : options.action});
+          })
+          .push(function (url) {
+            g.__element.getElementsByClassName("next")[0].href = url;
+            g.index = 0;
+            g.id = options.id;
             return g.jio_getAttachment({"_id" : options.id,
-                                        "_attachment" : "enclosure" });
+                                        "_attachment" : "enclosure0" });
           })
           .push(function (blob) {
             g.sourceBuffer = g.mediaSource.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
-            g.blob = blob;
-            g.size = 0;
-            g.step =  Math.ceil(blob.size / 16);
-            blob = blob.slice(0, g.step);
-            g.size += g.step;
             return jIO.util.readBlobAsArrayBuffer(blob).then(function (e) {
               g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
               g.video.play();
+              g.fin = true;
             });
           })
           .push(undefined, function (error) {
@@ -50,31 +94,35 @@
       }
     })
     .declareMethod("startService", function () {
-      var g = this,
-        video = g.__element.getElementsByClassName("videoMP4")[0];
-      g.video.play();
+      var g = this;
       return new RSVP.Queue()
         .push(function () {
           return RSVP.any([
-            loopEventListener(video, "progress", false, function () {
-              var blob;
-              if (g.size >= g.blob.size) {
+            loopEventListener(g.sourceBuffer, "updateend", false, function () {
+              if (!g.fin) {
+                return;
+              }
+              g.fin = false;
+              if (g.index >= g.length - 1) {
                 g.mediaSource.endOfStream();
                 return;
               }
-              if (g.size + g.step < g.blob.size) {
-                blob = g.blob.slice(g.size, g.size + g.step);
-              } else {
-                blob = g.blob.slice(g.size);
-              }
-              g.size += g.step;
-              return jIO.util.readBlobAsArrayBuffer(blob).then(
-                function (e) {
+              g.index += 1;
+              return g.jio_getAttachment({"_id" : g.id,
+                                          "_attachment" : "enclosure" + g.index })
+                .then(function (blob) {
+                  console.log(g.index);
+                  return jIO.util.readBlobAsArrayBuffer(blob);
+                })
+                .then(function (e) {
+                  g.fin = true;
                   return g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
-                }
-              );
+                });
             })
           ]);
+        })
+        .push(function (error) {
+          console.log(error);
         });
     });
   gk.ready(function (g) {

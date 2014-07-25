@@ -48,6 +48,12 @@
             i,
             j,
             exp;
+          Handlebars.registerHelper("compare", function (v1, v2, options) {
+            if (v1 === v2) {
+              return options.fn(this);
+            }
+            return options.inverse(this);
+          });
           if (options.id !== undefined && options.id !== "offline") {
             tmp = [];
             for (i = 0, j = 0; i < e.data.rows.length; i += 1) {

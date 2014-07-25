@@ -8,6 +8,7 @@
     AudioContext = window.AudioContext || window.webkitAudioContext
       || window.mozAudiocontext || window.msAudioContext,
     audioCtx = new AudioContext(),
+    MediaSource = window.MediaSource || window.WebKitMediaSource,
     myLoopEventListener = function (target, type, callback,
                                     allowDefault) {
       //////////////////////////
@@ -84,12 +85,6 @@
     gadget.filter.connect(gadget.analyser);
     gadget.analyser.connect(gadget.gain);
     gadget.gain.connect(audioCtx.destination);
-    gadget.audio.src = url;
-    gadget.audio.load();
-    if (gadget.type === "video/webm") {
-      gadget.video.src = url;
-      gadget.video.load();
-    }
   }
 
   function promiseRequestAnimation(callback) {
@@ -130,7 +125,6 @@
       meterNum = 300,
       array,
       drawFrame,
-      showTime,
       step,
       i,
       value,
@@ -157,21 +151,7 @@
                            cheight); //the meter
       }
     };
-    showTime = function () {
-      bar_context.value = that.audio.currentTime;
-      time_context.innerHTML = timeFormat(that.audio.duration -
-                                          that.audio.currentTime);
-      that.video.volume = 0;
-    };
-    if (that.type !== "video/webm") {
-      canvas.style.display = "";
-      that.video.style.display = "none";
-      return promiseRequestAnimation(drawFrame);
-    }
-    that.video.play();
-    that.video.style.display = "";
-    canvas.style.display = "none";
-    return promiseRequestAnimation(showTime);
+    return promiseRequestAnimation(drawFrame);
   }
 
   gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment")
@@ -208,7 +188,7 @@
             share_context.href =
               "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text="
               + encodeURI(result.data.title);
-            g.type = result.data.type;
+            g.length = Object.keys(result.data._attachment).length;
             return g.displayThisTitle(options.action + " : "
                                       + result.data.title);
           })
@@ -217,25 +197,38 @@
           })
           .push(function (e) {
             var list =  e.data.rows,
-              id;
+              id,
+              index,
+              control = "control";
             if (list.length === 1) {
               id = g.currentId;
             } else {
               do {
-                id = list[Math.floor(Math.random() * list.length)].id;
+                index = Math.floor(Math.random() * list.length);
+                id = list[index].id;
               } while (g.currentId === id);
             }
-            return g.displayThisPage({page: "control",
+            if (list[index].doc.format === "video/webm") {
+              control = "video_control";
+            }
+            return g.displayThisPage({page: control,
                                       id : id,
                                       action : options.action});
           })
           .push(function (url) {
             g.__element.getElementsByClassName("next")[0].href = url;
+            g.index = 0;
+            g.id = options.id;
             return g.jio_getAttachment({"_id" : options.id,
-                                        "_attachment" : "enclosure" });
+                                        "_attachment" : "enclosure0" });
           })
           .push(function (blob) {
-            g.url = URL.createObjectURL(blob);
+            g.sourceBuffer = g.mediaSource.addSourceBuffer('audio/mpeg;');
+            return jIO.util.readBlobAsArrayBuffer(blob).then(function (e) {
+              g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
+              g.audio.play();
+              g.fin = true;
+            });
           })
           .push(undefined, function (error) {
             if (!(error instanceof RSVP.CancellationError)) {
@@ -259,16 +252,11 @@
         filter_type = $('select'),
         loop_context = g.__element.getElementsByClassName("loop")[0],
         loop = false,
-        video = g.__element.getElementsByClassName("videoMP4")[0],
         time_context = g.__element.getElementsByClassName("time")[0];
       bar_context.value = 0;
       return new RSVP.Queue()
         .push(function () {
           set.call(g, g.url);
-          return promiseEventListener(g.audio, "loadedmetadata", false);
-        })
-        .push(function () {
-          bar_context.max = g.audio.duration;
           return RSVP.all([
             g.plEnablePage(),
             g.plGive("loop"),
@@ -291,6 +279,30 @@
           time_context.innerHTML = timeFormat(g.audio.duration);
           return RSVP.any([
             play.call(g),
+            loopEventListener(g.sourceBuffer, "updateend", false, function () {
+              if (!g.fin) {
+                return;
+              }
+              g.fin = false;
+              if (g.index >= g.length - 1) {
+                g.mediaSource.endOfStream();
+                bar_context.max = g.audio.duration;
+                return;
+              }
+              g.index += 1;
+              return g.jio_getAttachment({"_id" : g.id,
+                                          "_attachment" : "enclosure" + g.index })
+                .then(function (blob) {
+                  console.log(g.index);
+                  return jIO.util.readBlobAsArrayBuffer(blob);
+                })
+                .then(function (e) {
+                  g.fin = true;
+                  return g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
+                });
+            }),
+
+
             loopEventListener(mute_context, "click", false, function () {
               mute_context.innerHTML = g.gain.gain.value ?
                   "mute on" : "mute off";
@@ -302,38 +314,17 @@
               if (loop) {
                 g.audio.load();
                 g.audio.play();
-                if (g.type === "video/webm") {
-                  g.video.load();
-                  g.video.play();
-                }
               } else {
                 window.location = g.__element
                   .getElementsByClassName("next")[0].href;
               }
             }),
-            loopEventListener(g.video, "ended", false, function () {
-              if (loop) {
-                g.audio.load();
-                g.video.load();
-                g.audio.play();
-                g.video.play();
-              } else {
-                window.location = g.__element
-                  .getElementsByClassName("next")[0].href;
-              }
-            }),
-
             loopEventListener(command_context, "click", false, function () {
               if (g.audio.paused) {
                 g.audio.play();
-                if (g.type === "video/webm") {
-                  g.video.currentTime = g.audio.currentTime;
-                  g.video.play();
-                }
                 command_context.innerHTML = "stop";
               } else {
                 g.audio.pause();
-                g.video.pause();
                 command_context.innerHTML = "play";
               }
             }),
@@ -342,42 +333,8 @@
               g.audio.currentTime = getTime(bar_context, event.clientX);
               bar_context.value = g.audio.currentTime;
               g.audio.play();
-              if (g.type === "video/webm") {
-                g.video.currentTime = g.audio.currentTime;
-                g.video.play();
-              }
               command_context.innerHTML = "stop";
             }),
-            loopEventListener(video, "dblclick", false, function (event) {
-              var isFullScreen = document.mozFullScreen ||
-                document.webkitIsFullScreen,
-                cancelFullScreen = document.webkitCancelFullScreen.bind(document) ||
-                document.mozCancelFullScreen.bind(document),
-                requestFullScreen = video.webkitRequestFullScreen.bind(video) ||
-                video.mozRequestFullScreen.bind(video);
-              if (isFullScreen) {
-                cancelFullScreen();
-                g.audio.currentTime = g.video.currentTime;
-                g.video.currentTime = g.audio.currentTime;
-              } else {
-                requestFullScreen();
-              }
-            }),
-
-            loopEventListener(video, "play", false, function (event) {
-              if (g.video.currentTime) {
-                g.audio.currentTime = g.video.currentTime;
-                g.audio.play();
-                g.video.currentTime = g.audio.currentTime;//consistency
-              }
-              command_context.innerHTML = "stop";
-            }),
-
-            loopEventListener(video, "pause", false, function (event) {
-              g.audio.pause();
-              command_context.innerHTML = "play";
-            }),
-
             loopEventListener(bar_context, "mousemove",
                               false, function (event) {
                 var time = getTime(bar_context, event.clientX);
@@ -415,7 +372,7 @@
     g.gain = audioCtx.createGain();
     g.filter = audioCtx.createBiquadFilter();
     g.canvas = g.__element.getElementsByTagName('canvas')[0];
-    g.video = g.__element.getElementsByTagName('video')[0];
-    g.video.volume = 0;
+    g.mediaSource = new MediaSource();
+    g.audio.src = URL.createObjectURL(g.mediaSource);
   });
 }(window, rJS, RSVP, loopEventListener, jQuery, promiseEventListener));

@@ -21,6 +21,11 @@
             "0": "../audioplayer_control/index.html",
             "1": "../audioplayer_control/index.html",
             "2": "../audioplayer_control/index.html"
+        },
+        video_control: {
+            "0": "../audioplayer_video_control/index.html",
+            "1": "../audioplayer_video_control/index.html",
+            "2": "../audioplayer_video_control/index.html"
         }
     }, allStorageType = [ "offline", "localhost", "online" ];
     function storageType(type) {
@@ -182,6 +187,8 @@
             if (page_gadget.startService !== undefined) {
                 return page_gadget.startService(options);
             }
+        }).fail(function(e) {
+            console.log(e);
         });
     });
 })(window, rJS, jQuery, RSVP);
