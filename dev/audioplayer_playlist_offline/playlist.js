@@ -4,7 +4,7 @@
 (function(window, rJS, $, Handlebars, loopEventListener) {
     "use strict";
     var gk = rJS(window), rows_template_source = gk.__template_element.getElementById("rows-template").innerHTML, rows_template = Handlebars.compile(rows_template_source);
-    gk.declareAcquiredMethod("allDocs", "allDocs").declareAcquiredMethod("jio_remove", "jio_remove").declareAcquiredMethod("displayThisPage", "displayThisPage").declareAcquiredMethod("displayThisTitle", "displayThisTitle").declareAcquiredMethod("plEnablePage", "plEnablePage").declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").declareMethod("render", function(options) {
+    gk.declareAcquiredMethod("allDocs", "allDocs").declareAcquiredMethod("jio_remove", "jio_remove").declareAcquiredMethod("jio_removeAttachment", "jio_removeAttachment").declareAcquiredMethod("displayThisPage", "displayThisPage").declareAcquiredMethod("displayThisTitle", "displayThisTitle").declareAcquiredMethod("plEnablePage", "plEnablePage").declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").declareMethod("render", function(options) {
         var gadget = this, list = gadget.__element.getElementsByTagName("ul")[0];
         return new RSVP.Queue().push(function() {
             return RSVP.all([ gadget.displayThisPage({

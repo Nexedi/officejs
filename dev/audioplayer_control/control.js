@@ -122,22 +122,13 @@
             }).push(function(value) {
                 value = value || 5e3;
                 g.filter.frequency.value = value;
-            }).push(function() {
                 g.currentId = options.id;
-                return g.jio_get({
-                    _id: options.id
-                });
-            }).push(function(result) {
-                var share_context = g.__element.getElementsByClassName("share")[0];
-                share_context.href = "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text=" + encodeURI(result.data.title);
-                g.length = Object.keys(result.data._attachment).length;
-                return g.displayThisTitle(options.action + " : " + result.data.title);
             }).push(function() {
                 return g.allDocs({
                     include_docs: true
                 });
             }).push(function(e) {
-                var list = e.data.rows, id, index, control = "control";
+                var list = e.data.rows, id, index = 0, control = "control";
                 if (list.length === 1) {
                     id = g.currentId;
                 } else {
@@ -158,6 +149,15 @@
                 g.__element.getElementsByClassName("next")[0].href = url;
                 g.index = 0;
                 g.id = options.id;
+                return g.jio_get({
+                    _id: options.id
+                });
+            }).push(function(result) {
+                var share_context = g.__element.getElementsByClassName("share")[0];
+                share_context.href = "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text=" + encodeURI(result.data.title);
+                g.length = Object.keys(result.data._attachment).length;
+                return g.displayThisTitle(options.action + " : " + result.data.title);
+            }).push(function() {
                 return g.jio_getAttachment({
                     _id: options.id,
                     _attachment: "enclosure0"
@@ -172,11 +172,9 @@
             }).push(undefined, function(error) {
                 if (!(error instanceof RSVP.CancellationError)) {
                     window.location = g.__element.getElementsByClassName("next")[0].href;
-                    if (error.status === 404 && error.method === "getAttachment") {
-                        return g.jio_remove({
-                            _id: error.id
-                        });
-                    }
+                    return g.jio_remove({
+                        _id: error.id
+                    });
                 }
             });
         }
@@ -215,7 +213,6 @@
                     _id: g.id,
                     _attachment: "enclosure" + g.index
                 }).then(function(blob) {
-                    console.log(g.index);
                     return jIO.util.readBlobAsArrayBuffer(blob);
                 }).then(function(e) {
                     g.fin = true;
@@ -229,7 +226,7 @@
                 });
             }), loopEventListener(g.audio, "ended", false, function() {
                 if (loop) {
-                    g.audio.load();
+                    g.audio.currentTime = 0;
                     g.audio.play();
                 } else {
                     window.location = g.__element.getElementsByClassName("next")[0].href;

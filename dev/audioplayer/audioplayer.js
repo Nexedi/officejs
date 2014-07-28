@@ -120,6 +120,12 @@
                 return jio_gadget.remove.apply(jio_gadget, param_list);
             });
         }
+    }).allowPublicAcquisition("jio_removeAttachment", function(param_list) {
+        if (this.storageType === 0) {
+            return this.getDeclaredGadget(storageType(this.storageType)).push(function(jio_gadget) {
+                return jio_gadget.removeAttachment.apply(jio_gadget, param_list);
+            });
+        }
     }).allowPublicAcquisition("displayThisTitle", function(param_list) {
         var header = this.__element.getElementsByTagName("h1")[0];
         header.innerHTML = param_list[0];

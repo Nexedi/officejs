@@ -9283,9 +9283,16 @@ function sequence(thens) {
     }
   }
 
-
-
-
+  function transactionEnd(transaction) {
+    var resolver;
+    resolver = function (resolve, reject) {
+      transaction.onabort = reject;
+      transaction.oncomplete = function () {
+        resolve("end");
+      };
+    };
+    return new RSVP.Promise(resolver);
+  }
   /**
    * get a data from a store object
    * @param {ObjectStore} store The objectstore
@@ -9313,8 +9320,12 @@ function sequence(thens) {
   function removeIndexedDB(store, id) {
     function resolver(resolve, reject) {
       var request = store["delete"](id);
-      request.onerror = reject;
-      request.onsuccess = resolve;
+      request.onerror = function (e) {
+        reject("remove error");
+      };
+      request.onsuccess = function (e){
+        resolve(request.result);
+      };
     }
     return new RSVP.Promise(resolver);
   }
@@ -9382,18 +9393,19 @@ function sequence(thens) {
           //create an id in attachment si necessary
           if (researchResult.result === undefined) {
             return putIndexedDB(researchResult.store, {"_id": metadata._id});
-          } else {
-            return end(result);
           }
+        })
+        .push(function () {
+          return transactionEnd(transaction);
         })
         .push(function () {
           return end(result);
         })
         .push(undefined, function (error) {
           // Check if transaction is ongoing, if so, abort it
-          if (transaction !== undefined) {
-            transaction.abort();
-          }
+//          if (transaction !== undefined) {
+  //          transaction.abort();
+   //       }
           if (global_db !== undefined) {
             global_db.close();
           }
@@ -9441,13 +9453,16 @@ function sequence(thens) {
         if (result._attachment) {
           meta._attachment = result._attachment;
         }
+        return transactionEnd(transaction);
+      })
+      .push(function () {
         return ({"data": meta});
       })
       .push(undefined, function (error) {
         // Check if transaction is ongoing, if so, abort it
-        if (transaction !== undefined) {
-          transaction.abort();
-        }
+ //       if (transaction !== undefined) {
+   //       transaction.abort();
+   //     }
         if (global_db !== undefined) {
           global_db.close();
         }
@@ -9468,6 +9483,14 @@ function sequence(thens) {
       transaction,
       global_db,
       queue = new RSVP.Queue();
+    function tmp(index, array, store) {
+      return removeIndexedDB(store, [param._id, array[index]])
+        .then(function (e) {
+          if (index < array.length -1) {
+            return tmp(index + 1, array, store);
+          }
+        });
+    };
     return queue.push(function () {
       return openIndexedDB(jio_storage._database_name);
     })
@@ -9489,32 +9512,30 @@ function sequence(thens) {
         var store = transaction.objectStore("attachment");
         return getIndexedDB(store, param._id);
       })
-       .push(function (result) {
+        .push(function (result) {
         if (result._attachment) {
-          var i, l, key, array, func, store;
+          var array, store;
           array = Object.keys(result._attachment);
           store = transaction.objectStore("blob");
-          for (i = 0, l = array.length; i < l; i += 1) {
-            key = array[i];
-            //delete blob
-            func = removeIndexedDB(store, [param._id, key]);
-            queue.push(func);
-          }
+          return tmp(0, array, store);
         }
-      })
-        .push(function () {
+       })
+      .push(function () {
         var store = transaction.objectStore("attachment");
         //delete attachment
         return removeIndexedDB(store, param._id);
       })
-        .push(function () {
+      .push(function () {
+        return transactionEnd(transaction);
+      })
+      .push(function () {
         return ({"status": 204});
       })
         .push(undefined, function (error) {
         // Check if transaction is ongoing, if so, abort it
-        if (transaction !== undefined) {
-          transaction.abort();
-        }
+     //   if (transaction !== undefined) {
+      //    transaction.abort();
+     //   }
         if (global_db !== undefined) {
           global_db.close();
         }
@@ -9762,14 +9783,18 @@ function sequence(thens) {
             return putIndexedDB(store, {"_id": metadata._id,
               "_attachment" : metadata._attachment,
               "blob": metadata._blob}, readResult);
-          }).push(function () {
+          })
+          .push(function () {
+            return transactionEnd(transaction);
+          })
+          .push(function () {
             return {"status": 204};
           })
           .push(undefined, function (error) {
         // Check if transaction is ongoing, if so, abort it
-            if (transaction !== undefined) {
-              transaction.abort();
-            }
+       //     if (transaction !== undefined) {
+         //     transaction.abort();
+         //   }
             if (global_db !== undefined) {
               global_db.close();
             }
@@ -9873,14 +9898,17 @@ function sequence(thens) {
         var store = transaction.objectStore("attachment");
         return putIndexedDB(store, result);
       })
+      .push(function () {
+        return transactionEnd(transaction);
+      })
        .push(function () {
         return ({ "status": 204 });
       })
        .push(undefined, function (error) {
         // Check if transaction is ongoing, if so, abort it
-        if (transaction !== undefined) {
-          transaction.abort();
-        }
+      //  if (transaction !== undefined) {
+      //    transaction.abort();
+     //   }
         if (global_db !== undefined) {
           global_db.close();
         }
@@ -9979,13 +10007,16 @@ decodeURI, encodeURI*/
               result = result.substring(index + 7);
               index = result.indexOf("\">");
               url = result.substring(0, index);
-              if (url.indexOf(".mp3") === -1 && url.indexOf(".webm") === -1) {
+              if (url.indexOf(".mp3") === -1 && url.indexOf(".mp4") === -1
+                  && url.indexOf(".webm") === -1) {
                 result = result.substring(index + 2);
               } else {
-                if (url.indexOf(".webm") !== -1) {
-                  type = "video/webm";
+                if (url.indexOf(".mp4") !== -1) {
+                  type = "video/mp4";
+                } else if (url.indexOf(".webm") !== -1 ) {
+                  type = "audio/webm"
                 } else {
-                  type = "audio/mp3"
+                  type = "audio/mp3";
                 }
                 name = decodeURI(url);
                 rows.push({

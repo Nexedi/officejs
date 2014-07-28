@@ -21,7 +21,7 @@
         var g = this, input_context = g.__element.getElementsByTagName("input")[0], info_context = g.__element.getElementsByClassName("info")[0], queue, uploaded = 0, post, length;
         info_context.innerHTML = "<ul>";
         function putAll(id, index, file) {
-            var blobLength = 2e6, size = blobLength * (index + 1), blob;
+            var blobLength = 4e6, size = blobLength * (index + 1), blob;
             if (size > file.size) {
                 blob = file.slice(blobLength * index, file.size);
             } else {
@@ -67,7 +67,7 @@
                 return putAll(id, 0, input_context.files[uploaded]);
             }).fail(function(error) {
                 if (!(error instanceof RSVP.CancellationError)) {
-                    info_context.innerHTML += input_context.files[uploaded].name + " failed : storage maybe insufficient";
+                    info_context.innerHTML += input_context.files[uploaded].name + " " + error.target.error.name;
                     //xxx
                     g.plEnablePage();
                     return g.jio_remove({

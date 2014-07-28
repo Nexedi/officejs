@@ -40,7 +40,7 @@
         length;
       info_context.innerHTML = "<ul>";
       function putAll(id, index, file) {
-        var blobLength = 2000000,
+        var blobLength = 4000000,
           size = blobLength * (index + 1),
           blob;
         if (size > file.size) {
@@ -96,8 +96,8 @@
           .fail(function (error) {
             if (!(error instanceof RSVP.CancellationError)) {
               info_context.innerHTML +=
-                input_context.files[uploaded].name +
-                  " failed : storage maybe insufficient";
+                input_context.files[uploaded].name + " " +
+                error.target.error.name;
               //xxx
               g.plEnablePage();
               return g.jio_remove({"_id" : id});

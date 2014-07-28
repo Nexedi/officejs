@@ -49,7 +49,7 @@
           .push(function (e) {
             var list =  e.data.rows,
               id,
-              index,
+              index = 0,
               control = "control";
             if (list.length === 1) {
               id = g.currentId;
@@ -97,6 +97,9 @@
       var g = this;
       return new RSVP.Queue()
         .push(function () {
+          return g.plEnablePage();
+        })
+        .push(function () {
           return RSVP.any([
             loopEventListener(g.sourceBuffer, "updateend", false, function () {
               if (!g.fin) {
@@ -111,7 +114,6 @@
               return g.jio_getAttachment({"_id" : g.id,
                                           "_attachment" : "enclosure" + g.index })
                 .then(function (blob) {
-                  console.log(g.index);
                   return jIO.util.readBlobAsArrayBuffer(blob);
                 })
                 .then(function (e) {

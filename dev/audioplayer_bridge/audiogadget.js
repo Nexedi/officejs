@@ -50,6 +50,9 @@
     }).declareMethod("remove", function() {
         var storage = this.state_parameter_dict.jio_storage;
         return storage.remove.apply(storage, arguments);
+    }).declareMethod("removeAttachment", function() {
+        var storage = this.state_parameter_dict.jio_storage;
+        return storage.removeAttachment.apply(storage, arguments);
     }).declareMethod("put", function() {
         var storage = this.state_parameter_dict.jio_storage;
         return storage.put.apply(storage, arguments);

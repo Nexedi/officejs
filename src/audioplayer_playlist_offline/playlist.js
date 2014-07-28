@@ -11,6 +11,7 @@
     rows_template = Handlebars.compile(rows_template_source);
   gk.declareAcquiredMethod("allDocs", "allDocs")
     .declareAcquiredMethod("jio_remove", "jio_remove")
+    .declareAcquiredMethod("jio_removeAttachment", "jio_removeAttachment")
     .declareAcquiredMethod("displayThisPage", "displayThisPage")
     .declareAcquiredMethod("displayThisTitle", "displayThisTitle")
     .declareAcquiredMethod("plEnablePage", "plEnablePage")
