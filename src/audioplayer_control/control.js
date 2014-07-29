@@ -1,5 +1,5 @@
 /*global window, rJS, RSVP, console, URL, Math, parseInt, document, jIO,
-  Uint8Array, Audio, loopEventListener, jQuery, promiseEventListener*/
+  Uint8Array, Audio, loopEventListener, jQuery, promiseEventListener, Blob*/
 /*jslint nomen: true, maxlen:180 */
 
 (function (window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
@@ -54,7 +54,41 @@
     };
 
 
+  function set() {  //configure a song
+    var gadget = this;
+    gadget.source.connect(gadget.filter);
+    gadget.filter.connect(gadget.analyser);
+    gadget.analyser.connect(gadget.gain);
+    gadget.gain.connect(audioCtx.destination);
+  }
 
+
+  function loopEvent(g) {
+    return new RSVP.Queue()
+      .push(function () {
+        if (g.rebuild) {
+          return g.jio_getAttachment({"_id" : g.id,
+                                      "_attachment" : "enclosure" + g.index });
+        }
+      })
+      .push(function (blob) {
+        if (g.rebuild) {
+          g.index += 1;
+          if (g.blob) {
+            g.blob = new Blob([g.blob, blob], {type: "audio/mpeg"});
+          } else {
+            g.blob = new Blob([blob], {type: "audio/mpeg"});
+          }
+          g.audio.src = URL.createObjectURL(g.blob);
+          if (g.index < g.length) {
+            return loopEvent(g);
+          }
+        }
+      })
+      .push(undefined, function (error) {
+        throw error;
+      });
+  }
   function timeFormat(seconds) {
     var result = '00:' + Math.round(seconds),
       min,
@@ -80,14 +114,6 @@
     gadget.analyser.getByteFrequencyData(array);
     return array;
   }
-  function set(url) {  //configure a song
-    var gadget = this;
-    gadget.source.connect(gadget.filter);
-    gadget.filter.connect(gadget.analyser);
-    gadget.analyser.connect(gadget.gain);
-    gadget.gain.connect(audioCtx.destination);
-  }
-
   function promiseRequestAnimation(callback) {
     var animationId,
       callback_promise;
@@ -141,6 +167,9 @@
       canvasCtx.clearRect(0, 0, cwidth, cheight);
       step = Math.round(array.length / meterNum);
       bar_context.value = that.audio.currentTime;
+      if (that.audio.duration) {
+        bar_context.max = that.audio.duration;
+      }
       time_context.innerHTML = timeFormat(that.audio.duration -
                                           that.audio.currentTime);
       for (i = 0; i < meterNum; i += 1) {
@@ -233,9 +262,13 @@
           })
           .push(undefined, function (error) {
             if (!(error instanceof RSVP.CancellationError)) {
-              window.location = g.__element
+              g.rebuild = true;
+              //xxx
+              g.sourceBuffer = new Audio();
+              return;
+              /*   window.location = g.__element
                 .getElementsByClassName("next")[0].href;
-              return g.jio_remove({"_id" : error.id});
+              return g.jio_remove({"_id" : error.id});*/
             }
           });
       }
@@ -254,7 +287,7 @@
       bar_context.value = 0;
       return new RSVP.Queue()
         .push(function () {
-          set.call(g, g.url);
+          set.call(g);
           return RSVP.all([
             g.plEnablePage(),
             g.plGive("loop"),
@@ -275,6 +308,16 @@
           time_context.style.left = bar_context.style.left;
           $(time_context).offset().top = $(bar_context).offset().top + 3;
           time_context.innerHTML = timeFormat(g.audio.duration);
+          if (g.rebuild) {
+            return loopEvent(g);
+          }
+        })
+        .push(function () {
+          if (g.blob) {
+            g.audio.src = URL.createObjectURL(g.blob);
+            g.audio.load();
+            g.audio.play();
+          }
           return RSVP.any([
             play.call(g),
             loopEventListener(g.sourceBuffer, "updateend", false, function () {

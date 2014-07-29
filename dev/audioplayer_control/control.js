@@ -1,5 +1,5 @@
 /*global window, rJS, RSVP, console, URL, Math, parseInt, document, jIO,
-  Uint8Array, Audio, loopEventListener, jQuery, promiseEventListener*/
+  Uint8Array, Audio, loopEventListener, jQuery, promiseEventListener, Blob*/
 /*jslint nomen: true, maxlen:180 */
 (function(window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
     "use strict";
@@ -40,6 +40,43 @@
         }
         return new RSVP.Promise(itsANonResolvableTrap, canceller);
     };
+    function set() {
+        //configure a song
+        var gadget = this;
+        gadget.source.connect(gadget.filter);
+        gadget.filter.connect(gadget.analyser);
+        gadget.analyser.connect(gadget.gain);
+        gadget.gain.connect(audioCtx.destination);
+    }
+    function loopEvent(g) {
+        return new RSVP.Queue().push(function() {
+            if (g.rebuild) {
+                return g.jio_getAttachment({
+                    _id: g.id,
+                    _attachment: "enclosure" + g.index
+                });
+            }
+        }).push(function(blob) {
+            if (g.rebuild) {
+                g.index += 1;
+                if (g.blob) {
+                    g.blob = new Blob([ g.blob, blob ], {
+                        type: "audio/mpeg"
+                    });
+                } else {
+                    g.blob = new Blob([ blob ], {
+                        type: "audio/mpeg"
+                    });
+                }
+                g.audio.src = URL.createObjectURL(g.blob);
+                if (g.index < g.length) {
+                    return loopEvent(g);
+                }
+            }
+        }).push(undefined, function(error) {
+            throw error;
+        });
+    }
     function timeFormat(seconds) {
         var result = "00:" + Math.round(seconds), min, sec;
         if (seconds > 59) {
@@ -58,14 +95,6 @@
         var array = new Uint8Array(gadget.analyser.frequencyBinCount);
         gadget.analyser.getByteFrequencyData(array);
         return array;
-    }
-    function set(url) {
-        //configure a song
-        var gadget = this;
-        gadget.source.connect(gadget.filter);
-        gadget.filter.connect(gadget.analyser);
-        gadget.analyser.connect(gadget.gain);
-        gadget.gain.connect(audioCtx.destination);
     }
     function promiseRequestAnimation(callback) {
         var animationId, callback_promise;
@@ -102,6 +131,9 @@
             canvasCtx.clearRect(0, 0, cwidth, cheight);
             step = Math.round(array.length / meterNum);
             bar_context.value = that.audio.currentTime;
+            if (that.audio.duration) {
+                bar_context.max = that.audio.duration;
+            }
             time_context.innerHTML = timeFormat(that.audio.duration - that.audio.currentTime);
             for (i = 0; i < meterNum; i += 1) {
                 value = array[i * step];
@@ -171,10 +203,10 @@
                 });
             }).push(undefined, function(error) {
                 if (!(error instanceof RSVP.CancellationError)) {
-                    window.location = g.__element.getElementsByClassName("next")[0].href;
-                    return g.jio_remove({
-                        _id: error.id
-                    });
+                    g.rebuild = true;
+                    //xxx
+                    g.sourceBuffer = new Audio();
+                    return;
                 }
             });
         }
@@ -182,7 +214,7 @@
         var g = this, command_context = g.__element.getElementsByClassName("command")[0], mute_context = g.__element.getElementsByClassName("mute")[0], bar_context = g.__element.getElementsByClassName("bar")[0], box_context = g.__element.getElementsByClassName("box")[0], filter_context = g.__element.getElementsByClassName("filter")[0], filter_type = $("select"), loop_context = g.__element.getElementsByClassName("loop")[0], loop = false, time_context = g.__element.getElementsByClassName("time")[0];
         bar_context.value = 0;
         return new RSVP.Queue().push(function() {
-            set.call(g, g.url);
+            set.call(g);
             return RSVP.all([ g.plEnablePage(), g.plGive("loop"), g.plGive("mute") ]);
         }).push(function(list) {
             if (list[1]) {
@@ -198,6 +230,15 @@
             time_context.style.left = bar_context.style.left;
             $(time_context).offset().top = $(bar_context).offset().top + 3;
             time_context.innerHTML = timeFormat(g.audio.duration);
+            if (g.rebuild) {
+                return loopEvent(g);
+            }
+        }).push(function() {
+            if (g.blob) {
+                g.audio.src = URL.createObjectURL(g.blob);
+                g.audio.load();
+                g.audio.play();
+            }
             return RSVP.any([ play.call(g), loopEventListener(g.sourceBuffer, "updateend", false, function() {
                 if (!g.fin) {
                     return;
