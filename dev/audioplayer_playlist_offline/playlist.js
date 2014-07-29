@@ -31,8 +31,8 @@
             });
         }).push(function(e) {
             var tmp = e.data.rows, i, j, exp;
-            Handlebars.registerHelper("compare", function(v1, v2, options) {
-                if (v1 === v2) {
+            Handlebars.registerHelper("compare", function(v1, options) {
+                if (v1 === "audio/mp3" || v1 === "audio/mpeg") {
                     return options.fn(this);
                 }
                 return options.inverse(this);

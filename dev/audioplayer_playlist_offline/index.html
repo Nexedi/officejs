@@ -13,7 +13,7 @@
     <script id="rows-template" type="text/x-handlebars-template">
       {{#each rows}}
       <li>
-        {{#compare this.doc.type  "audio/mp3"}}
+        {{#compare this.doc.type}}
         <a href=#page=control&id={{this.id}}&action=offline>
           {{this.doc.title}}
         </a>

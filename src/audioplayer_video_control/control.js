@@ -15,7 +15,8 @@
 (function (window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
   "use strict";
   var gk = rJS(window),
-    MediaSource = window.MediaSource || window.WebKitMediaSource;
+    MediaSource = window.MediaSource || window.WebKitMediaSource
+      || window.mozMediaSource;
   gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment")
     .declareAcquiredMethod("jio_get", "jio_get")
     .declareAcquiredMethod("jio_remove", "jio_remove")

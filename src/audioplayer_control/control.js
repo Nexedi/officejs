@@ -8,7 +8,8 @@
     AudioContext = window.AudioContext || window.webkitAudioContext
       || window.mozAudiocontext || window.msAudioContext,
     audioCtx = new AudioContext(),
-    MediaSource = window.MediaSource || window.WebKitMediaSource,
+    MediaSource = window.MediaSource || window.WebKitMediaSource
+      || window.mozMediaSource,
     myLoopEventListener = function (target, type, callback,
                                     allowDefault) {
       //////////////////////////

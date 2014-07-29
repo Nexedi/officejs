@@ -9,7 +9,7 @@
  */
 (function(window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
     "use strict";
-    var gk = rJS(window), MediaSource = window.MediaSource || window.WebKitMediaSource;
+    var gk = rJS(window), MediaSource = window.MediaSource || window.WebKitMediaSource || window.mozMediaSource;
     gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment").declareAcquiredMethod("jio_get", "jio_get").declareAcquiredMethod("jio_remove", "jio_remove").declareAcquiredMethod("plSave", "plSave").declareAcquiredMethod("plGive", "plGive").declareAcquiredMethod("displayThisPage", "displayThisPage").declareAcquiredMethod("displayThisTitle", "displayThisTitle").declareAcquiredMethod("allDocs", "allDocs").declareAcquiredMethod("plEnablePage", "plEnablePage").declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").declareMethod("render", function(options) {
         var g = this;
         if (options.id) {

@@ -3,7 +3,7 @@
 /*jslint nomen: true, maxlen:180 */
 (function(window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
     "use strict";
-    var gk = rJS(window), AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudiocontext || window.msAudioContext, audioCtx = new AudioContext(), MediaSource = window.MediaSource || window.WebKitMediaSource, myLoopEventListener = function(target, type, callback, allowDefault) {
+    var gk = rJS(window), AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudiocontext || window.msAudioContext, audioCtx = new AudioContext(), MediaSource = window.MediaSource || window.WebKitMediaSource || window.mozMediaSource, myLoopEventListener = function(target, type, callback, allowDefault) {
         //////////////////////////
         // Infinite event listener (promise is never resolved)
         // eventListener is removed when promise is cancelled/rejected
