@@ -167,7 +167,7 @@
       canvasCtx.clearRect(0, 0, cwidth, cheight);
       step = Math.round(array.length / meterNum);
       bar_context.value = that.audio.currentTime;
-      if (that.audio.duration) {
+      if (that.audio.duration !== Infinity) {
         bar_context.max = that.audio.duration;
       }
       time_context.innerHTML = timeFormat(that.audio.duration -
