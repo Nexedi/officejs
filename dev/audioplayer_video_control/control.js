@@ -10,6 +10,30 @@
 (function(window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
     "use strict";
     var gk = rJS(window), MediaSource = window.MediaSource || window.WebKitMediaSource || window.mozMediaSource;
+    function loopEvent(g) {
+        return new RSVP.Queue().push(function() {
+            if (g.rebuild) {
+                return g.jio_getAttachment({
+                    _id: g.id,
+                    _attachment: "enclosure" + g.index
+                });
+            }
+        }).push(function(blob) {
+            if (g.rebuild) {
+                g.index += 1;
+                if (g.blob) {
+                    g.blob = new Blob([ g.blob, blob ]);
+                } else {
+                    g.blob = new Blob([ blob ]);
+                }
+                if (g.index < g.length) {
+                    return loopEvent(g);
+                }
+            }
+        }).push(undefined, function(error) {
+            throw error;
+        });
+    }
     gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment").declareAcquiredMethod("jio_get", "jio_get").declareAcquiredMethod("jio_remove", "jio_remove").declareAcquiredMethod("plSave", "plSave").declareAcquiredMethod("plGive", "plGive").declareAcquiredMethod("displayThisPage", "displayThisPage").declareAcquiredMethod("displayThisTitle", "displayThisTitle").declareAcquiredMethod("allDocs", "allDocs").declareAcquiredMethod("plEnablePage", "plEnablePage").declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").declareMethod("render", function(options) {
         var g = this;
         if (options.id) {
@@ -62,12 +86,10 @@
                 });
             }).push(undefined, function(error) {
                 if (!(error instanceof RSVP.CancellationError)) {
-                    window.location = g.__element.getElementsByClassName("next")[0].href;
-                    if (error.status === 404 && error.method === "getAttachment") {
-                        return g.jio_remove({
-                            _id: error.id
-                        });
-                    }
+                    g.rebuild = true;
+                    //xxx
+                    g.sourceBuffer = new Audio();
+                    return;
                 }
             });
         }
@@ -76,6 +98,15 @@
         return new RSVP.Queue().push(function() {
             return g.plEnablePage();
         }).push(function() {
+            if (g.rebuild) {
+                return loopEvent(g);
+            }
+        }).push(function() {
+            if (g.blob) {
+                g.video.src = URL.createObjectURL(g.blob);
+                g.video.load();
+                g.video.play();
+            }
             return RSVP.any([ loopEventListener(g.sourceBuffer, "updateend", false, function() {
                 if (!g.fin) {
                     return;
@@ -101,7 +132,13 @@
         });
     });
     gk.ready(function(g) {
+        var info;
         g.video = g.__element.getElementsByTagName("video")[0];
+        if (MediaSource === undefined) {
+            info = g.__element.getElementsByClassName("info")[0];
+            info.innerHTML = "<ul>\n<li>for a better performence, pleasa enable MediaSource</li>\n<li>1.Type about:config into the web browser's address bar and hit enter.\nConfirm that you will be careful if a warning message is displayed.</li>\n<li>2.search for media.mediasource.enabled and double-click the name.</li>\n</ul>";
+            return;
+        }
         g.mediaSource = new MediaSource();
         g.video.src = URL.createObjectURL(g.mediaSource);
     });

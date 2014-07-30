@@ -68,7 +68,6 @@
                         type: "audio/mpeg"
                     });
                 }
-                g.audio.src = URL.createObjectURL(g.blob);
                 if (g.index < g.length) {
                     return loopEvent(g);
                 }
@@ -313,6 +312,7 @@
         });
     });
     gk.ready(function(g) {
+        var info;
         g.audio = g.__element.getElementsByTagName("audio")[0];
         g.audio.style.display = "none";
         g.source = audioCtx.createMediaElementSource(g.audio);
@@ -320,6 +320,11 @@
         g.gain = audioCtx.createGain();
         g.filter = audioCtx.createBiquadFilter();
         g.canvas = g.__element.getElementsByTagName("canvas")[0];
+        if (MediaSource === undefined) {
+            info = g.__element.getElementsByClassName("info")[0];
+            info.innerHTML = "<ul>\n<li>for a better performence, pleasa enable MediaSource</li>\n<li>1.Type about:config into the web browser's address bar and hit enter.\nConfirm that you will be careful if a warning message is displayed.</li>\n<li>2.search for media.mediasource.enabled and double-click the name.</li>\n</ul>";
+            return;
+        }
         g.mediaSource = new MediaSource();
         g.audio.src = URL.createObjectURL(g.mediaSource);
     });
