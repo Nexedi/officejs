@@ -17,31 +17,6 @@
   var gk = rJS(window),
     MediaSource = window.MediaSource || window.WebKitMediaSource
       || window.mozMediaSource;
-  function loopEvent(g) {
-    return new RSVP.Queue()
-      .push(function () {
-        if (g.rebuild) {
-          return g.jio_getAttachment({"_id" : g.id,
-                                      "_attachment" : "enclosure" + g.index });
-        }
-      })
-      .push(function (blob) {
-        if (g.rebuild) {
-          g.index += 1;
-          if (g.blob) {
-            g.blob = new Blob([g.blob, blob]);
-          } else {
-            g.blob = new Blob([blob]);
-          }
-          if (g.index < g.length) {
-            return loopEvent(g);
-          }
-        }
-      })
-      .push(undefined, function (error) {
-        throw error;
-      });
-  }
   gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment")
     .declareAcquiredMethod("jio_get", "jio_get")
     .declareAcquiredMethod("jio_remove", "jio_remove")
@@ -65,7 +40,7 @@
             share_context.href =
               "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text="
               + encodeURI(result.data.title);
-            g.length = Object.keys(result.data._attachment).length;
+            g.size = result.data.size;
             return g.displayThisTitle(options.action + " : "
                                       + result.data.title);
           })
@@ -95,10 +70,12 @@
           })
           .push(function (url) {
             g.__element.getElementsByClassName("next")[0].href = url;
-            g.index = 0;
             g.id = options.id;
+            g.index = 3500000;
             return g.jio_getAttachment({"_id" : options.id,
-                                        "_attachment" : "enclosure0" });
+                                        "_attachment" : "enclosure",
+                                        "_start": 0,
+                                        "_end": 3500000});
           })
           .push(function (blob) {
             g.sourceBuffer = g.mediaSource.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
@@ -134,11 +111,12 @@
         })
         .push(function () {
           if (g.rebuild) {
-            return loopEvent(g);
+            return g.jio_getAttachment({"_id" : g.id,
+                                        "_attachment" : "enclosure"});
           }
         })
-        .push(function () {
-          if (g.blob) {
+        .push(function (blob) {
+          if (blob) {
             g.video.src = URL.createObjectURL(g.blob);
             g.video.load();
             g.video.play();
@@ -149,14 +127,16 @@
                 return;
               }
               g.fin = false;
-              if (g.index >= g.length - 1) {
+              if (g.index >= g.size) {
                 g.mediaSource.endOfStream();
                 return;
               }
-              g.index += 1;
               return g.jio_getAttachment({"_id" : g.id,
-                                          "_attachment" : "enclosure" + g.index })
+                                          "_attachment" : "enclosure",
+                                          "_start": g.index,
+                                          "_end": g.index + 3500000})
                 .then(function (blob) {
+                  g.index += 3500000;
                   return jIO.util.readBlobAsArrayBuffer(blob);
                 })
                 .then(function (e) {

@@ -39,38 +39,6 @@
         post,
         length;
       info_context.innerHTML = "<ul>";
-      function putAll(id, index, file) {
-        var blobLength = 4000000,
-          size = blobLength * (index + 1),
-          blob;
-        if (size > file.size) {
-          blob = file.slice(blobLength * index, file.size);
-        } else {
-          blob = file.slice(blobLength * index, size);
-        }
-        return g.jio_putAttachment({
-          "_id" : id,
-          "_attachment" : "enclosure" + index,
-          "_blob": blob
-        }, 0)
-          .then(function () {
-            var progress = Math.floor((size / file.size) * 100);
-            if (progress > 100) {
-              progress = 100;
-            }
-            progress += "%";
-            info_context.innerHTML += "<li>" + file.name
-              + "  " + progress + "</li>";
-            if (size < file.size) {
-              return putAll(id, index + 1, file);
-            }
-            uploaded += 1;
-            if (uploaded === length) {
-              return exit(g);
-            }
-            queue.push(post);
-          });
-      }
       post = function () {
         var now = new Date(),
           id;
@@ -86,18 +54,28 @@
                             (now.getMonth() + 1) + "-" + now.getDate()
                           }, 0)
           .then(function (res) {
-            var tmp = uploaded + 1;
             id = res.id;
+            return g.jio_putAttachment({
+              "_id" : res.id,
+              "_attachment" : "enclosure",
+              "_blob": input_context.files[uploaded]
+            }, 0);
+          })
+          .then(function () {
+            uploaded += 1;
             info_context.innerHTML += "<li>" +
-              input_context.files[uploaded].name + " " +
-              tmp + "/" + length;
-            return putAll(id, 0, input_context.files[uploaded]);
+              input_context.files[uploaded - 1].name
+              + "  " + uploaded + "/" + length + "</li>";
+            if (uploaded === length) {
+              return exit(g);
+            }
+            queue.push(post);
           })
           .fail(function (error) {
             if (!(error instanceof RSVP.CancellationError)) {
               info_context.innerHTML +=
                 input_context.files[uploaded].name + " " +
-                error.target.error.name;
+                  error.target.error.name;
               //xxx
               g.plEnablePage();
               return g.jio_remove({"_id" : id});
@@ -106,9 +84,6 @@
               JSON.stringify(error);
           });
       };
-
-
-
 
       queue = new RSVP.Queue();
       queue.push(function () {

@@ -10,30 +10,6 @@
 (function(window, rJS, RSVP, loopEventListener, $, promiseEventListener) {
     "use strict";
     var gk = rJS(window), MediaSource = window.MediaSource || window.WebKitMediaSource || window.mozMediaSource;
-    function loopEvent(g) {
-        return new RSVP.Queue().push(function() {
-            if (g.rebuild) {
-                return g.jio_getAttachment({
-                    _id: g.id,
-                    _attachment: "enclosure" + g.index
-                });
-            }
-        }).push(function(blob) {
-            if (g.rebuild) {
-                g.index += 1;
-                if (g.blob) {
-                    g.blob = new Blob([ g.blob, blob ]);
-                } else {
-                    g.blob = new Blob([ blob ]);
-                }
-                if (g.index < g.length) {
-                    return loopEvent(g);
-                }
-            }
-        }).push(undefined, function(error) {
-            throw error;
-        });
-    }
     gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment").declareAcquiredMethod("jio_get", "jio_get").declareAcquiredMethod("jio_remove", "jio_remove").declareAcquiredMethod("plSave", "plSave").declareAcquiredMethod("plGive", "plGive").declareAcquiredMethod("displayThisPage", "displayThisPage").declareAcquiredMethod("displayThisTitle", "displayThisTitle").declareAcquiredMethod("allDocs", "allDocs").declareAcquiredMethod("plEnablePage", "plEnablePage").declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").declareMethod("render", function(options) {
         var g = this;
         if (options.id) {
@@ -45,7 +21,7 @@
             }).push(function(result) {
                 var share_context = g.__element.getElementsByClassName("share")[0];
                 share_context.href = "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text=" + encodeURI(result.data.title);
-                g.length = Object.keys(result.data._attachment).length;
+                g.size = result.data.size;
                 return g.displayThisTitle(options.action + " : " + result.data.title);
             }).push(function() {
                 return g.allDocs({
@@ -71,11 +47,13 @@
                 });
             }).push(function(url) {
                 g.__element.getElementsByClassName("next")[0].href = url;
-                g.index = 0;
                 g.id = options.id;
+                g.index = 35e5;
                 return g.jio_getAttachment({
                     _id: options.id,
-                    _attachment: "enclosure0"
+                    _attachment: "enclosure",
+                    _start: 0,
+                    _end: 35e5
                 });
             }).push(function(blob) {
                 g.sourceBuffer = g.mediaSource.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
@@ -99,10 +77,13 @@
             return g.plEnablePage();
         }).push(function() {
             if (g.rebuild) {
-                return loopEvent(g);
+                return g.jio_getAttachment({
+                    _id: g.id,
+                    _attachment: "enclosure"
+                });
             }
-        }).push(function() {
-            if (g.blob) {
+        }).push(function(blob) {
+            if (blob) {
                 g.video.src = URL.createObjectURL(g.blob);
                 g.video.load();
                 g.video.play();
@@ -112,15 +93,17 @@
                     return;
                 }
                 g.fin = false;
-                if (g.index >= g.length - 1) {
+                if (g.index >= g.size) {
                     g.mediaSource.endOfStream();
                     return;
                 }
-                g.index += 1;
                 return g.jio_getAttachment({
                     _id: g.id,
-                    _attachment: "enclosure" + g.index
+                    _attachment: "enclosure",
+                    _start: g.index,
+                    _end: g.index + 35e5
                 }).then(function(blob) {
+                    g.index += 35e5;
                     return jIO.util.readBlobAsArrayBuffer(blob);
                 }).then(function(e) {
                     g.fin = true;

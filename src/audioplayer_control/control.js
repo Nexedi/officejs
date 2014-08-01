@@ -63,31 +63,6 @@
   }
 
 
-  function loopEvent(g) {
-    return new RSVP.Queue()
-      .push(function () {
-        if (g.rebuild) {
-          return g.jio_getAttachment({"_id" : g.id,
-                                      "_attachment" : "enclosure" + g.index });
-        }
-      })
-      .push(function (blob) {
-        if (g.rebuild) {
-          g.index += 1;
-          if (g.blob) {
-            g.blob = new Blob([g.blob, blob], {type: "audio/mpeg"});
-          } else {
-            g.blob = new Blob([blob], {type: "audio/mpeg"});
-          }
-          if (g.index < g.length) {
-            return loopEvent(g);
-          }
-        }
-      })
-      .push(undefined, function (error) {
-        throw error;
-      });
-  }
   function timeFormat(seconds) {
     var result = '00:' + Math.round(seconds),
       min,
@@ -235,7 +210,6 @@
           })
           .push(function (url) {
             g.__element.getElementsByClassName("next")[0].href = url;
-            g.index = 0;
             g.id = options.id;
             return g.jio_get({"_id" : options.id});
           })
@@ -244,13 +218,16 @@
             share_context.href =
               "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text="
               + encodeURI(result.data.title);
-            g.length = Object.keys(result.data._attachment).length;
+            g.size = result.data.size;
             return g.displayThisTitle(options.action + " : "
                                       + result.data.title);
           })
           .push(function () {
+            g.index = 1000000;
             return g.jio_getAttachment({"_id" : options.id,
-                                        "_attachment" : "enclosure0" });
+                                        "_attachment" : "enclosure",
+                                        "_start": 0,
+                                        "_end": 1000000});
           })
           .push(function (blob) {
             g.sourceBuffer = g.mediaSource.addSourceBuffer('audio/mpeg;');
@@ -309,11 +286,12 @@
           $(time_context).offset().top = $(bar_context).offset().top + 3;
           time_context.innerHTML = timeFormat(g.audio.duration);
           if (g.rebuild) {
-            return loopEvent(g);
+            return g.jio_getAttachment({"_id" : g.id,
+                                        "_attachment" : "enclosure"});
           }
         })
-        .push(function () {
-          if (g.blob) {
+        .push(function (blob) {
+          if (blob) {
             g.audio.src = URL.createObjectURL(g.blob);
             g.audio.load();
             g.audio.play();
@@ -325,15 +303,17 @@
                 return;
               }
               g.fin = false;
-              if (g.index >= g.length - 1) {
+              if (g.index >= g.size) {
                 g.mediaSource.endOfStream();
                 bar_context.max = g.audio.duration;
                 return;
               }
-              g.index += 1;
               return g.jio_getAttachment({"_id" : g.id,
-                                          "_attachment" : "enclosure" + g.index })
+                                          "_attachment" : "enclosure",
+                                          "_start": g.index,
+                                          "_end": g.index + 1000000})
                 .then(function (blob) {
+                  g.index += 1000000;
                   return jIO.util.readBlobAsArrayBuffer(blob);
                 })
                 .then(function (e) {

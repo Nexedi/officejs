@@ -9157,7 +9157,7 @@ function sequence(thens) {
  */
 
 /*jslint indent: 2, maxlen: 80, nomen: true */
-/*global define, module, require, indexedDB, jIO, RSVP, Blob*/
+/*global define, module, require, indexedDB, jIO, RSVP, Blob, Math*/
 
 (function (dependencies, factory) {
   "use strict";
@@ -9841,7 +9841,7 @@ function sequence(thens) {
       blob,
       totalLength;
     function getDesirePart(store, start, end) {
-      if (start >= end) {
+      if (start > end) {
         return;
       }
       return getIndexedDB(store, [param._id, param._attachment, start])
@@ -9870,27 +9870,37 @@ function sequence(thens) {
                                param._id, "attachment", "_id");
       })
       .push(function (researchResult) {
-        var result = researchResult.result;
+        var result = researchResult.result,
+          start,
+          end;
         if (result === undefined ||
             result._attachment[param._attachment] === undefined) {
           throw ({"status": 404, "reason": "missing attachment",
                   "message": "IndexeddbStorage, unable to get attachment."});
         }
         totalLength = result._attachment[param._attachment].length;
-        param._seek = param._seek === undefined ? 0 : param._seek;
-        param._offset = param._offset === undefined ? totalLength
-          : param._offset;
-        if (param._seek > param._offset) {
+        param._start = param._start === undefined ? 0 : param._start;
+        param._end = param._end === undefined ? totalLength
+          : param._end;
+        if (param._end > totalLength) {
+          param._end = totalLength;
+        }
+        if (param._start > param._end) {
           throw ({"status": 404, "reason": "invalide offset",
-                  "message": "seek is great then offset"});
+                  "message": "start is great then end"});
+        }
+        start = Math.floor(param._start / jio_storage._unite);
+        end =  Math.floor(param._end / jio_storage._unite);
+        if (param._end % jio_storage._unite === 0) {
+          end -= 1;
         }
         return getDesirePart(transaction.objectStore("blob"),
-                            param._seek / jio_storage._unite,
-                            param._offset / jio_storage._unite);
+                             start,
+                             end);
       })
       .push(function () {
-        var start = param._seek % jio_storage._unite,
-          end = start + param._offset - param._seek;
+        var start = param._start % jio_storage._unite,
+          end = start + param._end - param._start;
         blob = blob.slice(start, end);
         return ({ "data": new Blob([blob], {type: "text/plain"})});
       })
