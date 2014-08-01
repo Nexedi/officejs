@@ -168,7 +168,7 @@
                         id = list[index].id;
                     } while (g.currentId === id);
                 }
-                if (list[index].doc.format === "video/webm") {
+                if (list[index].doc.format === "video/webm" || list[index].doc.format === "video/mp4") {
                     control = "video_control";
                 }
                 return g.displayThisPage({

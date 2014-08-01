@@ -3,7 +3,7 @@
   Audio, loopEventListener, jQuery, promiseEventListener, Blob*/
 /*jslint nomen: true, maxlen:180 */
 /* The MediaSource API only supports MPEG-DASH and 
- * VP8 with keyframed segments currently (on Chrome 35).
+ * VP8 with keyframed segments currently.
  * more info:
  *https://dvcs.w3.org/hg/html-media/raw-file/tip/media-source/media-source.html
  */
@@ -61,7 +61,7 @@
                         id = list[index].id;
                     } while (g.currentId === id);
                 }
-                if (list[index].doc.format === "video/webm") {
+                if (list[index].doc.format === "video/webm" || list[index].doc.format === "video/mp4") {
                     control = "video_control";
                 }
                 return g.displayThisPage({
