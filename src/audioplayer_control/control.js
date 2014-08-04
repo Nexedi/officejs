@@ -252,6 +252,7 @@
     })
     .declareMethod("startService", function () {
       var g = this,
+        blob,
         command_context = g.__element.getElementsByClassName("command")[0],
         mute_context = g.__element.getElementsByClassName("mute")[0],
         bar_context = g.__element.getElementsByClassName("bar")[0],
@@ -266,7 +267,6 @@
         .push(function () {
           set.call(g);
           return RSVP.all([
-            g.plEnablePage(),
             g.plGive("loop"),
             g.plGive("mute")
           ]);
@@ -290,9 +290,13 @@
                                         "_attachment" : "enclosure"});
           }
         })
-        .push(function (blob) {
+        .push(function (result) {
+          blob = result;
+          return g.plEnablePage();
+        })
+        .push(function () {
           if (blob) {
-            g.audio.src = URL.createObjectURL(g.blob);
+            g.audio.src = URL.createObjectURL(blob);
             g.audio.load();
             g.audio.play();
           }

@@ -526,15 +526,12 @@ constants.http_status_text = {
   "0": "Unknown",
   "550": "Internal JIO Error",
   "551": "Internal Storage Error",
-  "555": "Cancelled",
   "Unknown": "Unknown",
   "Internal JIO Error": "Internal JIO Error",
   "Internal Storage Error": "Internal Storage Error",
-  "Cancelled": "Cancelled",
   "unknown": "Unknown",
   "internal_jio_error": "Internal JIO Error",
   "internal_storage_error": "Internal Storage Error",
-  "cancelled": "Cancelled",
 
   "200": "Ok",
   "201": "Created",
@@ -641,15 +638,12 @@ constants.http_status = {
   "0": 0,
   "550": 550,
   "551": 551,
-  "555": 555,
   "Unknown": 0,
   "Internal JIO Error": 550,
   "Internal Storage Error": 551,
-  "Cancelled": 555,
   "unknown": 0,
   "internal_jio_error": 550,
   "internal_storage_error": 551,
-  "cancelled": 555,
 
   "200": 200,
   "201": 201,
@@ -756,15 +750,12 @@ constants.http_action = {
   "0": "error",
   "550": "error",
   "551": "error",
-  "555": "error",
   "Unknown": "error",
   "Internal JIO Error": "error",
   "Internal Storage Error": "error",
-  "Cancelled": "error",
   "unknown": "error",
   "internal_jio_error": "error",
   "internal_storage_error": "error",
-  "cancelled": "error",
 
   "200": "success",
   "201": "success",
@@ -1214,22 +1205,8 @@ function generateUuid() {
 exports.util.generateUuid = generateUuid;
 
 /**
- * Concatenate a `string` `n` times.
- *
- * @param  {String} string The string to concat
- * @param  {Number} n The number of time to concat
- * @return {String} The concatenated string
- */
-function concatStringNTimes(string, n) {
-  /*jslint plusplus: true */
-  var res = "";
-  while (--n >= 0) { res += string; }
-  return res;
-}
-
-/**
- * JSON stringify a value. Object keys are sorted in order to make a kind of
- * deepEqual thanks to a simple string comparison.
+ * JSON stringify a value. Dict keys are sorted in order to make a kind of
+ * deepEqual thanks to a simple strict equal string comparison.
  *
  *     JSON.stringify({"a": "b", "c": "d"}) ===
  *       JSON.stringify({"c": "d", "a": "b"})                 // false
@@ -1240,84 +1217,43 @@ function concatStringNTimes(string, n) {
  *       uniqueJSONStringify({"c": "d", "a": "b"})            // true
  *
  * @param  {Any} value The value to stringify
- * @param  {Function,Array} [replacer] A function to replace values during parse
- * @param  {String,Number} [space] Causes the result to be pretty-printed
- * @return {String} The unique JSON stringified value
+ * @param  {Function} [replacer] A function to replace values during parse
  */
-function uniqueJSONStringify(value, replacer, space) {
-  var indent, key_value_space = "";
-  if (typeof space === "string") {
-    if (space !== "") {
-      indent = space;
-      key_value_space = " ";
-    }
-  } else if (typeof space === "number") {
-    if (isFinite(space) && space > 0) {
-      indent = concatStringNTimes(" ", space);
-      key_value_space = " ";
-    }
-  }
-
-  function uniqueJSONStringifyRec(key, value, deep) {
-    var i, l, res, my_space;
-    if (value && typeof value.toJSON === "function") {
-      value = value.toJSON();
-    }
-    if (typeof replacer === "function") {
+function uniqueJSONStringify(value, replacer) {
+  function subStringify(value, key) {
+    var i, res;
+    if (typeof replacer === 'function') {
       value = replacer(key, value);
-    }
-
-    if (indent) {
-      my_space = concatStringNTimes(indent, deep);
     }
     if (Array.isArray(value)) {
       res = [];
       for (i = 0; i < value.length; i += 1) {
-        res[res.length] = uniqueJSONStringifyRec(i, value[i], deep + 1);
+        res[res.length] = subStringify(value[i], i);
         if (res[res.length - 1] === undefined) {
-          res[res.length - 1] = "null";
+          res[res.length - 1] = 'null';
         }
       }
-      if (res.length === 0) { return "[]"; }
-      if (indent) {
-        return "[\n" + my_space + indent +
-          res.join(",\n" + my_space + indent) +
-          "\n" + my_space + "]";
-      }
-      return "[" + res.join(",") + "]";
+      return '[' + res.join(',') + ']';
     }
-    if (typeof value === "object" && value !== null) {
-      if (Array.isArray(replacer)) {
-        res = replacer.reduce(function (p, c) {
-          p.push(c);
-          return p;
-        }, []);
-      } else {
-        res = Object.keys(value);
+    if (typeof value === 'object' && value !== null &&
+        typeof value.toJSON !== 'function') {
+      res = [];
+      for (i in value) {
+        if (value.hasOwnProperty(i)) {
+          res[res.length] = subStringify(value[i], i);
+          if (res[res.length - 1] !== undefined) {
+            res[res.length - 1] = JSON.stringify(i) + ":" + res[res.length - 1];
+          } else {
+            res.length -= 1;
+          }
+        }
       }
       res.sort();
-      for (i = 0, l = res.length; i < l; i += 1) {
-        key = res[i];
-        res[i] = uniqueJSONStringifyRec(key, value[key], deep + 1);
-        if (res[i] !== undefined) {
-          res[i] = JSON.stringify(key) + ":" + key_value_space + res[i];
-        } else {
-          res.splice(i, 1);
-          l -= 1;
-          i -= 1;
-        }
-      }
-      if (res.length === 0) { return "{}"; }
-      if (indent) {
-        return "{\n" + my_space + indent +
-          res.join(",\n" + my_space + indent) +
-          "\n" + my_space + "}";
-      }
-      return "{" + res.join(",") + "}";
+      return '{' + res.join(',') + '}';
     }
     return JSON.stringify(value);
   }
-  return uniqueJSONStringifyRec("", value, 0);
+  return subStringify(value, '');
 }
 exports.util.uniqueJSONStringify = uniqueJSONStringify;
 
@@ -2832,7 +2768,7 @@ function addJobRuleCondition(name, method) {
 exports.addJobRuleCondition = addJobRuleCondition;
 
 /*jslint indent: 2, maxlen: 80, sloppy: true, nomen: true, regexp: true */
-/*global constants, dictUpdate, deepClone, DOMException */
+/*global constants, dictUpdate, deepClone */
 
 function restCommandRejecter(param, args) {
   // reject(status, reason, message, {"custom": "value"});
@@ -2905,22 +2841,8 @@ function restCommandRejecter(param, args) {
     if ((arg.statusText || arg.status >= 0)) {
       current_priority.status = arg.statusText || arg.status;
     }
-    if (arg instanceof Error || arg instanceof DOMException) {
-      if (arg.code !== undefined && arg.code !== null) {
-        current_priority.code = arg.code;
-      }
-      if (arg.lineNumber !== undefined && arg.lineNumber !== null) {
-        current_priority.lineNumber = arg.lineNumber;
-      }
-      if (arg.columnNumber !== undefined && arg.columnNumber !== null) {
-        current_priority.columnNumber = arg.columnNumber;
-      }
-      if (arg.filename !== undefined && arg.filename !== null) {
-        current_priority.filename = arg.filename;
-      }
-      if (arg.message !== undefined && arg.message !== null) {
-        current_priority.reason = arg.message;
-      }
+    if (arg instanceof Error) {
+      current_priority.reason = arg.message || "";
       current_priority.error = arg.name;
     }
   }
@@ -2951,7 +2873,6 @@ function restCommandRejecter(param, args) {
     priority.error = priority.statusText.toLowerCase().replace(/ /g, '_').
       replace(/[^_a-z]/g, '');
   }
-  param.storage_response = priority;
   return param.solver.reject(deepClone(priority));
 }
 
@@ -3079,7 +3000,6 @@ function restCommandResolver(param, args) {
     ]);
   }
 
-  param.storage_response = priority;
   return param.solver.resolve(deepClone(priority));
 }
 
@@ -3126,11 +3046,11 @@ function enableJobChecker(jio, shared, options) {
         if (!original_job.solver) {
           original_job.solver = new_job.solver;
         } else {
-          original_job.promise.then(function () {
-            new_job.command.resolve(deepClone(original_job.storage_response));
-          }, function () {
-            new_job.command.reject(deepClone(original_job.storage_response));
-          }, new_job.command.notify);
+          original_job.promise.then(
+            new_job.command.resolve,
+            new_job.command.reject,
+            new_job.command.notify
+          );
         }
       }
       new_job.state = 'running';
@@ -3499,13 +3419,6 @@ function enableJobMaker(jio, shared, options) {
     job.command.storage = function () {
       return shared.createRestApi.apply(null, arguments);
     };
-    job.command.setCanceller = function (canceller) {
-      job.cancellers["command:canceller"] = canceller;
-    };
-    job.cancellers = job.cancellers || {};
-    job.cancellers["job:canceller"] = function () {
-      shared.emit("job:reject", job, ["cancelled"]);
-    };
   }
 
   function createJobFromRest(param) {
@@ -3686,10 +3599,9 @@ function enableJobRecovery(jio, shared, options) {
 
   var i, job_array, delay, deadline, recovery_delay;
 
-  // 1 m 30 s  ===  default firefox request timeout
-  recovery_delay = numberOrDefault(options.recovery_delay, 90000);
+  recovery_delay = numberOrDefault(options.recovery_delay, 10000);
   if (recovery_delay < 0) {
-    recovery_delay = 90000;
+    recovery_delay = 10000;
   }
 
   if (options.job_management !== false && options.job_recovery !== false) {
@@ -3890,8 +3802,8 @@ function enableJobTimeout(jio, shared, options) {
             number : default_value);
   }
 
-  // Infinity by default
-  var default_timeout = positiveNumberOrDefault(options.default_timeout, 0);
+  // 10 seconds by default
+  var default_timeout = positiveNumberOrDefault(options.default_timeout, 10000);
 
   function timeoutReject(param) {
     return function () {
@@ -3906,8 +3818,7 @@ function enableJobTimeout(jio, shared, options) {
   }
 
   function initJob(job) {
-    if (typeof job.timeout !== 'number' || !isFinite(job.timeout) ||
-        job.timeout < 0) {
+    if (typeof job.timeout !== 'number' || job.timeout < 0) {
       job.timeout = positiveNumberOrDefault(
         job.options.timeout,
         default_timeout
@@ -4006,7 +3917,6 @@ function enableRestAPI(jio, shared) { // (jio, shared, options)
       param.solver.reject = reject;
       param.solver.notify = notify;
     }, function () {
-      if (!param.cancellers) { return; }
       var k;
       for (k in param.cancellers) {
         if (param.cancellers.hasOwnProperty(k)) {
@@ -4147,13 +4057,39 @@ function enableRestParamChecker(jio, shared) {
     }
   });
 
+
+  shared.on('getAttachment', function (param) {
+    if (param.storage_spec.type !== "indexeddb" &&
+        (param.kwargs._start !== undefined ||
+         param.kwargs._end !== undefined)) {
+      restCommandRejecter(param, [
+        'bad_request',
+        'not support',
+        'options _start, _end do not support.'
+      ]);
+      delete param.solver;
+      return false;
+    }
+    if (!checkId(param)) {
+      checkAttachmentId(param);
+    }
+  });
+
+
+  shared.on('removeAttachment', function (param) {
+    if (!checkId(param)) {
+      checkAttachmentId(param);
+    }
+  });
+
+/*
   ["getAttachment", "removeAttachment"].forEach(function (method) {
     shared.on(method, function (param) {
       if (!checkId(param)) {
         checkAttachmentId(param);
       }
     });
-  });
+  });*/
 
   ["check", "repair"].forEach(function (method) {
     shared.on(method, function (param) {

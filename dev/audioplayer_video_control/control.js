@@ -22,6 +22,7 @@
                 var share_context = g.__element.getElementsByClassName("share")[0];
                 share_context.href = "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text=" + encodeURI(result.data.title);
                 g.size = result.data.size;
+                g.format = result.data.format;
                 return g.displayThisTitle(options.action + " : " + result.data.title);
             }).push(function() {
                 return g.allDocs({
@@ -72,23 +73,26 @@
             });
         }
     }).declareMethod("startService", function() {
-        var g = this;
+        var g = this, blob;
         return new RSVP.Queue().push(function() {
-            return g.plEnablePage();
-        }).push(function() {
             if (g.rebuild) {
                 return g.jio_getAttachment({
                     _id: g.id,
                     _attachment: "enclosure"
                 });
             }
-        }).push(function(blob) {
+        }).push(function(result) {
+            blob = result;
+            return g.plEnablePage();
+        }).push(function() {
             if (blob) {
-                g.video.src = URL.createObjectURL(g.blob);
+                g.video.src = URL.createObjectURL(blob);
                 g.video.load();
                 g.video.play();
             }
-            return RSVP.any([ loopEventListener(g.sourceBuffer, "updateend", false, function() {
+            return RSVP.any([ loopEventListener(g.video, "ended", false, function() {
+                window.location = g.__element.getElementsByClassName("next")[0].href;
+            }), loopEventListener(g.sourceBuffer, "updateend", false, function() {
                 if (!g.fin) {
                     return;
                 }

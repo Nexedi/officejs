@@ -184,11 +184,11 @@
             });
         }
     }).declareMethod("startService", function() {
-        var g = this, command_context = g.__element.getElementsByClassName("command")[0], mute_context = g.__element.getElementsByClassName("mute")[0], bar_context = g.__element.getElementsByClassName("bar")[0], box_context = g.__element.getElementsByClassName("box")[0], filter_context = g.__element.getElementsByClassName("filter")[0], filter_type = $("select"), loop_context = g.__element.getElementsByClassName("loop")[0], loop = false, time_context = g.__element.getElementsByClassName("time")[0];
+        var g = this, blob, command_context = g.__element.getElementsByClassName("command")[0], mute_context = g.__element.getElementsByClassName("mute")[0], bar_context = g.__element.getElementsByClassName("bar")[0], box_context = g.__element.getElementsByClassName("box")[0], filter_context = g.__element.getElementsByClassName("filter")[0], filter_type = $("select"), loop_context = g.__element.getElementsByClassName("loop")[0], loop = false, time_context = g.__element.getElementsByClassName("time")[0];
         bar_context.value = 0;
         return new RSVP.Queue().push(function() {
             set.call(g);
-            return RSVP.all([ g.plEnablePage(), g.plGive("loop"), g.plGive("mute") ]);
+            return RSVP.all([ g.plGive("loop"), g.plGive("mute") ]);
         }).push(function(list) {
             if (list[1]) {
                 loop = true;
@@ -209,9 +209,12 @@
                     _attachment: "enclosure"
                 });
             }
-        }).push(function(blob) {
+        }).push(function(result) {
+            blob = result;
+            return g.plEnablePage();
+        }).push(function() {
             if (blob) {
-                g.audio.src = URL.createObjectURL(g.blob);
+                g.audio.src = URL.createObjectURL(blob);
                 g.audio.load();
                 g.audio.play();
             }

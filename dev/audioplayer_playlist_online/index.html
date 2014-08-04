@@ -13,8 +13,18 @@
     <script id="network" type="text/x-handlebars-template">
       {{#each rows}}
       <li>
-        <a href=#page=control&id={{this.id}}&action=online>
+        {{#compare this.doc.type}}
+        <a href=#page=control&id={{this.id}}&action=offline>
           {{this.doc.title}}
+        </a>
+        {{else}}
+        <a href=#page=video_control&id={{this.id}}&action=offline>
+          {{this.doc.title}}
+        </a>
+        {{/compare}}
+        <a href=#page=playlist&id={{this.id}}&action=delete>
+          data-rel=popup
+          data-position-to=window 
         </a>
       </li> 
       {{/each}}

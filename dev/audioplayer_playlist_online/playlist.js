@@ -100,6 +100,12 @@
         }).push(function(e) {
             if (e.data) {
                 var tmp = e.data.rows, i, j, exp;
+                Handlebars.registerHelper("compare", function(v1, options) {
+                    if (v1 === "audio/mp3" || v1 === "audio/mpeg") {
+                        return options.fn(this);
+                    }
+                    return options.inverse(this);
+                });
                 if (options.id !== undefined && options.id !== "online") {
                     tmp = [];
                     for (i = 0, j = 0; i < e.data.rows.length; i += 1) {
