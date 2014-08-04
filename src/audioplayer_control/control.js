@@ -275,15 +275,15 @@
           ]);
         })
         .push(function (list) {
-          if (list[1]) {
+          if (list[0]) {
             loop = true;
             loop_context.innerHTML = "loop on";
           } else {
             loop_context.innerHTML = "loop off";
           }
-          if (list[2] !== undefined) {
-            g.gain.gain.value = list[2];
-            mute_context.innerHTML = list[2] ? "mute off" : "mute on";
+          if (list[1] !== undefined) {
+            g.gain.gain.value = list[1];
+            mute_context.innerHTML = list[1] ? "mute off" : "mute on";
           }
           time_context.style.left = bar_context.style.left;
           $(time_context).offset().top = $(bar_context).offset().top + 3;
