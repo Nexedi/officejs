@@ -168,7 +168,8 @@
         .push(function (gadget) {
           return gadget.createJio(
             { "type" : "indexeddb",
-              "database" : "test"}
+              "database" : "test",
+              "_unite" : 5000000}
           );
         })
         .push(function () {

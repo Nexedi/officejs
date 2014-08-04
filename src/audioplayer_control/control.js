@@ -103,7 +103,7 @@
         callback_promise = new RSVP.Queue()
           .push(function () {
             callback();
-            animationId = window.requestAnimationFrame(tmp);
+            return promiseRequestAnimation(callback);
           })
           .push(undefined, function (error) {
             canceller();
@@ -223,16 +223,19 @@
                                       + result.data.title);
           })
           .push(function () {
-            g.index = 1000000;
+            g.index = 2000000;
             return g.jio_getAttachment({"_id" : options.id,
                                         "_attachment" : "enclosure",
                                         "_start": 0,
-                                        "_end": 1000000});
+                                        "_end": 2000000});
           })
           .push(function (blob) {
             g.sourceBuffer = g.mediaSource.addSourceBuffer('audio/mpeg;');
             return jIO.util.readBlobAsArrayBuffer(blob).then(function (e) {
               g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
+              if (g.index >= g.size) {
+                g.mediaSource.endOfStream();
+              }
               g.audio.play();
               g.fin = true;
             });

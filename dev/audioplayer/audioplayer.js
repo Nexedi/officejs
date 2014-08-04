@@ -141,7 +141,8 @@
         }).push(function(gadget) {
             return gadget.createJio({
                 type: "indexeddb",
-                database: "test"
+                database: "test",
+                _unite: 5e6
             });
         }).push(function() {
             var controlPanel = g.__element.getElementsByClassName("page")[0];
