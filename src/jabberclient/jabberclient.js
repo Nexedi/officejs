@@ -89,12 +89,15 @@
       }
     })
 
-    .declareMethod('setUserJID', function (jid) {
-      this.userJID = Strophe.getBareJidFromJid(jid);
+    .declareMethod('getConnectionJID', function () {
+      return this.getDeclaredGadget('connection')
+        .push(function (connection_gadget) {
+          return connection_gadget.getConnectionJID();
+        });
     })
 
-    .declareMethod('getUserJID', function () {
-      return this.userJID;
+    .allowPublicAcquisition('getConnectionJID', function () {
+      return this.getConnectionJid();
     })
 
     .allowPublicAcquisition('getJID', function () {
@@ -102,11 +105,15 @@
     })
 
     .allowPublicAcquisition('openChat', function (jid) {
-      return this.aq_pleasePublishMyState({
-        page: "chatbox",
-        current_contact_jid: jid[0],
-        jid: "thibaut.frain@tiolive.com"
-      })
+      var gadget = this;
+      return gadget.getConnectionJID()
+        .push(function (connection_jid) {
+          return gadget.aq_pleasePublishMyState({
+            page: 'chatbox',
+            current_contact_jid: jid[0],
+            jid: connection_jid
+          });
+        })
         .push(this.pleaseRedirectMyHash.bind(this));
     })
 

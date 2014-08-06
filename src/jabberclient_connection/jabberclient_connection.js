@@ -95,7 +95,7 @@
 
     .declareAcquiredMethod('receive', 'receive')
 
-    .declareMethod('getJID', function () {
+    .declareMethod('getConnectionJID', function () {
       return Strophe.getBareJidFromJid(this.props.connection.jid);
     })
 
