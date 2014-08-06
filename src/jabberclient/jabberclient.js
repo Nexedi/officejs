@@ -1,68 +1,94 @@
 /*globals window, document, $, RSVP, rJS, DOMParser,
-  XMLSerializer, Strophe, console, Handlebars, $iq*/
-
+  XMLSerializer, Strophe, console, $iq*/
+/*jslint nomen: true*/
 (function (window, document, $, RSVP, rJS) {
   "use strict";
 
-  var serializeXML = function (xml) {
-    return (new XMLSerializer()).serializeToString(xml);
-  },
-    parseXML = function (xmlString) {
-      return new DOMParser()
-        .parseFromString(xmlString, 'text/xml')
-        .children[0];
-    };
+  $.mobile.ajaxEnabled = false;
+  $.mobile.linkBindingEnabled = false;
+  $.mobile.hashListeningEnabled = false;
+  $.mobile.pushStateEnabled = false;
+
+  var gadget_paths = {
+    "connection": "../jabberclient_connection/index.html",
+    "contactlist": "../jabberclient_contactlist/index.html",
+    "chatbox": "../jabberclient_chatbox/index.html",
+    "jio": "../jabberclient_jio/index.html",
+    "logger": "../jabberclient_logger/index.html"
+  };
+
+  function parseXML(xmlString) {
+    return new DOMParser()
+      .parseFromString(xmlString, 'text/xml')
+      .children[0];
+  }
+
+  function isRoster(input) {
+    var selector = 'iq > query[xmlns="jabber:iq:roster"]';
+    return $(input).find(selector).length !== 0;
+  }
+
+  function isPresence(input) {
+    return input.nodeName === 'presence';
+  }
+
+  function isMessage(input) {
+    return input.nodeName === "message";
+  }
 
   rJS(window)
 
-    .declareMethod('send', function (datas) {
-      console.log('--jabberclient gadget (output)--');
-      console.log(datas);
-      console.log('--------------------------------');
-      return this.login_gadget.send(datas);
-    })
-
     .allowPublicAcquisition('send', function (datas) {
-      return this.send(datas);
-    })
-
-    .declareMethod('receive', function (datas) {
-      console.log('--jabberclient gadget (input)--');
-      console.log(datas);
-      console.log('-------------------------------');
-
-      var xmlInput = parseXML(datas),
-        from;
-
-      if (this.isRoster(xmlInput)) {
-        return this.contactlist_gadget.receiveRoster(datas);
-      }
-      if (this.isPresence(xmlInput)) {
-        return this.contactlist_gadget.receivePresence(datas);
-      }
-      if (this.isMessage(xmlInput)) {
-        from = Strophe.getBareJidFromJid($(xmlInput).attr('from'));
-        if (!this.chatbox_gadget[from]) {
-          return this.openChat(from)
-            .then(function (chatGadget) {
-              return this.chatbox_gadget.receive(datas);
-            });
-        }
-        return this.chatbox_gadget[from].receive(datas);
-      }
+      console.log('[xmpp datas output] : ' + datas);
+      return this.getDeclaredGadget("connection")
+        .push(function (connection_gadget) {
+          return connection_gadget.send(datas[0]);
+        });
     })
 
     .allowPublicAcquisition('receive', function (datas) {
-      return this.receive(datas);
+      datas = datas[0];
+      console.log('[xmpp datas input] : ' + datas);
+      var xmlInput = parseXML(datas);
+
+      if (isRoster(xmlInput)) {
+        return this.getDeclaredGadget("contactlist")
+          .push(function (contactlist_gadget) {
+            return contactlist_gadget.receiveRoster(datas);
+          });
+      }
+      if (isPresence(xmlInput)) {
+        return this.getDeclaredGadget("contactlist")
+          .push(function (contactlist_gadget) {
+            contactlist_gadget.receivePresence(datas);
+          });
+      }
+      if (isMessage(xmlInput)) {
+        return this.getDeclaredGadget("chatbox")
+          .push(function (chatbox_gadget) {
+            return chatbox_gadget.receive(datas);
+          });
+      }
     })
 
-    .allowPublicAcquisition('connected', function () {
-      console.log("connected !");
-      var iq = $iq({type: 'get'})
-        .c('query', {xmlns: 'jabber:iq:roster'}).tree();
-      $.mobile.pageContainer.content('change', $('.contactlist-page'));
-      return this.send(serializeXML(iq));
+    .allowPublicAcquisition('publishConnectionState', function (options) {
+      var state = options[0],
+        saved_options;
+
+      if (state === "connected") {
+        if (this.props.after_connect_options !== undefined) {
+          saved_options = this.props.after_connect_options;
+          delete this.props.after_connect_options;
+          return this.aq_pleasePublishMyState(saved_options)
+            .push(this.pleaseRedirectMyHash.bind(this));
+        }
+        if (window.location.hash !== "#page=connection") {
+          return this.aq_pleasePublishMyState({page: "contactlist"})
+            .push(this.pleaseRedirectMyHash.bind(this));
+        }
+      }
     })
+
     .declareMethod('setUserJID', function (jid) {
       this.userJID = Strophe.getBareJidFromJid(jid);
     })
@@ -71,102 +97,92 @@
       return this.userJID;
     })
 
-    .declareMethod('openChat', function (jid) {
-      var container = document.createElement('div');
-      $('.chatboxes-page .ui-content').append(container);
-      return this.declareGadget("../jabberclient_chatbox/", {
-        element: container
-      })
-        .then(function (chatbox_gadget) {
-          this.chatbox_gadgets[jid] = chatbox_gadget;
-          $.mobile.pageContainer.content('change', $('.chatboxes-page'));
-          return chatbox_gadget.initContact(jid);
-        });
-    })
-
     .allowPublicAcquisition('getJID', function () {
       return this.login_gadget.getJID();
     })
 
     .allowPublicAcquisition('openChat', function (jid) {
-      return this.openChat(jid[0]);
+      return this.aq_pleasePublishMyState({
+        page: "chatbox",
+        current_contact_jid: jid[0],
+        jid: "thibaut.frain@tiolive.com"
+      })
+        .push(this.pleaseRedirectMyHash.bind(this));
     })
 
+    .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
+
+  // Initialize header toolbar
     .ready(function (g) {
-
+      g.props = {};
       g.chatbox_gadgets = {};
+      $("[data-role='header']").toolbar();
+      return g.getDeclaredGadget('jio')
+        .push(function (io_gadget) {
+          return io_gadget.createJio({
+            "type": "local",
+            "username": "jabberclient",
+            "application_name": "jabberclient"
+          });
+        })
+        .push(function () {
+          return g.declareGadget(gadget_paths.connection, {
+            scope: "connection"
+          });
+        })
+        .push(function () {
+          return g.declareGadget(gadget_paths.contactlist, {
+            scope: "contactlist"
+          });
+        })
+        .push(function () {
+          return g.declareGadget(gadget_paths.chatbox, {
+            scope: "chatbox"
+          });
+        });
+    })
 
-      g.isRoster = function (input) {
-        var selector = 'iq > query[xmlns="jabber:iq:roster"]';
-        return $(input).find(selector).length !== 0;
-      };
+    .declareMethod('render', function (options) {
+      var gadget = this,
+        element,
+        page_gadget,
+        page_element;
 
-      g.isPresence = function (input) {
-        return input.nodeName === 'presence';
-      };
+      element = gadget.__element.querySelector(".gadget-container");
 
-      g.isMessage = function (input) {
-        return input.nodeName === "message";
-      };
+      return this.getDeclaredGadget("connection")
+        .push(function (connection_gadget) {
+          return connection_gadget.isConnected();
+        })
+        .push(function (is_connected) {
+          // default page
+          if (options.page === undefined) {
+            options.page = "contactlist";
+          }
 
-      g.processReceivedDatas = function (input) {
-        var xmlInput = parseXML(input),
-          from;
-        if (g.isRoster(xmlInput)) {
-          return g.contactlist_gadget.receiveRoster(input);
-        }
-        if (g.isPresence(xmlInput)) {
-          return g.contactlist_gadget.receivePresence(input);
-        }
-        if (g.isMessage(xmlInput)) {
-          from = Strophe.getBareJidFromJid($(xmlInput).attr('from'));
-          if (!g.chatboxes_gadget[from]) {
-            return g.openChat(from)
-              .then(function (chatGadget) {
-                return chatGadget.receive(input);
+          if (!is_connected && options.page !== "connection") {
+            gadget.props.after_connect_options = options;
+            return gadget.getDeclaredGadget("connection")
+              .push(function (connection_gadget) {
+                return connection_gadget.pleaseConnectMe();
               });
           }
-        }
-      };
 
-      // Initialize header toolbar
-      $("[data-role='header']").toolbar();
-
-      // Initialize login gadget
-      g.declareGadget("../jabberclient_login/", {
-        element: $(document).find('.login-page .ui-content')[0],
-        scope: 'login'
-      })
-        .then(function (login_gadget) {
-          g.login_gadget = login_gadget;
-          console.log('couscous');
-          return g.login_gadget.getElement();
-        })
-        .then(function (element) {
-          console.log(element);
-          $(element).enhanceWithin();
-        })
-        .fail(function (e) {
-          // XXX Replace with proper method
-          console.log(e);
-          console.log("Can't initialize login gadget");
-        });
-
-      // Initialize contactlist gadget
-      g.declareGadget("../jabberclient_contactlist/", {
-        element: $(document).find('.contactlist-page .ui-content')[0],
-        scope: "contactlist"
-      })
-        .then(function (contactlist_gadget) {
-          g.contactlist_gadget = contactlist_gadget;
-          return g.contactlist_gadget.getElement();
-        })
-        .then(function (element) {
-          $(element).enhanceWithin();
-        })
-        .fail(function (e) {
-          // XXX Replace with proper method
-          console.log("Can't initialize contactlist gadget");
+          return gadget.getDeclaredGadget(options.page)
+            .push(function (g) {
+              page_gadget = g;
+              return page_gadget.getElement();
+            })
+            .push(function (page_elem) {
+              page_element = page_elem;
+              while (element.firstChild) {
+                element.removeChild(element.firstChild);
+              }
+              element.appendChild(page_element);
+              if (page_gadget.render !== undefined) {
+                page_gadget.render(options);
+              }
+            });
         });
     });
 

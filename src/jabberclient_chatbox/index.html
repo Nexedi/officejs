@@ -8,15 +8,20 @@
 
     <script src="../<%= curl.jquery.relative_dest %>"></script>
     <script src="../<%= curl.strophejs.relative_dest %>"></script>
+    <script src="../<%= copy.handlebars.relative_dest %>"</script>
     <script src="../<%= copy.rsvp.relative_dest %>"></script>
     <script src="../<%= copy.renderjs.relative_dest %>"></script>
-    
+
+    <script class="message-template" type="text/x-handlebars-template">
+      <p>[{{time}}]&nbsp<strong>{{jid}}:&nbsp</strong>{{content}}</p>
+    </script>
+
     <script src="jabberclient_chatbox.js"></script>
   </head>
   <body>
-    <div id="contact"></div>
-    <div id="talk"></div>
-    <textarea id="talk-input"></textarea>
-    <button id="send-button">Send</button>
+    <div class="contact"></div>
+    <div class="talk-box ui-corner-all"></div>
+    <textarea class="talk-input ui-corner-all"></textarea>
+    <button class="send-button ui-btn ui-btn-inline ui-mini ui-corner-all">Send</button>
   </body>
 </html>

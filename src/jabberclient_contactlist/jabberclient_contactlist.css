@@ -7,6 +7,10 @@
     padding-left: 3.25em;
 }
 
+#contact-list li > * {
+    cursor: pointer;
+}
+
 #contact-list h2 {
     margin: -0.6em 0;
     margin-top: -0.3em;

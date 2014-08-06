@@ -13,25 +13,32 @@
     <script src="../<%= copy.renderjs.relative_dest %>"></script>
     <script src="../<%= curl.strophejs.relative_dest %>"></script>
     <script src="../<%= copy.handlebars.relative_dest %>"></script>
-    
+
     <script src="jabberclient_contactlist.js"></script>
-    
+
+    <script class="offline-contact-template" type="text/x-handlebars-template">
+      <li>
+        <img src="../jabberclient_contactlist/images/offline.png">
+        <h2>{{name}}&nbsp&nbsp{{jid}}</h2>
+      </li>
+    </script>
+
+    <script class="online-contact-template" type="text/x-handlebars-template">
+      <li>
+        <img src="../jabberclient_contactlist/images/online.png">
+        <h2>{{name}}&nbsp&nbsp{{jid}}</h2>
+      </li>
+    </script>
+
+    <script class="status-contact-template" type="text/x-handlebars-template">
+      <li>
+        <img src="../jabberclient_contactlist/images/status.png">
+        <h2>{{name}}&nbsp&nbsp{{jid}}&nbsp&nbsp({{status}})</h2>
+      </li>
+    </script>
+
   </head>
   <body>
     <div id=contact-list><ul data-role="listview" data-inset="true"></ul></div>
-    <script id="contact-template" type="text/x-handlebars-template">
-      <li>
-        {{#if offline}}
-        <img src="../jabberclient_contactlist/images/offline.png">
-        {{else}}
-        {{#if status}}
-        <img src="../jabberclient_contactlist/images/misc.png">
-        {{else}}
-        <img src="../jabberclient_contactlist/images/online.png">
-        {{/if}}
-        {{/if}}
-        <h2>{{name}}&nbsp&nbsp{{#if status}}({{status}}){{/if}}</h2>
-      </li>
-    </script>
   </body>
 </html>

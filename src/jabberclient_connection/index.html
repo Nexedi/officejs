@@ -5,16 +5,17 @@
     <title>Jabber login gadget</title>
 
     <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
-    <link rel="stylesheet" href="jabberclient_login.css">
-    
+    <link rel="stylesheet" href="jabberclient_connection.css">
+
     <script src="../<%= curl.jquery.relative_dest %>"></script>
     <script src="../<%= curl.jquerymobilejs.relative_dest %>"></script>
     <script src="../<%= copy.rsvp.relative_dest %>"></script>
     <script src="../<%= copy.renderjs.relative_dest %>"></script>
     <script src="../<%= curl.strophejs.relative_dest %>"></script>
     <script src="../<%= copy.handlebars.relative_dest %>"></script>
-    
-    <script src="jabberclient_login.js"></script>
+    <script src="../mixin_promise/mixin_promise.js" ></script>
+
+    <script src="jabberclient_connection.js"></script>
   </head>
   <body>
     <div class="login-box ui-corner-all ui-shadow">
@@ -24,10 +25,10 @@
           <input type="url" name="server" placeholder="Jabber server url" value="https://mail.tiolive.com/chat/http-bind/" required>
         </div>
         <div class="ui-field-contain">
-          <input type="text" name="jid" placeholder="Jabber ID" value="thibaut.frain@tiolive.com" required>
+          <input type="text" name="jid" placeholder="Jabber ID" required>
         </div>
         <div class="ui-field-contain">
-          <input type="password" name="passwd" placeholder="Password" value="&Cg8)Rl9" required>
+          <input type="password" name="passwd" placeholder="Password" required>
         </div>
         <fieldset class="ui-btn-inline">
           <input type="submit" value="Log In">

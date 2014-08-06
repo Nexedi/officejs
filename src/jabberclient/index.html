@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Jabber Client</title>
-    
+
     <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
     <link rel="stylesheet" href="jabberclient.css">
 
@@ -18,15 +18,13 @@
     <script src="jabberclient.js"></script>
   </head>
   <body>
+    <div class="jio_gadget"
+         data-gadget-url="../jabberclient_jio/index.html"
+         data-gadget-scope="jio">
+    </div>
     <div data-role="header" data-position="fixed" data-theme="a"><h1>Jabber Client</h1></div>
-    <div data-role="page" class="login-page">
-      <div role="main" class="ui-content"></div>
-    </div>
-    <div data-role="page" class="contactlist-page">
-      <div role="main" class="ui-content"></div>
-    </div>
-    <div data-role="page" class="chatboxes-page">
-      <div role="main" class="ui-content"></div>
+    <div data-role="page" overflow="hidden">
+      <div role="main" class="ui-content gadget-container" overflow="hidden"></div>
     </div>
   </body>
 </html>

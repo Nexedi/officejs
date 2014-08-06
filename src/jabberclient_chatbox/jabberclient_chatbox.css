@@ -4,24 +4,28 @@ html {
 body {
     height: 100%;
 }
-#talk {
+
+[data-gadget-scope="chatbox"] {
+    height: 95%;
+}
+
+.talk-box {
     padding: 10px;
-    height: 82%;
-    border: solid 1px #aaa;
+    height: 80%;
+    border: solid 1px;
     font-family: monospace;
     overflow: auto;
 }
 
-#talk-input { 
+.talk-input {
     width: 80%;
     height: 5%;
-    border: solid 1px #aaa;
     font-family: monospace;
     overflow: auto;
     float: left;
 }
 
-#send-button {
+.send-button {
     width: 10%;
     height: 5%;
     float: left;
