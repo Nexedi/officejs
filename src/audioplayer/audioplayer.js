@@ -228,7 +228,8 @@
           return page_gadget.startService(options);
         }
       }).fail(function (e) {
-        console.log(e);
+        gadget.__element.getElementsByClassName('console')[0].
+          innerHTML = JSON.stringify(e);
       });
     });
 }(window, rJS, jQuery, RSVP));
