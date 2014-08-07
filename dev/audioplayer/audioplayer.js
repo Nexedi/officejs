@@ -157,6 +157,7 @@
                 page: "playlist"
             }).push(gadget.pleaseRedirectMyHash.bind(gadget));
         }
+        gadget.__element.getElementsByClassName("console")[0].innerHTML = "";
         gadget.storageType = gadget.storageType || 0;
         if (options.page === "playlist") {
             if (options.id === "offline") {
@@ -191,7 +192,7 @@
                 return page_gadget.startService(options);
             }
         }).fail(function(e) {
-            gadget.__element.getElementsByClassName("console")[0].innerHTML = JSON.stringify(e);
+            gadget.__element.getElementsByClassName("console")[0].innerHTML = e;
         });
     });
 })(window, rJS, jQuery, RSVP);

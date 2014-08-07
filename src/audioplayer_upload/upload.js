@@ -1,10 +1,11 @@
 /*global window, rJS, RSVP, jIO, JSON, promiseEventListener, console,
- Math, ID3, FileAPIReader, dataReader, String, decodeURIComponent, escape */
+ Math, ID3, FileAPIReader, dataReader, String, decodeURIComponent,
+ DataView, escape */
 /*jslint nomen: true*/
+/*jslint bitwise: true*/
 (function (window, jIO, rJS) {
   "use strict";
   var gk = rJS(window);
-
   function promiseId3(file) {
     var resolver;
     resolver = function (resolve) {

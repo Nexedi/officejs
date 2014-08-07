@@ -189,6 +189,8 @@
         return gadget.aq_pleasePublishMyState({page: "playlist"})
           .push(gadget.pleaseRedirectMyHash.bind(gadget));
       }
+      gadget.__element.getElementsByClassName('console')[0].
+        innerHTML = "";
       gadget.storageType = gadget.storageType || 0;
       if (options.page === "playlist") {
         if (options.id === "offline") {
@@ -229,7 +231,7 @@
         }
       }).fail(function (e) {
         gadget.__element.getElementsByClassName('console')[0].
-          innerHTML = JSON.stringify(e);
+          innerHTML = e;
       });
     });
 }(window, rJS, jQuery, RSVP));

@@ -93,36 +93,16 @@
             return RSVP.any([ loopEventListener(g.video, "ended", false, function() {
                 window.location = g.__element.getElementsByClassName("next")[0].href;
             }), loopEventListener(g.video, "seeking", false, function(e) {
-                g.seeking = true;
-                console.log(e.target.currentTime);
-                if (g.mediaSource.readyState === "open") {
-                    g.mediaSource.sourceBuffers[0].abort();
+                if (g.buffedTime === undefined) {
+                    g.video.currentTime = 0;
+                } else {
+                    if (g.video.currentTime > g.buffedTime) {
+                        g.video.currentTime = g.buffedTime;
+                    }
                 }
-                if (g.mediaSource.readyState === "closed") {
-                    return;
-                }
-                if (g.mediaSource.sourceBuffers[0].updating) {
-                    return;
-                }
-                g.index = 35e5;
-                return g.jio_getAttachment({
-                    _id: g.id,
-                    _attachment: "enclosure",
-                    _start: g.index,
-                    _end: g.index + 35e5
-                }).then(function(blob) {
-                    g.index += 35e5;
-                    return jIO.util.readBlobAsArrayBuffer(blob);
-                }).then(function(e) {
-                    g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
-                    g.video.play();
-                    g.seeking = false;
-                });
             }), loopEventListener(g.sourceBuffer, "updateend", false, function() {
+                g.buffedTime = g.sourceBuffer.buffered.end(0);
                 if (!g.fin) {
-                    return;
-                }
-                if (g.seeking) {
                     return;
                 }
                 if (g.mediaSource.sourceBuffers[0].updating) {
@@ -139,19 +119,13 @@
                     _start: g.index,
                     _end: g.index + 35e5
                 }).then(function(blob) {
-                    if (g.seeking === false) {
-                        g.index += 35e5;
-                        return jIO.util.readBlobAsArrayBuffer(blob);
-                    }
+                    g.index += 35e5;
+                    return jIO.util.readBlobAsArrayBuffer(blob);
                 }).then(function(e) {
                     g.fin = true;
-                    if (g.seeking === false) {
-                        return g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
-                    }
+                    g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
                 });
             }) ]);
-        }).push(function(error) {
-            console.log(error);
         });
     });
     gk.ready(function(g) {
