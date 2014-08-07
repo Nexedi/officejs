@@ -15,11 +15,17 @@
       <li>
         {{#compare this.doc.type}}
         <a href=#page=control&id={{this.id}}&action=offline>
-          {{this.doc.title}}
+          <img src={{this.doc.picture}}>          
+          <h3> {{this.doc.title}} </h3>
+          <P>  {{this.doc.artist}} </p>
+          <P>  {{this.doc.album}} </p>
         </a>
         {{else}}
         <a href=#page=video_control&id={{this.id}}&action=offline>
-          {{this.doc.title}}
+          <img src={{this.doc.picture}}>
+          <h3> {{this.doc.title}} </h3>
+          <P>  {{this.doc.artist}} </p>
+          <P>  {{this.doc.album}} </p>
         </a>
         {{/compare}}
         <a href=#page=playlist&id={{this.id}}&action=delete>

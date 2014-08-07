@@ -10,7 +10,7 @@
         upload: {
             "0": "../audioplayer_upload/index.html",
             "1": "../audioplayer_playlist_local/index.html",
-            "2": "../audioplayer_playlist_online/index.html"
+            "2": "../audioplayer_upload/index.html"
         },
         playlist: {
             "0": "../audioplayer_playlist_offline/index.html",
@@ -56,11 +56,11 @@
         }
     }).allowPublicAcquisition("plDisablePage", function() {
         disablePage(this);
-    }).allowPublicAcquisition("plCreateHttpStorage", function(list) {
+    }).allowPublicAcquisition("plCreateDavStorage", function(list) {
         return this.getDeclaredGadget("online").push(function(gadget) {
             return gadget.createJio({
-                type: "http",
-                database: list[0]
+                type: "dav",
+                url: list[0]
             });
         });
     }).allowPublicAcquisition("displayThisPage", function(param_list) {
@@ -71,14 +71,14 @@
         var key = Object.keys(param_list[0]);
         this.save[key[0]] = param_list[0][key[0]];
     }).allowPublicAcquisition("plGiveStorageType", function() {
-        return storageType(this.storageType);
+        return this.storageType;
     }).allowPublicAcquisition("plGive", function(param_list) {
         if (this.save === undefined) {
             return this.save;
         }
         return this.save[param_list[0]];
     }).allowPublicAcquisition("allDocs", function(param_list) {
-        if (this.storageType !== 0) {
+        if (this.storageType === 1) {
             param_list[0].save = true;
         } else {
             param_list[0].save = false;
@@ -88,8 +88,8 @@
         });
     }).allowPublicAcquisition("jio_post", function(param_list) {
         var type;
-        if (param_list[1] === 0) {
-            type = 0;
+        if (param_list[1] === 0 || param_list[1] === 1) {
+            type = param_list[1];
         } else {
             type = this.storageType;
         }
@@ -98,8 +98,8 @@
         });
     }).allowPublicAcquisition("jio_putAttachment", function(param_list) {
         var type;
-        if (param_list[1] === 0) {
-            type = 0;
+        if (param_list[1] === 0 || param_list[1] === 1) {
+            type = param_list[1];
         } else {
             type = this.storageType;
         }
@@ -115,17 +115,13 @@
             return jio_gadget.get.apply(jio_gadget, param_list);
         });
     }).allowPublicAcquisition("jio_remove", function(param_list) {
-        if (this.storageType === 0) {
-            return this.getDeclaredGadget(storageType(this.storageType)).push(function(jio_gadget) {
-                return jio_gadget.remove.apply(jio_gadget, param_list);
-            });
-        }
+        return this.getDeclaredGadget(storageType(this.storageType)).push(function(jio_gadget) {
+            return jio_gadget.remove.apply(jio_gadget, param_list);
+        });
     }).allowPublicAcquisition("jio_removeAttachment", function(param_list) {
-        if (this.storageType === 0) {
-            return this.getDeclaredGadget(storageType(this.storageType)).push(function(jio_gadget) {
-                return jio_gadget.removeAttachment.apply(jio_gadget, param_list);
-            });
-        }
+        return this.getDeclaredGadget(storageType(this.storageType)).push(function(jio_gadget) {
+            return jio_gadget.removeAttachment.apply(jio_gadget, param_list);
+        });
     }).allowPublicAcquisition("displayThisTitle", function(param_list) {
         var header = this.__element.getElementsByTagName("h1")[0];
         header.innerHTML = param_list[0];
@@ -171,7 +167,7 @@
                 gadget.__element.getElementsByClassName("addMusic")[0].style.display = "none";
             } else if (options.id === "online") {
                 gadget.storageType = 2;
-                gadget.__element.getElementsByClassName("addMusic")[0].style.display = "none";
+                gadget.__element.getElementsByClassName("addMusic")[0].style.display = "";
             }
         }
         return gadget.declareGadget(gadget_list[options.page][gadget.storageType]).push(function(g) {

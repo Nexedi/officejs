@@ -130,8 +130,41 @@
                 .getElementsByClassName("next")[0].href;
             }),
 
+            loopEventListener(g.video, "seeking", false, function (e) {
+              g.seeking = true;
+              console.log(e.target.currentTime);
+              if (g.mediaSource.readyState === "open") {
+                g.mediaSource.sourceBuffers[0].abort();
+              }
+              if (g.mediaSource.readyState === "closed") {
+                return;
+              }
+              if (g.mediaSource.sourceBuffers[0].updating) {
+                return;
+              }
+              g.index = 3500000;
+              return g.jio_getAttachment({"_id" : g.id,
+                                          "_attachment" : "enclosure",
+                                          "_start": g.index,
+                                          "_end": g.index + 3500000})
+                .then(function (blob) {
+                  g.index += 3500000;
+                  return jIO.util.readBlobAsArrayBuffer(blob);
+                })
+                .then(function (e) {
+                  g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
+                  g.video.play();
+                  g.seeking = false;
+                });
+            }),
             loopEventListener(g.sourceBuffer, "updateend", false, function () {
               if (!g.fin) {
+                return;
+              }
+              if (g.seeking) {
+                return;
+              }
+              if (g.mediaSource.sourceBuffers[0].updating) {
                 return;
               }
               g.fin = false;
@@ -144,12 +177,16 @@
                                           "_start": g.index,
                                           "_end": g.index + 3500000})
                 .then(function (blob) {
-                  g.index += 3500000;
-                  return jIO.util.readBlobAsArrayBuffer(blob);
+                  if (g.seeking === false) {
+                    g.index += 3500000;
+                    return jIO.util.readBlobAsArrayBuffer(blob);
+                  }
                 })
                 .then(function (e) {
                   g.fin = true;
-                  return g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
+                  if (g.seeking === false) {
+                    return g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
+                  }
                 });
             })
           ]);
@@ -171,6 +208,7 @@ Confirm that you will be careful if a warning message is displayed.</li>
 </ul>";
       return;
     }
+    g.seeking = false;
     g.mediaSource = new MediaSource();
     g.video.src = URL.createObjectURL(g.mediaSource);
   });

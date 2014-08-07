@@ -33,9 +33,11 @@
       http,
       port,
       portEnd,
+      tmp,
       ipValue = value;
     g.__element.getElementsByTagName('ul')[0].innerHTML = " ";
     http = ipValue.indexOf("http");
+    tmp = ipValue.charAt(0);
     if (ipValue.indexOf("www.") !== -1) {
       if (http === -1) {
         info.innerHTML = "please start with http:// or https://";
@@ -47,27 +49,30 @@
       }
     } else {
       ipValue = ipValue.substring(ipValue.indexOf("//") + 2);
-      port = ipValue.indexOf(":");
-      portEnd = ipValue.indexOf(":/");
-      if (port !== -1) {
-        ipValue = ipValue.substring(0, port);
-      }
-      if (http === -1) {
-        info.innerHTML = "please start ip with http:// or https://";
-        return;
-      }
-      if (port === -1 || portEnd !== -1) {
-        info.innerHTML = "input port number";
-        return;
-      }
-      if (checkIp(ipValue) === false) {
-        info.innerHTML =
-          "invalide ip: ip should like xxx.xxx.xxx.xxx(xxx is between 0 ~ 255)";
-        return;
-      }
-      if (!endWith(value, "/")) {
-        info.innerHTML = "not end with /";
-        return;
+      tmp = ipValue.charAt(0);
+      if (tmp >= '0' || tmp <= '9') {
+        port = ipValue.indexOf(":");
+        portEnd = ipValue.indexOf(":/");
+        if (port !== -1) {
+          ipValue = ipValue.substring(0, port);
+        }
+        if (http === -1) {
+          info.innerHTML = "please start ip with http:// or https://";
+          return;
+        }
+        if (port === -1 || portEnd !== -1) {
+          info.innerHTML = "input port number";
+          return;
+        }
+        if (checkIp(ipValue) === false) {
+          info.innerHTML =
+            "invalide ip: ip should like xxx.xxx.xxx.xxx(xxx is between 0 ~ 255)";
+          return;
+        }
+        if (!endWith(value, "/")) {
+          info.innerHTML = "not end with /";
+          return;
+        }
       }
     }
     return new RSVP.Queue()
@@ -88,7 +93,7 @@
     .declareAcquiredMethod("plGive", "plGive")
     .declareAcquiredMethod("displayThisPage", "displayThisPage")
     .declareAcquiredMethod("displayThisTitle", "displayThisTitle")
-    .declareAcquiredMethod("plCreateHttpStorage", "plCreateHttpStorage")
+    .declareAcquiredMethod("plCreateDavStorage", "plCreateDavStorage")
     .declareAcquiredMethod("plEnablePage", "plEnablePage")
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
     .declareMethod('render', function (options) {
@@ -123,7 +128,7 @@
             ipValue = value;
             ip_context.value = value;
             if (options.action) {
-              return gadget.plCreateHttpStorage(value);
+              return gadget.plCreateDavStorage(value);
             }
           }
         })
