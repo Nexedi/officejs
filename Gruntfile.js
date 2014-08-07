@@ -90,8 +90,14 @@ module.exports = function (grunt) {
         files: {
           "<%= global_config.dest %>/jio_drive/jio_drive.css":
             "<%= global_config.src %>/jio_drive/jio_drive.less",
+          "<%= global_config.dest %>/audioplayer_control/control.css":
+            "<%= global_config.src %>/audioplayer_control/control.less",
+          "<%= global_config.dest %>/audioplayer_video_control/control.css":
+            "<%= global_config.src %>/audioplayer_video_control/control.less",
           "<%= global_config.dest %>/editor_ace/aceeditor.css":
             "<%= global_config.src %>/editor_ace/aceeditor.less",
+          "<%= global_config.dest %>/audioplayer/audioplayer.css":
+            "<%= global_config.src %>/audioplayer/audioplayer.less",
           "<%= global_config.dest %>/erp5/erp5.css":
             "<%= global_config.src %>/erp5/erp5.less",
           "<%= global_config.dest %>/twin_erp5/superindex.css":
@@ -125,7 +131,9 @@ module.exports = function (grunt) {
           'node_modules/jio/complex_queries.js',
           'node_modules/jio/src/jio.storage/localstorage.js',
           'node_modules/jio/src/jio.storage/erp5storage.js',
-          'node_modules/jio/src/jio.storage/indexeddbstorage1.js'   //xxx
+          'node_modules/jio/src/jio.storage/indexeddbstorage1.js',   //xxx
+          'node_modules/jio/src/jio.storage/httpstorage.js',   //xxx
+          'node_modules/jio/src/jio.storage/davstorage.js'   //xxx
         ],
         relative_dest: "lib/jio.js",
         dest: "<%= global_config.dest %>/<%= concat.jio.relative_dest %>"
@@ -162,6 +170,11 @@ module.exports = function (grunt) {
         src: "node_modules/rsvp/dist/rsvp-2.0.4.min.js",
         relative_dest: "lib/rsvp.min.js",
         dest: "<%= global_config.dest %>/<%= copy.rsvp.relative_dest %>"
+      },
+      id3: {
+        src: "node_modules/JavaScript-ID3-Reader/dist/id3-minimized.js",
+        relative_dest: "lib/id3-minimized.js",
+        dest: "<%= global_config.dest %>/<%= copy.id3.relative_dest %>"
       },
       uritemplate: {
         src: "node_modules/uritemplate/bin/uritemplate-min.js",
@@ -365,7 +378,7 @@ module.exports = function (grunt) {
     connect: {
       client: {
         options: {
-          hostname: '127.0.0.1',
+          hostname: '192.168.242.68',
           port: 9000,
           base: '.',
           directory: '.',
@@ -389,6 +402,6 @@ module.exports = function (grunt) {
   grunt.registerTask('dep', ['curl', 'unzip']);
 //   grunt.registerTask('test', ['qunit']);
   grunt.registerTask('server', ['connect:client', 'open', 'watch']);
-  grunt.registerTask('build', ['concat', 'copy', 'uglify', 'less']);
-
+  grunt.registerTask('build', ['concat', 'copy', 'curl:jquery', 'curl:jquerymobilejs',
+                               'curl:jquerymobilecss', 'uglify', 'less']);
 };
