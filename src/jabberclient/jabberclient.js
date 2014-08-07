@@ -72,21 +72,24 @@
     })
 
     .allowPublicAcquisition('publishConnectionState', function (options) {
-      var state = options[0],
-        saved_options;
+      var gadget = this,
+        state = options[0],
+        came_from;
 
       if (state === "connected") {
-        if (this.props.after_connect_options !== undefined) {
-          saved_options = this.props.after_connect_options;
-          delete this.props.after_connect_options;
-          return this.aq_pleasePublishMyState(saved_options)
-            .push(this.pleaseRedirectMyHash.bind(this));
+        if (this.props.came_from !== undefined) {
+          came_from = this.props.came_from;
+          delete this.props.came_from;
+          return this.aq_pleasePublishMyState(came_from)
+            .push(function () {
+              gadget.render(came_from);
+            });
         }
-        if (window.location.hash !== "#page=connection") {
-          return this.aq_pleasePublishMyState({page: "contactlist"})
-            .push(this.pleaseRedirectMyHash.bind(this));
-        }
+        return this.aq_pleasePublishMyState({page: "contactlist"})
+          .push(this.pleaseRedirectMyHash.bind(this));
       }
+      return this.aq_pleasePublishMyState({page: "connection"})
+        .push(this.pleaseRedirectMyHash.bind(this));
     })
 
     .declareMethod('getConnectionJID', function () {
@@ -156,7 +159,6 @@
         page_element;
 
       element = gadget.__element.querySelector(".gadget-container");
-
       return this.getDeclaredGadget("connection")
         .push(function (connection_gadget) {
           return connection_gadget.isConnected();
@@ -164,17 +166,17 @@
         .push(function (is_connected) {
           // default page
           if (options.page === undefined) {
-            options.page = "contactlist";
+            return gadget.aq_pleasePublishMyState({page: "contactlist"})
+              .push(gadget.pleaseRedirectMyHash.bind(gadget));
           }
 
           if (!is_connected && options.page !== "connection") {
-            gadget.props.after_connect_options = options;
+            gadget.props.came_from = options;
             return gadget.getDeclaredGadget("connection")
               .push(function (connection_gadget) {
                 return connection_gadget.pleaseConnectMe();
               });
           }
-
           return gadget.getDeclaredGadget(options.page)
             .push(function (g) {
               page_gadget = g;

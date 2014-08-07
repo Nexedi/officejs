@@ -116,7 +116,7 @@
           Object.keys(params).length === 3) {
         return loopConnectionListener(this, params);
       }
-      return this.pleaseRedirectMyHash("#page=connection");
+      return this.publishConnectionState("disconnected");
     })
 
     .ready(function (g) {
