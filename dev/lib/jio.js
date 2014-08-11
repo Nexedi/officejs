@@ -9783,7 +9783,7 @@ function sequence(thens) {
       }
       return getIndexedDB(store, [param._id, param._attachment, start])
         .then(function (result) {
-          var blobPart;
+          var blobPart = result.blob;
           if (result.blob.byteLength !== undefined) {
             blobPart = new Blob([result.blob]);
           }

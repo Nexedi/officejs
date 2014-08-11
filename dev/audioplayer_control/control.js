@@ -170,11 +170,7 @@
             }).push(function(blob) {
                 g.sourceBuffer = g.mediaSource.addSourceBuffer("audio/mpeg;");
                 return jIO.util.readBlobAsArrayBuffer(blob).then(function(e) {
-                    g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
-                    if (g.index >= g.size) {
-                        g.mediaSource.endOfStream();
-                    }
-                    g.audio.play();
+                    g.buffer = e.target.result;
                     g.fin = true;
                 });
             }).push(undefined, function(error) {
@@ -220,6 +216,8 @@
                 g.audio.src = URL.createObjectURL(blob);
                 g.audio.load();
                 g.audio.play();
+            } else {
+                g.sourceBuffer.appendBuffer(new Uint8Array(g.buffer));
             }
             return RSVP.any([ play.call(g), loopEventListener(g.sourceBuffer, "updateend", false, function() {
                 if (!g.fin) {

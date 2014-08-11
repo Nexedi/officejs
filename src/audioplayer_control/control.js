@@ -232,11 +232,7 @@
           .push(function (blob) {
             g.sourceBuffer = g.mediaSource.addSourceBuffer('audio/mpeg;');
             return jIO.util.readBlobAsArrayBuffer(blob).then(function (e) {
-              g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
-              if (g.index >= g.size) {
-                g.mediaSource.endOfStream();
-              }
-              g.audio.play();
+              g.buffer = e.target.result;
               g.fin = true;
             });
           })
@@ -302,6 +298,8 @@
             g.audio.src = URL.createObjectURL(blob);
             g.audio.load();
             g.audio.play();
+          } else {
+            g.sourceBuffer.appendBuffer(new Uint8Array(g.buffer));
           }
           return RSVP.any([
             play.call(g),
@@ -328,7 +326,6 @@
                   return g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
                 });
             }),
-
             loopEventListener(mute_context, "click", false, function () {
               mute_context.innerHTML = g.gain.gain.value ?
                   "mute on" : "mute off";

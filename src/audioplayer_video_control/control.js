@@ -73,7 +73,7 @@
             g.__element.getElementsByClassName("next")[0].href = url;
             g.id = options.id;
             g.index = 3500000;
-            return g.jio_getAttachment({"_id" : options.id,
+            return g.jio_getAttachment({"_id" : g.id,
                                         "_attachment" : "enclosure",
                                         "_start": 0,
                                         "_end": 3500000});
@@ -81,8 +81,7 @@
           .push(function (blob) {
             g.sourceBuffer = g.mediaSource.addSourceBuffer('video/webm; codecs="vorbis,vp8"');
             return jIO.util.readBlobAsArrayBuffer(blob).then(function (e) {
-              g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
-              g.video.play();
+              g.buffer = e.target.result;
               g.fin = true;
             });
           })
@@ -123,6 +122,9 @@
             g.video.src = URL.createObjectURL(blob);
             g.video.load();
             g.video.play();
+          } else {
+            g.sourceBuffer.appendBuffer(new Uint8Array(g.buffer));
+            g.video.play();
           }
           return RSVP.any([
             loopEventListener(g.video, "ended", false, function () {
@@ -142,9 +144,6 @@
             loopEventListener(g.sourceBuffer, "updateend", false, function () {
               g.buffedTime = g.sourceBuffer.buffered.end(0);
               if (!g.fin) {
-                return;
-              }
-              if (g.mediaSource.sourceBuffers[0].updating) {
                 return;
               }
               g.fin = false;

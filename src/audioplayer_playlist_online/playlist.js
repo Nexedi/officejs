@@ -50,7 +50,7 @@
     } else {
       ipValue = ipValue.substring(ipValue.indexOf("//") + 2);
       tmp = ipValue.charAt(0);
-      if (tmp >= '0' || tmp <= '9') {
+      if (tmp >= '0' && tmp <= '9') {
         port = ipValue.indexOf(":");
         portEnd = ipValue.indexOf(":/");
         if (port !== -1) {
