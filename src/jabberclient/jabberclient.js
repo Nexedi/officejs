@@ -38,6 +38,10 @@
 
   rJS(window)
 
+    .allowPublicAcquisition('manageService', function (params) {
+      this.props.app_services.monitor(params[0]);
+    })
+
     .allowPublicAcquisition('send', function (datas) {
       console.log('[xmpp datas output] : ' + datas);
       return this.getDeclaredGadget("connection")
@@ -71,24 +75,36 @@
       }
     })
 
-    .allowPublicAcquisition('publishConnectionState', function (options) {
+    .allowPublicAcquisition('jio_put', function (params) {
+      return this.getDeclaredGadget('jio')
+        .push(function (jio_gadget) {
+          return jio_gadget.put(params[0]);
+        });
+    })
+
+    .allowPublicAcquisition('jio_get', function (params) {
+      return this.getDeclaredGadget('jio')
+        .push(function (jio_gadget) {
+          return jio_gadget.get(params[0]);
+        });
+    })
+
+    .allowPublicAcquisition('loadGadgetAfterLogin', function () {
       var gadget = this,
-        state = options[0],
         came_from;
 
-      if (state === "connected") {
-        if (this.props.came_from !== undefined) {
-          came_from = this.props.came_from;
-          delete this.props.came_from;
-          return this.aq_pleasePublishMyState(came_from)
-            .push(function () {
-              gadget.render(came_from);
-            });
-        }
-        return this.aq_pleasePublishMyState({page: "contactlist"})
-          .push(this.pleaseRedirectMyHash.bind(this));
+      if (this.props.came_from !== undefined) {
+        came_from = this.props.came_from;
+        delete this.props.came_from;
+        return this.aq_pleasePublishMyState(came_from)
+          .push(function (hash) {
+            if (hash === window.location.hash) {
+              return gadget.render(came_from);
+            }
+            return gadget.pleaseRedirectMyHash(hash);
+          });
       }
-      return this.aq_pleasePublishMyState({page: "connection"})
+      return this.aq_pleasePublishMyState({page: "contactlist"})
         .push(this.pleaseRedirectMyHash.bind(this));
     })
 
@@ -122,14 +138,17 @@
 
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
 
-  // Initialize header toolbar
+    .allowPublicAcquisition('renderConnection', function () {
+      return this.aq_pleasePublishMyState({page: "connection"})
+        .push(this.pleaseRedirectMyHash.bind(this));
+    })
+
     .ready(function (g) {
       g.props = {};
-      g.chatbox_gadgets = {};
       $("[data-role='header']").toolbar();
       return g.getDeclaredGadget('jio')
-        .push(function (io_gadget) {
-          return io_gadget.createJio({
+        .push(function (jio_gadget) {
+          return jio_gadget.createJio({
             "type": "local",
             "username": "jabberclient",
             "application_name": "jabberclient"
@@ -159,6 +178,7 @@
         page_element;
 
       element = gadget.__element.querySelector(".gadget-container");
+
       return this.getDeclaredGadget("connection")
         .push(function (connection_gadget) {
           return connection_gadget.isConnected();
@@ -174,7 +194,7 @@
             gadget.props.came_from = options;
             return gadget.getDeclaredGadget("connection")
               .push(function (connection_gadget) {
-                return connection_gadget.pleaseConnectMe();
+                return connection_gadget.tryAutoConnect();
               });
           }
           return gadget.getDeclaredGadget(options.page)
@@ -189,9 +209,20 @@
               }
               element.appendChild(page_element);
               if (page_gadget.render !== undefined) {
-                page_gadget.render(options);
+                return page_gadget.render(options);
+              }
+            })
+            .push(function () {
+              if (page_gadget.startService !== undefined) {
+                return page_gadget.startService();
               }
             });
+        })
+        .push(function () {
+          if (!gadget.props.app_services) {
+            gadget.props.app_services = new RSVP.Monitor();
+            return gadget.props.app_services;
+          }
         });
     });
 

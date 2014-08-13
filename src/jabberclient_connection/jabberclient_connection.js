@@ -1,9 +1,16 @@
-/*global window, rJS, Strophe, $, $iq,
-  XMLSerializer, DOMParser, RSVP, localStorage*/
+/*global window, rJS, Strophe, $, $iq, Handlebars,
+  XMLSerializer, DOMParser, RSVP, sessionStorage, promiseEventListener*/
 /*jslint nomen: true*/
 
-(function ($, Strophe, rJS) {
+(function ($, Strophe, rJS, Handlebars) {
   "use strict";
+  var gadget_klass = rJS(window),
+    login_template_source = gadget_klass.__template_element
+      .querySelector(".login-template").innerHTML,
+    login_template = Handlebars.compile(login_template_source),
+    logout_template_source = gadget_klass.__template_element
+      .querySelector(".logout-template").innerHTML,
+    logout_template = Handlebars.compile(logout_template_source);
 
   function parseXML(xmlString) {
     return new DOMParser()
@@ -15,29 +22,87 @@
     return new XMLSerializer().serializeToString(xml);
   }
 
-  function showLogin(gadget, params) {
-    var login_box = gadget.props.login_box,
-      logout_box = gadget.props.logout_box;
-    $(login_box).find('input[name="server"]').val(params.server);
-    $(login_box).find('input[name="jid"]').val(params.jid);
-    $(login_box).find('input[name="passwd"]').val(params.passwd);
-    $(logout_box).hide();
-    $(login_box).show();
+  function logout(gadget) {
+    sessionStorage.removeItem("connection_params");
+    return gadget.render();
   }
 
-  function showLogout(gadget, params) {
-    var login_box = gadget.props.login_box,
-      logout_box = gadget.props.logout_box;
-    $(logout_box).find('.server').html(params.server);
-    $(logout_box).find('.jid').html(params.jid);
-    $(login_box).hide();
-    $(logout_box).show();
+  function showLogout(gadget) {
+    return new RSVP.Queue()
+      .push(function () {
+        var jid = Strophe.getBareJidFromJid(gadget.props.connection.jid);
+        $(gadget.__element).html(logout_template({
+          server: gadget.props.connection.service,
+          jid: jid
+        }));
+      })
+      .push(function () {
+        return promiseEventListener(
+          gadget.__element.querySelector('.logout-box button'),
+          'click',
+          false
+        );
+      })
+      .push(function () {
+        if (gadget.props.connection) {
+          gadget.props.connection.disconnect();
+        }
+      });
   }
 
-  function loopConnectionListener(gadget, params) {
+  function setInputListener(gadget) {
+    return new RSVP.Promise(function (resolveInputAssignment) {
+      function canceller() {
+        if (gadget.props.connection &&
+            gadget.props.connection.xmlInput) {
+          delete gadget.props.connection.xmlInput;
+        }
+      }
 
+      function resolver(resolve, reject) {
+        gadget.props.connection.xmlInput = function (domElement) {
+          try {
+            [].forEach.call(domElement.children, function (child) {
+              gadget.manageService(
+                gadget.receive(serializeXML(child))
+              );
+            });
+          } catch (e) {
+            reject(e);
+          }
+        };
+        resolveInputAssignment();
+      }
+      gadget.manageService(new RSVP.Promise(resolver, canceller));
+    });
+  }
+
+  function login(gadget, params) {
+    return new RSVP.Queue()
+      .push(function () {
+        return setInputListener(gadget);
+      })
+      .push(function () {
+        sessionStorage.setItem(
+          "connection_params",
+          JSON.stringify(params)
+        );
+      })
+      .push(function () {
+        return gadget.props.connection.send(
+          $iq({type: 'get'}).c('query', {xmlns: 'jabber:iq:roster'})
+            .tree()
+        );
+      })
+      .push(function () {
+        return gadget.loadGadgetAfterLogin();
+      });
+  }
+
+  function connectionListener(gadget, params) {
     var connection = new Strophe.Connection(params.server),
       connection_callback;
+    gadget.props.connection = connection;
 
     function canceller() {
       if (connection_callback !== undefined) {
@@ -47,44 +112,53 @@
 
     function resolver(resolve, reject) {
       connection_callback = function (status) {
-        if (status === Strophe.Status.CONNECTED) {
-          // init jabber inputs
-          connection.xmlInput = function (domElement) {
-            [].forEach.call(domElement.children, function (child) {
-              gadget.receive(serializeXML(child));
-            });
-          };
-          connection.send(
-            $iq({type: 'get'}).c('query', {xmlns: 'jabber:iq:roster'}).tree()
-          );
-          // inform parent gadget
-          gadget.publishConnectionState('connected');
-          // show logout box
-          showLogout(gadget, params);
-          // register params in localStorage
-          localStorage.setItem('jabberclient_login', JSON.stringify(params));
-        } else if (status === Strophe.Status.DISCONNECTED) {
-          // Destroy connection object
-          gadget.props.connection = null;
-          // Inform parent gadget
-          gadget.publishConnectionState('disconnected');
-          // Show login box
-          showLogin(gadget, params);
-          // remove params in localStorage
-          localStorage.removeItem('jabberclient_login');
-        }
+        new RSVP.Queue()
+          .push(function () {
+            if (status === Strophe.Status.CONNECTED) {
+              return login(gadget, params);
+            }
+            if (status === Strophe.Status.DISCONNECTED) {
+              return logout(gadget);
+            }
+          })
+          .fail(function (e) {
+            reject(e);
+          });
       };
       connection.connect(params.jid, params.passwd, connection_callback);
-      gadget.props.connection = connection;
     }
     return new RSVP.Promise(resolver, canceller);
   }
 
-  rJS(window)
+  function showLogin(gadget) {
+    var params = {
+      server: "https://mail.tiolive.com/chat/http-bind/"
+    };
+    return new RSVP.Queue()
+      .push(function () {
+        $(gadget.__element).html(login_template(params));
+      })
+      .push(function () {
+        return promiseEventListener(
+          gadget.__element.querySelector('form.login-form'),
+          'submit',
+          false
+        );
+      })
+      .push(function (submit_event) {
+        $(submit_event.target).serializeArray()
+          .forEach(function (field) {
+            params[field.name] = field.value;
+          });
+        gadget.manageService(connectionListener(gadget, params));
+      });
+  }
 
-    .declareAcquiredMethod('pleaseRedirectMyHash', 'pleaseRedirectMyHash')
+  gadget_klass
 
-    .declareAcquiredMethod('publishConnectionState', 'publishConnectionState')
+    .declareAcquiredMethod("manageService", "manageService")
+
+    .declareAcquiredMethod('loadGadgetAfterLogin', 'loadGadgetAfterLogin')
 
     .declareMethod("isConnected", function () {
       if (this.props.connection) {
@@ -103,53 +177,32 @@
       return this.props.connection.send(parseXML(xmlString));
     })
 
-    .declareMethod('disconnect', function () {
-      if (this.connection && this.connection.connected) {
-        return this.connection.disconnect();
-      }
+    .declareMethod('logout', function () {
+      logout(this);
     })
 
-    .declareMethod("pleaseConnectMe", function () {
-      var params = JSON.parse(localStorage.getItem('jabberclient_login'));
+    .declareAcquiredMethod("renderConnection", "renderConnection")
+
+    .declareMethod("tryAutoConnect", function () {
+      var params = JSON.parse(sessionStorage.getItem('connection_params'));
       if (params !== null &&
           typeof params === 'object' &&
           Object.keys(params).length === 3) {
-        return loopConnectionListener(this, params);
+        this.manageService(connectionListener(this, params));
+      } else {
+        return this.renderConnection();
       }
-      return this.publishConnectionState("disconnected");
     })
 
     .ready(function (g) {
-      g.props = {
-        login_box: g.__element.querySelector('.login-box'),
-        logout_box: g.__element.querySelector('.logout_box')
-      };
+      g.props = {};
+    })
 
-      g.submitLoginCallback = function (e) {
-        e.preventDefault();
-        g.props.params = {};
-        $(this).serializeArray().forEach(function (elem) {
-          g.props.params[elem.name] = elem.value;
-        });
-        loopConnectionListener(g, g.props.params);
-        return false;
-      };
-
-      g.submitLogoutCallback = function (e) {
-        g.connection.disconnect();
-        g.publishConnectionState('disconnected');
-      };
-
-      window.g = g;
-      return new RSVP.Promise(function (resolve) {
-        $(document).on('submit', 'form.login-form', g.submitLoginCallback);
-        $(document).on('click', '.logout-box button', g.submitLogoutCallback);
-        resolve();
-      }, function () {
-        $(document).off('submit', 'form.login-form', g.submitLoginCallback);
-        $(document).off('click', '.logout-box button', g.submitLogoutCallback);
-      });
-
+    .declareMethod('render', function () {
+      if (this.props.connection &&
+          this.props.connection.authenticated) {
+        return showLogout(this);
+      }
+      return showLogin(this);
     });
-
-}($, Strophe, rJS));
+}($, Strophe, rJS, Handlebars));

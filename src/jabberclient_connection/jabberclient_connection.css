@@ -1,6 +1,6 @@
 .login-box, .logout-box {
     margin: 0 auto;
-    max-width: 35ch !important;
+    max-width: 40ch !important;
     text-align: center;
     padding: 1%;
 }

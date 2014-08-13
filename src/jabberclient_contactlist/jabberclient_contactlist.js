@@ -113,25 +113,6 @@
 
     .declareMethod('receivePresence', function (presence) {
       updateContactList(this, parseXML(presence));
-    })
-
-    .declareMethod('receive', function (message) {
-      var that = this,
-        body = parseXML(message);
-      if ($(body).find('iq').length !== 0 &&
-          $(body).find('query').length !== 0 &&
-          $(body).find('query').attr('xmlns') === "jabber:iq:roster") {
-        this.contactList = new ContactList($(body).find('iq')[0]);
-      } else if ($(body).find('presence')) {
-        $(body).find('presence').each(function (index, elem) {
-          updateContactList(that, elem);
-        });
-      }
-    })
-
-    .declareMethod('updatePresence', function (presence) {
-      presence = parseXML(presence);
-      updateContactList(this, presence);
     });
 
 }($, Strophe, rJS(window)));
