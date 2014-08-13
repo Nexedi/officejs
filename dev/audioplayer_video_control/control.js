@@ -132,7 +132,7 @@
         g.video = g.__element.getElementsByTagName("video")[0];
         if (MediaSource === undefined) {
             info = g.__element.getElementsByClassName("info")[0];
-            info.innerHTML = "<ul>\n<li>for a better performence, pleasa enable MediaSource</li>\n<li>1.Type about:config into the web browser's address bar and hit enter.\nConfirm that you will be careful if a warning message is displayed.</li>\n<li>2.search for media.mediasource.enabled and double-click the name.</li>\n</ul>";
+            info.innerHTML = "<ul>\n<li>for a better performance, pleasa enable MediaSource</li>\n<li>1.Type about:config into the web browser's address bar and hit enter.\nConfirm that you will be careful if a warning message is displayed.</li>\n<li>2.search for media.mediasource.enabled and double-click the name.</li>\n</ul>";
             return;
         }
         g.seeking = false;
