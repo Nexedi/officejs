@@ -17,8 +17,9 @@
         <a href=#page=control&id={{this.id}}&action=offline>
           <img src={{this.doc.picture}}>          
           <h3> {{this.doc.title}} </h3>
-          <P>  {{this.doc.artist}} </p>
-          <P>  {{this.doc.album}} </p>
+          <P>{{this.doc.artist}}</p>
+          <P>{{this.doc.album}} </p>
+          <p class="ui-li-count">{{this.doc.time}} </p>
         </a>
         {{else}}
         <a href=#page=video_control&id={{this.id}}&action=offline>
@@ -26,6 +27,7 @@
           <h3> {{this.doc.title}} </h3>
           <P>  {{this.doc.artist}} </p>
           <P>  {{this.doc.album}} </p>
+          <p class="ui-li-count">{{this.doc.time}} </p>
         </a>
         {{/compare}}
         <a href=#page=playlist&id={{this.id}}&action=delete>

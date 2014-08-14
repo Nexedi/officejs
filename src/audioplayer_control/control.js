@@ -53,16 +53,6 @@
       return new RSVP.Promise(itsANonResolvableTrap, canceller);
     };
 
-
-  function set() {  //configure a song
-    var gadget = this;
-    gadget.source.connect(gadget.filter);
-    gadget.filter.connect(gadget.analyser);
-    gadget.analyser.connect(gadget.gain);
-    gadget.gain.connect(audioCtx.destination);
-  }
-
-
   function timeFormat(seconds) {
     var result = '00:' + Math.round(seconds),
       min,
@@ -75,6 +65,15 @@
     }
     return result;
   }
+
+  function set() {  //configure a song
+    var gadget = this;
+    gadget.source.connect(gadget.filter);
+    gadget.filter.connect(gadget.analyser);
+    gadget.analyser.connect(gadget.gain);
+    gadget.gain.connect(audioCtx.destination);
+  }
+
 
   function getTime(context, x) {
     var posX = x,
@@ -141,9 +140,9 @@
       canvasCtx.clearRect(0, 0, cwidth, cheight);
       step = Math.round(array.length / meterNum);
       bar_context.value = that.audio.currentTime;
-      if (isFinite(that.audio.duration)) {
+    /*  if (isFinite(that.audio.duration)) {
         bar_context.max = that.audio.duration;
-      }
+      }*/
       time_context.innerHTML = timeFormat(that.audio.duration -
                                           that.audio.currentTime);
       for (i = 0; i < meterNum; i += 1) {
@@ -160,6 +159,7 @@
 
   gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment")
     .declareAcquiredMethod("jio_get", "jio_get")
+    .declareAcquiredMethod("jio_put", "jio_put")
     .declareAcquiredMethod("jio_remove", "jio_remove")
     .declareAcquiredMethod("plSave", "plSave")
     .declareAcquiredMethod("plGive", "plGive")
@@ -210,7 +210,6 @@
           })
           .push(function (url) {
             g.__element.getElementsByClassName("next")[0].href = url;
-            g.id = options.id;
             return g.jio_get({"_id" : options.id});
           })
           .push(function (result) {
@@ -218,7 +217,7 @@
             share_context.href =
               "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text="
               + encodeURI(result.data.title);
-            g.size = result.data.size;
+            g.metadata = result.data;
             return g.displayThisTitle(options.action + " : "
                                       + result.data.title);
           })
@@ -285,7 +284,7 @@
           $(time_context).offset().top = $(bar_context).offset().top + 3;
           time_context.innerHTML = timeFormat(g.audio.duration);
           if (g.rebuild) {
-            return g.jio_getAttachment({"_id" : g.id,
+            return g.jio_getAttachment({"_id" : g.currentId,
                                         "_attachment" : "enclosure"});
           }
         })
@@ -294,13 +293,35 @@
           return g.plEnablePage();
         })
         .push(function () {
-          if (blob) {
+          if (g.rebuild) {
             g.audio.src = URL.createObjectURL(blob);
             g.audio.load();
             g.audio.play();
+            return promiseEventListener(g.audio, "loadedmetadata", false);
+          }
+        })
+        .push(function () {
+          if (g.rebuild) {
+            bar_context.max = g.audio.duration;
+            if (g.metadata.time === undefined) {
+              return g.jio_put({"_id": g.currentId,
+                                "title" : g.metadata.title,
+                                "type" : g.metadata.type,
+                                "format" : g.metadata.type,
+                                "size" : g.metadata.size,
+                                "artist" : g.metadata.artist,
+                                "album" : g.metadata.album,
+                                "year" : g.metadata.year,
+                                "picture" : g.metadata.picture,
+                                "modified" : g.metadata.modified,
+                                "date" : g.metadata.date,
+                                "time": timeFormat(g.audio.duration)});
+            }
           } else {
             g.sourceBuffer.appendBuffer(new Uint8Array(g.buffer));
           }
+        })
+        .push(function () {
           return RSVP.any([
             play.call(g),
             loopEventListener(g.sourceBuffer, "updateend", false, function () {
@@ -308,12 +329,26 @@
                 return;
               }
               g.fin = false;
-              if (g.index >= g.size) {
+              if (g.index >= g.metadata.size) {
                 g.mediaSource.endOfStream();
                 bar_context.max = g.audio.duration;
+                if (g.metadata.time === undefined) {
+                  return g.jio_put({"_id": g.currentId,
+                                    "title" : g.metadata.title,
+                                    "type" : g.metadata.type,
+                                    "format" : g.metadata.type,
+                                    "size" : g.metadata.size,
+                                    "artist" : g.metadata.artist,
+                                    "album" : g.metadata.album,
+                                    "year" : g.metadata.year,
+                                    "picture" : g.metadata.picture,
+                                    "modified" : g.metadata.modified,
+                                    "date" : g.metadata.date,
+                                    "time": timeFormat(g.audio.duration)});
+                }
                 return;
               }
-              return g.jio_getAttachment({"_id" : g.id,
+              return g.jio_getAttachment({"_id" : g.currentId,
                                           "_attachment" : "enclosure",
                                           "_start": g.index,
                                           "_end": g.index + 1000000})

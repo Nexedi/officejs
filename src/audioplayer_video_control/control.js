@@ -17,8 +17,23 @@
   var gk = rJS(window),
     MediaSource = window.MediaSource || window.WebKitMediaSource
       || window.mozMediaSource;
+
+  function timeFormat(seconds) {
+    var result = '00:' + Math.round(seconds),
+      min,
+      sec;
+    if (seconds > 59) {
+      min = Math.floor(seconds / 60);
+      sec = Math.floor(seconds % 60);
+      result = (min > 9 ? min : ('0' + min)) +
+        ':' + (sec > 9 ? sec : ('0' + sec));
+    }
+    return result;
+  }
+
   gk.declareAcquiredMethod("jio_getAttachment", "jio_getAttachment")
     .declareAcquiredMethod("jio_get", "jio_get")
+    .declareAcquiredMethod("jio_put", "jio_put")
     .declareAcquiredMethod("jio_remove", "jio_remove")
     .declareAcquiredMethod("plSave", "plSave")
     .declareAcquiredMethod("plGive", "plGive")
@@ -40,8 +55,7 @@
             share_context.href =
               "https://twitter.com/intent/tweet?hashtags=MusicPlayer&text="
               + encodeURI(result.data.title);
-            g.size = result.data.size;
-            g.format = result.data.format;
+            g.metadata = result.data;
             return g.displayThisTitle(options.action + " : "
                                       + result.data.title);
           })
@@ -71,7 +85,6 @@
           })
           .push(function (url) {
             g.__element.getElementsByClassName("next")[0].href = url;
-            g.id = options.id;
             g.index = 3500000;
             return g.jio_getAttachment({"_id" : g.id,
                                         "_attachment" : "enclosure",
@@ -109,7 +122,7 @@
       return new RSVP.Queue()
         .push(function () {
           if (g.rebuild) {
-            return g.jio_getAttachment({"_id" : g.id,
+            return g.jio_getAttachment({"_id" : g.currentId,
                                         "_attachment" : "enclosure"});
           }
         })
@@ -118,37 +131,58 @@
           return g.plEnablePage();
         })
         .push(function () {
-          if (blob) {
+          if (g.rebuild) {
             g.video.src = URL.createObjectURL(blob);
             g.video.load();
             g.video.play();
+            return promiseEventListener(g.video, "loadedmetadata", false);
+          }
+        })
+        .push(function () {
+          if (g.rebuild) {
+            if (g.metadata.time === undefined) {
+              return g.jio_put({"_id": g.currentId,
+                                "title" : g.metadata.title,
+                                "type" : g.metadata.type,
+                                "format" : g.metadata.type,
+                                "size" : g.metadata.size,
+                                "artist" : g.metadata.artist,
+                                "album" : g.metadata.album,
+                                "year" : g.metadata.year,
+                                "picture" : g.metadata.picture,
+                                "modified" : g.metadata.modified,
+                                "date" : g.metadata.date,
+                                "time": timeFormat(g.video.duration)});
+            }
           } else {
             g.sourceBuffer.appendBuffer(new Uint8Array(g.buffer));
             g.video.play();
           }
+        })
+        .push(function () {
           return RSVP.any([
-            loopEventListener(g.video, "ended", false, function () {
-              window.location = g.__element
-                .getElementsByClassName("next")[0].href;
-            }),
-
-            loopEventListener(g.video, "seeking", false, function (e) {
-              if (g.buffedTime === undefined) {
-                g.video.currentTime = 0;
-              } else {
-                if (g.video.currentTime > g.buffedTime) {
-                  g.video.currentTime = g.buffedTime;
-                }
-              }
-            }),
             loopEventListener(g.sourceBuffer, "updateend", false, function () {
               g.buffedTime = g.sourceBuffer.buffered.end(0);
               if (!g.fin) {
                 return;
               }
               g.fin = false;
-              if (g.index >= g.size) {
+              if (g.index >= g.metadata.size) {
                 g.mediaSource.endOfStream();
+                if (g.metadata.time === undefined) {
+                  return g.jio_put({"_id": g.currentId,
+                                    "title" : g.metadata.title,
+                                    "type" : g.metadata.type,
+                                    "format" : g.metadata.type,
+                                    "size" : g.metadata.size,
+                                    "artist" : g.metadata.artist,
+                                    "album" : g.metadata.album,
+                                    "year" : g.metadata.year,
+                                    "picture" : g.metadata.picture,
+                                    "modified" : g.metadata.modified,
+                                    "date" : g.metadata.date,
+                                    "time": timeFormat(g.video.duration)});
+                }
                 return;
               }
               return g.jio_getAttachment({"_id" : g.id,
@@ -163,6 +197,19 @@
                   g.fin = true;
                   g.sourceBuffer.appendBuffer(new Uint8Array(e.target.result));
                 });
+            }),
+            loopEventListener(g.video, "ended", false, function () {
+              window.location = g.__element
+                .getElementsByClassName("next")[0].href;
+            }),
+            loopEventListener(g.video, "seeking", false, function (e) {
+              if (g.buffedTime === undefined) {
+                g.video.currentTime = 0;
+              } else {
+                if (g.video.currentTime > g.buffedTime) {
+                  g.video.currentTime = g.buffedTime;
+                }
+              }
             })
           ]);
         });

@@ -118,6 +118,10 @@
         return this.getDeclaredGadget(storageType(this.storageType)).push(function(jio_gadget) {
             return jio_gadget.remove.apply(jio_gadget, param_list);
         });
+    }).allowPublicAcquisition("jio_put", function(param_list) {
+        return this.getDeclaredGadget(storageType(this.storageType)).push(function(jio_gadget) {
+            return jio_gadget.put.apply(jio_gadget, param_list);
+        });
     }).allowPublicAcquisition("jio_removeAttachment", function(param_list) {
         return this.getDeclaredGadget(storageType(this.storageType)).push(function(jio_gadget) {
             return jio_gadget.removeAttachment.apply(jio_gadget, param_list);
