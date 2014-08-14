@@ -9616,7 +9616,6 @@ decodeURI, encodeURI*/
       result,
       index,
       name,
-      type,
       that = this;
     return new Promise(function (resolve, reject) {
       xml.onerror = function (e) {
@@ -9634,23 +9633,20 @@ decodeURI, encodeURI*/
               result = result.substring(index + 7);
               index = result.indexOf("\">");
               url = result.substring(0, index);
-              if (url.indexOf(".mp3") === -1 && url.indexOf(".mp4") === -1
-                  && url.indexOf(".webm") === -1) {
-                result = result.substring(index + 2);
-              } else {
-                if (url.indexOf(".mp4") !== -1) {
-                  type = "video/mp4";
-                } else if (url.indexOf(".webm") !== -1 ) {
-                  type = "audio/webm"
-                } else {
-                  type = "audio/mp3";
-                }
+              if (url.indexOf(".mp3") === -1) {
                 name = decodeURI(url);
                 rows.push({
                   "id": url,
                   "doc": {"title" : name,
-                          "type" : type        
-                         }
+                          "type" : "video/webm"}
+                });
+                result = result.substring(index + 2);
+              } else {
+                name = decodeURI(url);
+                rows.push({
+                  "id": url,
+                  "doc": {"title" : name,
+                          "type" : "audio/mpeg"}
                 });
               }
             }
@@ -9675,10 +9671,8 @@ decodeURI, encodeURI*/
       .then(function (result) {
         length = result.data.rows.length;
         for (i = 0; i < length; i += 1) {
-          if ((result.data.rows[i].id === encodeURI(param._id)) 
-              || (result.data.rows[i].id === param._id)) {  //xxx
-            return ({"data": {"title" : result.data.rows[i].doc.title,
-                              "type": result.data.rows[i].doc.type}});
+          if (result.data.rows[i].id === encodeURI(param._id)) {  //xxx
+            return ({"data": {"title" : result.data.rows[i].doc.title}});
           }
         }
       })
@@ -9712,6 +9706,11 @@ decodeURI, encodeURI*/
     }
     pro.then(command.success, command.error, command.notify);
   };
+  
+  httpStorage.prototype.put = function (command) {
+    command.success();
+  };
+
 
   httpStorage.prototype.allDocs = function (command) {
     this.getList()
