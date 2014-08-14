@@ -315,7 +315,10 @@
                                 "picture" : g.metadata.picture,
                                 "modified" : g.metadata.modified,
                                 "date" : g.metadata.date,
-                                "time": timeFormat(g.audio.duration)});
+                                "time": timeFormat(g.audio.duration)})
+                .fail(function (e) {
+                  return;
+                });
             }
           } else {
             g.sourceBuffer.appendBuffer(new Uint8Array(g.buffer));
@@ -344,7 +347,10 @@
                                     "picture" : g.metadata.picture,
                                     "modified" : g.metadata.modified,
                                     "date" : g.metadata.date,
-                                    "time": timeFormat(g.audio.duration)});
+                                    "time": timeFormat(g.audio.duration)})
+                    .fail(function (e) {
+                      return;
+                    });
                 }
                 return;
               }

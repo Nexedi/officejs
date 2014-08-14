@@ -234,6 +234,8 @@
                         modified: g.metadata.modified,
                         date: g.metadata.date,
                         time: timeFormat(g.audio.duration)
+                    }).fail(function(e) {
+                        return;
                     });
                 }
             } else {
@@ -262,6 +264,8 @@
                             modified: g.metadata.modified,
                             date: g.metadata.date,
                             time: timeFormat(g.audio.duration)
+                        }).fail(function(e) {
+                            return;
                         });
                     }
                     return;
