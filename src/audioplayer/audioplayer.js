@@ -133,7 +133,13 @@
         });
     })
     .allowPublicAcquisition("jio_remove", function (param_list) {
-      return this.getDeclaredGadget(storageType(this.storageType))
+      var type;
+      if (param_list[1] === 0 || param_list[1] === 1) {
+        type = param_list[1];
+      } else {
+        type = this.storageType;
+      }
+      return this.getDeclaredGadget(storageType(type))
         .push(function (jio_gadget) {
           return jio_gadget.remove.apply(jio_gadget, param_list);
         });
