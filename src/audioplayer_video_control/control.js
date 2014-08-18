@@ -203,11 +203,13 @@
                 .getElementsByClassName("next")[0].href;
             }),
             loopEventListener(g.video, "seeking", false, function (e) {
-              if (g.buffedTime === undefined) {
-                g.video.currentTime = 0;
-              } else {
-                if (g.video.currentTime > g.buffedTime) {
-                  g.video.currentTime = g.buffedTime;
+              if (g.rebuild === false) {
+                if (g.buffedTime === undefined) {
+                  g.video.currentTime = 0;
+                } else {
+                  if (g.video.currentTime > g.buffedTime) {
+                    g.video.currentTime = g.buffedTime;
+                  }
                 }
               }
             })
