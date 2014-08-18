@@ -58,7 +58,7 @@
                 g.__element.getElementsByClassName("next")[0].href = url;
                 g.index = 35e5;
                 return g.jio_getAttachment({
-                    _id: g.id,
+                    _id: g.currentId,
                     _attachment: "enclosure",
                     _start: 0,
                     _end: 35e5
@@ -147,7 +147,7 @@
                     return;
                 }
                 return g.jio_getAttachment({
-                    _id: g.id,
+                    _id: g.currentId,
                     _attachment: "enclosure",
                     _start: g.index,
                     _end: g.index + 35e5

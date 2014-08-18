@@ -86,7 +86,7 @@
           .push(function (url) {
             g.__element.getElementsByClassName("next")[0].href = url;
             g.index = 3500000;
-            return g.jio_getAttachment({"_id" : g.id,
+            return g.jio_getAttachment({"_id" : g.currentId,
                                         "_attachment" : "enclosure",
                                         "_start": 0,
                                         "_end": 3500000});
@@ -185,7 +185,7 @@
                 }
                 return;
               }
-              return g.jio_getAttachment({"_id" : g.id,
+              return g.jio_getAttachment({"_id" : g.currentId,
                                           "_attachment" : "enclosure",
                                           "_start": g.index,
                                           "_end": g.index + 3500000})
