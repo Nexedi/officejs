@@ -81,8 +81,9 @@
       queue = new RSVP.Queue();
     this.list = {};
     this.el = $('#contact-list ul');
-    //that.el.listview();
     this.el.hide();
+    this.el.html("");
+    that.el.listview();
     [].forEach.call(contactItems, function (item) {
       queue
         .push(function () {

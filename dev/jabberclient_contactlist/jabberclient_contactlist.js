@@ -60,8 +60,9 @@
         var that = this, contactItems = rosterIq.childNodes[0].childNodes, queue = new RSVP.Queue();
         this.list = {};
         this.el = $("#contact-list ul");
-        //that.el.listview();
         this.el.hide();
+        this.el.html("");
+        that.el.listview();
         [].forEach.call(contactItems, function(item) {
             queue.push(function() {
                 var options = {}, jid = $(item).attr("jid");
