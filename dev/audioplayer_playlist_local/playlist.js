@@ -81,7 +81,7 @@
             return gadget.displayThisTitle("localhost playlist: " + tmp.length + " media");
         }).fail(function(error) {
             if (!(error instanceof RSVP.CancellationError)) {
-                if (error.target.error.name === "QuotaExceededError") {
+                if (error.target.error !== undefined && error.target.error.name === "QuotaExceededError") {
                     gadget.__element.getElementsByClassName("info")[0].innerHTML = "QuotaError";
                     if (gadget.putId) {
                         return gadget.jio_remove({
