@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Chatbox</title>
+
+    <link rel="stylesheet" href="jabberclient_chatbox.css">
+
+    <script src="../lib/jquery.js"></script>
+    <script src="../lib/strophejs-1.1.3/strophe.min.js"></script>
+    <script src="../lib/handlebars.min.js"</script>
+    <script src="../lib/rsvp.min.js"></script>
+    <script src="../lib/renderjs.min.js"></script>
+
+    <script class="message-template" type="text/x-handlebars-template">
+      <p>[{{time}}]&nbsp<strong>{{jid}}:&nbsp</strong>{{content}}</p>
+    </script>
+
+    <script src="jabberclient_chatbox.js"></script>
+  </head>
+  <body>
+    <div class="contact"></div>
+    <div class="talk-box ui-corner-all"></div>
+    <textarea class="talk-input ui-corner-all"></textarea>
+    <button class="send-button ui-btn ui-btn-inline ui-mini ui-corner-all">Send</button>
+  </body>
+</html>

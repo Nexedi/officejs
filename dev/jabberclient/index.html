@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Jabber Client</title>
+
+    <link rel="stylesheet" href="../lib/jquerymobile.css">
+    <link rel="stylesheet" href="jabberclient.css">
+
+    <script src="../lib/jquery.js"></script>
+    <script src="../lib/jquerymobile.js"></script>
+    <script src="../lib/strophejs-1.1.3/strophe.min.js"></script>
+    <script src="../lib/rsvp.min.js"></script>
+    <script src="../lib/renderjs.min.js"></script>
+
+    <script src="jabberclient.js"></script>
+  </head>
+  <body>
+    <div class="jio_gadget"
+         data-gadget-url="../jabberclient_jio/index.html"
+         data-gadget-scope="jio">
+    </div>
+    <div data-role="header" data-position="fixed" data-theme="a">
+      <a href="#page=contactlist" class="ui-btn-left ui-btn ui-btn-inline ui-mini ui-corner-all ui-btn-icon-left ui-icon-user">Contacts</a>
+      <h1>Jabber Client</h1>
+      <a href="#page=connection" class="ui-btn-right ui-btn ui-btn-inline ui-mini ui-corner-all">Connection</a>
+    </div>
+    <div data-role="page" overflow="hidden">
+      <div role="main" class="ui-content gadget-container" overflow="hidden"></div>
+    </div>
+  </body>
+</html>

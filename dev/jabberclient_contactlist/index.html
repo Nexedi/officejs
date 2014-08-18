@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Jabber client</title>
+
+    <link rel="stylesheet" href="../lib/jquerymobile.css">
+
+    <script src="../lib/jquery.js"></script>
+    <script src="../lib/jquerymobile.js"></script>
+    <script src="../lib/rsvp.min.js"></script>
+    <script src="../lib/renderjs.min.js"></script>
+    <script src="../lib/strophejs-1.1.3/strophe.min.js"></script>
+    <script src="../lib/handlebars.min.js"></script>
+
+    <script src="jabberclient_contactlist.js"></script>
+
+    <script class="offline-contact-template" type="text/x-handlebars-template">
+      <li>
+        <img src="../jabberclient_contactlist/images/offline.png"
+             alt="offline"
+             class="ui-li-icon ui-corner-none">
+        {{name}}&nbsp&nbsp{{jid}}
+      </li>
+    </script>
+
+    <script class="online-contact-template" type="text/x-handlebars-template">
+      <li><a href="{{hash}}">
+        <img src="../jabberclient_contactlist/images/online.png"
+             alt="online"
+             class="ui-li-icon ui-corner-none">
+        {{name}}&nbsp&nbsp{{jid}}
+      </a></li>
+    </script>
+
+    <script class="status-contact-template" type="text/x-handlebars-template">
+      <li><a href="{{hash}}">
+        <img src="../jabberclient_contactlist/images/status.png"
+             alt="{{status}}"
+             class="ui-li-icon ui-corner-none">
+        {{name}}&nbsp&nbsp{{jid}}&nbsp&nbsp({{status}})
+      </a></li>
+    </script>
+
+  </head>
+  <body>
+    <div id=contact-list><ul data-role="listview" data-inset="true"></ul></div>
+  </body>
+</html>
