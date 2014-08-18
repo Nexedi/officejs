@@ -110,8 +110,6 @@ module.exports = function (grunt) {
             "<%= global_config.src %>/jabberclient/jabberclient.css",
           "<%= global_config.dest %>/jabberclient_connection/jabberclient_connection.css":
             "<%= global_config.src %>/jabberclient_connection/jabberclient_connection.css",
-          "<%= global_config.dest %>/jabberclient_contactlist/jabberclient_contactlist.css":
-            "<%= global_config.src %>/jabberclient_contactlist/jabberclient_contactlist.css",
           "<%= global_config.dest %>/jabberclient_chatbox/jabberclient_chatbox.css":
             "<%= global_config.src %>/jabberclient_chatbox/jabberclient_chatbox.css"
         }

@@ -5,7 +5,6 @@
     <title>Jabber client</title>
 
     <link rel="stylesheet" href="../<%= curl.jquerymobilecss.relative_dest %>">
-    <link rel="stylesheet" href="jabberclient_contactlist.css">
 
     <script src="../<%= curl.jquery.relative_dest %>"></script>
     <script src="../<%= curl.jquerymobilejs.relative_dest %>"></script>
@@ -18,23 +17,29 @@
 
     <script class="offline-contact-template" type="text/x-handlebars-template">
       <li>
-        <img src="../jabberclient_contactlist/images/offline.png">
-        <h2>{{name}}&nbsp&nbsp{{jid}}</h2>
+        <img src="../jabberclient_contactlist/images/offline.png"
+             alt="offline"
+             class="ui-li-icon ui-corner-none">
+        {{name}}&nbsp&nbsp{{jid}}
       </li>
     </script>
 
     <script class="online-contact-template" type="text/x-handlebars-template">
-      <li>
-        <img src="../jabberclient_contactlist/images/online.png">
-        <h2>{{name}}&nbsp&nbsp{{jid}}</h2>
-      </li>
+      <li><a href="{{hash}}">
+        <img src="../jabberclient_contactlist/images/online.png"
+             alt="online"
+             class="ui-li-icon ui-corner-none">
+        {{name}}&nbsp&nbsp{{jid}}
+      </a></li>
     </script>
 
     <script class="status-contact-template" type="text/x-handlebars-template">
-      <li>
-        <img src="../jabberclient_contactlist/images/status.png">
-        <h2>{{name}}&nbsp&nbsp{{jid}}&nbsp&nbsp({{status}})</h2>
-      </li>
+      <li><a href="{{hash}}">
+        <img src="../jabberclient_contactlist/images/status.png"
+             alt="{{status}}"
+             class="ui-li-icon ui-corner-none">
+        {{name}}&nbsp&nbsp{{jid}}&nbsp&nbsp({{status}})
+      </a></li>
     </script>
 
   </head>

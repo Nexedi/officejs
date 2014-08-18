@@ -1,4 +1,4 @@
-/*global window, rJS, Strophe, $, DOMParser,
+/*global window, rJS, Strophe, $, DOMParser, RSVP,
   XMLSerializer, Handlebars, $iq, $pres*/
 /*jslint nomen: true*/
 
@@ -25,7 +25,6 @@
   function updateContactElement(gadget, contact) {
     var template,
       options = {};
-
     if (contact.el) { contact.el.remove(); }
     if (contact.offline) {
       template = offline_contact_template;
@@ -37,10 +36,18 @@
     }
     options.jid = contact.jid;
     options.name = contact.name;
-    contact.el = $(template(options));
-    contact.el.click(function () {
-      gadget.openChat(contact.jid);
-    });
+    return gadget.getConnectionJID()
+      .push(function (connection_jid) {
+        return gadget.getHash({
+          page: "chatbox",
+          current_contact_jid: contact.jid,
+          jid: connection_jid
+        });
+      })
+      .push(function (hash) {
+        options.hash = hash;
+        contact.el = $(template(options));
+      });
   }
 
   function updateContact(gadget, contact, presence) {
@@ -54,37 +61,49 @@
         contact.status = show.text();
       }
     }
-    updateContactElement(gadget, contact);
+    return updateContactElement(gadget, contact);
   }
 
-  function Contact(gadget, jid, options) {
-    this.jid = jid;
-    this.offline = true;
-    this.status = null;
+  function createContact(gadget, jid, options) {
+    gadget.contactList.list[jid] = {};
+    gadget.contactList.list[jid].jid = jid;
+    gadget.contactList.list[jid].offline = true;
+    gadget.contactList.list[jid].status = null;
     if (typeof options === 'object') {
-      $.extend(this, options);
+      $.extend(gadget.contactList.list[jid], options);
     }
-    updateContactElement(gadget, this);
+    return updateContactElement(gadget, gadget.contactList.list[jid]);
   }
 
   function ContactList(gadget, rosterIq) {
     var that = this,
       contactItems = rosterIq.childNodes[0].childNodes,
-      jid,
-      options;
+      queue = new RSVP.Queue();
     this.list = {};
     this.el = $('#contact-list ul');
+    //that.el.listview();
+    this.el.hide();
     [].forEach.call(contactItems, function (item) {
-      jid = $(item).attr('jid');
-      options = {};
-      [].forEach.call(item.attributes, function (attr) {
-        options[attr.name] = attr.value;
-      });
-      that.list[jid] = new Contact(gadget, jid, options);
-      that.el.append(that.list[jid].el);
+      queue
+        .push(function () {
+          var options = {},
+            jid = $(item).attr('jid');
+          [].forEach.call(item.attributes, function (attr) {
+            options[attr.name] = attr.value;
+          });
+          return createContact(gadget, jid, options);
+        })
+        .push(function () {
+          var jid = $(item).attr('jid');
+          that.el.append(that.list[jid].el);
+        });
     });
-    this.el.listview();
-    gadget.send($pres().toString());
+    queue
+      .push(function () {
+        that.el.listview();
+        that.el.show();
+        gadget.send($pres().toString());
+      });
   }
 
   function updateContactList(gadget, presence) {
@@ -92,19 +111,26 @@
       contact = gadget.contactList.list[jid];
 
     if (contact) {
-      updateContact(gadget, contact, presence);
-      if (contact.offline) {
-        gadget.contactList.el.append(contact.el);
-      } else {
-        gadget.contactList.el.prepend(contact.el);
-      }
-      gadget.contactList.el.listview('refresh');
+      return updateContact(gadget, contact, presence)
+        .push(function () {
+          if (contact.offline) {
+            gadget.contactList.el.append(contact.el);
+          } else {
+            gadget.contactList.el.prepend(contact.el);
+          }
+          gadget.contactList.el.listview('refresh');
+        });
     }
   }
 
   gadget
 
+    .declareAcquiredMethod('getHash', 'getHash')
+
+    .declareAcquiredMethod("getConnectionJID", "getConnectionJID")
+
     .declareAcquiredMethod('send', 'send')
+
     .declareAcquiredMethod('openChat', 'openChat')
 
     .declareMethod('receiveRoster', function (roster) {
@@ -112,7 +138,7 @@
     })
 
     .declareMethod('receivePresence', function (presence) {
-      updateContactList(this, parseXML(presence));
+      return updateContactList(this, parseXML(presence));
     });
 
 }($, Strophe, rJS(window)));

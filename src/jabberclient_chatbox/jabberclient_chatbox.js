@@ -75,11 +75,21 @@
     })
 
     .declareMethod('render', function (options) {
-      var gadget = this;
+      var gadget = this,
+        messages;
       this.props.jid = options.jid;
       this.props.current_contact_jid = options.current_contact_jid;
       $('[data-role="page"]').height("100%");
       $('.gadget-container').height("93%");
+
+      $(gadget.__element).find(".talk-box").html("");
+
+      if (this.props.talks[this.props.current_contact_jid]) {
+        messages = this.props.talks[this.props.current_contact_jid].messages;
+        messages.forEach(function (message) {
+          displayMessage(message);
+        });
+      }
 
       $(this.__element).find(".send-button").click(function (e) {
         e.preventDefault();

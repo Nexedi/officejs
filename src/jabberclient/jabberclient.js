@@ -108,32 +108,15 @@
         .push(this.pleaseRedirectMyHash.bind(this));
     })
 
-    .declareMethod('getConnectionJID', function () {
+    .allowPublicAcquisition('getConnectionJID', function () {
       return this.getDeclaredGadget('connection')
         .push(function (connection_gadget) {
           return connection_gadget.getConnectionJID();
         });
     })
 
-    .allowPublicAcquisition('getConnectionJID', function () {
-      return this.getConnectionJid();
-    })
-
-    .allowPublicAcquisition('getJID', function () {
-      return this.login_gadget.getJID();
-    })
-
-    .allowPublicAcquisition('openChat', function (jid) {
-      var gadget = this;
-      return gadget.getConnectionJID()
-        .push(function (connection_jid) {
-          return gadget.aq_pleasePublishMyState({
-            page: 'chatbox',
-            current_contact_jid: jid[0],
-            jid: connection_jid
-          });
-        })
-        .push(this.pleaseRedirectMyHash.bind(this));
+    .allowPublicAcquisition('getHash', function (options) {
+      return this.aq_pleasePublishMyState(options[0]);
     })
 
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")
