@@ -9633,7 +9633,8 @@ decodeURI, encodeURI*/
               result = result.substring(index + 7);
               index = result.indexOf("\">");
               url = result.substring(0, index);
-              if (url.indexOf(".mp3") === -1) {
+              if (url.indexOf(".webm") !== -1 ||
+                  url.indexOf(".mp4") !== -1) {
                 name = decodeURI(url);
                 rows.push({
                   "id": url,
@@ -9641,7 +9642,8 @@ decodeURI, encodeURI*/
                           "type" : "video/webm"}
                 });
                 result = result.substring(index + 2);
-              } else {
+              }
+              if (url.indexOf(".mp3") !== -1) {
                 name = decodeURI(url);
                 rows.push({
                   "id": url,
@@ -9706,7 +9708,6 @@ decodeURI, encodeURI*/
     }
     pro.then(command.success, command.error, command.notify);
   };
-  
   httpStorage.prototype.put = function (command) {
     command.success();
   };
