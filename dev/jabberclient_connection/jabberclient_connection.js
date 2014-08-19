@@ -10,9 +10,11 @@
     function serializeXML(xml) {
         return new XMLSerializer().serializeToString(xml);
     }
-    function logout(gadget) {
+    function logout(gadget, authfail) {
         sessionStorage.removeItem("connection_params");
-        return gadget.render();
+        return gadget.render({
+            authfail: authfail
+        });
     }
     function showLogout(gadget) {
         return new RSVP.Queue().push(function() {
@@ -67,7 +69,7 @@
         });
     }
     function connectionListener(gadget, params) {
-        var connection = new Strophe.Connection(params.server), connection_callback;
+        var connection = new Strophe.Connection(params.server), connection_callback, authfail = false;
         gadget.props.connection = connection;
         function canceller() {
             if (connection_callback !== undefined) {
@@ -78,10 +80,14 @@
             connection_callback = function(status) {
                 new RSVP.Queue().push(function() {
                     if (status === Strophe.Status.CONNECTED) {
+                        authfail = false;
                         return login(gadget, params);
                     }
                     if (status === Strophe.Status.DISCONNECTED) {
-                        return logout(gadget);
+                        return logout(gadget, authfail);
+                    }
+                    if (status === Strophe.Status.CONNFAIL || status === Strophe.Status.AUTHFAIL) {
+                        authfail = true;
                     }
                 }).fail(function(e) {
                     reject(e);
@@ -91,11 +97,14 @@
         }
         return new RSVP.Promise(resolver, canceller);
     }
-    function showLogin(gadget) {
+    function showLogin(gadget, options) {
         var params = {
             server: "https://mail.tiolive.com/chat/http-bind/"
         };
         return new RSVP.Queue().push(function() {
+            if (options && options.authfail) {
+                params.authfail = true;
+            }
             $(gadget.__element).html(login_template(params));
         }).push(function() {
             return promiseEventListener(gadget.__element.querySelector("form.login-form"), "submit", false);
@@ -126,10 +135,10 @@
         }
     }).ready(function(g) {
         g.props = {};
-    }).declareMethod("render", function() {
+    }).declareMethod("render", function(options) {
         if (this.props.connection && this.props.connection.authenticated) {
             return showLogout(this);
         }
-        return showLogin(this);
+        return showLogin(this, options);
     });
 })($, Strophe, rJS, Handlebars);

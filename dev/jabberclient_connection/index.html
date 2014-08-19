@@ -31,6 +31,9 @@
           <fieldset class="ui-btn-inline">
             <input type="submit" value="Log In">
           </fieldset>
+          {{#if authfail}}
+          <p style="color:red;">Bad username or password</p>
+          {{/if}}
         </form>
       </div>
     </script>
