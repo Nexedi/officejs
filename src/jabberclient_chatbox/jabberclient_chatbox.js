@@ -68,10 +68,21 @@
   }
 
   gadget_klass
+
+    .declareAcquiredMethod('jio_put', 'jio_put')
+
+    .declareAcquiredMethod('jio_get', 'jio_get')
+
     .ready(function (g) {
-      g.props = {
-        talks: {}
-      };
+      return g.jio_get({"_id": "chatbox_history"})
+        .push(function (response) {
+          return JSON.parse(response.data.datas);
+        })
+        .push(function (talks) {
+          g.props = {
+            talks: talks
+          };
+        });
     })
 
     .declareMethod('render', function (options) {
@@ -125,6 +136,12 @@
         this.props.talks[from] = new Talk(from);
       }
       this.props.talks[from].messages.push(message);
+
+      this.jio_put({
+        "_id": "chatbox_history",
+        "datas": JSON.stringify(this.props.talks)
+      });
+
       displayMessage(message);
     });
 
