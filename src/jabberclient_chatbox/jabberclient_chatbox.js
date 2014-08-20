@@ -60,6 +60,10 @@
         gadget.props.talks[to] = new Talk(to);
       }
       gadget.props.talks[to].messages.push(message);
+      gadget.jio_put({
+        "_id": "chatbox_history",
+        "datas": JSON.stringify(gadget.props.talks)
+      });
       displayMessage(message);
       gadget.send(
         $msg({to: to, type: "chat"}).c('body').t(content).toString()
@@ -110,10 +114,10 @@
       $(this.__element).find(".talk-input").keypress(function (e) {
         var charCode = (typeof e.which === "number") ? e.which : e.keyCode;
         if (charCode === 13) {
+          e.preventDefault();
           if (!e.shiftKey) {
             sendInput(gadget);
           } else {
-            e.preventDefault();
             $(gadget.__element).find(".talk-input").val(
               $(gadget.__element).find(".talk-input").val() + "\n"
             );
