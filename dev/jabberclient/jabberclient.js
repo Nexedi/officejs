@@ -37,7 +37,7 @@
     }).allowPublicAcquisition("receive", function(datas) {
         datas = datas[0];
         console.log("[xmpp datas input] : " + datas);
-        var xmlInput = parseXML(datas);
+        var xmlInput = parseXML(datas), gadget = this;
         if (isRoster(xmlInput)) {
             return this.getDeclaredGadget("contactlist").push(function(contactlist_gadget) {
                 return contactlist_gadget.receiveRoster(datas);
@@ -45,11 +45,15 @@
         }
         if (isPresence(xmlInput)) {
             return this.getDeclaredGadget("contactlist").push(function(contactlist_gadget) {
-                contactlist_gadget.receivePresence(datas);
+                return contactlist_gadget.receivePresence(datas);
             });
         }
         if (isMessage(xmlInput)) {
-            return this.getDeclaredGadget("chatbox").push(function(chatbox_gadget) {
+            return this.getDeclaredGadget("contactlist").push(function(contactlist_gadget) {
+                return contactlist_gadget.receiveMessage(datas);
+            }).push(function() {
+                return gadget.getDeclaredGadget("chatbox");
+            }).push(function(chatbox_gadget) {
                 return chatbox_gadget.receive(datas);
             });
         }
@@ -82,7 +86,11 @@
         });
     }).allowPublicAcquisition("getHash", function(options) {
         return this.aq_pleasePublishMyState(options[0]);
-    }).declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").allowPublicAcquisition("renderConnection", function() {
+    }).declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").allowPublicAcquisition("messagesAreRead", function(jid) {
+        return this.getDeclaredGadget("contactlist").push(function(contactlist_gadget) {
+            return contactlist_gadget.messagesAreRead(jid[0]);
+        });
+    }).allowPublicAcquisition("renderConnection", function() {
         return this.aq_pleasePublishMyState({
             page: "connection"
         }).push(this.pleaseRedirectMyHash.bind(this));

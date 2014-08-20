@@ -124,7 +124,10 @@
           }
         }
       });
+      return this.messagesAreRead(options.current_contact_jid);
     })
+
+    .declareAcquiredMethod('messagesAreRead', "messagesAreRead")
 
     .declareAcquiredMethod('send', 'send')
 

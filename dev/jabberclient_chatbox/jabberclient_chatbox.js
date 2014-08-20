@@ -90,7 +90,8 @@
                 }
             }
         });
-    }).declareAcquiredMethod("send", "send").declareMethod("receive", function(datas) {
+        return this.messagesAreRead(options.current_contact_jid);
+    }).declareAcquiredMethod("messagesAreRead", "messagesAreRead").declareAcquiredMethod("send", "send").declareMethod("receive", function(datas) {
         var xmlMessage = parseXML(datas), from = Strophe.getBareJidFromJid($(xmlMessage).attr("from")), to = Strophe.getBareJidFromJid($(xmlMessage).attr("to")), time = getTime(), content = $(xmlMessage).find("body").text(), message = new Message(from, to, time, content);
         if (!this.props.talks[from]) {
             this.props.talks[from] = new Talk(from);

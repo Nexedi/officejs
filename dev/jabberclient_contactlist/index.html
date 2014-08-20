@@ -21,6 +21,9 @@
              alt="offline"
              class="ui-li-icon ui-corner-none">
         {{name}}&nbsp&nbsp{{jid}}
+        {{#if new_message}}
+        &nbsp&nbsp [new message(s)]
+        {{/if}}
       </li>
     </script>
 
@@ -30,6 +33,9 @@
              alt="online"
              class="ui-li-icon ui-corner-none">
         {{name}}&nbsp&nbsp{{jid}}
+        {{#if new_message}}
+        &nbsp&nbsp [new message(s)]
+        {{/if}}
       </a></li>
     </script>
 
@@ -39,6 +45,9 @@
              alt="{{status}}"
              class="ui-li-icon ui-corner-none">
         {{name}}&nbsp&nbsp{{jid}}&nbsp&nbsp({{status}})
+        {{#if new_message}}
+        &nbsp&nbsp [new message(s)]
+        {{/if}}
       </a></li>
     </script>
 

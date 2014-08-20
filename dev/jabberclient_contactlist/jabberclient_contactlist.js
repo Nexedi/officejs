@@ -7,7 +7,7 @@
     function parseXML(xmlString) {
         return new DOMParser().parseFromString(xmlString, "text/xml").children[0];
     }
-    function updateContactElement(gadget, contact) {
+    function updateContactElement(gadget, contact, new_message, messages_read) {
         var template, options = {};
         if (contact.el) {
             contact.el.remove();
@@ -22,6 +22,7 @@
         }
         options.jid = contact.jid;
         options.name = contact.name;
+        options.new_message = new_message || false;
         return gadget.getConnectionJID().push(function(connection_jid) {
             return gadget.getHash({
                 page: "chatbox",
@@ -31,6 +32,11 @@
         }).push(function(hash) {
             options.hash = hash;
             contact.el = $(template(options));
+        }).push(function() {
+            if (options.new_message || messages_read) {
+                gadget.contactList.el.prepend(contact.el);
+                gadget.contactList.el.listview("refresh");
+            }
         });
     }
     function updateContact(gadget, contact, presence) {
@@ -94,7 +100,13 @@
             });
         }
     }
-    gadget.declareAcquiredMethod("getHash", "getHash").declareAcquiredMethod("getConnectionJID", "getConnectionJID").declareAcquiredMethod("send", "send").declareAcquiredMethod("openChat", "openChat").declareMethod("receiveRoster", function(roster) {
+    gadget.declareAcquiredMethod("getHash", "getHash").declareAcquiredMethod("getConnectionJID", "getConnectionJID").declareAcquiredMethod("send", "send").declareAcquiredMethod("openChat", "openChat").declareMethod("messagesAreRead", function(jid) {
+        var contact = this.contactList.list[jid];
+        return updateContactElement(this, contact, false, true);
+    }).declareMethod("receiveMessage", function(message) {
+        var xmlMessage = parseXML(message), jid = Strophe.getBareJidFromJid($(xmlMessage).attr("from")), contact = this.contactList.list[jid];
+        return updateContactElement(this, contact, true);
+    }).declareMethod("receiveRoster", function(roster) {
         this.contactList = new ContactList(this, parseXML(roster));
     }).declareMethod("receivePresence", function(presence) {
         return updateContactList(this, parseXML(presence));
