@@ -86,6 +86,13 @@
           g.props = {
             talks: talks
           };
+        })
+        .fail(function (e) {
+          if (e.status === 404) {
+            g.props = {
+              talks: {}
+            };
+          }
         });
     })
 

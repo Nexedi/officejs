@@ -61,6 +61,12 @@
             g.props = {
                 talks: talks
             };
+        }).fail(function(e) {
+            if (e.status === 404) {
+                g.props = {
+                    talks: {}
+                };
+            }
         });
     }).declareMethod("render", function(options) {
         var gadget = this, messages;
