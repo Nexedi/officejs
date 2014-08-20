@@ -99,7 +99,7 @@
     }
     function showLogin(gadget, options) {
         var params = {
-            server: "https://mail.tiolive.com/chat/http-bind/"
+            server: options.server
         };
         return new RSVP.Queue().push(function() {
             if (options && options.authfail) {
@@ -126,16 +126,20 @@
         return this.props.connection.send(parseXML(xmlString));
     }).declareMethod("logout", function() {
         logout(this);
-    }).declareAcquiredMethod("renderConnection", "renderConnection").declareMethod("tryAutoConnect", function() {
+    }).declareAcquiredMethod("renderConnection", "renderConnection").declareMethod("tryAutoConnect", function(options) {
         var params = JSON.parse(sessionStorage.getItem("connection_params"));
         if (params !== null && typeof params === "object" && Object.keys(params).length === 3) {
             this.manageService(connectionListener(this, params));
         } else {
-            return this.renderConnection();
+            return this.renderConnection(options);
         }
     }).ready(function(g) {
         g.props = {};
-    }).declareMethod("render", function(options) {
+    }).declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").declareAcquiredMethod("getHash", "getHash").declareMethod("render", function(options) {
+        if (options.server === undefined) {
+            options.server = "https://mail.tiolive.com/chat/http-bind/";
+            return this.getHash(options).push(this.pleaseRedirectMyHash.bind(this));
+        }
         if (this.props.connection && this.props.connection.authenticated) {
             return showLogout(this);
         }

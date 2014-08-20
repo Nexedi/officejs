@@ -90,10 +90,14 @@
         return this.getDeclaredGadget("contactlist").push(function(contactlist_gadget) {
             return contactlist_gadget.messagesAreRead(jid[0]);
         });
-    }).allowPublicAcquisition("renderConnection", function() {
-        return this.aq_pleasePublishMyState({
+    }).allowPublicAcquisition("renderConnection", function(options) {
+        var new_options = {
             page: "connection"
-        }).push(this.pleaseRedirectMyHash.bind(this));
+        };
+        if (options[0].server !== undefined) {
+            new_options.server = options[0].server;
+        }
+        return this.aq_pleasePublishMyState(new_options).push(this.pleaseRedirectMyHash.bind(this));
     }).ready(function(g) {
         g.props = {};
         $("[data-role='header']").toolbar();
@@ -124,14 +128,13 @@
         }).push(function(is_connected) {
             // default page
             if (options.page === undefined) {
-                return gadget.aq_pleasePublishMyState({
-                    page: "contactlist"
-                }).push(gadget.pleaseRedirectMyHash.bind(gadget));
+                options.page = "contactlist";
+                return gadget.aq_pleasePublishMyState(options).push(gadget.pleaseRedirectMyHash.bind(gadget));
             }
             if (!is_connected && options.page !== "connection") {
                 gadget.props.came_from = options;
                 return gadget.getDeclaredGadget("connection").push(function(connection_gadget) {
-                    return connection_gadget.tryAutoConnect();
+                    return connection_gadget.tryAutoConnect(options);
                 });
             }
             return gadget.getDeclaredGadget(options.page).push(function(g) {

@@ -17,11 +17,9 @@
 
     <script class="login-template" type="text/x-handlebars-template">
       <div class="login-box ui-corner-all ui-shadow">
-        <h3>Status: Not connected</h3><br/>
+        <h3>Status: Not connected</h3>
+        <h5>XMPP Server:&nbsp{{server}}</h5>
         <form class="login-form" data-ajax="false">
-          <div class="ui-field-contain">
-            <input type="url" name="server" placeholder="Jabber server url" value="{{server}}" required>
-          </div>
           <div class="ui-field-contain">
             <input type="text" name="jid" placeholder="Jabber ID" value="{{jid}}" required>
           </div>

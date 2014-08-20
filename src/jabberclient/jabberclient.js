@@ -135,8 +135,14 @@
         });
     })
 
-    .allowPublicAcquisition('renderConnection', function () {
-      return this.aq_pleasePublishMyState({page: "connection"})
+    .allowPublicAcquisition('renderConnection', function (options) {
+      var new_options = {
+        page: "connection"
+      };
+      if (options[0].server !== undefined) {
+        new_options.server = options[0].server;
+      }
+      return this.aq_pleasePublishMyState(new_options)
         .push(this.pleaseRedirectMyHash.bind(this));
     })
 
@@ -183,7 +189,8 @@
         .push(function (is_connected) {
           // default page
           if (options.page === undefined) {
-            return gadget.aq_pleasePublishMyState({page: "contactlist"})
+            options.page = "contactlist";
+            return gadget.aq_pleasePublishMyState(options)
               .push(gadget.pleaseRedirectMyHash.bind(gadget));
           }
 
@@ -191,7 +198,7 @@
             gadget.props.came_from = options;
             return gadget.getDeclaredGadget("connection")
               .push(function (connection_gadget) {
-                return connection_gadget.tryAutoConnect();
+                return connection_gadget.tryAutoConnect(options);
               });
           }
           return gadget.getDeclaredGadget(options.page)
