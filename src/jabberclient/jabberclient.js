@@ -36,6 +36,10 @@
     return input.nodeName === "message";
   }
 
+  function getHash(gadget, options) {
+    return gadget.aq_pleasePublishMyState(options);
+  }
+
   rJS(window)
 
     .allowPublicAcquisition('manageService', function (params) {
@@ -122,8 +126,19 @@
         });
     })
 
+    .allowPublicAcquisition("redirectOptions", function (options) {
+      var gadget = this;
+      return getHash(this, options[0])
+        .push(function (hash) {
+          if ("#" + window.location.href.split("#")[1] === hash) {
+            return gadget.render(options[0]);
+          }
+          window.location = hash;
+        });
+    })
+
     .allowPublicAcquisition('getHash', function (options) {
-      return this.aq_pleasePublishMyState(options[0]);
+      return getHash(this, options[0]);
     })
 
     .declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash")

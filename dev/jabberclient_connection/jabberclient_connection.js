@@ -1,4 +1,4 @@
-/*global window, rJS, Strophe, $, $iq, Handlebars,
+/*global window, rJS, Strophe, $, $iq, Handlebars, console,
   XMLSerializer, DOMParser, RSVP, sessionStorage, promiseEventListener*/
 /*jslint nomen: true*/
 (function($, Strophe, rJS, Handlebars) {
@@ -13,6 +13,7 @@
     function logout(gadget, authfail) {
         sessionStorage.removeItem("connection_params");
         return gadget.render({
+            page: "connection",
             authfail: authfail
         });
     }
@@ -86,8 +87,12 @@
                     if (status === Strophe.Status.DISCONNECTED) {
                         return logout(gadget, authfail);
                     }
-                    if (status === Strophe.Status.CONNFAIL || status === Strophe.Status.AUTHFAIL) {
+                    if (status === Strophe.Status.CONNFAIL) {
                         authfail = true;
+                    }
+                    if (status === Strophe.Status.AUTHFAIL) {
+                        authfail = true;
+                        connection.disconnect();
                     }
                 }).fail(function(e) {
                     reject(e);
@@ -102,7 +107,7 @@
             server: options.server
         };
         return new RSVP.Queue().push(function() {
-            if (options && options.authfail) {
+            if (options && (options.authfail === "true" || options.authfail === true)) {
                 params.authfail = true;
             }
             $(gadget.__element).html(login_template(params));
@@ -135,10 +140,12 @@
         }
     }).ready(function(g) {
         g.props = {};
-    }).declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").declareAcquiredMethod("getHash", "getHash").declareMethod("render", function(options) {
+    }).declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").declareAcquiredMethod("redirectOptions", "redirectOptions").declareMethod("render", function(options) {
+        console.log("render connection");
+        console.log(options);
         if (options.server === undefined) {
             options.server = "https://mail.tiolive.com/chat/http-bind/";
-            return this.getHash(options).push(this.pleaseRedirectMyHash.bind(this));
+            return this.redirectOptions(options);
         }
         if (this.props.connection && this.props.connection.authenticated) {
             return showLogout(this);

@@ -27,6 +27,9 @@
     function isMessage(input) {
         return input.nodeName === "message";
     }
+    function getHash(gadget, options) {
+        return gadget.aq_pleasePublishMyState(options);
+    }
     rJS(window).allowPublicAcquisition("manageService", function(params) {
         this.props.app_services.monitor(params[0]);
     }).allowPublicAcquisition("send", function(datas) {
@@ -84,8 +87,16 @@
         return this.getDeclaredGadget("connection").push(function(connection_gadget) {
             return connection_gadget.getConnectionJID();
         });
+    }).allowPublicAcquisition("redirectOptions", function(options) {
+        var gadget = this;
+        return getHash(this, options[0]).push(function(hash) {
+            if ("#" + window.location.href.split("#")[1] === hash) {
+                return gadget.render(options[0]);
+            }
+            window.location = hash;
+        });
     }).allowPublicAcquisition("getHash", function(options) {
-        return this.aq_pleasePublishMyState(options[0]);
+        return getHash(this, options[0]);
     }).declareAcquiredMethod("pleaseRedirectMyHash", "pleaseRedirectMyHash").allowPublicAcquisition("messagesAreRead", function(jid) {
         return this.getDeclaredGadget("contactlist").push(function(contactlist_gadget) {
             return contactlist_gadget.messagesAreRead(jid[0]);

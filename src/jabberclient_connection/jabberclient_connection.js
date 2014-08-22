@@ -24,7 +24,10 @@
 
   function logout(gadget, authfail) {
     sessionStorage.removeItem("connection_params");
-    return gadget.render({authfail: authfail});
+    return gadget.render({
+      page: "connection",
+      authfail: authfail
+    });
   }
 
   function showLogout(gadget) {
@@ -123,9 +126,12 @@
             if (status === Strophe.Status.DISCONNECTED) {
               return logout(gadget, authfail);
             }
-            if (status === Strophe.Status.CONNFAIL ||
-                status === Strophe.Status.AUTHFAIL) {
+            if (status === Strophe.Status.CONNFAIL) {
               authfail = true;
+            }
+            if (status === Strophe.Status.AUTHFAIL) {
+              authfail = true;
+              connection.disconnect();
             }
           })
           .fail(function (e) {
@@ -143,7 +149,8 @@
     };
     return new RSVP.Queue()
       .push(function () {
-        if (options && options.authfail) {
+        if (options &&
+            (options.authfail === "true" || options.authfail === true)) {
           params.authfail = true;
         }
         $(gadget.__element).html(login_template(params));
@@ -210,13 +217,12 @@
 
     .declareAcquiredMethod('pleaseRedirectMyHash', 'pleaseRedirectMyHash')
 
-    .declareAcquiredMethod('getHash', 'getHash')
+    .declareAcquiredMethod('redirectOptions', 'redirectOptions')
 
     .declareMethod('render', function (options) {
       if (options.server === undefined) {
         options.server = "https://mail.tiolive.com/chat/http-bind/";
-        return this.getHash(options)
-          .push(this.pleaseRedirectMyHash.bind(this));
+        return this.redirectOptions(options);
       }
       if (this.props.connection &&
           this.props.connection.authenticated) {
