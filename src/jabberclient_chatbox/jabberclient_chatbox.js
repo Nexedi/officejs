@@ -156,7 +156,9 @@
         "datas": JSON.stringify(this.props.talks)
       });
 
-      displayMessage(message);
+      if (this.props.current_contact_jid === from) {
+        displayMessage(message);
+      }
     });
 
 }($, rJS, Handlebars));
