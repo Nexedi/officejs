@@ -4,13 +4,14 @@
 (function($, rJS, Handlebars) {
     "use strict";
     var gadget_klass = rJS(window), message_template_source = gadget_klass.__template_element.querySelector(".message-template").innerHTML, message_template = Handlebars.compile(message_template_source);
-    function displayMessage(message) {
-        var html_message = message_template({
+    function displayMessage(gadget, message) {
+        var talk_box = gadget.__element.querySelector(".talk-box"), html_message = message_template({
             time: message.time,
             jid: message.from,
             content: message.content
         });
-        $(".talk-box").append(html_message);
+        $(talk_box).append(html_message);
+        talk_box.scrollTop = talk_box.scrollHeight;
     }
     function Message(from, to, time, content) {
         this.from = from;
@@ -45,7 +46,7 @@
                 _id: "chatbox_history",
                 datas: JSON.stringify(gadget.props.talks)
             });
-            displayMessage(message);
+            displayMessage(gadget, message);
             gadget.send($msg({
                 to: to,
                 type: "chat"
@@ -78,7 +79,7 @@
         if (this.props.talks[this.props.current_contact_jid]) {
             messages = this.props.talks[this.props.current_contact_jid].messages;
             messages.forEach(function(message) {
-                displayMessage(message);
+                displayMessage(gadget, message);
             });
         }
         $(this.__element).find(".send-button").click(function(e) {
@@ -108,7 +109,7 @@
             datas: JSON.stringify(this.props.talks)
         });
         if (this.props.current_contact_jid === from) {
-            displayMessage(message);
+            displayMessage(this, message);
         }
     });
 })($, rJS, Handlebars);
