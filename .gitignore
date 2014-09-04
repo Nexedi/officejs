@@ -31,6 +31,6 @@ apache2.conf
 *~
 
 node_modules/
-dev/
+#dev/
 tmp/
 .tern-port

@@ -50,27 +50,38 @@
     return input;
   };
   
-  gk.ready(function (g) {
-    g.declareGadget(gadget_path_list.connection, {})
+  gk.declareMethod("getJSON", function() {
+      for (var key in document.getElementByTagName("input")) {
+        console.log(input.value);
+      }
+  })
+  .declareMethod('render', function(options) {
+     if (options.software_release_url === undefined) {
+       throw "undefined software_release_url";
+     }
+     var g = this;
+    
+    return g.declareGadget(gadget_path_list.connection, {})
     
     .push(function (gadget) {
       return gadget.loadJSONSchema(json_url);
     })
     .push(function (json) {
-       var fieldset = g.__element.getElementsByTagName('fieldset')[0];
-       var fieldset_optional = g.__element.getElementsByTagName('fieldset')[1];
+       var fieldset = document.getElementsByTagName('fieldset')[1];
+       var fieldset_optional = document.getElementsByTagName('fieldset')[2];
        for (var key in json.properties) {
          var div = document.createElement("div");
-         div.klass = "field";
+         div.setAttribute("class", "field");
          div.title = json.properties[key].description;
-         console.log(key);
+         /* console.log(key); */
          var label = document.createElement("label");
          label.textContent = json.properties[key].title;
          div.appendChild(label);
          var div_input = document.createElement("div");
-         div.klass = "input";
+         div.setAttribute("class", "input");
          var input = render_field(json.properties[key]);
-         input.name = key; 
+         input.name = key;
+         input.setAttribute("class", "slapos-parameter");
          
          div_input.appendChild(input);
          div.appendChild(div_input);
@@ -81,10 +92,6 @@
          }
        }
     });
-  }).declareMethod("getCouscou", function() {
-    var sp = document.createElement("span");
-    sp.textContent = "couscous";
-    return sp
   });
 
 }(window, document, rJS));

@@ -35,7 +35,7 @@
       throw error});
   };
   
-  var validateJSON = function(json) {
+  var validateJSONSchema = function(json) {
     
     var promise = new RSVP.Promise(function(resolve, reject) {
       return resolve(getMetaJSONSchema());
@@ -48,11 +48,23 @@
       throw error});
   };
   
+  var validateJSON = function(json, generated_json) {
+      console.log(tv4.validate(generated_json, json));
+      return generated_json;
+  };
+  
   gk.declareMethod("loadJSONSchema", function(url) {
     return getJSON(url).then(function(json) {
-      return validateJSON(json);
+      return validateJSONSchema(json);
     }, function(error) { 
       throw error});
+  })
+  
+  .declareMethod("validateJSON", function(schema_url, generated_json) {
+    return getJSON(schema_url).then(function(json) {
+      return validateJSON(json, generated_json);
+    }, function(error) {
+      throw error});
   });
-   
+  
 }(window, rJS, RSVP, jQuery));
