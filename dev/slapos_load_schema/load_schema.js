@@ -42,15 +42,11 @@
     });
     
     return promise.then(function (meta_schema) {
+      /* Do one actuall validation here is missing */
       console.log(tv4.validate(json, meta_schema));
       return json;
     }, function (error) {
       throw error});
-  };
-  
-  var validateJSON = function(json, generated_json) {
-      console.log(tv4.validate(generated_json, json));
-      return generated_json;
   };
   
   gk.declareMethod("loadJSONSchema", function(url) {
@@ -62,7 +58,7 @@
   
   .declareMethod("validateJSON", function(schema_url, generated_json) {
     return getJSON(schema_url).then(function(json) {
-      return validateJSON(json, generated_json);
+      return tv4.validateMultiple(generated_json, json);
     }, function(error) {
       throw error});
   });

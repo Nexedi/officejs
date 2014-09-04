@@ -4,12 +4,15 @@
         "user-authorized-key": {
             "title": "User Authorized Key",
             "description": "SSH public key in order to connect to the SSH server of this runner instance.",
-            "type": "string"
+            "type": "string",
+            "require": true
         },
         "instance-amount": {
             "title": "Partition Amount",
             "description": "Number of slappart to deploy inside the runner (default is 10). Needs instance to be restarted.",
             "type": "integer",
+            "minimum": 1,
+            "maximum": 40,
             "optional": true
         },
         "slapos-software": {
@@ -29,6 +32,7 @@
             "description": "url of the default git repository that will be download by the runner while its instanciation. Will be cloned in a directory named 'slapos' (default is http://git.erp5.org/repos/slapos.git)",
             "type": "string",
             "format": "uri",
+            "pattern": "^(http|https|ftp)://",
             "optional": true
         },
         "slapos-reference": {

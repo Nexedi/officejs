@@ -59,6 +59,12 @@
      if (options.software_release_url === undefined) {
        throw "undefined software_release_url";
      }
+     if (options.json_url === undefined) {
+       throw "undefined software_release_url";
+     }
+     if (options.software_release_json_url === undefined) {
+       throw "undefined software_release_url";
+     }
      var g = this;
     
     return g.declareGadget(gadget_path_list.connection, {})
@@ -84,6 +90,9 @@
          input.setAttribute("class", "slapos-parameter");
          
          div_input.appendChild(input);
+         var span_error = document.createElement("span");
+         span_error.setAttribute("class", "error");
+         div_input.appendChild(span_error);
          div.appendChild(div_input);
          if (json.properties[key].optional === true) {
            fieldset_optional.appendChild(div);
