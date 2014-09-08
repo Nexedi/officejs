@@ -6,7 +6,6 @@
   var gk = rJS(window);
   var json_url = "../slapos_load_schema/schema.json";
   var gadget_path_list = {
-        parameter: "../slapos_parameter/index.html",
         connection: "../slapos_load_schema/index.html"
   };
   
@@ -15,12 +14,22 @@
        throw "undefined software_release_url";
      }
      var g = this;
-     var gadget = this.getDeclaredGadget('parameter')
+     this.getDeclaredGadget('software-type')
      .push(function(gadget) {
-       options[json_url] = json_url;
-       options[software_type_json_url] = software_type_json_url;  
+       options.json_url = "../slapos_load_schema/software_type.json";
        return gadget.render(options);
-       });
+       })
+      .push(function() {
+        g.getDeclaredGadget('parameter')
+        .push(function(gadget) {
+            options.json_url = json_url;
+            return gadget.render(options);
+        });   
+        
+      });
+     
+       
+      
        
       var gadget_promise = g.declareGadget(gadget_path_list.connection, {});
     

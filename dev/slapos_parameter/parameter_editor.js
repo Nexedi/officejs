@@ -4,7 +4,6 @@
   "use strict";
 
   var gk = rJS(window);
-  var json_url = "../slapos_load_schema/schema.json";
   var gadget_path_list = {
         connection: "../slapos_load_schema/index.html"
   };
@@ -56,18 +55,16 @@
       }
   })
   .declareMethod('render', function(options) {
-     if (options.software_release_url === undefined) {
-       throw "undefined software_release_url";
-     }
-     if (options.json_url === undefined) {
-       throw "undefined software_release_url";
-     }
-     if (options.software_release_json_url === undefined) {
-       throw "undefined software_release_url";
-     }
-     var g = this;
+    if (options.software_release_url === undefined) {
+     throw "undefined software_release_url";
+    }
+    if (options.json_url === undefined) {
+      throw "undefined json_url";
+    }
+    var g = this;
+    var json_url = options.json_url;
     
-    return g.declareGadget(gadget_path_list.connection, {})
+    return g.getDeclaredGadget("load-schema")
     
     .push(function (gadget) {
       return gadget.loadJSONSchema(json_url);
