@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <title>Simple Text Editor Gadget</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script src="../lib/rsvp.min.js" type="text/javascript"></script>
+    <script src="../lib/renderjs.min.js" type="text/javascript"></script>
+    <script src="../lib/jquery.js"></script>
+
+    <script src="../<%= copy.uritemplate.relative_dest %>" type="text/javascript"></script>
+    <script src="../<%= copy.uri.relative_dest %>" type="text/javascript"></script>
+    <script src="../<%= concat.jio.relative_dest %>" type="text/javascript"></script>
+
+
+
+    <script src="../lib/tv4.min.js"></script>
+    <script src="load_schema.js" type="text/javascript"></script>
+    <link rel="http://www.renderjs.org/rel/interface"
+          href="http://www.renderjs.org/interface/editor"/>
+  </head>
+  <body>
+    <div id="editor"></div>
+  </body>
+</html>
